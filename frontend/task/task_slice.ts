@@ -12,6 +12,7 @@ import CraneFixture from './fixtures/test_crane';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
+import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -26,15 +27,10 @@ const availableTasks = {
     login: StringsLoginFixture,
 };
 
-export interface TaskSubmission {
-    executing: boolean,
-    results: TaskSubmissionResult[], // One per test
-}
-
-export interface TaskSubmissionResult {
-    executing: boolean,
-    result?: boolean,
-    message?: string,
+export enum TaskActionTypes {
+    TaskLoad = 'task/load',
+    TaskUnload = 'task/unload',
+    TaskRunExecution = 'task/runExecution',
 }
 
 export interface BlocksUsage {
@@ -45,7 +41,7 @@ export interface BlocksUsage {
 }
 
 export interface TaskState {
-    currentTask?: any,
+    currentTask?: Task|null,
     currentLevel?: TaskLevelName,
     recordingEnabled?: boolean,
     resetDone?: boolean,
@@ -56,7 +52,6 @@ export interface TaskState {
     taskTests: TaskTest[],
     currentTestId?: number,
     previousTestId?: number,
-    currentSubmission?: TaskSubmission,
     inputNeeded?: boolean,
     inputs?: any[],
     contextId: number,
@@ -73,16 +68,42 @@ export interface TaskInputEnteredPayload {
     clearInput?: boolean,
 }
 
-export interface TaskSubmissionResultPayload {
-    testId: number,
-    result: boolean,
-    message?: string,
-    steps?: number,
-}
-
 export interface TaskTest {
+    id?: string,
+    subtaskId?: string|null,
+    groupType?: TaskTestGroupType,
+    active?: boolean,
+    name?: string,
     data: any,
     contextState: any,
+}
+
+export interface QuickalgoTask {
+    gridInfos: any,
+    data?: any,
+}
+
+export type Task = QuickalgoTask & Partial<TaskServer>;
+
+export function isServerTask(object: Task): boolean {
+    return null !== object.id && undefined !== object.id;
+}
+
+export function isServerTest(object: TaskTest): boolean {
+    return null !== object.id && undefined !== object.id;
+}
+
+// TODO: update this function when we will have a "public" field in tm_task_tests
+export function isTestPublic(task: Task, test: TaskTest|null): boolean {
+    if (null === test || !isServerTest(test)) {
+        return true;
+    }
+
+    if (task && task.gridInfos && 'printer' === task.gridInfos.context) {
+        return !(test && test.data && !test.data.input);
+    }
+
+    return true;
 }
 
 export const taskInitialState = {
@@ -91,7 +112,6 @@ export const taskInitialState = {
     taskTests: [],
     currentTestId: null,
     previousTestId: null,
-    currentSubmission: null,
     recordingEnabled: false,
     resetDone: true,
     loaded: false,
@@ -108,12 +128,18 @@ export const taskInitialState = {
     menuHelpsOpen: false,
 } as TaskState;
 
-export const selectCurrentTest = (state: AppStore) => {
+export const selectCurrentTestData = (state: AppStore) => {
+    const currentTest = selectCurrentTest(state);
+
+    return null !== currentTest ? currentTest.data : {};
+}
+
+export const selectCurrentTest = (state: AppStore): TaskTest|null => {
     if (null == state.task.currentTestId || !(state.task.currentTestId in state.task.taskTests)) {
-        return {};
+        return null;
     }
 
-    return state.task.taskTests[state.task.currentTestId].data;
+    return state.task.taskTests[state.task.currentTestId];
 }
 
 export const taskSlice = createSlice({
@@ -128,7 +154,7 @@ export const taskSlice = createSlice({
             }
             state.previousTestId = null;
         },
-        currentTaskChange(state, action: PayloadAction<any>) {
+        currentTaskChange(state, action: PayloadAction<Task|null>) {
             state.currentTask = action.payload;
             state.previousTestId = null;
             state.currentTestId = null;
@@ -152,11 +178,8 @@ export const taskSlice = createSlice({
         taskResetDone(state: TaskState, action: PayloadAction<boolean>) {
             state.resetDone = action.payload;
         },
-        updateTaskTests(state: TaskState, action: PayloadAction<any[]>) {
-            state.taskTests = action.payload.map(testData => ({
-                data: testData,
-                contextState: null,
-            } as TaskTest));
+        updateTaskTests(state: TaskState, action: PayloadAction<TaskTest[]>) {
+            state.taskTests = action.payload;
             state.previousTestId = null;
             state.currentTestId = null;
         },
@@ -208,25 +231,6 @@ export const taskSlice = createSlice({
         taskAddInput(state: TaskState, action: PayloadAction<any>) {
             state.inputs.push(action.payload);
         },
-        taskCreateSubmission(state: TaskState) {
-            state.currentSubmission = {
-                executing: true,
-                results: state.taskTests.map(() => ({executing: false})),
-            };
-        },
-        taskClearSubmission(state: TaskState) {
-            state.currentSubmission = null;
-        },
-        taskSubmissionStartTest(state: TaskState, action: PayloadAction<number>) {
-            state.currentSubmission.results[action.payload].executing = true;
-        },
-        taskSubmissionSetTestResult(state: TaskState, action: PayloadAction<TaskSubmissionResultPayload>) {
-            state.currentSubmission.results[action.payload.testId] = {
-                executing: false,
-                result: action.payload.result,
-                message: action.payload.message,
-            };
-        },
         taskIncreaseContextId(state: TaskState) {
             state.contextId++;
         },
@@ -274,10 +278,6 @@ export const {
     currentTaskChangePredefined,
     currentTaskChange,
     taskAddInput,
-    taskCreateSubmission,
-    taskClearSubmission,
-    taskSubmissionStartTest,
-    taskSubmissionSetTestResult,
     updateTestContextState,
     taskCurrentLevelChange,
     taskIncreaseContextId,

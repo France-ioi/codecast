@@ -6,17 +6,18 @@ import {ActionTypes, stepperRunBackgroundFinished} from './actionTypes';
 import {PlayerInstant} from '../player';
 import log from 'loglevel';
 import {mainQuickAlgoLogger, quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
-import {selectCurrentTest} from '../task/task_slice';
+import {selectCurrentTestData} from '../task/task_slice';
 import {getCurrentStepperState, isStepperInterrupting} from './selectors';
 import {App, Codecast} from '../index';
 import {StepperContext} from './api';
 import {getNodeRange, initialStateStepper, stepperMaxSpeed, StepperStatus} from './index';
+import {appSelect} from '../hooks';
 
 export function addStepperRecordAndReplayHooks(app: App) {
     const {recordApi, replayApi} = app;
 
     recordApi.onStart(function* (init) {
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const stepperState = state.stepper;
         if (stepperState) {
             init.speed = stepperState.speed;
@@ -44,8 +45,8 @@ export function addStepperRecordAndReplayHooks(app: App) {
             log.getLogger('stepper').debug('make reset saga');
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context) {
-                const state = yield* select();
-                context.resetAndReloadState(selectCurrentTest(state), state);
+                const state = yield* appSelect();
+                context.resetAndReloadState(selectCurrentTestData(state), state);
             }
         })
     });
@@ -111,7 +112,7 @@ export function addStepperRecordAndReplayHooks(app: App) {
         log.getLogger('stepper').debug('[stepper.step] after yield promise', promise);
 
         replayContext.addSaga(function* () {
-            const speed = yield* select((state: AppStore) => state.stepper.speed);
+            const speed = yield* appSelect(state => state.stepper.speed);
             log.getLogger('stepper').debug('[stepper.step] set speed', speed);
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && context.changeDelay) {
@@ -121,7 +122,7 @@ export function addStepperRecordAndReplayHooks(app: App) {
     });
 
     recordApi.on(ActionTypes.StepperInteractBefore, function* (addEvent, {payload}) {
-        const state = yield* select();
+        const state = yield* appSelect();
         if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
             log.getLogger('stepper').debug('stepper is still interrupting, not logging progress');
             return;
@@ -187,7 +188,7 @@ export function addStepperRecordAndReplayHooks(app: App) {
     });
 
     replayApi.on('stepper.restart', function* () {
-        const state = yield* select();
+        const state = yield* appSelect();
         const stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
 
         yield* put({type: ActionTypes.StepperEnabled});

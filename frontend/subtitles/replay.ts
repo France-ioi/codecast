@@ -5,6 +5,7 @@ import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {appSelect} from '../hooks';
 
 export default function(bundle: Bundle) {
     /* Initialize the available options from the recording's data when the
@@ -24,7 +25,7 @@ export default function(bundle: Bundle) {
            subtitles language, if available. */
         yield* takeLatest(PlayerActionTypes.PlayerReady, function* () {
             const {language} = getPersistentOptions();
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             const {availableOptions} = state.subtitles;
             if (language && language !== "none" && language in availableOptions) {
                 const option = availableOptions[language];

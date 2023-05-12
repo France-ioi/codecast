@@ -11,6 +11,7 @@ import log from "loglevel";
 import platformSlice from "./task/platform/platform_slice";
 import analysisSlice from "./stepper/analysis/analysis_slice";
 import modalSlice from "./common/modal_slice";
+import submissionSlice from "./submission/submission_slice";
 
 export interface Linker {
     scope: App,
@@ -223,6 +224,7 @@ export function link(rootBuilder, globalScope: App): Linker {
             [hintsSlice.name]: hintsSlice.reducer,
             [analysisSlice.name]: analysisSlice.reducer,
             [modalSlice.name]: modalSlice.reducer,
+            [submissionSlice.name]: submissionSlice.reducer,
         })(newState, action);
 
         let end2 = window.performance.now();

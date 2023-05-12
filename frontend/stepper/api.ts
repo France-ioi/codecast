@@ -23,7 +23,7 @@ import {getCurrentImmerState} from "../task/utils";
 import {ActionTypes as CompileActionTypes} from "./actionTypes";
 import {Codecast} from "../index";
 import log from "loglevel";
-import {TaskSubmissionResultPayload} from "../task/task_slice";
+import {TaskSubmissionResultPayload} from "../submission/submission";
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 
 export interface QuickalgoLibraryCall {

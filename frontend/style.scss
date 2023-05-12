@@ -28,6 +28,7 @@ $grid-gutter-width: 6px;
 @import "subtitles";
 @import "controls";
 @import "./tralalere/tralalere.scss";
+@import "./submission/submission.scss";
 
 html {
   margin-left: calc(100vw - 100%);
@@ -307,6 +308,12 @@ span + .value-previous {
 .code-highlight {
   position: absolute;
   background-color: rgba(100,200,100,0.5);
+  z-index: 20;
+}
+
+.error-highlight {
+  position: absolute;
+  background-color: rgba(255, 18, 18, 0.5);
   z-index: 20;
 }
 

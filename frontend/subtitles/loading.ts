@@ -12,6 +12,7 @@ import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {getMessage} from "../lang";
 import log from 'loglevel';
+import {appSelect} from '../hooks';
 
 export default function(bundle: Bundle) {
     /* Clear (unload) the currently loaded subtitles, if any. */
@@ -139,7 +140,7 @@ function* subtitlesLoadFromTextSaga(action) {
 }
 
 function* subtitlesLoadFromUrlSaga(action) {
-    const options = yield* select(state => state.options);
+    const options = yield* appSelect(state => state.options);
     if (options.data && options.data.subtitlesData && action.payload.key in options.data.subtitlesData) {
         yield* put({
             type: ActionTypes.SubtitlesLoadSucceeded,
@@ -196,7 +197,7 @@ function* subtitlesLoadFromFileSaga(action) {
 }
 
 function* subtitlesReloadSaga(_action) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const {selectedKey: key, availableOptions} = state.subtitles;
 
     if (key) {
@@ -223,7 +224,7 @@ function* subtitlesReloadSaga(_action) {
 }
 
 export function* subtitlesLoadForTrimSaga() {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const {availableOptions} = state.subtitles;
     const availKeys = Object.keys(availableOptions).sort();
 

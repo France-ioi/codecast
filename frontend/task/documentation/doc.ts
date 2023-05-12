@@ -14,6 +14,7 @@ import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
 import {App} from "../../index";
 import {Screen} from "../../common/screens";
+import {appSelect} from '../../hooks';
 
 let openerChannel;
 
@@ -90,7 +91,7 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
     if (standalone) {
         try {
             const {concepts, selectedConceptId, screen, language} = yield* call(getConceptsFromChannel);
-            const currentScreen = yield* select(state => state.screen);
+            const currentScreen = yield* appSelect(state => state.screen);
             if (currentScreen !== screen) {
                 yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen}});
             }
@@ -104,13 +105,13 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
 
     let context = quickAlgoLibraries.getContext(null, 'main');
     if (context.infos.conceptViewer) {
-        const language = yield* select(state => state.documentation.language);
+        const language = yield* appSelect(state => state.documentation.language);
         let concepts = [], allConcepts = [];
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
 
-            const currentLevel = yield* select(state => state.task.currentLevel);
+            const currentLevel = yield* appSelect(state => state.task.currentLevel);
             const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
 
             concepts = window.getConceptsFromBlocks(curIncludeBlocks, allConcepts, context);
@@ -123,7 +124,7 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
             concepts.push('base');
         }
 
-        const currentTask = yield* select(state => state.task.currentTask);
+        const currentTask = yield* appSelect(state => state.task.currentTask);
         if (!currentTask) {
             // Add code examples to documentation
             const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
@@ -159,7 +160,7 @@ function* loadDocumentationConcepts(documentationConcepts, selectedConceptId = n
     if (selectedConceptId) {
         yield* put(documentationConceptSelected(selectedConceptId));
     } else {
-        const selectedConceptId = yield* select(state => state.documentation.selectedConceptId);
+        const selectedConceptId = yield* appSelect(state => state.documentation.selectedConceptId);
         if (documentationConcepts.length && (!selectedConceptId || !documentationConcepts.find(concept => selectedConceptId === concept.id))) {
             yield* put(documentationConceptSelected(documentationConcepts[0].id));
         }

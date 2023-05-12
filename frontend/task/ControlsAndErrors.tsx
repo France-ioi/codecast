@@ -2,22 +2,38 @@ import React, {useEffect, useState} from "react";
 import {StepperControls} from "../stepper/views/StepperControls";
 import {stepperClearError} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
-import {Dialog, Icon} from "@blueprintjs/core";
+import {Button, Icon} from "@blueprintjs/core";
 import {LayoutMobileMode, LayoutType} from "./layout/layout";
 import {ActionTypes} from "./layout/actionTypes";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faFileAlt, faPencilAlt, faPlay} from "@fortawesome/free-solid-svg-icons";
+import {faCogs, faFileAlt, faPencilAlt, faPlay, faSpinner} from "@fortawesome/free-solid-svg-icons";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
-import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
+import {TaskTestsSubmissionResultOverview} from "../submission/TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
+import {submissionChangeExecutionMode} from "../submission/submission_slice";
+import {SubmissionControls} from "../submission/SubmissionControls";
+import {
+    submissionGradeAnswerServer,
+    TaskSubmissionEvaluateOn
+} from '../submission/submission';
+import { Dropdown } from "react-bootstrap";
+import {capitalizeFirstLetter, nl2br} from '../common/utils';
+import {StepperStatus} from '../stepper';
+import {isServerTask, isTestPublic} from './task_slice';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
     const layoutType = useAppSelector(state => state.layout.type);
     const {showStepper} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const currentTestId = useAppSelector(state => state.task.currentTestId);
+    const taskTests = useAppSelector(state => state.task.taskTests);
+    const executionMode = useAppSelector(state => state.submission.executionMode);
+    const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
+    const stepperStatus = useAppSelector(state => state.stepper.status);
+    const isEvaluating = lastSubmission && !lastSubmission.evaluated && !lastSubmission.crashed;
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
@@ -40,11 +56,14 @@ export function ControlsAndErrors() {
     if (hasError) {
         if ('task-tests-submission-results-overview' === stepperError.type) {
             error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
+        } else if ('task-submission-test-result-diff' === stepperError.type) {
+            const stepperErrorHtml = toHtml(nl2br(stepperError.error));
+            error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         } else if ('compilation' === stepperError.type) {
             const stepperErrorHtml = toHtml(stepperError.content);
             error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
         } else {
-            const stepperErrorHtml = toHtml(stepperError);
+            const stepperErrorHtml = toHtml(nl2br(stepperError));
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         }
     // } else if (blocksUsage && blocksUsage.error) {
@@ -68,6 +87,16 @@ export function ControlsAndErrors() {
     const selectMode = (mobileMode: LayoutMobileMode) => {
         dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
+
+    const changeExecutionMode = (newMode) => {
+        dispatch(submissionChangeExecutionMode(newMode));
+    };
+
+    const submitSubmission = () => {
+        dispatch(submissionGradeAnswerServer());
+    };
+
+    const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
 
     return (
         <div className="controls-and-errors">
@@ -104,7 +133,34 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    <StepperControls enabled={true}/>
+                    {TaskSubmissionEvaluateOn.Client === executionMode && <div className="stepper-controls-container-flex"><StepperControls enabled={currentTestPublic}/></div>}
+                    {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
+
+                    {!hasModes && null !== currentTask && isServerTask(currentTask) && <div className="execution-controls">
+                        <div className="execution-controls-dropdown">
+                            <Dropdown>
+                                <Dropdown.Toggle>
+                                    <FontAwesomeIcon icon={faCogs} className="mr-2"/>
+                                    {capitalizeFirstLetter(getMessage(TaskSubmissionEvaluateOn.Client === executionMode ? 'SUBMISSION_EXECUTE_ON_CLIENT' : 'SUBMISSION_EXECUTE_ON_SERVER').s)}
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu>
+                                    <Dropdown.Item key="client" onClick={() => changeExecutionMode(TaskSubmissionEvaluateOn.Client)}>{capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_CLIENT').s)}</Dropdown.Item>
+                                    <Dropdown.Item key="server" onClick={() => changeExecutionMode(TaskSubmissionEvaluateOn.Server)}>{capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_SERVER').s)}</Dropdown.Item>
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
+                        <div>
+                            <Button
+                                className="quickalgo-button is-medium"
+                                disabled={isEvaluating || StepperStatus.Clear !== stepperStatus}
+                                icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
+                                onClick={submitSubmission}
+                            >
+                                {getMessage('SUBMISSION_EXECUTE_SUBMIT')}
+                            </Button>
+                        </div>
+                    </div>}
                 </div>}
             </div>}
 

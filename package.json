@@ -1,6 +1,6 @@
 {
   "name": "codecast",
-  "version": "7.2.0",
+  "version": "7.3.0",
   "description": "Live coding in the browser with recording for C and Python",
   "homepage": "https://github.com/France-ioi/codecast",
   "authors": [
@@ -64,6 +64,7 @@
     "lodash": "^4.17.21",
     "lodash.memoize": "^4.1.2",
     "loglevel": "^1.8.0",
+    "luxon": "^3.3.0",
     "mini-css-extract-plugin": "^2.4.5",
     "mysql": "^2.18.1",
     "node-range": "^0.1.0",
@@ -126,6 +127,7 @@
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",
     "babel-loader": "8.2.3",
+    "circular-dependency-plugin": "^5.2.2",
     "copy-webpack-plugin": "^10.2.0",
     "crypto-browserify": "^3.12.0",
     "css-loader": "^5.1.1",

@@ -19,6 +19,7 @@ import {Screen} from "../common/screens";
 import {EditorSaveState, EditorSavingStep} from "./index";
 import {subtitlesLoadForTrimSaga} from "../subtitles/loading";
 import {UploadResponse} from "../recorder/save_screen";
+import {appSelect} from '../hooks';
 
 export const initialStateTrimSaving = {
     unsaved: false,
@@ -147,7 +148,7 @@ function* editorTrimReturnSaga(_action) {
 
 function* editorTrimSaveSaga(action) {
     try {
-        let state: AppStore = yield* select();
+        let state: AppStore = yield* appSelect();
         const editor = state.editor;
         const {intervals} = editor.trim;
         const {targets, playerUrl, editorUrl} = yield* call(trimEditorPrepareUpload, action.payload.target);
@@ -336,7 +337,7 @@ function* trimEditorUpdateSubtitles(intervals) {
     try {
         yield* put({type: ActionTypes.EditorSavingStep, payload: {step}});
 
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const {loaded: subtitleData} = state.subtitles.trim;
         const subtitles = trimSubtitles(subtitleData, intervals); // return [{key, text}]
 
@@ -355,7 +356,7 @@ function* trimEditorUpdateSubtitles(intervals) {
 function* trimEditorPrepareUpload(target) {
     yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.PrepareUpload}});
 
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const {baseUrl} = state.options;
     const uploadParameters = {
         ...target,
@@ -393,7 +394,7 @@ function* trimEditorUpload(step, target, data) {
 
 function* trimEditorAssembleAudio(audioBuffer, intervals) {
     yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.AssembleAudio}});
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const worker = yield* call(spawnWorker, AudioWorker, state.options.audioWorkerUrl);
     const {sampleRate, numberOfChannels, duration} = audioBuffer;
 
@@ -450,7 +451,7 @@ function* trimEditorEncodeAudio(worker: CodecastWorker) {
 function* trimSubtitleUpload(playerUrl, subtitles) {
     yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles}});
 
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const {baseUrl} = state.options;
     const urlParsed = url.parse(playerUrl, true);
     const base = urlParsed.query['recording']; //newly generated codecast's base

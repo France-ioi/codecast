@@ -64,6 +64,7 @@ import {stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {hasBlockPlatform} from '../stepper/js';
+import {appSelect} from '../hooks';
 
 const AceThemes = [
     'github',
@@ -206,7 +207,7 @@ export function getBufferEditor(state, buffer) {
 
 function* buffersSaga() {
     yield* takeEvery(ActionTypes.BufferInit, function* (action) {
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
 
         // @ts-ignore
         const {buffer, editor} = action;
@@ -217,7 +218,7 @@ function* buffersSaga() {
         }
     });
     yield* takeEvery(ActionTypes.BufferInsertBlock, function* (action) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
         // @ts-ignore
         const {buffer, block, pos} = action.payload;
         const editor = getBufferEditor(state, buffer);
@@ -239,7 +240,7 @@ function* buffersSaga() {
         }
     });
     yield* takeEvery(ActionTypes.BufferReset, function* (action) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
         // @ts-ignore
         const {buffer, model, quiet, goToEnd} = action;
         if (!quiet) {
@@ -250,7 +251,7 @@ function* buffersSaga() {
         }
     });
     yield* takeEvery(ActionTypes.BufferModelSelect, function* (action) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
 
         // @ts-ignore
         const {buffer, selection} = action;
@@ -260,7 +261,7 @@ function* buffersSaga() {
         }
     });
     yield* takeEvery(ActionTypes.BufferModelEdit, function* (action) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
 
         // @ts-ignore
         const {buffer, delta, deltas} = action;
@@ -270,7 +271,7 @@ function* buffersSaga() {
         }
     });
     yield* takeEvery(ActionTypes.BufferModelScroll, function* (action) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
 
         // @ts-ignore
         const {buffer, firstVisibleRow} = action;
@@ -280,17 +281,17 @@ function* buffersSaga() {
         }
     });
     yield* takeEvery(ActionTypes.BufferHighlight, function* (action) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
 
         // @ts-ignore
-        const {buffer, range} = action;
+        const {buffer, range, className} = action;
         const editor = getBufferEditor(state, buffer);
         if (editor) {
-            editor.highlight(range);
+            editor.highlight(range, className);
         }
     });
     yield* takeEvery(ActionTypes.BufferResize, function* (action) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
 
         // @ts-ignore
         const {buffer} = action;
@@ -300,7 +301,7 @@ function* buffersSaga() {
         }
     });
     yield* takeEvery(ActionTypes.BufferDownload, function* () {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
         const platform = state.options.platform;
         const sourceModel = getBufferModel(state, 'source');
         const answer = sourceModel.document ? compressDocument(sourceModel.document) : null;
@@ -316,7 +317,7 @@ function* buffersSaga() {
     });
 
     yield* takeEvery(ActionTypes.BufferReload, function* () {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
 
         try {
             const fileContent = yield* call(pickFileAndGetContent);
@@ -397,7 +398,7 @@ function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {
 
 function addRecordHooks({recordApi}: App) {
     recordApi.onStart(function* (init) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
 
         init.buffers = {};
         for (let bufferName of Object.keys(state.buffers)) {
@@ -416,7 +417,7 @@ function addRecordHooks({recordApi}: App) {
         yield* call(addEvent, 'buffer.select', buffer, compressRange(selection));
     });
     recordApi.on(ActionTypes.BufferEdit, function* (addEvent, action) {
-        const state: AppStore = yield* select();
+        const state: AppStore = yield* appSelect();
         const {buffer, delta} = action;
         const {start, end} = delta;
         const range = {start, end};

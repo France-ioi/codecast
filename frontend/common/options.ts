@@ -11,6 +11,7 @@ import {Languages} from "../lang";
 import {taskLoad} from "../task";
 import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 import {isLocalStorageEnabled} from "./utils";
+import {appSelect} from '../hooks';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -125,14 +126,14 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* () {
         // @ts-ignore
         yield* takeEvery(ActionTypes.PlatformChanged, function* ({payload: {reloadTask}}) {
-            const newPlatform = yield* select((state: AppStore) => state.options.platform);
+            const newPlatform = yield* appSelect(state => state.options.platform);
             if (isLocalStorageEnabled()) {
                 window.localStorage.setItem('platform', newPlatform);
             }
             if (false !== reloadTask) {
                 yield* put({type: StepperActionTypes.StepperExit});
                 yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
-                const levels = yield* select((state: AppStore) => state.platform.levels);
+                const levels = yield* appSelect(state => state.platform.levels);
                 for (let level of Object.keys(levels)) {
                     yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
                 }

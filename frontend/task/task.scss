@@ -97,7 +97,6 @@ html, body, #react-container {
   .task-section {
     display: flex;
     width: 100vw;
-    flex-direction: column;
     flex: 1 0;
     min-height: 0;
   }
@@ -191,6 +190,12 @@ html, body, #react-container {
       margin-bottom: 1rem;
       font-size: 1.5em !important;
     }
+    h2 {
+      font-size: 1.35em !important;
+    }
+    h3 {
+      font-size: 1.2em !important;
+    }
 
     ul {
       margin-bottom: 1rem !important;
@@ -234,6 +239,7 @@ html, body, #react-container {
     width: 100%;
     height: 100%;
     flex: 1 1 auto;
+    overflow-y: auto;
   }
 
   .task-visualization {
@@ -280,7 +286,7 @@ html, body, #react-container {
   }
 
   &.full-screen {
-    .task-header, .layout-footer, .task-zone-left, .level-tabs {
+    .task-header, .layout-footer, .task-zone-left, .level-tabs, .submission-results {
       display: none;
     }
     .task-body {
@@ -817,11 +823,27 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   outline: none;
   border-radius: 50px;
   box-shadow: none !important;
+  &.is-medium {
+    font-size: 1rem !important;
+    padding: 0.375rem 0.75rem !important;
+  }
   .bp3-icon {
     color: #fff;
+  }
+  &[disabled] {
+    opacity: 0.3;
+    cursor: not-allowed;
   }
 }
 
 .context-visualization-images {
   display: none;
+}
+
+.io-visualization {
+  padding: 1rem;
+}
+
+.task-visualization-not-public {
+  padding: 1rem;
 }

@@ -109,7 +109,7 @@ export function StepperControls(props: StepperControlsProps) {
                 <Button
                     className={classNames}
                     onClick={onClick}
-                    disabled={disabled}
+                    disabled={!props.enabled || disabled}
                     intent={intent}
                     title={title}
                     icon={icon}
@@ -185,6 +185,7 @@ export function StepperControls(props: StepperControlsProps) {
                     <div className="player-slider-container">
                         <FontAwesomeIcon icon={faWalking} className="extremity extremity-left"/>
                         <Slider
+                            disabled={!props.enabled}
                             value={speed}
                             onChange={onChangeSpeed}
                             min={0}

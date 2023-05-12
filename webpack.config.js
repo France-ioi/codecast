@@ -7,6 +7,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 // To analyse webpack speed and build size
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
 const smp = new SpeedMeasurePlugin();
@@ -214,6 +215,12 @@ module.exports = (env, argv) => {
                 patterns: bundledFiles,
             }),
             new MiniCssExtractPlugin(),
+            // new CircularDependencyPlugin({
+            //     exclude: /node_modules/,
+            //     failOnError: true,
+            //     allowAsyncCycles: false,
+            //     cwd: process.cwd(),
+            // }),
             // new BundleAnalyzerPlugin(),
         ],
         // Note : splitChunks breaks the audio recording.

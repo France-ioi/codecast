@@ -23,6 +23,17 @@ export interface TaskInstructionsProps {
     hideShowMoreButton?: boolean,
 }
 
+function findStringForLanguage(taskStrings: any[], languages: string[]) {
+    for (let language of languages) {
+        let taskString = taskStrings.find(string => string.language === language);
+        if (taskString) {
+            return taskString;
+        }
+    }
+
+    return taskStrings[0];
+}
+
 const defaultInstructionsHtml = `
     <p>
         Programmez le robot pour qu'il pousse les caisses sur les cases marquées.
@@ -46,7 +57,9 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const platform = useAppSelector(state => state.options.platform);
     const contextId = useAppSelector(state => state.task.contextId);
     const isBackend = useAppSelector(state => state.options.backend);
+    const language = useAppSelector(state => state.options.language.split('-')[0]);
     const taskInstructionsHtmlFromOptions = useAppSelector(state => state.options.taskInstructions);
+    const [instructionsTitle, setInstructionsTitle] = useState(null);
     const [instructionsHtml, setInstructionsHtml] = useState(null);
     const instructionsRef = useRef<HTMLDivElement>();
     const screen = useAppSelector(state => state.screen);
@@ -66,7 +79,14 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     useEffect(() => {
         let newInstructionsHtml = taskInstructionsHtmlFromOptions ? taskInstructionsHtmlFromOptions : defaultInstructionsHtml;
         const context = quickAlgoLibraries.getContext(null, 'main');
-        if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask.gridInfos.intro) {
+        let newInstructionsTitle = null;
+        if (currentTask && currentTask.strings && currentTask.strings.length) {
+            const instructions = findStringForLanguage(currentTask.strings, [language, 'en', 'fr']);
+            if (instructions.title) {
+                newInstructionsTitle = instructions.title;
+            }
+            newInstructionsHtml = instructions.statement;
+        } else if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask.gridInfos.intro) {
             const strLang = window.stringsLanguage;
             if (strLang in window.algoreaInstructionsStrings) {
                 const strings = window.algoreaInstructionsStrings[strLang];
@@ -81,6 +101,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         }
 
         const instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel);
+        setInstructionsTitle(newInstructionsTitle);
         setInstructionsHtml(instructionsJQuery.html());
 
         if (props.changeDisplayShowMore) {
@@ -97,7 +118,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         <div ref={instructionsRef} className={`task-mission ${props.expanded ? 'is-expanded' : ''}`} style={{fontSize: `${zoomLevel}rem`}}>
             {props.missionRightSlot}
 
-            {!props.withoutTitle && <h1>{getMessage('TASK_INSTRUCTIONS')}</h1>}
+            {!props.withoutTitle && <h1>{instructionsTitle ? instructionsTitle : getMessage('TASK_INSTRUCTIONS')}</h1>}
 
             {LayoutView.Instructions === activeView && <div className="task-mission-platform-selection">
                 <PlatformSelection/>

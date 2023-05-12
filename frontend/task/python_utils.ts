@@ -113,6 +113,7 @@ const pythonForbiddenBlocks = {
         'procedures_defnoreturn': ['def'],
         'procedures_defreturn': ['def'],
         'setattr' : ['setattr'],
+        'lambda' : ['lambda'],
     },
     'variables': {
         'variables_set': ['var_assign'],

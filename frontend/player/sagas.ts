@@ -32,6 +32,7 @@ import {createRunnerSaga} from "../stepper";
 import {delay as delay$1} from 'typed-redux-saga';
 import {platformTaskLink} from '../task/platform/actionTypes';
 import log from 'loglevel';
+import {appSelect} from '../hooks';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -97,7 +98,7 @@ function* playerPrepare(app: App, action) {
     const {baseDataUrl, audioUrl, resetTo} = action.payload;
 
     // Check that the player is idle.
-    let state: AppStore = yield* select();
+    let state = yield* appSelect();
     const player = getPlayerState(state);
     if (player.isPlaying) {
         return;
@@ -129,7 +130,7 @@ function* playerPrepare(app: App, action) {
     if (action.payload.data) {
         data = action.payload.data;
     } else {
-        data = yield* call(asyncGetJson, action.payload.eventsUrl);
+        data = yield* call(asyncGetJson, action.payload.eventsUrl, false);
     }
     data = Object.freeze(data);
 
@@ -169,7 +170,7 @@ function* playerPrepare(app: App, action) {
         yield* take(taskLoaded.type);
     }
 
-    state = yield* select();
+    state = yield* appSelect();
 
     const replayState = {
         task: {
@@ -427,7 +428,7 @@ function* playerReplayEvent(app: App, {type, payload}) {
 }
 
 function* replaySaga(app: App, {type, payload}) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const player = getPlayerState(state);
     const isPlaying = player.isPlaying;
     const audio = player.audio;
@@ -509,7 +510,7 @@ function* replaySaga(app: App, {type, payload}) {
     /* The periodic update loop runs until cancelled by another replay action. */
     const chan = yield* call(requestAnimationFrames, 50);
     try {
-        while (!(yield* select((state: AppStore) => state.player.current.isEnd))) {
+        while (!(yield* appSelect(state => state.player.current.isEnd))) {
             /* Use the audio time as reference. */
             let endTime = Math.round(audio.currentTime * 1000);
             if (audio.ended) {
@@ -640,7 +641,7 @@ function* resetToAudioTime(app: App, audioTime: number, quick?: boolean) {
 
     /* Call the registered reset-sagas to update any part of the state not
        handled by playerTick. */
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const instant = state.player.current;
 
     yield* call(replayApi.reset, instant, quick);
@@ -654,7 +655,7 @@ function* restartStepper() {
 
 function* jumpToAudioTime(app: App, audioTime: number) {
     /* Jump and full reset to the specified audioTime. */
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const player = getPlayerState(state);
     audioTime = Math.max(0, Math.min(player.duration, audioTime));
     const audio = player.audio;

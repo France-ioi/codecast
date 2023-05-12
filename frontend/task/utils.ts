@@ -1,10 +1,23 @@
 import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
-import {createDraft, current, isDraft} from "immer";
+import {current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
 import {AppStore, CodecastPlatform, platformsList} from "../store";
 import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
+import {isServerTask, Task} from './task_slice';
+
+export enum TaskPlatformMode {
+    Source = 'source',
+    RecordingProgress = 'recording_progress',
+}
+
+
+export const recordingProgressSteps = 10;
+
+export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
+    return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
+}
 
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
@@ -107,10 +120,10 @@ export function getBlocksUsage(answer, platform: CodecastPlatform) {
     return null;
 }
 
-export function getDefaultSourceCode(platform: CodecastPlatform, environment: string) {
+export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask: Task) {
     const context = quickAlgoLibraries.getContext(null, environment);
     if (CodecastPlatform.Python === platform) {
-        if (context) {
+        if (context && !isServerTask(currentTask)) {
             const availableModules = getAvailableModules(context);
             let content = '';
             for (let i = 0; i < availableModules.length; i++) {
@@ -146,6 +159,8 @@ export function formatTaskInstructions(instructions: string, platform: CodecastP
             instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
         }
     }
+
+    instructionsJQuery.find('[data-current-lang]').html(getMessage('PLATFORM_' + platform.toLocaleUpperCase()).s);
 
     return instructionsJQuery;
 }

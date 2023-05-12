@@ -1,1 +1,3 @@
-export const RECORDING_FORMAT_VERSION = '7.2.0';
+const {version} = require('../package.json');
+
+export const RECORDING_FORMAT_VERSION = version;

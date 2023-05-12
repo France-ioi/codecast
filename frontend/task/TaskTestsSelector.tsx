@@ -1,24 +1,49 @@
 import React from "react";
 import {useAppSelector} from "../hooks";
-import {updateCurrentTestId} from "./task_slice";
+import {TaskTest, updateCurrentTestId} from "./task_slice";
 import {useDispatch} from "react-redux";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCheckCircle, faTimesCircle} from "@fortawesome/free-solid-svg-icons";
 import {Spinner} from "@blueprintjs/core";
 import {getMessage} from "../lang";
+import {submissionChangePaneOpen} from '../submission/submission_slice';
+import {faList} from '@fortawesome/free-solid-svg-icons/faList';
+import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
+import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
+import {faCheckCircle} from '@fortawesome/free-solid-svg-icons/faCheckCircle';
+import {faTimesCircle} from '@fortawesome/free-solid-svg-icons/faTimesCircle';
+import {memoize} from 'proxy-memoize';
+import {SubmissionTestErrorCode} from '../submission/task_platform';
+import {ErrorCodeData, testErrorCodeData} from '../submission/TestsPaneListTest';
+
+const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: TaskTest} => {
+    const getTaskTestsByIndex = {};
+    for (let testIndex = 0; testIndex < taskTests.length; testIndex++) {
+        getTaskTestsByIndex[testIndex] = taskTests[testIndex];
+    }
+
+    return getTaskTestsByIndex;
+});
 
 export function TaskTestsSelector() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
+    const taskTests = useAppSelector(state => state.task.taskTests);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
-    const currentSubmission = useAppSelector(state => state.task.currentSubmission);
-    const levelData = currentTask.data[currentLevel];
+    const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
+    const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
 
     const dispatch = useDispatch();
 
     const selectTest = (index) => {
         dispatch(updateCurrentTestId({testId: index}));
-    }
+    };
+
+    const incrementTestId = (increment) => {
+        const newTestId = currentTestId + increment;
+        if (newTestId >= 0 && newTestId <= taskTests.length - 1) {
+            selectTest(newTestId);
+        }
+    };
 
     const existingImages = currentTask.gridInfos && currentTask.gridInfos.images ? currentTask.gridInfos.images.map(element => element.path.default) : [];
 
@@ -38,50 +63,111 @@ export function TaskTestsSelector() {
         return element ? element : null;
     };
 
-    let testStatuses = null;
+    let testStatuses: ({executing: boolean, errorCodeData?: ErrorCodeData} | null)[] = [];
     if (currentSubmission) {
-        testStatuses = levelData.map((test, index) => {
-            // return 'executing';
-            if (index in currentSubmission.results) {
-                const testResult = currentSubmission.results[index];
-                if (testResult.executing) {
-                    return 'executing';
-                }
-                if (true === testResult.result) {
-                    return 'success';
-                }
-                if (false === testResult.result) {
-                    return 'failure';
+        testStatuses = taskTests.map((test, index) => {
+            if (currentSubmission.result && currentSubmission.result.tests) {
+                const testResult = currentSubmission.result.tests.find(testResult => testResult.testId === test.id);
+                if (testResult) {
+                    if (testResult.executing) {
+                        return {executing: true};
+                    }
+
+                    const errorCodeData = testErrorCodeData[testResult.errorCode];
+
+                    return {executing: false, errorCodeData};
                 }
             }
 
-            return 'unknown';
+            return null;
         })
     }
 
+    const taskTestsByIndex = getTaskTestsByIndex(taskTests);
+
+    const toggleSubmissionPane = () => {
+        dispatch(submissionChangePaneOpen(!submissionsPaneOpen));
+    };
+
+    const tooManyTests = taskTests.length > 3;
+
+    const getTestName = (test: TaskTest, index: number) => {
+        const subTask = null !== test.subtaskId && currentTask.subTasks && currentTask.subTasks.length ? currentTask.subTasks.find(subTask => subTask.id === test.subtaskId) : null;
+        const parts = [];
+        if (subTask) {
+            parts.push(subTask.name);
+        }
+
+        let testName = test.name;
+        if (!testName) {
+            let testNumber;
+            if (null !== subTask) {
+                testNumber = taskTests.filter(otherTest => otherTest.subtaskId === subTask.id).findIndex(otherTest => otherTest.id === test.id);
+            } else  {
+                testNumber = index;
+            }
+
+            testName = getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: testNumber + 1});
+        }
+
+        parts.push(testName);
+
+        return parts.join(' - ');
+    };
+
     return (
         <div className="tests-selector">
-            {levelData.map((testData, index) =>
+            <div
+                className={`tests-selector-tab tests-selector-menu`}
+                onClick={toggleSubmissionPane}>
+                <span>
+                    <FontAwesomeIcon icon={faList}/>
+                </span>
+            </div>
+            {Object.entries(tooManyTests ? (null !== currentTestId ? {[currentTestId]: taskTestsByIndex[currentTestId]} : {}) : taskTestsByIndex).map(([index, testData]) =>
                 <div
                     key={index}
-                    className={`tests-selector-tab${currentTestId === index ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
-                    onClick={() => selectTest(index)}>
-                    {getTestThumbNail(index) && <div className="test-thumbnail">
+                    className={`tests-selector-tab${!tooManyTests ? ' is-selectable' : ''}${currentTestId === Number(index) ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
+                    onClick={!tooManyTests ? () => selectTest(Number(index)) : () => {}}>
+                    {getTestThumbNail(Number(index)) && <div className="test-thumbnail">
                         <img
-                            src={getTestThumbNail(index)}
+                            src={getTestThumbNail(Number(index))}
                         />
                     </div>}
-                    <span className="test-title">
-                        {testStatuses && <span className="test-icon">
-                            {testStatuses[index] === 'executing' && <Spinner size={Spinner.SIZE_SMALL}/>}
-                            {testStatuses && testStatuses[index] === 'success' && <FontAwesomeIcon icon={faCheckCircle}/>}
-                            {testStatuses && testStatuses[index] === 'failure' && <FontAwesomeIcon icon={faTimesCircle}/>}
+                    <span className={`test-title ${tooManyTests ? 'too-many-tests' : ''}`}>
+                        {testStatuses[index] && <span className="test-icon">
+                            {testStatuses[index].executing && <Spinner size={Spinner.SIZE_SMALL}/>}
+                            {!testStatuses[index].executing && testStatuses[index].errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: testStatuses[index].errorCodeData.color}}>
+                                <FontAwesomeIcon icon={testStatuses[index].errorCodeData.icon}/>
+                            </div>}
                         </span>}
 
-                        <span>{getMessage('TESTS_TAB_TITLE').format({index: index + 1})}</span>
+                        <span className="test-title-content">
+                            {getTestName(testData, Number(index))}
+                        </span>
+
+                        {tooManyTests && <span className="test-index">
+                            {Number(index) + 1}/{taskTests.length}
+                        </span>}
                     </span>
                 </div>
             )}
+            {tooManyTests && <React.Fragment>
+                <div
+                    className={`tests-selector-tab tests-selector-menu ${currentTestId <= 0 ? 'is-disabled' : ''}`}
+                    onClick={() => incrementTestId(-1)}>
+                    <span>
+                        <FontAwesomeIcon icon={faChevronLeft}/>
+                    </span>
+                </div>
+                <div
+                    className={`tests-selector-tab tests-selector-menu ${currentTestId >= taskTests.length - 1 ? 'is-disabled' : ''}`}
+                    onClick={() => incrementTestId(1)}>
+                    <span>
+                        <FontAwesomeIcon icon={faChevronRight}/>
+                    </span>
+                </div>
+            </React.Fragment>}
         </div>
     );
 }

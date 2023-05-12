@@ -14,10 +14,11 @@ import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {selectAnswer} from "../../task/selectors";
 import {delay} from "../../player/sagas";
 import log from 'loglevel';
+import {appSelect} from '../../hooks';
 
 export function* compilePythonCodeSaga(source: string) {
     log.getLogger('python_runner').debug('compile python code', source);
-    const state = yield* select();
+    const state = yield* appSelect();
     const context = quickAlgoLibraries.getContext(null, state.environment);
 
     let compileError = null;

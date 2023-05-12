@@ -17,7 +17,7 @@ import {initialStateIoPane} from "./stepper/io";
 import {SubtitlesState} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
-import {TaskState} from "./task/task_slice";
+import {QuickalgoTask, TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
 import {DocumentationState} from "./task/documentation/documentation_slice";
 import {BufferState} from "./buffers";
@@ -26,6 +26,7 @@ import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
 import {AnalysisState} from "./stepper/analysis/analysis_slice";
 import {ModalState} from "./common/modal_slice";
 import {HintsState, TaskHint} from "./task/hints/hints_slice";
+import {SubmissionState} from "./submission/submission_slice";
 
 export enum CodecastPlatform {
     Python = 'python',
@@ -86,7 +87,7 @@ export interface CodecastOptions {
         bucket: string
     },
     origin: string,
-    task?: string,
+    task?: QuickalgoTask,
     taskInstructions?: string,
     taskHints?: TaskHint[],
     theme?: string,
@@ -94,6 +95,8 @@ export interface CodecastOptions {
     backend?: boolean,
     preload?: boolean, // If true, we consider that all necessary assets have already been preloaded; this is needed
                        // for Castor platforms in which assets are inlined into the HTML
+    taskId?: string,
+    taskPlatformUrl?: string,
 }
 
 export interface Panes {
@@ -157,4 +160,5 @@ export interface AppStore extends Store, AppStoreReplay {
     documentation: DocumentationState,
     analysis: AnalysisState,
     modal: ModalState,
+    submission: SubmissionState,
 }

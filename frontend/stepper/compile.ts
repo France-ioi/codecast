@@ -31,6 +31,7 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getMessage} from "../lang";
 import {selectAnswer} from "../task/selectors";
 import {compilePythonCodeSaga} from "./python";
+import {appSelect} from '../hooks';
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -75,7 +76,7 @@ export default function(bundle: Bundle) {
 
     bundle.addSaga(function* watchCompile() {
         yield* takeLatest(ActionTypes.Compile, function* () {
-            let state: AppStore = yield* select();
+            let state = yield* appSelect();
             const source = selectAnswer(state);
             const {platform} = state.options;
 
@@ -113,7 +114,7 @@ export default function(bundle: Bundle) {
                     yield* put({type: ActionTypes.CompileFailed, payload: {error: String(ex)}});
                 }
             } else {
-                state = yield* select();
+                state = yield* appSelect();
                 try {
                     const logData = state.statistics.logData;
                     const postData = {source, platform, logData};

@@ -22,6 +22,7 @@ import {App} from "../index";
 import {PlayerInstant, playerReset} from "../player";
 import {PayloadAction} from "@reduxjs/toolkit";
 import log from 'loglevel';
+import {appSelect} from '../hooks';
 
 export interface AutoRecordingParams {
     sliceName: string,
@@ -140,7 +141,7 @@ export default function(bundle: Bundle) {
                     log.getLogger('recorder').debug('skip record');
                     continue;
                 }
-                const state: AppStore = yield* select();
+                const state = yield* appSelect();
                 const recorder = state.recorder;
                 const status = recorder.status;
                 if (status !== RecorderStatus.Recording) {

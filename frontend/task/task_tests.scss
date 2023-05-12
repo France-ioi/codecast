@@ -3,9 +3,11 @@
   line-height: 24px;
   text-align: center;
   background-color: #f1f2f7;
+  user-select: none;
 
   .test-title {
     min-height: 40px;
+    font-size: 16px;
   }
 
   .test-thumbnail {
@@ -19,9 +21,25 @@
     }
   }
 
+  .test-index {
+    font-weight: normal;
+  }
+
+  .test-title.too-many-tests {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+
+    .test-title-content {
+      flex: 1 0;
+      text-align: left;
+    }
+  }
+
   .tests-selector-tab {
     flex: 1 0;
-    cursor: pointer;
     padding: 2px;
     position: relative;
     display: flex;
@@ -30,6 +48,10 @@
     align-items: center;
     color: #7c7c7c;
     font-weight: bold;
+
+    &.is-selectable {
+      cursor: pointer;
+    }
 
     &.is-active {
       box-shadow: 0 1px 0 0px #ccc;
@@ -67,6 +89,13 @@
       box-shadow: 0 1px 0 0px #ccc inset;
     }
 
+    &.is-disabled {
+      cursor: not-allowed;
+      svg {
+        opacity: 0.3;
+      }
+    }
+
     .test-icon {
       display: inline-block;
       margin-right: 5px;
@@ -80,6 +109,14 @@
     &.status-failure .test-icon {
       color: red;
     }
+  }
+
+  .tests-selector-menu {
+    flex: 0 1;
+    padding-left: 13px;
+    padding-right: 15px;
+    cursor: pointer;
+    color: var(--primary-color);
   }
 }
 

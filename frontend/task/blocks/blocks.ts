@@ -10,6 +10,7 @@ import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
 import {QuickAlgoLibrary} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
+import {appSelect} from '../../hooks';
 
 export enum BlockType {
     Function = 'function',
@@ -222,7 +223,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
 });
 
 function* checkSourceSaga() {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const answer = selectAnswer(state);
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentTask = state.task.currentTask;
