@@ -222,5 +222,5 @@ export function* makeServerSubmission(answer: string, taskToken: string, answerT
         }
     };
 
-    return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions?XDEBUG_SESSION_START=PHPSTORM', body, false)) as {success: boolean, submissionId?: string};
+    return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions', body, false)) as {success: boolean, submissionId?: string};
 }
