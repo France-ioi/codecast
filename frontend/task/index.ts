@@ -198,6 +198,8 @@ function* taskLoadSaga(app: App, action) {
             let defaultLevel = null;
             if (currentTask.gridInfos?.defaultLevel && currentTask.gridInfos?.defaultLevel in currentTask.data) {
                 defaultLevel = currentTask.gridInfos.defaultLevel;
+            } else if ('easy' in currentTask.data) {
+                defaultLevel = 'easy';
             } else {
                 for (let level of taskLevelsList) {
                     if (level in currentTask.data) {
