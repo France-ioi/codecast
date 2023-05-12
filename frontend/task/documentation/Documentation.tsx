@@ -51,7 +51,9 @@ export function Documentation(props: DocumentationProps) {
             urlSplit[0] = urlSplit[0].replace(/index_en\.html/g, 'index_tralalere_en.html');
         }
         conceptUrl = urlSplit.join('#');
-        console.log('concept url', conceptUrl, selectedConcept, concepts);
+        if (-1 !== conceptUrl.indexOf('http://') && 'https:' === window.location.protocol) {
+            conceptUrl = conceptUrl.replace(/http:\/\//, 'https://');
+        }
     }
 
     useEffect(() => {
