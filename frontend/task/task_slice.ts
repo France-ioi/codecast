@@ -141,6 +141,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     usedSkills?: string[],
     targetNbInstructions?: number,
     forceNextTaskAfter?: number,
+    defaultLevel?: TaskLevelName,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {

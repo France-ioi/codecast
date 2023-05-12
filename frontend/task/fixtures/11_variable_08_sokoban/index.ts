@@ -78,6 +78,7 @@ export default {
             }
         },
         forceNextTaskAfter: 2,
+        defaultLevel: 'easy',
     },
     data: {
         easy: [
