@@ -1,5 +1,11 @@
 import {immerable} from "immer";
 
+export interface TrimInterval {
+    value: {skip: boolean, mute: boolean},
+    start: number,
+    end: number,
+}
+
 function Node(left, key, right) {
     this.left = left;
     this.key = key;
@@ -23,7 +29,7 @@ function split(tree, key) {
     return tree;
 }
 
-function get(tree, key) {
+function get(tree, key): TrimInterval {
     let start = 0, end = Infinity;
     while (tree instanceof Node) {
         // @ts-ignore
@@ -136,7 +142,7 @@ function keys(tree) {
     };
 }
 
-function intervals(tree) {
+function intervals(tree): Iterator<TrimInterval> {
     let start = 0, nextValue = null;
     const stack = [];
 
@@ -175,13 +181,14 @@ function intervals(tree) {
                 start = +Infinity;
                 return {value: result};
             }
-            return {done: true};
+            return {done: true, value: null};
         }
     };
 }
 
 export class IntervalTree {
     [immerable] = true;
+    [Symbol.iterator]: () => Iterator<TrimInterval>;
     keys = {[Symbol.iterator]: () => keys(this.root)};
 
     constructor(public root) {

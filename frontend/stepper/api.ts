@@ -508,7 +508,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         }
 
         const makeLibraryCall = () => {
-            return new Promise(resolve => {
+            return new Promise((resolve, reject) => {
                 let callbackArguments = [];
                 let result = context[module][action].apply(context, [...args, function (a) {
                     log.getLogger('quickalgo_executor').debug('[quickalgo_executor] receive callback', arguments);
@@ -525,7 +525,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
                             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] returned element', module, action, argumentResult);
                             // Use context.waitDelay to transform result to primitive when the library uses generators
                             context.waitDelay(resolve, argumentResult);
-                        });
+                        })
+                        .catch(reject)
                 }
             });
         }

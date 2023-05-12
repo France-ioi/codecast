@@ -9,7 +9,7 @@ import {submissionTriggerPlatformValidate} from "./submission";
 
 export function SubmissionControls() {
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
-    const isEvaluating = lastSubmission && !lastSubmission.evaluated;
+    const isEvaluating = lastSubmission && !lastSubmission.evaluated && !lastSubmission.crashed;
     const dispatch = useDispatch();
 
     const submit = () => {

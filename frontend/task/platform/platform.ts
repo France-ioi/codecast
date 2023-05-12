@@ -52,7 +52,7 @@ let taskGrader: TaskGrader;
 let taskEventsEnvironment = 'main';
 
 export let taskApi: any;
-export let platformApi: ReturnType<typeof makePlatformAdapter>;
+export let platformApi: ReturnType<typeof makePlatformAdapter> = null;
 export let serverApi = null;
 export let setTaskEventsEnvironment = (environment: string) => {
     taskEventsEnvironment = environment;
@@ -111,6 +111,10 @@ function* linkTaskPlatformSaga() {
     window.taskGetResourcesPost = (res, callback) => {
         Codecast.environments['main'].store.dispatch(taskGetResourcesPost(res, callback));
     };
+}
+
+export function isTaskPlatformLinked(): boolean {
+    return null !== platformApi;
 }
 
 function* taskAnswerReloadedSaga () {

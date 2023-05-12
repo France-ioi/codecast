@@ -44,7 +44,7 @@ module.exports = {
     UPLOADING_URL_EVENTS: "URL events",
     UPLOADING_URL_AUDIO_MP3: "URL audio (mp3)",
     UPLOADING_URL_AUDIO_WAV: "URL audio (wav)",
-    UPLOADING_TARGET: "Target:",
+    UPLOADING_TARGET: "Target",
     UPLOADING_PREPARE_UPLOAD: 'Preparing upload...',
     UPLOADING_UPLOAD_EVENTS: 'Uploading events...',
     UPLOADING_ASSEMBLE_AUDIO: 'Assembling audio...',
@@ -169,6 +169,7 @@ module.exports = {
     EDITOR_RELOAD_IMPOSSIBLE: "The saved answer couldn't be reloaded.",
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
+    USER_CHANGE_USER: "Logout",
 
     KEYWORD: 'keyword',
     CONSTANT: "constant",
@@ -284,7 +285,7 @@ module.exports = {
     SUBMISSION_ERROR_COMPILATION: "Compilation error:",
     SUBMISSION_ERROR_EXECUTION: "Execution error:",
     SUBMISSION_NO_TESTS: "There are no tests for this task.",
-    SUBMISSION_COMPILATION_OUTPUT: "Compilation result :",
+    SUBMISSION_COMPILATION_OUTPUT: "Compilation result:",
     SUBMISSION_RESULT_ABORT: "Abort",
     SUBMISSION_RESULT_BUSERROR: "Bus Error",
     SUBMISSION_RESULT_FLOATING: "Floating point Expression",

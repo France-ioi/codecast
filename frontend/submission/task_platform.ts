@@ -1,8 +1,9 @@
-import {call, delay, race} from "typed-redux-saga";
+import {call, put} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {Task} from '../task/task_slice';
 import {appSelect} from '../hooks';
-import {TaskSubmissionServerResult} from './submission';
+import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission';
+import {submissionUpdateTaskSubmission} from './submission_slice';
 import {TaskHint} from '../task/hints/hints_slice';
 
 export interface TaskNormalized {
@@ -194,31 +195,24 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
     }
 }
 
-export function* getServerSubmissionResults(submissionId: string): Generator<any, TaskSubmissionServerResult|null> {
-    const outcome = yield* race({
-        results: call(longPollServerSubmissionResults, submissionId),
-        timeout: delay(60*1000)
-    });
-
-    if (outcome.timeout) {
-        throw new Error("Submission results have timeout");
-    }
-
-    return outcome.results;
-}
-
-export function* longPollServerSubmissionResults(submissionId: string) {
+export function* longPollServerSubmissionResults(submissionId: string, submissionIndex: number, serverSubmission: TaskSubmissionServer, callback: (TaskSubmissionServerResult) => void) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
 
     while (true) {
         const result = (yield* call(asyncGetJson, taskPlatformUrl + '/submissions/' + submissionId + '?longPolling', false)) as TaskSubmissionServerResult|null;
         if (result.evaluated) {
-            return result;
+            for (let test of result.tests) {
+                test.score = test.score / 100;
+            }
+
+            yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result}}));
+            callback(result);
+
+            return;
         }
     }
 }
-
 
 export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string, platform: string) {
     const state = yield* appSelect();
@@ -246,5 +240,5 @@ export function* makeServerSubmission(answer: string, taskToken: string, answerT
         }
     };
 
-    return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions?XDEBUG_SESSION_START=PHPSTORM', body, false)) as {success: boolean, submissionId?: string};
+    return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions', body, false)) as {success: boolean, submissionId?: string};
 }

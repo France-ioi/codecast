@@ -49,8 +49,8 @@ export function TaskApp() {
     const language = useAppSelector(state => state.options.language);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
     const taskSuccess = useAppSelector(state => state.task.success);
-    const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
     const activeView = useAppSelector(selectActiveView);
+    const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
 
     let progress = null;
     let progressMessage = null;
