@@ -1,8 +1,9 @@
-import {call, delay, race} from "typed-redux-saga";
+import {call, put} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {Task} from '../task/task_slice';
 import {appSelect} from '../hooks';
-import {TaskSubmissionServerResult} from './submission';
+import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission';
+import {submissionUpdateTaskSubmission} from './submission_slice';
 
 export interface TaskNormalized {
     id: string,
@@ -170,31 +171,20 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
     return {...defaultTask, ...task};
 }
 
-export function* getServerSubmissionResults(submissionId: string): Generator<any, TaskSubmissionServerResult|null> {
-    const outcome = yield* race({
-        results: call(longPollServerSubmissionResults, submissionId),
-        timeout: delay(60*1000)
-    });
-
-    if (outcome.timeout) {
-        throw new Error("Submission results have timeout");
-    }
-
-    return outcome.results;
-}
-
-export function* longPollServerSubmissionResults(submissionId: string) {
+export function* longPollServerSubmissionResults(submissionId: string, submissionIndex: number, serverSubmission: TaskSubmissionServer, callback: (TaskSubmissionServerResult) => void) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
 
     while (true) {
         const result = (yield* call(asyncGetJson, taskPlatformUrl + '/submissions/' + submissionId + '?longPolling', false)) as TaskSubmissionServerResult|null;
         if (result.evaluated) {
-            return result;
+            yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result}}));
+            callback(result);
+
+            return;
         }
     }
 }
-
 
 export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string) {
     const state = yield* appSelect();

@@ -1,4 +1,4 @@
-import {apply, call, put} from "typed-redux-saga";
+import {apply, call, put, race, spawn} from "typed-redux-saga";
 import {Codecast} from "../index";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
@@ -19,12 +19,17 @@ import {
     submissionStartExecutingTest,
     submissionUpdateTaskSubmission,
 } from "./submission_slice";
-import {getServerSubmissionResults, makeServerSubmission} from "./task_platform";
+import {longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from './tests';
-import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload, TaskSubmissionServer} from './submission';
+import {
+    TaskSubmissionEvaluateOn,
+    TaskSubmissionResultPayload,
+    TaskSubmissionServer,
+    TaskSubmissionServerResult
+} from './submission';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
 import {TaskActionTypes} from '../task/task_slice';
 
@@ -215,21 +220,30 @@ class TaskSubmissionExecutor {
 
         const submissionId = submissionData.submissionId;
 
-        let submissionResult;
-        try {
-            submissionResult = yield* getServerSubmissionResults(submissionId);
-        } catch (e) {
+        let promiseResolve;
+        const promise = new Promise<TaskSubmissionServerResult>((resolve) => {
+            promiseResolve = resolve;
+        });
+
+        yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, promiseResolve);
+
+        const outcome = yield* race({
+            result: call(() => promise),
+            timeout: delay(10*60*1000), // 10 min
+        });
+
+        if (outcome.result) {
+            return {
+                score: outcome.result.score,
+                message: outcome.result.errorMessage,
+            };
+        } else {
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 
-            return {score: 0};
+            return {
+                score: 0,
+            };
         }
-
-        yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result: submissionResult}}));
-
-        return {
-            score: submissionResult.score,
-            message: submissionResult.errorMessage,
-        };
     }
 
     *gradeAnswerClient(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {

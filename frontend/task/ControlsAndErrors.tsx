@@ -33,7 +33,7 @@ export function ControlsAndErrors() {
     const executionMode = useAppSelector(state => state.submission.executionMode);
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
     const stepperStatus = useAppSelector(state => state.stepper.status);
-    const isEvaluating = lastSubmission && !lastSubmission.evaluated;
+    const isEvaluating = lastSubmission && !lastSubmission.evaluated && !lastSubmission.crashed;
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
