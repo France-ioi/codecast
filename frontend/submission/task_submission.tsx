@@ -1,4 +1,4 @@
-import {apply, call, put} from "typed-redux-saga";
+import {apply, call, put, race, spawn} from "typed-redux-saga";
 import {Codecast} from "../index";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
@@ -21,7 +21,7 @@ import {
     submissionStartExecutingTest,
     submissionUpdateTaskSubmission,
 } from "./submission_slice";
-import {getServerSubmissionResults, makeServerSubmission} from "./task_platform";
+import {longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
@@ -238,33 +238,40 @@ class TaskSubmissionExecutor {
 
         const submissionId = submissionData.submissionId;
 
-        let submissionResult: TaskSubmissionServerResult;
-        try {
-            submissionResult = yield* getServerSubmissionResults(submissionId);
-        } catch (e) {
+        let promiseResolve;
+        const promise = new Promise<TaskSubmissionServerResult>((resolve) => {
+            promiseResolve = resolve;
+        });
+
+        yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, promiseResolve);
+
+        const outcome = yield* race({
+            result: call(() => promise),
+            timeout: delay(10*60*1000), // 10 min
+        });
+
+        if (outcome.result) {
+            const submissionResult = outcome.result;
+            if (submissionResult.compilationError) {
+                yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
+            } else if (!submissionsPaneEnabled) {
+                const tests = submissionResult.tests;
+                if (tests.length) {
+                    yield* put(updateCurrentTestId({testId: 0}));
+                }
+            }
+
+            return {
+                score: outcome.result.score / 100,
+                message: outcome.result.errorMessage,
+            };
+        } else {
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 
-            return {score: 0};
+            return {
+                score: 0,
+            };
         }
-
-        for (let test of submissionResult.tests) {
-            test.score = test.score / 100;
-        }
-
-        yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result: submissionResult}}));
-        if (submissionResult.compilationError) {
-            yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
-        } else if (!submissionsPaneEnabled) {
-            const tests = submissionResult.tests;
-            if (tests.length) {
-                yield* put(updateCurrentTestId({testId: 0}));
-            }
-        }
-
-        return {
-            score: submissionResult.score / 100,
-            message: submissionResult.errorMessage,
-        };
     }
 
     *gradeAnswerClient(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {

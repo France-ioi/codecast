@@ -1,10 +1,23 @@
 import React, {useEffect, useState} from "react";
-import {Button, FormGroup, HTMLSelect, Icon, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
+import {
+    AnchorButton,
+    Button,
+    ControlGroup,
+    FormGroup,
+    HTMLSelect,
+    Icon,
+    InputGroup,
+    Intent,
+    ProgressBar,
+    Spinner
+} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {useDispatch} from "react-redux";
 import {SaveStep} from "./save_screen";
 import {useAppSelector} from "../hooks";
 import {getMessage} from "../lang";
+import {IconNames} from '@blueprintjs/icons';
 
 interface SaveScreenProps {
     onCancel?: () => void,
@@ -62,7 +75,7 @@ export function SaveScreen(props: SaveScreenProps) {
     }
 
     useEffect(() => {
-        if (!targetUrl && grants && grants.length) {
+        if ((!targetUrl || !grants.find(grant => grant.url === targetUrl)) && grants.length) {
             setTargetUrl(grants[0].url);
         }
     }, [grants]);
@@ -78,6 +91,10 @@ export function SaveScreen(props: SaveScreenProps) {
         if (grant) {
             dispatch({type: ActionTypes.SaveScreenUpload, payload: {target: grant}});
         }
+    };
+
+    const onChangeUser = () => {
+        dispatch({type: CommonActionTypes.LogoutFeedback});
     };
 
     /* TODO: select target among user grants */
@@ -115,7 +132,16 @@ export function SaveScreen(props: SaveScreenProps) {
                 />
             </FormGroup>}
             <FormGroup label={getMessage('UPLOADING_TARGET')}>
-                <HTMLSelect options={grantOptions} value={targetUrl} onChange={handleTargetChange}/>
+                <ControlGroup>
+                    <HTMLSelect options={grantOptions} value={targetUrl} onChange={handleTargetChange}/>
+                    <Button
+                        onClick={onChangeUser}
+                        intent={Intent.NONE}
+                        icon='user'
+                        className="ml-2"
+                        text={getMessage('USER_CHANGE_USER')}
+                    />
+                </ControlGroup>
             </FormGroup>
             <div className="encoding-status">
                 {busy ?
@@ -149,13 +175,27 @@ export function SaveScreen(props: SaveScreenProps) {
 
             {playerUrl &&
                 <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')} className="mt-4">
-                    <input id='playerUrlInput' type='text' className='bp3-input bp3-fill' value={playerUrl} readOnly onFocus={handleFocus}/>
+                    <InputGroup
+                        leftIcon={IconNames.LINK}
+                        type='text'
+                        value={playerUrl}
+                        readOnly
+                        onFocus={handleFocus}
+                        rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
+                    />
                 </FormGroup>
             }
 
             {editorUrl &&
                 <FormGroup labelFor='editorUrlInput' label={getMessage('EDITOR_LINK')} className="mt-4">
-                    <input id='editorUrlInput' type='text' className='bp3-input bp3-fill' value={editorUrl} readOnly onFocus={handleFocus}/>
+                    <InputGroup
+                        leftIcon={IconNames.LINK}
+                        type='text'
+                        value={editorUrl}
+                        readOnly
+                        onFocus={handleFocus}
+                        rightElement={<AnchorButton href={editorUrl} icon={IconNames.EDIT} minimal target='_blank' rel="noreferrer"/>}
+                    />
                 </FormGroup>
             }
         </form>

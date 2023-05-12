@@ -46,6 +46,7 @@ export function Documentation(props: DocumentationProps) {
         }
         if (isTralalere) {
             urlSplit[0] = urlSplit[0].replace(/index\.html/g, 'index_tralalere.html');
+            urlSplit[0] = urlSplit[0].replace(/index_en\.html/g, 'index_tralalere_en.html');
         }
         conceptUrl = urlSplit.join('#');
     }
