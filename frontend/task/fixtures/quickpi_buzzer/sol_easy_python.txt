@@ -1,0 +1,7 @@
+from quickpi import *
+
+setLedState("led1", True)
+setBuzzerState("buzzer1", True)
+sleep(1000)
+setLedState("led1", False)
+setBuzzerState("buzzer1", False)

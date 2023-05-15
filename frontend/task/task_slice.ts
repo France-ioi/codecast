@@ -4,6 +4,7 @@ import TurtleFixture from './fixtures/turtle_05_functions_01';
 import ProcessingFixture from './fixtures/test_processing';
 import BarcodeFixture from './fixtures/test_barcode';
 import QuickPiFixture from './fixtures/quickpi_testbed';
+import QuickPiBuzzerFixture from './fixtures/quickpi_buzzer';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
 import StringsLoginFixture from './fixtures/14_strings_01_login';
 import DatabaseFixture from './fixtures/test_database';
@@ -14,12 +15,12 @@ import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
 import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
-import {CodecastPlatform} from '../stepper/platforms';
 
 const availableTasks = {
     robot: SokobanFixture,
     turtle: TurtleFixture,
     quickpi: QuickPiFixture,
+    buzzer: QuickPiBuzzerFixture,
     processing: ProcessingFixture,
     printer: StringRotationFixture,
     barcode: BarcodeFixture,
