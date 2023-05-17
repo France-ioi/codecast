@@ -1,6 +1,6 @@
 import React, {useEffect} from "react";
 import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
-import {appSelect, useAppSelector} from "../hooks";
+import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
 import {useDispatch} from "react-redux";
@@ -8,12 +8,11 @@ import {isTestPublic} from './task_slice';
 import {getMessage} from '../lang';
 import {
     isServerSubmission,
-    selectCurrentServerSubmission,
     selectSubmissionsPaneEnabled,
     TaskSubmissionServerTestResult
 } from '../submission/submission';
 import {submissionChangeDisplayedError, SubmissionErrorType} from '../submission/submission_slice';
-import { Alert } from "react-bootstrap";
+import {Alert} from "react-bootstrap";
 import {toHtml} from '../utils/sanitize';
 import {nl2br} from '../common/utils';
 
@@ -58,22 +57,18 @@ export function ContextVisualization() {
 
     console.log('inner visuzalition', {submission, submissionDisplayedError});
 
-    let innerVisualization = null;
+    const createAlertVisualization = (content: any) => {
+        return <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
+            <div className="error-content">{content}</div>
+        </Alert></div>
+    }
+    let innerVisualization;
     if (submission && SubmissionErrorType.CompilationError === submissionDisplayedError && submission.result && submission.result.compilationError) {
-        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
-            <div className="error-content" dangerouslySetInnerHTML={toHtml(submission.result.compilationMessage)}></div>
-        </Alert></div>;
+        innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(submission.result.compilationMessage)}></div>);
     } else if (submission && SubmissionErrorType.CompilationWarning === submissionDisplayedError && submission.result && submission.result.compilationMessage) {
-        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
-            <div className="error-content">
-                {submission.result.compilationMessage}
-            </div>
-        </Alert></div>;
+        innerVisualization = createAlertVisualization(submission.result.compilationMessage);
     } else if (submission && SubmissionErrorType.ExecutionError === submissionDisplayedError && submission.result && submission.result.errorMessage) {
-        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
-            <div className="error-content" dangerouslySetInnerHTML={toHtml(nl2br(submission.result.errorMessage))}>
-            </div>
-        </Alert></div>;
+        innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(nl2br(submission.result.errorMessage))}></div>);
     } else if (currentTestResult && currentTestResult.noFeedback) {
         innerVisualization = <div className="task-visualization-not-public">
             {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
