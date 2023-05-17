@@ -18,15 +18,13 @@ export function SubmissionControls() {
 
     return (
         <div className="submission-controls">
-            <Button
-                className="quickalgo-button"
-                onClick={submit}
-                disabled
-                // TODO: enable this button
-                icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>}
-            >
-                {getMessage('SUBMISSION_EXECUTE_THIS_TEST')}
-            </Button>
+            {/*<Button*/}
+            {/*    className="quickalgo-button"*/}
+            {/*    onClick={submit}*/}
+            {/*    icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>}*/}
+            {/*>*/}
+            {/*    {getMessage('SUBMISSION_EXECUTE_THIS_TEST')}*/}
+            {/*</Button>*/}
         </div>
     )
 }

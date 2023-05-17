@@ -140,6 +140,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     placeholderBlocks?: any,
     usedSkills?: string[],
     targetNbInstructions?: number,
+    expectedStorage?: string,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
