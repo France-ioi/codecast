@@ -29,37 +29,25 @@ export function TestsPaneList(props: SubmissionResultProps) {
         dispatch(submissionChangeDisplayedError(type));
     };
 
+    const createCompilationStatusBlock = (submissionErrorType: SubmissionErrorType, text: string, color: string) => {
+        return <div
+            className={`submission-result-compilation-status ${submissionErrorType === submissionDisplayedError ? 'is-active' : ''}`}
+            onClick={() => showSubmissionError(submissionErrorType)}
+        >
+            <div className="submission-result-icon-container" style={{backgroundColor: color}}>
+                <FontAwesomeIcon icon={faExclamationTriangle}/>
+            </div>
+            <strong>{text}</strong>
+        </div>;
+    };
+
     let compilationResult = null;
     if (submission && submission.result && submission.result.compilationError) {
-        compilationResult = <div
-            className={`submission-result-compilation-status ${SubmissionErrorType.CompilationError === submissionDisplayedError ? 'is-active' : ''}`}
-            onClick={() => showSubmissionError(SubmissionErrorType.CompilationError)}
-        >
-            <div className="submission-result-icon-container" style={{backgroundColor: 'red'}}>
-                <FontAwesomeIcon icon={faExclamationTriangle}/>
-            </div>
-            <strong>{getMessage('SUBMISSION_ERROR_COMPILATION')}</strong><br />
-        </div>;
+        compilationResult = createCompilationStatusBlock(SubmissionErrorType.CompilationError, getMessage('SUBMISSION_ERROR_COMPILATION'), 'red');
     } else if (submission && submission.result && submission.result.compilationMessage) {
-        compilationResult = <div
-            className={`submission-result-compilation-status ${SubmissionErrorType.CompilationWarning === submissionDisplayedError ? 'is-active' : ''}`}
-            onClick={() => showSubmissionError(SubmissionErrorType.CompilationWarning)}
-        >
-            <div className="submission-result-icon-container" style={{backgroundColor: 'orange'}}>
-                <FontAwesomeIcon icon={faExclamationTriangle}/>
-            </div>
-            <strong>{getMessage('SUBMISSION_WARNING_COMPILATION')}</strong><br />
-        </div>;
+        compilationResult = createCompilationStatusBlock(SubmissionErrorType.CompilationWarning, getMessage('SUBMISSION_WARNING_COMPILATION'), 'orange');
     } else if (submission && submission.result && submission.result.errorMessage) {
-        compilationResult = <div
-            className={`submission-result-compilation-status ${SubmissionErrorType.ExecutionError === submissionDisplayedError ? 'is-active' : ''}`}
-            onClick={() => showSubmissionError(SubmissionErrorType.ExecutionError)}
-        >
-            <div className="submission-result-icon-container" style={{backgroundColor: 'black'}}>
-                <FontAwesomeIcon icon={faExclamationTriangle}/>
-            </div>
-            <strong>{getMessage('SUBMISSION_ERROR_EXECUTION')}</strong><br />
-        </div>;
+        compilationResult = createCompilationStatusBlock(SubmissionErrorType.ExecutionError, getMessage('SUBMISSION_ERROR_EXECUTION'), 'black');
     } else if (submission && submission.platform in platformsList && platformsList[submission.platform].needsCompilation) {
         compilationResult = <div
             className={`submission-result-compilation-status is-ok`}
@@ -73,7 +61,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
 
     return (
         <div className="submission-result">
-            {submission&& isServerSubmission(submission) && 'UserTest' === submission.result.mode && <div>
+            {submission && isServerSubmission(submission) && 'UserTest' === submission.result.mode && <div>
                 <Alert intent={Intent.WARNING}>{getMessage('SUBMISSION_USER_TEST_WARNING')}</Alert>
             </div>}
             {submission && !submission.evaluated && <div>
