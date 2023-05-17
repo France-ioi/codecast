@@ -88,30 +88,6 @@ export function TaskTestsSelector() {
 
     const tooManyTests = taskTests.length > 3;
 
-    const getTestName = (test: TaskTest, index: number) => {
-        const subTask = null !== test.subtaskId && currentTask.subTasks && currentTask.subTasks.length ? currentTask.subTasks.find(subTask => subTask.id === test.subtaskId) : null;
-        const parts = [];
-        if (subTask) {
-            parts.push(subTask.name);
-        }
-
-        let testName = test.name;
-        if (!testName) {
-            let testNumber;
-            if (null !== subTask) {
-                testNumber = taskTests.filter(otherTest => otherTest.subtaskId === subTask.id).findIndex(otherTest => otherTest.id === test.id);
-            } else  {
-                testNumber = index;
-            }
-
-            testName = getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: testNumber + 1});
-        }
-
-        parts.push(testName);
-
-        return parts.join(' - ');
-    };
-
     return (
         <div className="tests-selector">
             <div
@@ -140,7 +116,7 @@ export function TaskTestsSelector() {
                         </span>}
 
                         <span className="test-title-content">
-                            {getTestName(testData, Number(index))}
+                            {testData.name}
                         </span>
 
                         {tooManyTests && <span className="test-index">

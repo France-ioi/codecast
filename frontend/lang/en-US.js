@@ -244,9 +244,8 @@ module.exports = {
     LAYOUT_DefaultLayoutMobileVerticalInstructions: 'Mobile vertical (instructions)',
     LAYOUT_DefaultLayoutMobileVerticalPlayer: 'Mobile vertical (execution)',
 
-    TESTS_TAB_TITLE: 'Test {index}',
-    TESTS_RESULT_OVERVIEW_SUCCESS: 'Test {index}: success',
-    TESTS_RESULT_OVERVIEW_FAILURE: 'Test {index}: error',
+    TESTS_RESULT_OVERVIEW_SUCCESS: '{testName}: success',
+    TESTS_RESULT_OVERVIEW_FAILURE: '{testName}: error',
     TESTS_RESULT_OVERVIEW_VIEW: 'see',
 
     CODE_CONSTRAINTS_FORBIDDEN_KEYWORD: "The keyword {keyword} is forbidden here.",
