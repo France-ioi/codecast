@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 export default {
     gridInfos: {
         context: 'printer',
@@ -69,4 +71,4 @@ export default {
             }
         ],
     }
-}
+} as QuickalgoTask

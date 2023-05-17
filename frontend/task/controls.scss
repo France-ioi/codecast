@@ -79,7 +79,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
+  padding: 0 20px;
 
   .execution-controls-dropdown {
     display: flex;
@@ -92,6 +92,15 @@
         box-shadow: none !important;
       }
     }
+  }
+
+  .submission-server-controls.no-padding .submission-controls {
+    padding-left: 0;
+  }
+
+  .execution-controls-submit {
+    flex: 1;
+    text-align: right;
   }
 }
 

@@ -6,18 +6,25 @@ import {getCurrentImmerState} from "../utils";
 import {mainQuickAlgoLogger} from "./quickalgo_libraries";
 import {stepperMaxSpeed} from "../../stepper";
 import log from 'loglevel';
+import {QuickalgoLibraryInfos} from '../task_slice';
+import {TaskSubmissionServerTestResult} from '../../submission/submission';
+import {defaultNotions, NotionArborescence} from '../blocks/notions';
+import {CodecastPlatform} from '../../stepper/platforms';
+import {LibraryTestResult} from './library_test_result';
 
-export class QuickAlgoLibrary {
+export abstract class QuickAlgoLibrary {
     display: boolean;
-    infos: any;
+    infos: QuickalgoLibraryInfos;
     placeholderBlocks: any;
     iTestCase: number; // Required for some libs such as barcode
     nbCodes: number;
     nbNodes: number;
+    nbMoves?: number;
     strings: any;
     customBlocks: any;
     customConstants: any;
     conceptList: any[];
+    notionsList: NotionArborescence;
     runner: any;
     curNode: any;
     lost: boolean = false;
@@ -35,6 +42,7 @@ export class QuickAlgoLibrary {
     callbacksOnReady: Function[] = [];
     needsRedrawDisplay: boolean = false;
     environment: string;
+    success?: boolean;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -103,6 +111,13 @@ export class QuickAlgoLibrary {
     // function
     getConceptList() {
         return this.conceptList || [];
+    };
+
+    getNotionsList(): NotionArborescence {
+        return {
+            ...defaultNotions,
+            ...(this.notionsList || {}),
+        }
     };
 
     // Default implementations
@@ -277,6 +292,19 @@ export class QuickAlgoLibrary {
             log.getLogger('libraries').debug('not ready yet');
             this.callbacksOnReady.push(callback);
         }
+    }
+
+    checkOutputHelper() {
+    }
+
+    getErrorFromTestResult?(testResult: TaskSubmissionServerTestResult): LibraryTestResult;
+
+    getSupportedPlatforms(): string[] {
+        return [
+            CodecastPlatform.Blockly,
+            CodecastPlatform.Scratch,
+            CodecastPlatform.Python,
+        ];
     }
 }
 

@@ -21,17 +21,18 @@ import {TextEncoder} from "text-encoding-utf-8";
 import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
+import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
-import {getMessage} from "../lang";
 import {selectAnswer} from "../task/selectors";
 import {compilePythonCodeSaga} from "./python";
 import {appSelect} from '../hooks';
+import {CodecastPlatform} from './platforms';
+import {LibraryTestResult} from '../task/libs/library_test_result';
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -94,7 +95,7 @@ export default function(bundle: Bundle) {
                 yield* put({
                     type: ActionTypes.CompileFailed,
                     payload: {
-                        error: String(e),
+                        testResult: LibraryTestResult.fromString(String(e)),
                     },
                 });
                 return;
@@ -111,7 +112,7 @@ export default function(bundle: Bundle) {
                 try {
                     yield* call(compilePythonCodeSaga, source);
                 } catch (ex) {
-                    yield* put({type: ActionTypes.CompileFailed, payload: {error: String(ex)}});
+                    yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
                 }
             } else {
                 state = yield* appSelect();
@@ -133,7 +134,7 @@ export default function(bundle: Bundle) {
                         platform
                     });
                 } else {
-                    yield* put({type: ActionTypes.CompileFailed, payload: {error: {type: 'compilation', content: response.diagnostics}}});
+                    yield* put({type: ActionTypes.CompileFailed, payload: {testResult: new LibraryTestResult(null, 'compilation', {content: response.diagnostics})}});
                 }
             }
         });
@@ -175,17 +176,20 @@ export default function(bundle: Bundle) {
         });
 
         recordApi.on(ActionTypes.CompileFailed, function* (addEvent, {payload}) {
-            yield* call(addEvent, 'compile.failure', payload.error);
+            yield* call(addEvent, 'compile.failure', payload.testResult.serialize());
         });
         replayApi.on('compile.failure', function* (replayContext: ReplayContext, event) {
-            let error = event[2];
-
+            let testResult: LibraryTestResult;
             // Ensure retro-compatibility with Codecast V6
-            if (error.diagnostics) {
-                error = {type: 'compilation', content: error.diagnostics}
+            if (event[2].diagnostics) {
+                testResult = new LibraryTestResult(null, 'compilation', {content: event[2].diagnostics});
+            } else if ('object' === typeof event[2]) {
+                testResult = LibraryTestResult.unserialize(event[2]);
+            } else {
+                testResult = LibraryTestResult.fromString(event[2]);
             }
 
-            yield* put({type: ActionTypes.CompileFailed, payload: {error}});
+            yield* put({type: ActionTypes.CompileFailed, payload: {testResult}});
         });
 
         replayApi.on('stepper.exit', function* () {

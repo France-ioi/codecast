@@ -63,8 +63,10 @@ $sides: (top, bottom, left, right);
 @import "./documentation/documentation.scss";
 @import "./task_tests.scss";
 @import "./levels.scss";
+@import "./hints/hints.scss";
 @import "./blocks/blocks.scss";
 @import "./libs/quickpi.scss";
+@import "./libs/smart_contract/smart_contract.scss";
 @import "../stepper/js/blockly.scss";
 
 html {
@@ -624,6 +626,21 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   }
 }
 
+.task-visualization-error {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  .alert {
+    width: 100%;
+  }
+  .alert .error-content {
+    white-space: pre;
+    font-family: $font-family-monospace;
+    overflow-x: auto;
+  }
+}
 
 @include mobile {
   .bp3-dialog {
@@ -823,6 +840,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   outline: none;
   border-radius: 50px;
   box-shadow: none !important;
+  cursor: pointer;
   &.is-medium {
     font-size: 1rem !important;
     padding: 0.375rem 0.75rem !important;
@@ -846,4 +864,8 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 
 .task-visualization-not-public {
   padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }

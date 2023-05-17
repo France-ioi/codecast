@@ -1,3 +1,5 @@
+import {LibraryTestResult} from '../task/libs/library_test_result';
+
 export enum ActionTypes {
     StepperTaskCancelled = 'Stepper.Task.Cancelled',
     StepperRestart = 'Stepper.Restart',
@@ -39,22 +41,22 @@ export enum ActionTypes {
     CompileFailed = 'Compile.Failed',
 }
 
-export const stepperExecutionSuccess = (message) => ({
+export const stepperExecutionSuccess = (testResult: LibraryTestResult) => ({
     type: ActionTypes.StepperExecutionSuccess,
     payload: {
-        message,
+        testResult,
     },
 });
 
-export const stepperExecutionError = (error, clearHighlight = true) => ({
+export const stepperExecutionError = (testResult: LibraryTestResult, clearHighlight = true) => ({
     type: ActionTypes.StepperExecutionError,
     payload: {
-        error,
+        testResult,
         clearHighlight,
     },
 });
 
-export const stepperDisplayError = (error) => ({
+export const stepperDisplayError = (error: string|LibraryTestResult) => ({
     type: ActionTypes.StepperDisplayError,
     payload: {
         error,

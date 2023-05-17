@@ -1,10 +1,11 @@
-import {AppStore, AppStoreReplay, CodecastPlatform} from '../store';
-import {getRunnerClassFromPlatform, Stepper, StepperControlsType, StepperState} from "./index";
+import {AppStore, AppStoreReplay} from '../store';
+import {Stepper, StepperControlsType, StepperState} from "./index";
 import {getMessage} from "../lang";
 import {hasBlockPlatform} from "./js";
 import {CompileStatus} from "./compile";
 import {LayoutType} from "../task/layout/layout";
 import * as C from '@france-ioi/persistent-c';
+import {CodecastPlatform, platformsList} from './platforms';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;
@@ -51,7 +52,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
     const inputNeeded = state.task.inputNeeded;
     const soundEnabled = state.task.soundEnabled;
 
-    const runnerClass = getRunnerClassFromPlatform(platform);
+    const platformData = platformsList[platform];
     const runningBackground = state.stepper.runningBackground;
 
     let showCompile = false, showControls = true, showEdit = false;
@@ -59,7 +60,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
     let canStepOver = false;
     let canInterrupt = false, canUndo = false, canRedo = false;
     let isFinished = false;
-    let showExpr = runnerClass.hasMicroSteps();
+    let showExpr = !!platformData.hasMicroSteps;
     let compileOrExecuteMessage = '';
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
@@ -72,7 +73,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
         }
     }
 
-    if (runnerClass.needsCompilation()) {
+    if (!!platformData.needsCompilation) {
         compileOrExecuteMessage = getMessage('COMPILE');
     } else {
         compileOrExecuteMessage = getMessage('EXECUTE');

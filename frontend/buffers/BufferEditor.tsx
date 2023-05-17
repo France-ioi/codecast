@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {Editor} from "./Editor";
+import {Editor, EditorProps} from "./Editor";
 import {ActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {withResizeDetector} from "react-resize-detector/build/withPolyfill";
 import {Block} from "../task/blocks/blocks";
-import {CodecastPlatform} from "../store";
 import {BlocklyEditor} from "../stepper/js/BlocklyEditor";
 import {hasBlockPlatform} from "../stepper/js";
+import {CodecastPlatform} from '../stepper/platforms';
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -20,6 +20,8 @@ interface BufferEditorProps {
     buffer: string,
     hasAutocompletion?: boolean,
     platform?: CodecastPlatform,
+    dragEnabled?: boolean,
+    editorProps?: EditorProps,
 }
 
 const _BufferEditor = (props: BufferEditorProps) => {
@@ -84,6 +86,8 @@ const _BufferEditor = (props: BufferEditorProps) => {
         height={props.requiredHeight}
         hasAutocompletion={props.hasAutocompletion}
         hasScrollMargin={'source' === buffer}
+        dragEnabled={props.dragEnabled}
+        {...props.editorProps}
     />;
 }
 

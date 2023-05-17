@@ -512,7 +512,7 @@ export const highlightColors = [
     {fg: '#3F51B5', bg: '#C5CAE9', name: 'indigo'}
 ];
 
-export function getCSpecificBlocks(contextIncludeBlocks: any): Block[] {
+export function getCSpecificBlocks(): Block[] {
     const availableBlocks: Block[] = [];
 
     for (let [directive, directiveData] of Object.entries(C_directiveViewDict)) {

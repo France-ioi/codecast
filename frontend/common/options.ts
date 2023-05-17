@@ -5,13 +5,16 @@ import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {ActionTypes as BufferActionTypes} from '../buffers/actionTypes';
 import {Bundle} from "../linker";
 import {put, select, takeEvery} from "typed-redux-saga";
-import {AppStore, CodecastOptions, CodecastOptionsMode, CodecastPlatform} from "../store";
+import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
 import {taskLoad} from "../task";
 import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
+import {CodecastPlatform, platformsList} from '../stepper/platforms';
+import {BlockDocumentModel, DocumentModel} from '../buffers';
+import {hasBlockPlatform} from '../stepper/js';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -86,6 +89,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('directives' in query) {
         options.showDirectives = true;
     }
+    if ('viewTestDetails' in query) {
+        options.viewTestDetails = true;
+    }
     options.canDownload = !('noDownload' in query);
 
     if (query.recording) {
@@ -112,6 +118,10 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     }
 
     loadOptionsFromQuery(options, query);
+
+    if (!(state.options.platform in platformsList)) {
+        throw new Error("Unknown platform name: " + state.options.platform);
+    }
 }
 
 export default function(bundle: Bundle) {
@@ -132,7 +142,16 @@ export default function(bundle: Bundle) {
             }
             if (false !== reloadTask) {
                 yield* put({type: StepperActionTypes.StepperExit});
-                yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
+
+                // Reset source if we change from a block platform to a non-block platform
+                const currentModel = yield* appSelect(state => state.buffers['source'].model);
+                if (
+                    (currentModel instanceof BlockDocumentModel && !hasBlockPlatform(newPlatform))
+                    || (currentModel instanceof DocumentModel && hasBlockPlatform(newPlatform))
+                ) {
+                    yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
+                }
+
                 const levels = yield* appSelect(state => state.platform.levels);
                 for (let level of Object.keys(levels)) {
                     yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));

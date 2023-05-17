@@ -10,7 +10,7 @@ import {getContextBlocksDataSelector} from "../blocks/blocks";
 import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
-import {CodecastPlatform} from "../../store";
+import {CodecastPlatform, platformsList} from '../../stepper/platforms';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -21,32 +21,20 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const platform = options.platform;
     const currentTask = useAppSelector(state => state.task.currentTask);
     const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
-    let sourceMode;
-    switch (platform) {
-        case CodecastPlatform.Arduino:
-            sourceMode = 'arduino';
-            break;
-        case CodecastPlatform.Python:
-            sourceMode = 'python';
-            break;
-        default:
-            sourceMode = 'c_cpp';
-            break;
-    }
-
+    const sourceMode = platformsList[platform].aceSourceMode;
     const player = useAppSelector(state => getPlayerState(state));
     const preventInput = player.isPlaying;
 
     const dispatch = useDispatch();
 
     const collapseBlocks = () => {
-        dispatch(taskSetBlocksPanelCollapsed(!blocksCollapsed));
+        dispatch(taskSetBlocksPanelCollapsed({collapsed: !blocksCollapsed, manual: true}));
     };
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector({state, context}) : []);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
-    const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform && 'tralalere' !== options.app);
+    const displayBlocks = !!(context && blocks.length && platformsList[platform].displayBlocks && 'tralalere' !== options.app);
 
     return (
         <div className="layout-editor" style={props.style}>
@@ -61,10 +49,10 @@ export function LayoutEditor(props: LayoutEditorProps) {
                     readOnly={false}
                     shield={preventInput}
                     mode={sourceMode}
-                    theme="textmate"
                     requiredWidth="100%"
                     requiredHeight="100%"
                     hasAutocompletion
+                    dragEnabled
                 />
             </div>
             {'tralalere' !== options.app && <BlocksUsage/>}

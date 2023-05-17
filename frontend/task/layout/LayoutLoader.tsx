@@ -7,7 +7,8 @@ import {ActionTypes} from "./actionTypes";
 import {withResizeDetector} from 'react-resize-detector/build/withPolyfill';
 import {Directive} from "../../stepper/python/directives";
 import {Screen} from "../../common/screens";
-import {pythonForbiddenLists} from "../python_utils";
+import {getNotionsBagFromIncludeBlocks} from '../blocks/notions';
+import {quickAlgoLibraries} from '../libs/quickalgo_libraries';
 
 interface LayoutLoaderStateToProps {
     advisedVisualization: string,
@@ -37,10 +38,11 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const currentTask = state.task.currentTask;
     let showVariables = options.showStack;
     const activeView = selectActiveView(state);
+    const context = quickAlgoLibraries.getContext(null, 'main');
 
-    if (null !== currentTask) {
-        const forbidden = pythonForbiddenLists(state.task.contextIncludeBlocks).forbidden;
-        showVariables = showVariables && -1 === forbidden.indexOf('var_assign');
+    if (null !== currentTask && context) {
+        const notionsBag = getNotionsBagFromIncludeBlocks(state.task.contextIncludeBlocks, context.getNotionsList());
+        showVariables = showVariables && notionsBag.hasNotion('variables_set');
     }
 
     let layoutMobileMode = state.layout.mobileMode;
@@ -65,15 +67,6 @@ interface LayoutLoaderProps extends LayoutLoaderStateToProps, LayoutLoaderDispat
 }
 
 class _LayoutLoader extends React.PureComponent<LayoutLoaderProps> {
-    componentDidUpdate(prevProps) {
-        if (prevProps.advisedVisualization !== this.props.advisedVisualization && this.props.advisedVisualization) {
-            this.props.dispatch({
-                type: ActionTypes.LayoutVisualizationSelected,
-                payload: {visualization: this.props.advisedVisualization}
-            });
-        }
-    }
-
     render() {
         if (undefined !== this.props.width && undefined !== this.props.height) {
             return createLayout(this.props);

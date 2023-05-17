@@ -1,9 +1,8 @@
-import {AppStore, AppStoreReplay, CodecastPlatform} from "../../store";
-import {getPythonSpecificBlocks} from "../python_utils";
+import {AppStoreReplay} from "../../store";
 import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {getCSpecificBlocks} from "../../stepper/views/c/utils";
 import {Bundle} from "../../linker";
-import {call, debounce, put, select, takeEvery} from "typed-redux-saga";
+import {call, debounce, put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {BlocksUsage, taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
@@ -11,6 +10,8 @@ import {selectAnswer} from "../selectors";
 import {QuickAlgoLibrary} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
 import {appSelect} from '../../hooks';
+import {CodecastPlatform, platformsList} from '../../stepper/platforms';
+import {getNotionsBagFromIncludeBlocks} from './notions';
 
 export enum BlockType {
     Function = 'function',
@@ -162,12 +163,10 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
         }
     }
 
-    if (CodecastPlatform.Python === platform) {
-        const pythonSpecificBlocks = getPythonSpecificBlocks(contextIncludeBlocks);
-        availableBlocks = [...availableBlocks, ...pythonSpecificBlocks];
-    } else if (CodecastPlatform.Unix === platform) {
-        const cSpecificBlocks = getCSpecificBlocks(contextIncludeBlocks);
-        availableBlocks = [...availableBlocks, ...cSpecificBlocks];
+    if (platformsList[platform].getSpecificBlocks) {
+        const notionsBag = getNotionsBagFromIncludeBlocks(contextIncludeBlocks, context.getNotionsList());
+        const specificBlocks = platformsList[platform].getSpecificBlocks(notionsBag, contextIncludeBlocks);
+        availableBlocks = [...availableBlocks, ...specificBlocks];
     }
 
     availableBlocks.forEach((block => {
@@ -196,7 +195,9 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             let funcCode = block.caption;
             blockDesc = block.description;
             if (!blockDesc) {
-                block.caption = funcCode + '()';
+                if (CodecastPlatform.Python === platform) {
+                    block.caption = funcCode + '()';
+                }
             } else if (blockDesc.indexOf('</code>') < 0) {
                 let funcProtoEnd = blockDesc.indexOf(')') + 1;
                 if (funcProtoEnd > 0) {
@@ -211,7 +212,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             if (block.caption && block.caption.trim().substring(0, 1) === '%') {
                 block.caption = block.caption.substring(block.caption.indexOf('%') + 1).trim();
             }
-            block.snippet = getSnippet(block.caption);
+            block.snippet = block.snippet ? block.snippet : getSnippet(block.caption);
         }
 
         if (block.description && block.description.trim().substring(0, 1) === ':') {

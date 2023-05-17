@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 const images = [
     {path: require('./icon.png')},
     {path: require('./crane.png')},
@@ -59,7 +61,18 @@ export default {
             standardBlocks: {
                 includeAll: false
             }
-        }
+        },
+        // computeGrade: function (context, message) {
+        //     var rate = 0;
+        //     if (context.success) {
+        //         rate = 0.5;
+        //         message += " Partial score granted.";
+        //     }
+        //     return {
+        //         successRate: rate,
+        //         message: message
+        //     };
+        // },
     },
     data: {
         easy: [
@@ -117,4 +130,4 @@ export default {
             }
         ]
     },
-}
+} as QuickalgoTask

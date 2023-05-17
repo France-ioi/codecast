@@ -7,6 +7,8 @@ import {BufferEditor} from "../../../buffers/BufferEditor";
 import {useAppSelector} from "../../../hooks";
 import {inputBufferLibTest, outputBufferLibTest} from "./printer_lib";
 import {getMessage} from "../../../lang";
+import {Card} from 'react-bootstrap';
+import {Icon} from '@blueprintjs/core';
 
 export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.ioPane.mode);
@@ -24,26 +26,48 @@ export function InputOutputVisualization() {
         } else {
             visualization = (
                 <div>
-                    <p>{getMessage('IOPANE_INITIAL_INPUT')}</p>
-                    <BufferEditor
-                        buffer={inputBufferLibTest}
-                        mode='text'
-                        readOnly={!!currentTask}
-                        requiredWidth='100%'
-                        requiredHeight='150px'
-                    />
-
-                    {currentTask &&
-                        <React.Fragment>
-                            <p className="mt-4">{getMessage('IOPANE_INITIAL_OUTPUT')}</p>
+                    <Card>
+                        <Card.Header className="terminal-view-header">
+                            {getMessage("IOPANE_INITIAL_INPUT")}
+                            {!!currentTask && <Icon icon='lock'/>}
+                        </Card.Header>
+                        <Card.Body>
                             <BufferEditor
-                                buffer={outputBufferLibTest}
-                                readOnly={true}
+                                buffer={inputBufferLibTest}
                                 mode='text'
+                                readOnly={!!currentTask}
                                 requiredWidth='100%'
                                 requiredHeight='150px'
+                                editorProps={{
+                                    hideCursor: true,
+                                    highlightActiveLine: false,
+                                    dragEnabled: false,
+                                }}
                             />
-                        </React.Fragment>
+                        </Card.Body>
+                    </Card>
+
+                    {!!currentTask &&
+                        <Card>
+                            <Card.Header className="terminal-view-header">
+                                {getMessage("IOPANE_INITIAL_OUTPUT")}
+                                <Icon icon='lock'/>
+                            </Card.Header>
+                            <Card.Body>
+                                <BufferEditor
+                                    buffer={outputBufferLibTest}
+                                    readOnly
+                                    mode='text'
+                                    requiredWidth='100%'
+                                    requiredHeight='150px'
+                                    editorProps={{
+                                        hideCursor: true,
+                                        highlightActiveLine: false,
+                                        dragEnabled: false,
+                                    }}
+                                />
+                            </Card.Body>
+                        </Card>
                     }
                 </div>
             );

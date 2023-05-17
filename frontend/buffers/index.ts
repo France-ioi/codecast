@@ -40,18 +40,24 @@ import {
 
 window.ace = require("ace-builds");
 window.ace.acequire = window.ace.require || window.ace.acequire;
+window.ace.config.set("loadWorkerFromBlob", false);
+
+
 import "ace-builds/src-min-noconflict/mode-c_cpp";
 import "ace-builds/src-min-noconflict/mode-python";
+import "ace-builds/src-min-noconflict/mode-javascript";
+import "ace-builds/src-min-noconflict/mode-ocaml";
+import "./modes/archetype";
+import "./modes/michelson";
 import "ace-builds/src-min-noconflict/snippets/html";
 import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-min-noconflict/theme-github";
-import "ace-builds/src-min-noconflict/worker-javascript";
 
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "./selectors";
 import {immerable} from "immer";
-import {AppStore, CodecastPlatform} from "../store";
+import {AppStore} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
@@ -59,12 +65,12 @@ import {App} from "../index";
 import {updateSourceHighlightSaga} from "../stepper";
 import {BlockType} from "../task/blocks/blocks";
 import log from 'loglevel';
-import {selectAnswer} from '../task/selectors';
 import {stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {hasBlockPlatform} from '../stepper/js';
 import {appSelect} from '../hooks';
+import {CodecastPlatform} from '../stepper/platforms';
 
 const AceThemes = [
     'github',

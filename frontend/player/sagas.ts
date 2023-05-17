@@ -11,7 +11,7 @@ import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {getPlayerState} from "./selectors";
-import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
+import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
@@ -33,6 +33,7 @@ import {delay as delay$1} from 'typed-redux-saga';
 import {platformTaskLink} from '../task/platform/actionTypes';
 import log from 'loglevel';
 import {appSelect} from '../hooks';
+import {CodecastPlatform} from '../stepper/platforms';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);

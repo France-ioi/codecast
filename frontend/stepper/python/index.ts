@@ -4,7 +4,7 @@ import {
     ActionTypes,
     stepperExecutionError
 } from '../actionTypes';
-import {AppStore, CodecastPlatform} from "../../store";
+import {AppStore} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App, Codecast} from "../../index";
@@ -15,6 +15,8 @@ import {selectAnswer} from "../../task/selectors";
 import {delay} from "../../player/sagas";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
+import {CodecastPlatform} from '../platforms';
+import {LibraryTestResult} from '../../task/libs/library_test_result';
 
 export function* compilePythonCodeSaga(source: string) {
     log.getLogger('python_runner').debug('compile python code', source);
@@ -46,7 +48,7 @@ export function* compilePythonCodeSaga(source: string) {
         yield* put({
             type: ActionTypes.CompileFailed,
             payload: {
-                error: String(compileError),
+                testResult: LibraryTestResult.fromString(String(compileError)),
             },
         });
     } else {
@@ -78,7 +80,7 @@ export default function(bundle: Bundle) {
 
                 context.onError = (diagnostics) => {
                     log.getLogger('python_runner').debug('context error', diagnostics);
-                    channel.put(stepperExecutionError(diagnostics, false));
+                    channel.put(stepperExecutionError(LibraryTestResult.fromString(diagnostics), false));
                 };
 
                 stepperState.directives = {

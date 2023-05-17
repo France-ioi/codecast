@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 export default {
     gridInfos: {
         context: 'quickpi',
@@ -119,7 +121,7 @@ export default {
             testName: "Expérimenter",
         }],
     },
-}
+} as QuickalgoTask
 
 // displayHelper.avatarType = "none";
 // displayHelper.timeoutMinutes = 0;

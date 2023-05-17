@@ -1,20 +1,23 @@
 import {Bundle} from "../linker";
 import {call, put, takeEvery} from "typed-redux-saga";
 import {AppAction, AppStore} from "../store";
-import {getTaskAnswerAggregated, platformApi, PlatformTaskGradingParameters} from "../task/platform/platform";
+import {
+    platformApi,
+} from "../task/platform/platform";
 import {
     SubmissionNormalized,
     SubmissionSubtaskNormalized,
     SubmissionTestErrorCode,
     SubmissionTestNormalized
 } from './task_platform';
-import {taskSubmissionExecutor} from './task_submission';
 import {appSelect} from '../hooks';
-import {selectAnswer} from '../task/selectors';
-import stringify from 'json-stable-stringify-without-jsonify';
-import {TaskState, updateCurrentTestId} from '../task/task_slice';
+import {updateCurrentTestId} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
+import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
+import {CodecastPlatform} from '../stepper/platforms';
+import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_slice';
 import {getMessage} from '../lang';
+import {LibraryTestResult} from '../task/libs/library_test_result';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -34,6 +37,7 @@ export interface TaskSubmission {
     date: string, // ISO format
     evaluated: boolean,
     crashed?: boolean,
+    platform: CodecastPlatform,
     result?: TaskSubmissionResult,
 }
 
@@ -43,6 +47,9 @@ export function isServerSubmission(object: TaskSubmission): object is TaskSubmis
 
 export interface TaskSubmissionResult {
     tests: TaskSubmissionTestResult[],
+    compilationError?: boolean,
+    compilationMessage?: string|null,
+    errorMessage?: string|null,
 }
 
 export interface TaskSubmissionClient extends TaskSubmission {
@@ -66,30 +73,22 @@ export interface TaskSubmissionServerTestResult extends TaskSubmissionTestResult
 export interface TaskSubmissionResultPayload {
     testId: number,
     result: boolean,
+    successRate?: number, // Between 0 and 1
     message?: string,
     steps?: number,
+    testResult?: LibraryTestResult,
 }
-
 
 export enum SubmissionActionTypes {
     SubmissionTriggerPlatformValidate = 'submission/triggerPlatformValidate',
-    SubmissionGradeAnswerServer = 'submission/gradeAnswerServer',
 }
 
 export interface SubmissionTriggerPlatformValidateAction extends AppAction {
     type: SubmissionActionTypes.SubmissionTriggerPlatformValidate,
 }
 
-export interface SubmissionGradeAnswerServerAction extends AppAction {
-    type: SubmissionActionTypes.SubmissionGradeAnswerServer,
-}
-
 export const submissionTriggerPlatformValidate = (): SubmissionTriggerPlatformValidateAction => ({
     type: SubmissionActionTypes.SubmissionTriggerPlatformValidate,
-});
-
-export const submissionGradeAnswerServer = (): SubmissionGradeAnswerServerAction => ({
-    type: SubmissionActionTypes.SubmissionGradeAnswerServer,
 });
 
 export function selectCurrentServerSubmission(state: AppStore) {
@@ -116,6 +115,14 @@ export interface TestResultDiffLog {
     excerptCol: number,
 }
 
+export function selectSubmissionsPaneEnabled(state: AppStore) {
+    if (!state.task.currentTask || state.task.currentTask.gridInfos.hiddenTests) {
+        return false;
+    }
+
+    return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && state.task.taskTests.length > 1))
+}
+
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* takeEvery(SubmissionActionTypes.SubmissionTriggerPlatformValidate, function* (action: SubmissionTriggerPlatformValidateAction) {
@@ -125,31 +132,27 @@ export default function (bundle: Bundle) {
             }
         });
 
-        // @ts-ignore
-        yield* takeEvery(updateCurrentTestId.type, function* ({payload}) {
+        yield* takeEvery(updateCurrentTestId, function* ({payload}) {
             const newTest = yield* appSelect(state => state.task.taskTests[state.task.currentTestId]);
             const submission = yield* appSelect(selectCurrentServerSubmission);
+            const submissionDisplayedError = yield* appSelect(state => state.submission.submissionDisplayedError);
+            if (null !== submissionDisplayedError) {
+                yield* put(submissionChangeDisplayedError(null));
+            }
             if (null !== submission && null !== newTest && isServerSubmission(submission)) {
                 const testResult = submission.result.tests.find(test => test.testId === newTest.id);
                 if (undefined !== testResult) {
-                    if (testResult.errorMessage) {
-                        yield* put(stepperDisplayError(testResult.errorMessage));
-                    } else if (!testResult.noFeedback && testResult.log) {
-                        try {
-                            // Check if first line of the log is JSON data containing a diff
-                            const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
-                            const error = {
-                                type: 'task-submission-test-result-diff',
-                                props: {
-                                    log,
-                                },
-                                error: getMessage('IOPANE_ERROR').format({line: log.diffRow}),
-                            };
+                    let error = null;
+                    const context = quickAlgoLibraries.getContext(null, 'main');
+                    if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
+                        error = context.getErrorFromTestResult(testResult);
+                    }
+                    if (null === error && testResult.errorMessage) {
+                        error = testResult.errorMessage;
+                    }
 
-                            yield* put(stepperDisplayError(error));
-                        } catch (e) {
-                            yield* put(stepperDisplayError(testResult.log));
-                        }
+                    if (null !== error) {
+                        yield* put(stepperDisplayError(error));
                     } else {
                         yield* put(stepperClearError());
                     }
@@ -157,16 +160,14 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(SubmissionActionTypes.SubmissionGradeAnswerServer, function* (action: SubmissionTriggerPlatformValidateAction) {
-            const answer = yield getTaskAnswerAggregated();
-            const submissionParameters: PlatformTaskGradingParameters = {
-                answer: stringify(answer),
-                minScore: 0,
-                maxScore: 100,
-                noScore: 0,
-            };
+        yield* takeEvery(submissionChangeDisplayedError, function* ({payload}) {
+            if (SubmissionErrorType.CompilationError === payload) {
+                const error = getMessage('SUBMISSION_ERROR_COMPILATION').s;
 
-            yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer], submissionParameters);
-        });
+                yield* put(stepperDisplayError(error));
+            } else if (null === payload) {
+                yield* put(stepperClearError());
+            }
+        })
     });
 }

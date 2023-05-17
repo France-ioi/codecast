@@ -30,6 +30,8 @@ import {StepperStatus} from "../../stepper";
 import log from 'loglevel';
 import {capitalizeFirstLetter} from '../../common/utils';
 import {appSelect} from '../../hooks';
+import {taskSetBlocksPanelCollapsed} from '../task_slice';
+import {submissionChangePaneOpen} from '../../submission/submission_slice';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -80,6 +82,7 @@ export interface LayoutProps {
     currentTask: any,
     showVariables: boolean,
     activeView?: string,
+    advisedVisualization: string,
 }
 
 export interface LayoutElementMetadata {
@@ -596,6 +599,8 @@ function getAppropriateXmlLayout(layoutType: LayoutType, layoutMobileMode: Layou
 }
 
 export function createLayout(layoutProps: LayoutProps): ReactElement {
+    const instructionsAvailable = layoutProps.currentTask && 'solve' !== layoutProps.activeView && !(layoutProps.showVariables && 'variables' === layoutProps.advisedVisualization);
+
     const xmlToReact = new XMLToReact({
         HorizontalLayout: (attrs) => ({
             type: RelativeLayout,
@@ -632,7 +637,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 ...attrs,
             },
         }),
-        ...(layoutProps.currentTask && 'solve' !== layoutProps.activeView ? {
+        ...(instructionsAvailable ? {
             Instructions: (attrs) => ({
                 type: TaskInstructions,
                 metadata: {
@@ -654,7 +659,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 },
             })
         } : {}),
-        ...(layoutProps.showVariables ? {
+        ...(!instructionsAvailable ? {
             Variables: (attrs) => ({
                 type: LayoutStackView,
                 metadata: {
@@ -804,10 +809,24 @@ export interface LayoutState {
 }
 
 function* layoutSaga({replayApi}: App) {
-    yield* takeEvery(StepperActionTypes.StepperRestart, function* () {
+    yield* takeEvery(StepperActionTypes.StepperStepFromControls, function* () {
         const environment = yield* appSelect(state => state.environment);
         if ('replay' === environment) {
             yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Player}});
+        }
+
+        const submissionPaneOpen = yield* appSelect(state => state.submission.submissionsPaneOpen);
+        if (submissionPaneOpen) {
+            yield* put(submissionChangePaneOpen(false));
+        }
+    });
+
+    yield* takeEvery(submissionChangePaneOpen, function* (action) {
+        if (action.payload) {
+            yield* put(taskSetBlocksPanelCollapsed({collapsed: true}));
+        } else {
+            const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
+            yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
         }
     });
 

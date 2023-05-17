@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
-import {Document} from "./document";
+import {Document, documentFromString} from "./document";
 import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
@@ -12,20 +12,27 @@ import log from 'loglevel';
 
 const Range = window.ace.acequire('ace/range').Range;
 
-interface EditorProps {
-    readOnly: boolean,
-    shield: boolean,
-    theme: string,
-    mode: string,
-    width: any,
-    height: any,
+export interface EditorProps {
+    readOnly?: boolean,
+    shield?: boolean,
+    theme?: string,
+    mode?: string,
+    width?: any,
+    height?: any,
     hasAutocompletion?: boolean,
     hasScrollMargin?: boolean,
-    onSelect: Function,
-    onEdit: Function,
-    onScroll: Function,
-    onInit: Function,
-    onDropBlock: Function,
+    onInit?: Function,
+    onSelect?: Function,
+    onEdit?: Function,
+    onScroll?: Function,
+    onDropBlock?: Function,
+    content?: string,
+    hideGutter?: boolean,
+    printMarginColumn?: boolean,
+    highlightActiveLine?: boolean,
+    maxLines?: number,
+    dragEnabled?: boolean,
+    hideCursor?: boolean,
 }
 
 function toRange(selection) {
@@ -95,14 +102,18 @@ export function Editor(props: EditorProps) {
                 return;
             log.getLogger('editor').debug('new selection', selection.current, selection_);
             selection.current = selection_;
-            props.onSelect(selection_);
-            // Try to scroll if needed
-            scrollOnLastLines();
+            if (props.onSelect) {
+                props.onSelect(selection_);
+            }
+            if (props.hasScrollMargin) {
+                // Try to scroll if needed
+                scrollOnLastLines();
+            }
         });
     };
 
     const onTextChanged = (edit) => {
-        if (mute.current) {
+        if (mute.current || !props.onEdit) {
             return;
         }
         // The callback must not trigger a rendering of the Editor.
@@ -139,7 +150,7 @@ export function Editor(props: EditorProps) {
         }
     };
 
-    const reset = (value: Document, newSelection, firstVisibleRow) => {
+    const reset = (value: Document, newSelection = null, firstVisibleRow = null) => {
         wrapModelToEditor(() => {
             editor.current.getSession().setValue(null === value ? '' : value.toString());
             editor.current.resize(true);
@@ -267,25 +278,42 @@ export function Editor(props: EditorProps) {
             addAutocompletion(availableBlocks, contextStrings);
         }
         const session = editor.current.getSession();
+        session.setUseWorker(false);
         editor.current.$blockScrolling = Infinity;
         // editor.setBehavioursEnabled(false);
-        editor.current.setTheme(`ace/theme/${props.theme || 'github'}`);
+        editor.current.setTheme(`ace/theme/${props.theme || 'textmate'}`);
         session.setMode(`ace/mode/${props.mode || 'text'}`);
         editor.current.setFontSize(Math.round(16 * zoomLevel) + 'px');
-        // editor.setOptions({minLines: 25, maxLines: 50});
         editor.current.setOptions({
             readOnly: !!props.readOnly,
             enableBasicAutocompletion: props.hasAutocompletion,
             enableLiveAutocompletion: props.hasAutocompletion,
             enableSnippets: false,
-            dragEnabled: true,
+            dragEnabled: props.dragEnabled,
+            ...(props.maxLines ? {maxLines: props.maxLines}: {}),
         });
         if (props.hasScrollMargin) {
             editor.current.setOption("scrollPastEnd", 0.1);
             editor.current.renderer.setScrollMargin(0, 80);
         }
+        if (props.hideGutter) {
+            editor.current.renderer.setShowGutter(false);
+        }
+        if (false === props.highlightActiveLine) {
+            editor.current.setHighlightActiveLine(false);
+        }
+        if (false === props.printMarginColumn) {
+            editor.current.renderer.setPrintMarginColumn(false);
+        }
+        if (props.hideCursor) {
+            editor.current.renderer.$cursorLayer.element.style.display = "none";
+        }
 
         const {onInit, onSelect, onEdit} = props;
+        if (undefined !== props.content) {
+            reset(documentFromString(props.content));
+        }
+
         if (typeof onInit === 'function') {
             const api = {
                 reset,
@@ -396,7 +424,7 @@ export function Editor(props: EditorProps) {
 
     useEffect(() => {
         if (editor.current) {
-            editor.current.setTheme(`ace/theme/${props.theme || 'github'}`);
+            editor.current.setTheme(`ace/theme/${props.theme || 'textmate'}`);
         }
     }, [props.theme]);
 
@@ -414,7 +442,9 @@ export function Editor(props: EditorProps) {
             const offset = monitor.getClientOffset();
             // noinspection JSVoidFunctionReturnValueUsed
             const pos = editor.current.renderer.screenToTextCoordinates(offset.x, offset.y);
-            props.onDropBlock(item.block, pos);
+            if (props.onDropBlock) {
+                props.onDropBlock(item.block, pos);
+            }
         },
         hover(item, monitor) {
             const offset = monitor.getClientOffset();

@@ -4,11 +4,12 @@ import {Task} from '../task/task_slice';
 import {appSelect} from '../hooks';
 import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission';
 import {submissionUpdateTaskSubmission} from './submission_slice';
+import {TaskHint} from '../task/hints/hints_slice';
 
 export interface TaskNormalized {
     id: string,
     textId: string,
-    supportedLanguages: string,
+    supportedLanguages: string[],
     author: string,
     showLimits: boolean,
     userTests: boolean,
@@ -71,6 +72,7 @@ export interface TaskServer extends TaskNormalized {
     strings: TaskStringNormalized[],
     subTasks: TaskSubtaskNormalized[],
     tests: TaskTestServer[],
+    hints?: TaskHint[],
 }
 
 
@@ -79,7 +81,7 @@ export interface SubmissionNormalized {
     success: boolean,
     totalTestsCount: number,
     passedTestsCount: number,
-    score: number,
+    score: number, // Initially from 0 to 100 in the server return, but converted from 0 to 1 to be consistent with other submission types
     compilationError: boolean,
     compilationMessage: string|null,
     errorMessage: string|null,
@@ -134,41 +136,63 @@ export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> 
 }
 
 export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
-    const defaultTask = {
-        gridInfos: {
-            context: 'printer',
-            importModules: [],
-            showLabels: true,
-            conceptViewer: true,
-            // maxInstructions: {
-            //     easy: 20,
-            //     medium: 30,
-            //     hard: 40
-            // },
-            // nbPlatforms: 100,
-            includeBlocks: {
-                groupByCategory: true,
-                standardBlocks: {
-                    includeAll: true,
-                    // singleBlocks: ["controls_repeat", "controls_if"]
+    // Use this for now to check if it's a Smart Contract task. Change this in the future
+    if (-1 !== task.supportedLanguages.indexOf('michelson')) {
+        return {
+            ...task,
+            gridInfos: {
+                context: 'smart_contract',
+                importModules: [],
+                showLabels: true,
+                conceptViewer: true,
+                includeBlocks: {
+                    groupByCategory: true,
+                    standardBlocks: {
+                        wholeCategories: ['smart_contract_main_blocks', 'smart_contract_types'],
+                    },
                 },
-                generatedBlocks: {
-                    printer: ["print", "read"]
+            },
+            hints: [
+                {content: 'Indice 1'},
+                {content: 'Indice 2'},
+            ],
+        };
+    } else {
+        return {
+            ...task,
+            gridInfos: {
+                context: 'printer',
+                importModules: [],
+                showLabels: true,
+                conceptViewer: true,
+                // maxInstructions: {
+                //     easy: 20,
+                //     medium: 30,
+                //     hard: 40
+                // },
+                // nbPlatforms: 100,
+                includeBlocks: {
+                    groupByCategory: true,
+                    standardBlocks: {
+                        includeAll: true,
+                        singleBlocks: ["controls_repeat", "controls_if"]
+                    },
+                    generatedBlocks: {
+                        printer: ["print", "read"]
+                    },
+                    variables: [],
+                    pythonAdditionalFunctions: ["len"]
                 },
-                variables: {},
-                // pythonAdditionalFunctions: ["len"]
+                checkEndEveryTurn: false,
+                checkEndCondition: function (context, lastTurn) {
+                    if (!lastTurn) return;
+                    context.checkOutputHelper();
+                    context.success = true;
+                    throw(window.languageStrings.messages.outputCorrect);
+                },
             },
-            checkEndEveryTurn: false,
-            checkEndCondition: function (context, lastTurn) {
-                if (!lastTurn) return;
-                context.checkOutputHelper();
-                context.success = true;
-                throw(window.languageStrings.messages.outputCorrect);
-            },
-        },
-    };
-
-    return {...defaultTask, ...task};
+        }
+    }
 }
 
 export function* longPollServerSubmissionResults(submissionId: string, submissionIndex: number, serverSubmission: TaskSubmissionServer, callback: (TaskSubmissionServerResult) => void) {
@@ -178,6 +202,10 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
     while (true) {
         const result = (yield* call(asyncGetJson, taskPlatformUrl + '/submissions/' + submissionId + '?longPolling', false)) as TaskSubmissionServerResult|null;
         if (result.evaluated) {
+            for (let test of result.tests) {
+                test.score = test.score / 100;
+            }
+
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result}}));
             callback(result);
 
@@ -186,7 +214,7 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
     }
 }
 
-export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string) {
+export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string, platform: string) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
     const answerDecoded = JSON.parse(answer);
@@ -195,7 +223,7 @@ export function* makeServerSubmission(answer: string, taskToken: string, answerT
         token: taskToken,
         answerToken: answerToken,
         answer: {
-            language: state.options.platform,
+            language: platform,
             sourceCode: answerDecoded,
         },
         userTests: [],

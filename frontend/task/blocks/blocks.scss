@@ -36,7 +36,7 @@
     font-size: 0.9rem;
   }
 
-  transition: min-width .2s ease-in-out, max-width .2s ease-in-out, margin-left .3s ease-in-out;
+  //transition: min-width .2s ease-in-out, max-width .2s ease-in-out, margin-left .3s ease-in-out;
 
   &.is-collapsed {
     margin-left: -33%;

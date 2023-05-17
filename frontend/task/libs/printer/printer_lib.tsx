@@ -1,16 +1,15 @@
 import React from "react";
 import {InputOutputVisualization} from "./InputOutputVisualization";
 import {QuickAlgoLibrary} from "../quickalgo_library";
-import {apply, call, put, race, select, take, takeEvery} from "typed-redux-saga";
+import {apply, call, put, race, take, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../../../store";
-import {ActionTypes as BufferActionTypes, ActionTypes} from "../../../buffers/actionTypes";
-import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../../../stepper/actionTypes";
+import {ActionTypes} from "../../../buffers/actionTypes";
+import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
 import {documentModelFromString} from "../../../buffers";
 import {
     selectCurrentTestData,
     taskInputEntered,
     taskInputNeeded,
-    taskUpdateState,
     updateCurrentTest
 } from "../../task_slice";
 import {App} from "../../../index";
@@ -20,23 +19,15 @@ import {createDraft} from "immer";
 import log from 'loglevel';
 import {PayloadAction} from "@reduxjs/toolkit";
 import {appSelect} from '../../../hooks';
-import {TestResultDiffLog} from '../../../submission/submission';
+import {TaskSubmissionServerTestResult, TestResultDiffLog} from '../../../submission/submission';
 import {getMessage} from '../../../lang';
 import {
     quickAlgoLibraries,
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../quickalgo_libraries';
-import {getCurrentImmerState} from '../../utils';
-
-function escapeHtml(unsafe) {
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+import {CodecastPlatform} from '../../../stepper/platforms';
+import {LibraryTestResult} from '../library_test_result';
 
 export function getTerminalText(events) {
     return events
@@ -316,6 +307,15 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (appState && appState.ioPane.mode) {
             this.ioMode = appState.ioPane.mode;
         }
+    };
+
+    getSupportedPlatforms() {
+        return [
+            CodecastPlatform.Blockly,
+            CodecastPlatform.Scratch,
+            CodecastPlatform.Python,
+            CodecastPlatform.Unix,
+        ];
     };
 
     getInnerState() {
@@ -662,13 +662,9 @@ export class PrinterLib extends QuickAlgoLibrary {
                         excerptCol: 1,
                     };
 
-                    throw({
-                        type: 'task-submission-test-result-diff',
-                        props: {
-                            log,
-                        },
-                        error: getMessage('IOPANE_ERROR').format({line: iLine + 1}),
-                    });
+                    throw(new LibraryTestResult(getMessage('IOPANE_ERROR').format({line: iLine + 1}), 'task-submission-test-result-diff', {
+                        log,
+                    }));
                 }
             }
 
@@ -767,6 +763,23 @@ export class PrinterLib extends QuickAlgoLibrary {
         });
     }
 
+    getErrorFromTestResult(testResult: TaskSubmissionServerTestResult): LibraryTestResult {
+        try {
+            // Check if first line of the log is JSON data containing a diff
+            const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
+
+            return new LibraryTestResult(
+                getMessage('IOPANE_ERROR').format({line: log.diffRow}),
+                'task-submission-test-result-diff',
+                {
+                    log,
+                }
+            );
+        } catch (e) {
+            return LibraryTestResult.fromString(testResult.log);
+        }
+    }
+
     *getSaga(app: App) {
         log.getLogger('printer_lib').debug('START PRINTER LIB SAGA');
 
@@ -786,7 +799,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         yield* takeEvery(StepperActionTypes.StepperDisplayError, function* (action) {
             // @ts-ignore
             const {payload} = action;
-            if (payload.error && 'task-submission-test-result-diff' === payload.error.type) {
+            if (payload.error instanceof LibraryTestResult && 'task-submission-test-result-diff' === payload.error.getType()) {
                 const log: TestResultDiffLog = payload.error.props.log;
                 const environment = yield* appSelect(state => state.environment);
                 const context = quickAlgoLibraries.getContext(null, environment);

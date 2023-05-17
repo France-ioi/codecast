@@ -27,22 +27,7 @@ import {AnalysisState} from "./stepper/analysis/analysis_slice";
 import {ModalState} from "./common/modal_slice";
 import {HintsState, TaskHint} from "./task/hints/hints_slice";
 import {SubmissionState} from "./submission/submission_slice";
-
-export enum CodecastPlatform {
-    Python = 'python',
-    Unix = 'unix',
-    Arduino = 'arduino',
-    Blockly = 'blockly',
-    Scratch = 'scratch',
-}
-
-export const platformsList = [
-    CodecastPlatform.Python,
-    CodecastPlatform.Unix,
-    CodecastPlatform.Arduino,
-    CodecastPlatform.Blockly,
-    CodecastPlatform.Scratch,
-];
+import {CodecastPlatform} from './stepper/platforms';
 
 export enum CodecastOptionsMode {
     Edit = 'edit',
@@ -97,6 +82,8 @@ export interface CodecastOptions {
                        // for Castor platforms in which assets are inlined into the HTML
     taskId?: string,
     taskPlatformUrl?: string,
+    canAddUserTests?: boolean,
+    viewTestDetails?: boolean,
 }
 
 export interface Panes {

@@ -6,15 +6,14 @@ import {useAppSelector} from "../hooks";
 import {isLocalMode} from "../utils/app";
 import {select} from "typed-redux-saga";
 import {StepperStatus} from "../stepper";
-import {ActionTypes as CommonActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {IoMode} from "../stepper/io";
 import {getMessage} from "../lang";
-import {getJsLibLoaded} from "../task/libs/import_modules";
-import {hasBlockPlatform} from "../stepper/js";
 import {PlatformSelection} from './PlatformSelection';
+import {hasBlockPlatform} from '../stepper/js';
+import {getJsLibLoaded} from '../task/libs/import_modules';
 
 interface SettingsDialogProps {
     open: boolean,
@@ -64,6 +63,8 @@ export function SettingsDialog(props: SettingsDialogProps) {
         'DefaultLayoutMobileVerticalPlayer',
     ];
 
+    const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();
+
     const closable = props.closable !== false;
 
     return (
@@ -72,7 +73,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 {canChangeLanguage && <div style={{marginBottom: '10px'}}>
                     <LanguageSelection closeMenu={props.onClose}/>
                 </div>}
-                {canChangePlatform &&
+                {(canChangePlatform || forceSettingsOpen) &&
                     <PlatformSelection/>
                 }
                 {ioModeSelect &&

@@ -2,14 +2,14 @@ import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
 import {QuickAlgoLibrary} from "./quickalgo_library";
 import {Bundle} from "../../linker";
-import {apply, call, put, select, spawn, takeEvery} from "typed-redux-saga";
+import {apply, call, put, spawn, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
 import {extractLevelSpecific, getCurrentImmerState} from "../utils";
 import {PrinterLib} from "./printer/printer_lib";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../../stepper/js";
 import {
     selectCurrentTestData,
-    taskIncreaseContextId,
+    taskIncreaseContextId, taskSetAvailablePlatforms,
     taskSetBlocksPanelCollapsed,
     taskSetContextIncludeBlocks,
     taskSetContextStrings,
@@ -17,7 +17,6 @@ import {
 } from "../task_slice";
 import {ActionTypes as IOActionTypes} from "../../stepper/io/actionTypes";
 import {IoMode} from "../../stepper/io";
-import {PlayerInstant} from "../../player";
 import {makeContext, QuickalgoLibraryCall} from "../../stepper/api";
 import {importModules, importPlatformModules, loadFonts} from "./import_modules";
 import {createRunnerSaga} from "../../stepper";
@@ -25,6 +24,10 @@ import {cancelModal, displayModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
+import {SmartContractLib} from './smart_contract/smart_contract_lib';
+import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
+import {platformsList} from '../../stepper/platforms';
+import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -107,7 +110,7 @@ export const quickAlgoLibraries = new QuickAlgoLibraries();
 window.quickAlgoLoadedLibraries = quickAlgoLibraries;
 window.quickAlgoResponsive = true;
 window.quickAlgoContext = function (display: boolean, infos: any) {
-    return new QuickAlgoLibrary(display, infos);
+    return new DefaultQuickalgoLibrary(display, infos);
 }
 
 export function* createQuickalgoLibrary() {
@@ -151,6 +154,10 @@ export function* createQuickalgoLibrary() {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
         }
+        window.quickAlgoLibrariesList.push(['smart_contract', (display, infos) => {
+            return new SmartContractLib(display, infos);
+        }]);
+
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
         if (-1 !== libraryIndex) {
             const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
@@ -160,7 +167,7 @@ export function* createQuickalgoLibrary() {
                 quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.environment);
             } catch (e) {
                 console.error("Cannot create context", e);
-                contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+                contextLib = new DefaultQuickalgoLibrary(display, levelGridInfos);
                 quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
             }
         }
@@ -171,7 +178,7 @@ export function* createQuickalgoLibrary() {
             quickAlgoLibraries.addLibrary(contextLib, 'printer', state.environment);
         } catch (e) {
             console.error("Cannot create context", e);
-            contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+            contextLib = new DefaultQuickalgoLibrary(display, levelGridInfos);
             quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
         }
     }
@@ -207,10 +214,25 @@ export function* createQuickalgoLibrary() {
         yield* put(taskSetContextIncludeBlocks({...context.infos.includeBlocks}));
     }
     if (context.infos && context.infos.panelCollapsed) {
-        yield* put(taskSetBlocksPanelCollapsed(true));
+        yield* put(taskSetBlocksPanelCollapsed({collapsed: false, manual: true}));
     }
+
+    let availablePlatforms = context.getSupportedPlatforms();
+    if (null !== currentTask && currentTask.supportedLanguages && currentTask.supportedLanguages.length) {
+        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
+    }
+    if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
+        yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: true}});
+
+        return false;
+    }
+
+    yield* put(taskSetAvailablePlatforms(availablePlatforms));
+
     context.resetAndReloadState(testData, state);
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+
+    return true;
 }
 
 export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = null) {

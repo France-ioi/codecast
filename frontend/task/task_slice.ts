@@ -13,6 +13,8 @@ import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
 import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
+import {QuickAlgoLibrary} from './libs/quickalgo_library';
+import {CodecastPlatform} from '../stepper/platforms';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -56,8 +58,10 @@ export interface TaskState {
     inputs?: any[],
     contextId: number,
     contextStrings: any,
-    contextIncludeBlocks: any,
+    contextIncludeBlocks: QuickalgoTaskIncludeBlocks,
+    availablePlatforms: string[],
     blocksPanelCollapsed?: boolean,
+    blocksPanelWasOpen?: boolean,
     blocksUsage?: BlocksUsage,
     soundEnabled?: boolean,
     menuHelpsOpen?: boolean,
@@ -78,8 +82,82 @@ export interface TaskTest {
     contextState: any,
 }
 
+
+export interface QuickalgoTaskIncludeBlocks {
+    groupByCategory?: boolean,
+    originalGroupByCategory?: boolean,
+    generatedBlocks?: {[context: string]: string[]},
+    standardBlocks?: {
+        includeAll?: boolean,
+        includeAllPython?: boolean,
+        wholeCategories?: string[],
+        singleBlocks?: string[],
+    },
+    variables?: string[],
+    pythonAdditionalFunctions?: string[],
+    procedures?: {ret: boolean, noret: boolean, disableArgs?: boolean},
+    pythonForceAllowed?: string[],
+    pythonForceForbidden?: string[],
+}
+
+// We can customize the option for each level in the task definition
+export interface QuickalgoTaskIncludeBlocksAllLevels {
+    groupByCategory?: boolean|{[level: string]: boolean},
+    generatedBlocks?: {[context: string]: string[]}|{[context: string]: {[level: string]: string[]}},
+    standardBlocks?: {
+        includeAll?: boolean,
+        wholeCategories?: string[]|{[level: string]: string[]},
+        singleBlocks?: string[]|{[level: string]: string[]},
+    },
+    variables?: string[]|{[level: string]: string[]},
+    pythonAdditionalFunctions?: string[],
+}
+
+export interface QuickalgoTaskGridInfosNotLevelDependent {
+    context: string,
+    contextType?: string,
+    images?: {id?: string, path: {default: string}}[],
+    importModules?: string[],
+    conceptViewer?: boolean|string[],
+    backgroundColor?: string,
+    backgroundSrc?: string,
+    borderColor?: string,
+    showLabels?: boolean,
+    logOption?: boolean,
+    unlockedLevels?: number,
+    blocklyColourTheme?: string,
+    zoom?: {wheel?: boolean, controls?: boolean, scale?: number},
+    scrollbars?: boolean,
+    intro?: any,
+    hideSaveOrLoad?: boolean,
+    actionDelay?: number,
+    panelCollapsed?: boolean,
+    checkEndCondition?: (context: QuickAlgoLibrary, lastTurn: any) => void,
+    computeGrade?: (context: QuickAlgoLibrary, message: unknown) => {successRate: number, message: string},
+    checkEndEveryTurn?: boolean,
+    hiddenTests?: boolean,
+    maxListSize?: number,
+    placeholderBlocks?: any,
+    usedSkills?: string[],
+    targetNbInstructions?: number,
+}
+
+export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
+    maxInstructions?: number|{[level: string]: number},
+    startingExample?: any,
+    limitedUses?: {[level: string]: {blocks: string[], nbUses: number}[]},
+    includeBlocks?: QuickalgoTaskIncludeBlocksAllLevels,
+}
+
+export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDependent {
+    maxInstructions?: number,
+    startingExample: any,
+    limitedUses?: {blocks: string[], nbUses: number}[],
+    includeBlocks?: QuickalgoTaskIncludeBlocks,
+}
+
 export interface QuickalgoTask {
-    gridInfos: any,
+    gridInfos: QuickalgoTaskGridInfos,
     data?: any,
 }
 
@@ -123,9 +201,11 @@ export const taskInitialState = {
     contextStrings: {},
     contextIncludeBlocks: {},
     blocksPanelCollapsed: false,
+    blocksPanelWasOpen: true,
     blocksUsage: null,
     soundEnabled: !isLocalStorageEnabled() || !window.localStorage.getItem('soundDisabled'),
     menuHelpsOpen: false,
+    availablePlatforms: [],
 } as TaskState;
 
 export const selectCurrentTestData = (state: AppStore) => {
@@ -238,11 +318,14 @@ export const taskSlice = createSlice({
             // Make a copy to put in the store so that the original "strings" object do not end frozen and thus immutable by Immer
             state.contextStrings = action.payload ? JSON.parse(JSON.stringify(action.payload)) : {};
         },
-        taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<any>) {
+        taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<QuickalgoTaskIncludeBlocks>) {
             state.contextIncludeBlocks = action.payload;
         },
-        taskSetBlocksPanelCollapsed(state: TaskState, action: PayloadAction<boolean>) {
-            state.blocksPanelCollapsed = action.payload;
+        taskSetBlocksPanelCollapsed(state: TaskState, action: PayloadAction<{collapsed: boolean, manual?: boolean}>) {
+            state.blocksPanelCollapsed = action.payload.collapsed;
+            if (action.payload.manual) {
+                state.blocksPanelWasOpen = !state.blocksPanelCollapsed;
+            }
         },
         taskSetBlocksUsage(state: TaskState, action: PayloadAction<BlocksUsage>) {
             state.blocksUsage = action.payload;
@@ -259,6 +342,9 @@ export const taskSlice = createSlice({
         },
         taskSetMenuHelpsOpen(state: TaskState, action: PayloadAction<boolean>) {
             state.menuHelpsOpen = action.payload;
+        },
+        taskSetAvailablePlatforms(state: TaskState, action: PayloadAction<string[]>) {
+            state.availablePlatforms = action.payload;
         },
     },
 });
@@ -287,6 +373,7 @@ export const {
     taskSetBlocksUsage,
     taskChangeSoundEnabled,
     taskSetMenuHelpsOpen,
+    taskSetAvailablePlatforms,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

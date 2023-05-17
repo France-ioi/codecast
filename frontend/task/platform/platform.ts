@@ -41,8 +41,8 @@ import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
 import {taskLoad} from '../index';
 import {taskLoaded} from '../task_slice';
-import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {appSelect} from '../../hooks';
+import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -130,11 +130,9 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
     const taskLevels = yield* appSelect(state => state.platform.levels);
     let nextVersion: TaskLevelName = null;
 
-    const {maxScore} = yield* call(platformApi.getTaskParams, null, null);
-
     const levelScores = Object.values(taskLevels).map(element => ({
         level: element.level,
-        score: currentLevelMaxScore === element.level ? maxScore : element.score,
+        score: currentLevelMaxScore === element.level ? 1 : element.score,
     }));
     const reconciledScore = computeReconciledScore(levelScores);
 
@@ -144,7 +142,7 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
         if (level === topLevel) {
             scoreCoefficient = 1;
         }
-        const levelMaxScore = maxScore * scoreCoefficient;
+        const levelMaxScore = scoreCoefficient;
         if (levelMaxScore > reconciledScore) {
             nextVersion = level;
             break;
@@ -321,7 +319,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
             taskLoadParameters.level = options.level;
         }
         yield* put(taskLoad(taskLoadParameters));
-        yield* take(taskLoaded.type);
+        yield* take(taskLoaded);
 
         // if (serverApi) {
         //     const taskData = yield* call(serverApi, 'tasks', 'taskData', {task: taskToken});
@@ -340,7 +338,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);
-        const {minScore, maxScore, noScore} = yield* call(platformApi.getTaskParams, null, null);
+        const {minScore, maxScore} = yield* call(platformApi.getTaskParams, null, null);
         if (taskLevels && Object.keys(taskLevels).length) {
             const versionsScore = {};
             const currentLevel = yield getTaskLevel();
@@ -358,7 +356,8 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
 
                 log.getLogger('tests').debug('info answer', level);
 
-                const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer],{level, answer: answerObject[level], minScore, maxScore, noScore});
+                // Score is between 0 and 1
+                const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer],{level, answer: answerObject[level]});
 
                 versionsScore[level] = score;
                 if (level === currentLevel) {
@@ -367,7 +366,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
                     currentScoreToken = scoreToken;
                 }
 
-                yield* put(platformSaveScore({level, score, maxScore, answer: answerObject[level]}));
+                yield* put(platformSaveScore({level, score, answer: answerObject[level]}));
             }
 
             const levelScores = Object.values(taskLevels).map(element => ({
@@ -375,20 +374,24 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
                 score: versionsScore[element.level],
             }));
             const reconciledScore = computeReconciledScore(levelScores);
+            const scoreWithPlatformParameters = minScore + (maxScore - minScore) * reconciledScore;
 
             if (!silent) {
-                yield* put(platformAnswerGraded({score: currentScore, message: currentMessage, maxScore}));
+                yield* put(platformAnswerGraded({score: currentScore, message: currentMessage}));
             }
-            yield* call(success, reconciledScore, currentMessage, currentScoreToken);
+            yield* call(success, scoreWithPlatformParameters, currentMessage, currentScoreToken);
         } else {
             // if (!answerToken) {
             //     const answer = yield getTaskAnswer();
             //     answerToken = window.task_token.getAnswerToken(stringify(answer));
             // }
-            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer, minScore, maxScore, noScore});
 
-            yield* put(platformAnswerGraded({score, message, maxScore}));
-            yield* call(success, score, message, scoreToken);
+            // Score is between 0 and 1
+            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer});
+            const scoreWithPlatformParameters = minScore + (maxScore - minScore) * score;
+
+            yield* put(platformAnswerGraded({score, message}));
+            yield* call(success, scoreWithPlatformParameters, message, scoreToken);
         }
     } catch (ex: any) {
         const message = ex.message === 'Network request failed' ? "Vous n'êtes actuellement pas connecté à Internet."
@@ -427,9 +430,6 @@ function getTopLevel(levels: TaskLevelName[]) {
 export interface PlatformTaskGradingParameters {
     level?: TaskLevelName,
     answer?: any,
-    minScore: number,
-    maxScore: number,
-    noScore: number,
 }
 
 export interface PlatformTaskGradingResult {
@@ -461,19 +461,19 @@ export function setPlatformBundleParameters(parameters: PlatformBundleParameters
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
-        yield* takeEvery(taskLoadEvent.type, taskLoadEventSaga);
-        yield* takeEvery(taskGetMetadataEvent.type, taskGetMetaDataEventSaga);
-        yield* takeEvery(taskUnloadEvent.type, taskUnloadEventSaga);
-        yield* takeEvery(taskShowViewsEvent.type, taskShowViewsEventSaga);
-        yield* takeEvery(taskGetViewsEvent.type, taskGetViewsEventSaga);
-        yield* takeEvery(taskUpdateTokenEvent.type, taskUpdateTokenEventSaga);
-        yield* takeEvery(taskGetHeightEvent.type, taskGetHeightEventSaga);
-        yield* takeEvery(taskGetStateEvent.type, taskGetStateEventSaga);
-        yield* takeEvery(taskReloadStateEvent.type, taskReloadStateEventSaga);
-        yield* takeEvery(taskGetAnswerEvent.type, taskGetAnswerEventSaga);
-        yield* takeEvery(taskGradeAnswerEvent.type, taskGradeAnswerEventSaga);
-        yield* takeEvery(taskReloadAnswerEvent.type, taskReloadAnswerEventSaga);
-        yield* takeEvery(taskGetResourcesPost.type, taskGetResourcesPostSaga);
-        yield* takeEvery(platformTaskLink.type, linkTaskPlatformSaga);
+        yield* takeEvery(taskLoadEvent, taskLoadEventSaga);
+        yield* takeEvery(taskGetMetadataEvent, taskGetMetaDataEventSaga);
+        yield* takeEvery(taskUnloadEvent, taskUnloadEventSaga);
+        yield* takeEvery(taskShowViewsEvent, taskShowViewsEventSaga);
+        yield* takeEvery(taskGetViewsEvent, taskGetViewsEventSaga);
+        yield* takeEvery(taskUpdateTokenEvent, taskUpdateTokenEventSaga);
+        yield* takeEvery(taskGetHeightEvent, taskGetHeightEventSaga);
+        yield* takeEvery(taskGetStateEvent, taskGetStateEventSaga);
+        yield* takeEvery(taskReloadStateEvent, taskReloadStateEventSaga);
+        yield* takeEvery(taskGetAnswerEvent, taskGetAnswerEventSaga);
+        yield* takeEvery(taskGradeAnswerEvent, taskGradeAnswerEventSaga);
+        yield* takeEvery(taskReloadAnswerEvent, taskReloadAnswerEventSaga);
+        yield* takeEvery(taskGetResourcesPost, taskGetResourcesPostSaga);
+        yield* takeEvery(platformTaskLink, linkTaskPlatformSaga);
     });
 }

@@ -18,7 +18,6 @@ import {faClock} from '@fortawesome/free-solid-svg-icons';
 export function TestsPane() {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
     const dispatch = useDispatch();
-    const platform = useAppSelector(state => state.options.platform)
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
     const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type);
 
@@ -27,7 +26,7 @@ export function TestsPane() {
 
         return <div className="submission-label">
             {submissionResult.evaluated ?
-                <div className="submission-label-icon" style={{'--progression': `${Math.floor(submissionResult.result.score / 100 * 360)}deg`} as React.CSSProperties}>
+                <div className={`submission-label-icon ${1 <= submissionResult.result.score ? 'submission-label-icon-success' : ''}`} style={{'--progression': `${Math.floor(submissionResult.result.score / 100 * 360)}deg`} as React.CSSProperties}>
                     <div className="submission-label-score">
                         {submissionResult.result.score}
                     </div>
@@ -38,7 +37,7 @@ export function TestsPane() {
                 </div>
             }
             <div className="submission-label-name">
-                <p>{getMessage('SUBMISSION_RESULTS_LABEL').format({platform: capitalizeFirstLetter(platform)})}</p>
+                <p>{getMessage('SUBMISSION_RESULTS_LABEL').format({platform: capitalizeFirstLetter(submissionResult.platform)})}</p>
                 <p className="submission-label-date">
                     <FontAwesomeIcon icon={faClock}/>
                     <span className="ml-1">{dateTime.toLocaleString(DateTime.DATETIME_SHORT)}</span>

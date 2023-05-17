@@ -7,8 +7,13 @@ import {hasBlockPlatform} from '../stepper/js';
 import {getJsLibLoaded} from '../task/libs/import_modules';
 import {getMessage} from '../lang';
 
-export function PlatformSelection() {
+export interface PlatformSelectionProps {
+    withoutLabel?: boolean
+}
+
+export function PlatformSelection(props: PlatformSelectionProps) {
     const platform = useAppSelector(state => state.options.platform);
+    const availablePlatforms = useAppSelector(state => state.task.availablePlatforms);
     const dispatch = useDispatch();
 
     const setPlatform = (event) => {
@@ -19,19 +24,23 @@ export function PlatformSelection() {
         });
     };
 
+    const selector = <div className='bp3-select'>
+        <select onChange={setPlatform} value={platform}>
+            {availablePlatforms.map(platform =>
+                <option key={platform} value={platform}>{getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`)}</option>
+            )}
+        </select>
+    </div>;
+
+    if (props.withoutLabel) {
+        return selector;
+    }
+
     return (
         <div>
             <label className='bp3-label'>
                 {getMessage('PLATFORM_SETTING')}
-                <div className='bp3-select'>
-                    <select onChange={setPlatform} value={platform}>
-                        <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
-                        <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
-                        <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
-                        <option value='blockly'>{getMessage('PLATFORM_BLOCKLY')}</option>
-                        <option value='scratch'>{getMessage('PLATFORM_SCRATCH')}</option>
-                    </select>
-                </div>
+                {selector}
             </label>
 
             {hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">

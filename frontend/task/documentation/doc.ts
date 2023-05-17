@@ -1,7 +1,6 @@
 import {Bundle} from "../../linker";
 import {call, put, select, takeEvery} from "typed-redux-saga";
 import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
-import {extractLevelSpecific} from "../utils";
 import {
     DocumentationConcept,
     documentationConceptSelected,
@@ -9,12 +8,18 @@ import {
     DocumentationLanguage,
     documentationLanguageChanged
 } from "./documentation_slice";
-import {AppAction, CodecastPlatform} from "../../store";
-import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
+import {AppAction} from "../../store";
+import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
 import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
+import {CodecastPlatform} from '../../stepper/platforms';
+import {QuickalgoTaskIncludeBlocks, TaskActionTypes} from '../task_slice';
+import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
+import {useEffect} from 'react';
+import {ActionTypes as AppActionTypes} from '../../actionTypes';
+import {taskLoad} from '../index';
 
 let openerChannel;
 
@@ -87,6 +92,71 @@ export function convertPlatformToDocumentationLanguage(platform: CodecastPlatfor
     }
 }
 
+// Extracted from _common/modules/pemFioi/conceptViewer-1.0-mobileFirst.js
+function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allConcepts, notionsList: NotionArborescence) {
+    if (!includeBlocks) {
+        return [];
+    }
+
+    let concepts = ['language'];
+    let blocklyAliases = {
+        'controls_repeat_ext': 'controls_repeat'
+    };
+
+    const allConceptsById = {};
+    for (let c = 0; c < allConcepts.length; c++) {
+        allConceptsById[allConcepts[c].id] = allConcepts[c];
+    }
+
+    const notionsBag = getNotionsBagFromIncludeBlocks(includeBlocks, notionsList);
+    for (let notion of notionsBag.getNotionsList()) {
+        let notionRealName = notion in blocklyAliases ? blocklyAliases[notion] : notion;
+        if (allConceptsById['blockly_' + notionRealName]) {
+            concepts.push(allConceptsById['blockly_' + notionRealName]);
+        } else if (allConceptsById[notionRealName]) {
+            concepts.push(allConceptsById[notionRealName]);
+        }
+    }
+
+    // Ole code, useful for QuickPi
+    if (includeBlocks.generatedBlocks) {
+        for (let genName in includeBlocks.generatedBlocks) {
+            // this variable is used in order to make sure that we don't include two
+            // times a documentation
+            let includedConceptIds = [];
+            // We remove all concepts which have no "python" attribute
+            let filteredConcepts = allConcepts.filter(function (concept) {
+                return concept.python && concept.python != [];
+            });
+            for (let functionKey in includeBlocks.generatedBlocks[genName]) {
+                let functionName = includeBlocks.generatedBlocks[genName][functionKey];
+                let concept = findConceptByFunction(filteredConcepts, functionName);
+                if (concept) {
+                    // if we does not have the concept already pushed, we push it.
+                    if (includedConceptIds.indexOf(concept.id) == -1) {
+                        includedConceptIds.push(concept.id);
+                        concepts.push(concept);
+                    }
+                }
+            }
+        }
+    }
+
+    return concepts;
+}
+
+function findConceptByFunction(filteredConcepts, functionName) {
+    for (let conceptId in filteredConcepts) {
+        for (let conceptFunctionId in filteredConcepts[conceptId].python) {
+            if (filteredConcepts[conceptId].python[conceptFunctionId] === functionName) {
+                return filteredConcepts[conceptId];
+            }
+        }
+    }
+
+    return false;
+}
+
 function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolean) {
     if (standalone) {
         try {
@@ -110,15 +180,11 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
-
-            const currentLevel = yield* appSelect(state => state.task.currentLevel);
-            const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
-
-            concepts = window.getConceptsFromBlocks(curIncludeBlocks, allConcepts, context);
+            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList());
         }
 
         const conceptViewer = context.infos.conceptViewer;
-        if (conceptViewer.length) {
+        if (Array.isArray(conceptViewer)) {
             concepts = concepts.concat(conceptViewer);
         } else {
             concepts.push('base');
@@ -184,6 +250,16 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(DocumentationActionTypes.DocumentationLoad, function* (action: DocumentationLoadAction) {
             yield* call(documentationLoadSaga, action.payload.standalone, action.payload.hasTaskInstructions);
+        });
+
+        // @ts-ignore
+        yield* takeEvery([ActionTypes.PlatformChanged, TaskActionTypes.TaskLoad], function* () {
+            const newPlatform = yield* appSelect(state => state.options.platform);
+            const documentationLanguage = yield* appSelect(state => state.documentation.language);
+            const platformDocumentationLanguage = convertPlatformToDocumentationLanguage(newPlatform);
+            if (platformDocumentationLanguage !== documentationLanguage) {
+                yield* put(documentationLanguageChanged(platformDocumentationLanguage));
+            }
         });
     });
 }

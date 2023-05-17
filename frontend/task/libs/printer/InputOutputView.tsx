@@ -20,10 +20,15 @@ export function InputOutputView() {
                 <Card.Body>
                     <BufferEditor
                         buffer='printerLibInput'
-                        readOnly={true}
+                        readOnly
                         mode='text'
                         requiredWidth='100%'
                         requiredHeight='100px'
+                        editorProps={{
+                            hideCursor: true,
+                            highlightActiveLine: false,
+                            dragEnabled: false,
+                        }}
                     />
                 </Card.Body>
             </Card>}
@@ -35,10 +40,15 @@ export function InputOutputView() {
                 <Card.Body>
                     <BufferEditor
                         buffer='printerLibOutput'
-                        readOnly={true}
+                        readOnly
                         mode='text'
                         requiredWidth='100%'
                         requiredHeight='100px'
+                        editorProps={{
+                            hideCursor: true,
+                            highlightActiveLine: false,
+                            dragEnabled: false,
+                        }}
                     />
                 </Card.Body>
             </Card>
@@ -50,10 +60,15 @@ export function InputOutputView() {
                 <Card.Body>
                     <BufferEditor
                         buffer={outputBufferLibTest}
-                        readOnly={true}
+                        readOnly
                         mode='text'
                         requiredWidth='100%'
                         requiredHeight='100px'
+                        editorProps={{
+                            hideCursor: true,
+                            highlightActiveLine: false,
+                            dragEnabled: false,
+                        }}
                     />
                 </Card.Body>
             </Card>

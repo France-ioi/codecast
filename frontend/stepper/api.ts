@@ -9,7 +9,7 @@
 
 import * as C from '@france-ioi/persistent-c';
 import {all, call, put} from 'typed-redux-saga';
-import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
+import {AppStore, AppStoreReplay} from "../store";
 import {
     initialStepperStateControls,
     Stepper,
@@ -20,11 +20,13 @@ import {
 import {Bundle} from "../linker";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {getCurrentImmerState} from "../task/utils";
-import {ActionTypes as CompileActionTypes} from "./actionTypes";
+import {ActionTypes as CompileActionTypes, stepperExecutionError} from "./actionTypes";
 import {Codecast} from "../index";
 import log from "loglevel";
 import {TaskSubmissionResultPayload} from "../submission/submission";
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
+import {CodecastPlatform} from './platforms';
+import {LibraryTestResult} from '../task/libs/library_test_result';
 
 export interface QuickalgoLibraryCall {
     module: string,
@@ -154,7 +156,7 @@ export default function(bundle: Bundle) {
                 yield* put({
                     type: CompileActionTypes.CompileFailed,
                     payload: {
-                        error: String(e),
+                        testResult: LibraryTestResult.fromString(String(e)),
                     },
                 });
             }
@@ -582,7 +584,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
                     stepperContext.taskDisplayNoneStatus = 'end';
                 }, stepperThrottleDisplayDelay);
             }
-        } catch (e) {
+        } catch (e: unknown) {
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] context error 2', e);
             if (hideDisplay) {
                 // context.display = true;
@@ -596,13 +598,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
 
             Codecast.runner.stop();
 
-            await stepperContext.dispatch({
-                type: CompileActionTypes.StepperExecutionError,
-                payload: {
-                    error: e,
-                    clearHighlight: false,
-                },
-            });
+            await stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(String(e)), false));
         }
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async library call', libraryCallResult);
@@ -632,7 +628,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
 export class StepperError extends Error {
     condition = null;
 
-    constructor(condition, message) {
+    constructor(condition, message: string) {
         super(message);
         this.name = this.constructor.name;
         this.condition = condition;

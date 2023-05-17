@@ -4,7 +4,7 @@ import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {convertPlatformToDocumentationLanguage, documentationLoad, sendCodeExampleToOpener} from "./doc";
 import {useAppSelector} from "../../hooks";
-import {documentationConceptSelected, DocumentationLanguage, documentationLanguageChanged} from "./documentation_slice";
+import {documentationConceptSelected, documentationLanguageChanged} from "./documentation_slice";
 import {Screen} from "../../common/screens";
 import {select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -12,8 +12,9 @@ import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {ActionTypes} from "../../buffers/actionTypes";
 import {documentModelFromString} from "../../buffers";
 import {getMessage} from "../../lang";
-import {CodecastPlatform} from "../../store";
 import {TaskInstructions} from '../TaskInstructions';
+import {CodecastPlatform} from '../../stepper/platforms';
+import {DocumentationLanguageSelector} from './DocumentationLanguageSelector';
 
 interface DocumentationProps {
     standalone: boolean,
@@ -51,10 +52,6 @@ export function Documentation(props: DocumentationProps) {
     }
 
     useEffect(() => {
-        const platformDocumentationLanguage = convertPlatformToDocumentationLanguage(platform);
-        if (platformDocumentationLanguage !== documentationLanguage) {
-            dispatch(documentationLanguageChanged(platformDocumentationLanguage));
-        }
         dispatch(documentationLoad(props.standalone, false !== props.hasTaskInstructions));
     }, [documentationLanguage]);
 
@@ -143,11 +140,6 @@ export function Documentation(props: DocumentationProps) {
         selectConcept(selectedConcept);
     }
 
-    const setDocumentationLanguage = (event) => {
-        const language = event.target.value;
-        dispatch(documentationLanguageChanged(language));
-    };
-
     return (
         <div className={`documentation ${Screen.DocumentationBig === screen ? 'is-big' : 'is-small'} ${props.standalone ? 'is-standalone' : ''}`}>
             {props.header ? props.header : <div className="documentation-header">
@@ -156,16 +148,7 @@ export function Documentation(props: DocumentationProps) {
                 </div>
                 <h2>{getMessage('TASK_DOCUMENTATION')}</h2>
                 <div className="documentation-language-selector">
-                    <label className='bp3-label documentation-select'>
-                        <div className='bp3-select'>
-                            <select onChange={setDocumentationLanguage} value={documentationLanguage}>
-                                <option value={DocumentationLanguage.Python}>Python</option>
-                                <option value={DocumentationLanguage.C}>C</option>
-                                <option value={DocumentationLanguage.Blockly}>Blockly</option>
-                                <option value={DocumentationLanguage.Scratch}>Scratch</option>
-                            </select>
-                        </div>
-                    </label>
+                    <DocumentationLanguageSelector/>
                 </div>
                 {!props.standalone && <div className="documentation-new-window">
                     <a onClick={openDocumentationInNewWindow}>
@@ -182,16 +165,7 @@ export function Documentation(props: DocumentationProps) {
                     <Icon icon="code"/>
                 </div>
                 <div className="documentation-category-selector">
-                    <label className='bp3-label documentation-select'>
-                        <div className='bp3-select'>
-                            <select onChange={setDocumentationLanguage} value={documentationLanguage}>
-                                <option value={DocumentationLanguage.Python}>Python</option>
-                                <option value={DocumentationLanguage.C}>C</option>
-                                <option value={DocumentationLanguage.Blockly}>Blockly</option>
-                                <option value={DocumentationLanguage.Scratch}>Scratch</option>
-                            </select>
-                        </div>
-                    </label>
+                    <DocumentationLanguageSelector/>
                 </div>
             </div>
             <div className="documentation-category-dropdown">

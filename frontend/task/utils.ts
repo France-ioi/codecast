@@ -2,10 +2,11 @@ import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
 import {current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
-import {AppStore, CodecastPlatform, platformsList} from "../store";
+import {AppStore} from "../store";
 import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
 import {isServerTask, Task} from './task_slice';
+import {CodecastPlatform, platformsList} from '../stepper/platforms';
 
 export enum TaskPlatformMode {
     Source = 'source',
@@ -19,7 +20,7 @@ export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
     return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
 }
 
-export function extractLevelSpecific(item, level) {
+export function extractLevelSpecific(item: any, level: TaskLevelName) {
     if ((typeof item != "object")) {
         return item;
     }
@@ -148,7 +149,7 @@ export function getCurrentImmerState(object) {
 
 export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName) {
     const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
-    for (let availablePlatform of platformsList) {
+    for (let availablePlatform of Object.keys(platformsList)) {
         if (platform !== availablePlatform) {
             instructionsJQuery.find(`[data-lang~="${availablePlatform}"]:not([data-lang~="${platform}"]`).remove();
         }
