@@ -31,6 +31,7 @@ export enum ActionTypes {
     StepperSynchronizingAnalysisChanged = 'Stepper.Synchronizing.Analysis.Changed',
     StepperExecutionSuccess = 'Stepper.Execution.Success',
     StepperExecutionError = 'Stepper.Execution.Error',
+    StepperExecutionEnd = 'Stepper.Execution.End', // End of program without success nor error (for experiment mode)
     StepperDisplayError = 'Stepper.Execution.DisplayError',
     StepperClearError = 'Stepper.Execution.ClearError',
     Compile = 'Compile',
@@ -54,6 +55,10 @@ export const stepperExecutionError = (testResult: LibraryTestResult, clearHighli
         testResult,
         clearHighlight,
     },
+});
+
+export const stepperExecutionEnd = () => ({
+    type: ActionTypes.StepperExecutionEnd,
 });
 
 export const stepperDisplayError = (error: string|LibraryTestResult) => ({

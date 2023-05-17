@@ -628,6 +628,15 @@ export default function (bundle: Bundle) {
             });
         });
 
+        yield* takeEvery(StepperActionTypes.StepperExecutionEnd, function* () {
+            const currentTestId = yield* appSelect(state => state.task.currentTestId);
+            yield taskSubmissionExecutor.afterExecution({
+                testId: currentTestId,
+                result: true,
+                noGrading: true,
+            });
+        });
+
         // @ts-ignore
         yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function* ({payload}) {
             const currentTestId = yield* appSelect(state => state.task.currentTestId);

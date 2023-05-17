@@ -73,7 +73,7 @@ class TaskSubmissionExecutor {
         const level = state.task.currentLevel;
         const answer = selectAnswer(state);
         const tests = yield* appSelect(state => state.task.taskTests);
-        if (!tests || 0 === Object.values(tests).length) {
+        if (!tests || 0 === Object.values(tests).length || result.noGrading) {
             return;
         }
 
