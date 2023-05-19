@@ -334,7 +334,7 @@ class DisplayHelper {
         }
     }
     async showPopupDialog(message) {
-        const dialog = `<div id="popupMessage" style="display: block">${message}</div>`;
+        const dialog = `<div id="popupMessage" class="floatingMessage" style="display: block">${message}</div>`;
         const mainStore = Codecast.environments['main'].store;
         mainStore.dispatch(displayModal({message: dialog, mode: ModalType.dialog}));
     }
