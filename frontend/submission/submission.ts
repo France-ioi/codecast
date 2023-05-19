@@ -81,7 +81,7 @@ export interface TaskSubmissionResultPayload {
     testResult?: LibraryTestResult,
 }
 
-export const submissionTriggerPlatformValidate = createAction('submission/triggerPlatformValidate', (action?: string) => ({
+export const callPlatformValidate = createAction('submission/callPlatformValidate', (action?: string) => ({
     payload: {
         action,
     },
@@ -123,7 +123,7 @@ export function selectSubmissionsPaneEnabled(state: AppStore) {
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
-        yield* takeEvery(submissionTriggerPlatformValidate, function* (action) {
+        yield* takeEvery(callPlatformValidate, function* (action) {
             const platformAction = action.payload.action ?? 'done';
             yield* call([platformApi, platformApi.validate], platformAction);
         });
