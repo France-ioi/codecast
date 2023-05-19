@@ -98,7 +98,7 @@ export function PromptModalDialog() {
             <div dangerouslySetInnerHTML={{__html: modalData.message}}></div>
 
             {ModalType.input === modalData.mode &&
-                <div className="text-center mb-4">
+                <div className="text-center mb-2 mt-4">
                     <input type="text" className='modal-input bp3-input bp3-fill' value={inputValue} onChange={(event) => setInputValue(event.target.value)}></input>
                 </div>
             }
@@ -107,7 +107,7 @@ export function PromptModalDialog() {
                 <div className="simple-dialog-buttons">
                     <button className="simple-dialog-button" onClick={validate}>
                         <Icon icon="small-tick" iconSize={24}/>
-                        <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText ? 'VALIDATE' : 'ALRIGHT'))}</span>
+                        <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText || ModalType.input === modalData.mode ? 'VALIDATE' : 'ALRIGHT'))}</span>
                     </button>
 
                     {modalData.noButtonText &&

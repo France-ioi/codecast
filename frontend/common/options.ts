@@ -133,6 +133,11 @@ export default function(bundle: Bundle) {
         state.compile = {...initialStateCompile};
     });
 
+    bundle.defineAction(ActionTypes.CanChangePlatformChanged);
+    bundle.addReducer(ActionTypes.CanChangePlatformChanged, (state, {payload: {canChangePlatform}}) => {
+        state.options.canChangePlatform = canChangePlatform;
+    });
+
     bundle.addSaga(function* () {
         // @ts-ignore
         yield* takeEvery(ActionTypes.PlatformChanged, function* ({payload: {reloadTask}}) {

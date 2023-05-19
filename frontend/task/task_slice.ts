@@ -44,7 +44,7 @@ export interface BlocksUsage {
 
 export interface TaskState {
     currentTask?: Task|null,
-    currentLevel?: TaskLevelName,
+    currentLevel?: TaskLevelName|null,
     recordingEnabled?: boolean,
     resetDone?: boolean,
     loaded?: boolean,
@@ -140,6 +140,8 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     placeholderBlocks?: any,
     usedSkills?: string[],
     targetNbInstructions?: number,
+    forceNextTaskAfter?: number,
+    defaultLevel?: TaskLevelName,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {

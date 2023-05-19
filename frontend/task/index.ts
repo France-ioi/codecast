@@ -195,12 +195,21 @@ function* taskLoadSaga(app: App, action) {
             yield* put(taskCurrentLevelChange({level: action.payload.level, record: false}));
         } else if (currentTask.data && (null === currentLevel || !(currentLevel in currentTask.data))) {
             // Select default level
-            for (let level of taskLevelsList) {
-                if (level in currentTask.data) {
-                    yield* put(taskCurrentLevelChange({level, record: false}));
-                    break;
+            let defaultLevel = null;
+            if (currentTask.gridInfos?.defaultLevel && currentTask.gridInfos?.defaultLevel in currentTask.data) {
+                defaultLevel = currentTask.gridInfos.defaultLevel;
+            } else if ('easy' in currentTask.data) {
+                defaultLevel = 'easy';
+            } else {
+                for (let level of taskLevelsList) {
+                    if (level in currentTask.data) {
+                        defaultLevel = level;
+                        break;
+                    }
                 }
             }
+
+            yield* put(taskCurrentLevelChange({level: defaultLevel, record: false}));
         }
         currentLevel = yield* appSelect(state => state.task.currentLevel);
         log.getLogger('task').debug('new current level', currentLevel);
