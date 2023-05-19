@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup node
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
-        node-version: 14.18.x
+        node-version: 16.x
         registry-url: "https://npm.pkg.github.com"
       env:
         NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_PAT }}
     - name: Cache node modules
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: node_modules
         key: v1-npm-deps-${{ hashFiles('yarn.lock') }}
@@ -40,16 +40,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup node
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
-        node-version: 14.18.x
+        node-version: 16.x
         registry-url: "https://npm.pkg.github.com"
       env:
         NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_PAT }}
     - name: Cache node modules
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: node_modules
         key: v1-npm-deps-${{ hashFiles('yarn.lock') }}

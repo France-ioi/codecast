@@ -71,7 +71,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
                     })}{variable.variables.length > elementsToDisplay ? '...' : ''}{delimiters[1]}
                 </React.Fragment>);
             } else {
-                renderedElements = (<ul className="object_scope">
+                renderedElements = (<ul className="object-scope">
                     {variable.variables.length ? variable.variables.slice(0, elementsToDisplay).map((innerVariable) => {
                         return (
                             <li key={innerVariable.name}>
@@ -108,7 +108,6 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
 
         const hasPreviousValue = null !== variable.previousValue && variable.value !== variable.previousValue;
 
-
         const sanitizeValue = (value) => {
             if ('string' === typeof value && value.substring(0, 1) === '"' && value.length > 100) {
                 return value.substring(0, 98) + '..."';
@@ -119,7 +118,12 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
 
         return (
             <React.Fragment>
-                <span className={`value-scalar ${hasPreviousValue ? 'value-has-changed' : ''} ${!hasPreviousValue && variable.loaded ? 'value-loaded' : ''}`}>{sanitizeValue(variable.value)}</span>
+                <span className={`value-scalar ${hasPreviousValue ? 'value-has-changed' : ''} ${!hasPreviousValue && variable.loaded ? 'value-loaded' : ''}`}>
+                    {sanitizeValue(variable.value)}
+                    {variable.displayType && <span className="value-type ml-1">
+                        &lt;{variable.type}&gt;
+                    </span>}
+                </span>
                 {hasPreviousValue ?
                     <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{sanitizeValue(variable.previousValue)}</span>
                     : null}

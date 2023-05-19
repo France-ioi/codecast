@@ -38,7 +38,7 @@ export interface CodecastAnalysisSnapshot {
 export interface CodecastAnalysisStackFrame extends DebugProtocol.StackFrame {
     variables: CodecastAnalysisVariable[],
     directives?: any[],
-    args: string[],
+    args?: string[],
 }
 
 export interface CodecastAnalysisVariable {
@@ -49,6 +49,7 @@ export interface CodecastAnalysisVariable {
     loaded?: boolean
     previousValue?: string,
     type?: string,
+    displayType?: boolean,
     variablesReference: number,
     alreadyVisited?: boolean,
 }

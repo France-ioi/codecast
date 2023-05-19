@@ -1,6 +1,6 @@
 import React, {useEffect} from "react";
 import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
-import {appSelect, useAppSelector} from "../hooks";
+import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
 import {useDispatch} from "react-redux";
@@ -8,14 +8,14 @@ import {isTestPublic} from './task_slice';
 import {getMessage} from '../lang';
 import {
     isServerSubmission,
-    selectCurrentServerSubmission,
     selectSubmissionsPaneEnabled,
     TaskSubmissionServerTestResult
 } from '../submission/submission';
 import {submissionChangeDisplayedError, SubmissionErrorType} from '../submission/submission_slice';
-import { Alert } from "react-bootstrap";
+import {Alert} from "react-bootstrap";
 import {toHtml} from '../utils/sanitize';
 import {nl2br} from '../common/utils';
+import {Button} from '@blueprintjs/core';
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
@@ -45,7 +45,11 @@ export function ContextVisualization() {
 
     const dismissSubmissionError = () => {
         dispatch(submissionChangeDisplayedError(null));
-    }
+    };
+
+    const showCompilationError = () => {
+        dispatch(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
+    };
 
     const testsSelectorEnabled = submissionPaneEnabled;
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
@@ -56,26 +60,38 @@ export function ContextVisualization() {
         currentTestResult = submission.result.tests.find(test => test.testId === taskTests[currentTestId].id);
     }
 
-    let innerVisualization = null;
+    const createAlertVisualization = (content: any) => {
+        return <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
+            <div className="error-content">{content}</div>
+        </Alert></div>
+    }
+    let innerVisualization;
     if (submission && SubmissionErrorType.CompilationError === submissionDisplayedError && submission.result && submission.result.compilationError) {
-        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
-            <div className="error-content" dangerouslySetInnerHTML={toHtml(submission.result.compilationMessage)}></div>
-        </Alert></div>;
+        innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(submission.result.compilationMessage)}></div>);
     } else if (submission && SubmissionErrorType.CompilationWarning === submissionDisplayedError && submission.result && submission.result.compilationMessage) {
-        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
-            <div className="error-content">
-                {submission.result.compilationMessage}
-            </div>
-        </Alert></div>;
+        innerVisualization = createAlertVisualization(submission.result.compilationMessage);
     } else if (submission && SubmissionErrorType.ExecutionError === submissionDisplayedError && submission.result && submission.result.errorMessage) {
-        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
-            <div className="error-content" dangerouslySetInnerHTML={toHtml(nl2br(submission.result.errorMessage))}>
+        innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(nl2br(submission.result.errorMessage))}></div>);
+    } else if (submission && submission.result && submission.result.compilationError) {
+        innerVisualization = <div className="task-visualization-not-public">
+            <div>
+                <p>
+                    {getMessage('SUBMISSION_VIEW_COMPILATION_ERROR')}
+                </p>
+                <p>
+                    <Button
+                        className="quickalgo-button"
+                        onClick={showCompilationError}
+                    >
+                        {getMessage('SUBMISSION_VIEW_COMPILATION_ERROR_BUTTON')}
+                    </Button>
+                </p>
             </div>
-        </Alert></div>;
+        </div>;
     } else if (currentTestResult && currentTestResult.noFeedback) {
         innerVisualization = <div className="task-visualization-not-public">
             {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
-        </div>
+        </div>;
     } else if (currentTestPublic || (currentTestResult && !currentTestResult.noFeedback)) {
         innerVisualization = <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
             {Visualization ? <Visualization/> :

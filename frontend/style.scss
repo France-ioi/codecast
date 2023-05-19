@@ -226,10 +226,10 @@ body#app, #app h1, #app h2, #app h3 {
 .stack-view ul {
   padding-left: 20px;
 }
-.stack-view  ul.global-scope {
+ul.global-scope {
   padding-left: 2px;
 }
-.stack-view li {
+ul.global-scope li, ul.object-scope li {
   list-style-type: none;
 }
 .stack-frame-focused {
