@@ -6,6 +6,7 @@ import {Codecast} from "../../index";
 import {AnalysisSnapshot} from "../analysis/analysis";
 import {fetchLatestBlocklyAnalysis} from "./analysis";
 import log from "loglevel";
+import {getMessage} from '../../lang';
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
@@ -442,7 +443,7 @@ export default class BlocklyRunner extends AbstractRunner {
             let message = e.message || e.toString();
 
             // Translate "Unknown identifier" message
-            if(message.substring(0, 20) == "Unknown identifier: ") {
+            if (message.substring(0, 20) == "Unknown identifier: ") {
                 let varName = message.substring(20);
                 // Get original variable name if possible
                 for(let dbIdx in window.Blockly.JavaScript.variableDB_.db_) {
@@ -452,9 +453,10 @@ export default class BlocklyRunner extends AbstractRunner {
                     }
                 }
                 message = this.context.blocklyHelper.strings.uninitializedlet + ' ' + varName;
-            }
-
-            if(message.indexOf('undefined') != -1) {
+            } else if (message.match(/^(.+) is not defined$/)) {
+                const variableName = message.substring(0, message.indexOf('is not defined')).trim();
+                message = getMessage('EVAL_IS_NOT_DEFINED').format({variable: variableName});
+            } else if (message.indexOf('undefined') != -1) {
                 console.error(e)
                 message += '. ' + this.context.blocklyHelper.strings.undefinedMsg;
             }

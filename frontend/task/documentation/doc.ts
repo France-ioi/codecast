@@ -1,5 +1,5 @@
 import {Bundle} from "../../linker";
-import {call, put, select, takeEvery} from "typed-redux-saga";
+import {call, put, takeEvery} from "typed-redux-saga";
 import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {
     DocumentationConcept,
@@ -8,47 +8,46 @@ import {
     DocumentationLanguage,
     documentationLanguageChanged
 } from "./documentation_slice";
-import {AppAction} from "../../store";
 import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
 import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
 import {CodecastPlatform} from '../../stepper/platforms';
-import {QuickalgoTaskIncludeBlocks, TaskActionTypes} from '../task_slice';
+import {QuickalgoTaskIncludeBlocks, Task, TaskActionTypes, taskSetAvailablePlatforms} from '../task_slice';
 import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
-import {useEffect} from 'react';
-import {ActionTypes as AppActionTypes} from '../../actionTypes';
-import {taskLoad} from '../index';
+import {createAction} from '@reduxjs/toolkit';
+import {documentModelFromString} from '../../buffers';
+import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 
 let openerChannel;
-
-export enum DocumentationActionTypes {
-    DocumentationLoad = 'documentation/load',
-}
-
-export interface DocumentationLoadAction extends AppAction {
-    type: DocumentationActionTypes.DocumentationLoad,
-    payload: {
-        standalone: boolean,
-        hasTaskInstructions: boolean,
-    },
-}
 
 export interface ConceptViewer {
     showConcept: Function,
 }
 
-export const documentationLoad = (standalone: boolean, hasTaskInstructions?: boolean): DocumentationLoadAction => ({
-    type: DocumentationActionTypes.DocumentationLoad,
+export const documentationLoad = createAction('documentation/load', (standalone: boolean, hasTaskInstructions?: boolean) => ({
     payload: {
         standalone,
         hasTaskInstructions: true === hasTaskInstructions,
     },
-});
+}));
+
+export const documentationOpenInNewWindow = createAction('documentation/openInNewWindow', (hasTaskInstructions: boolean) => ({
+    payload: {
+        hasTaskInstructions,
+    },
+}));
+
+export const documentationUseCodeExample = createAction('documentation/useCodeExample', (code: string, language: DocumentationLanguage) => ({
+    payload: {
+        code,
+        language,
+    },
+}));
 
 function getConceptsFromChannel() {
-    return new Promise<{concepts: any, selectedConceptId: number, screen: string, language: DocumentationLanguage}>((resolve, reject) => {
+    return new Promise<ConceptViewerConfigs>((resolve, reject) => {
         if (!openerChannel) {
             openerChannel = window.Channel.build({window: window.opener, origin: '*', scope: 'test'});
         }
@@ -157,25 +156,9 @@ function findConceptByFunction(filteredConcepts, functionName) {
     return false;
 }
 
-function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolean) {
-    if (standalone) {
-        try {
-            const {concepts, selectedConceptId, screen, language} = yield* call(getConceptsFromChannel);
-            const currentScreen = yield* appSelect(state => state.screen);
-            if (currentScreen !== screen) {
-                yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen}});
-            }
-            yield* put(documentationLanguageChanged(language));
-            yield* call(loadDocumentationConcepts, concepts, selectedConceptId);
-        } catch (e: any) {
-            yield* put({type: CommonActionTypes.Error, payload: {error: getMessage('TASK_DOCUMENTATION_LOAD_ERROR'), closable: false}});
-        }
-        return;
-    }
-
+function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task|null, language: DocumentationLanguage) {
     let context = quickAlgoLibraries.getContext(null, 'main');
     if (context.infos.conceptViewer) {
-        const language = yield* appSelect(state => state.documentation.language);
         let concepts = [], allConcepts = [];
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
@@ -190,7 +173,6 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
             concepts.push('base');
         }
 
-        const currentTask = yield* appSelect(state => state.task.currentTask);
         if (!currentTask) {
             // Add code examples to documentation
             const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
@@ -216,7 +198,40 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
             ];
         }
 
-        yield* call(loadDocumentationConcepts, documentationConcepts);
+        return documentationConcepts;
+    }
+
+    return null;
+}
+
+function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolean) {
+    if (standalone) {
+        try {
+            const conceptsConfig = yield* call(getConceptsFromChannel);
+            const {concepts, selectedConceptId, availablePlatforms, screen, language, canChangePlatform} = conceptsConfig;
+            const currentSelectedConceptId = yield* appSelect(state => state.documentation.selectedConceptId);
+            const firstLoad = null === currentSelectedConceptId;
+            if (firstLoad) {
+                const currentScreen = yield* appSelect(state => state.screen);
+                if (currentScreen !== screen) {
+                    yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen}});
+                }
+                yield* put({type: CommonActionTypes.CanChangePlatformChanged, payload: {canChangePlatform}});
+                yield* put(taskSetAvailablePlatforms(availablePlatforms));
+                yield* put(documentationLanguageChanged(language));
+            }
+
+            yield* call(loadDocumentationConcepts, concepts, firstLoad ? selectedConceptId : currentSelectedConceptId);
+        } catch (e: any) {
+            yield* put({type: CommonActionTypes.Error, payload: {error: getMessage('TASK_DOCUMENTATION_LOAD_ERROR'), closable: false}});
+        }
+    } else {
+        const language = yield* appSelect(state => state.documentation.language);
+        const currentTask = yield* appSelect(state => state.task.currentTask);
+        const concepts = getConceptsFromLanguage(hasTaskInstructions, currentTask, language);
+        if (null !== concepts) {
+            yield* call(loadDocumentationConcepts, concepts);
+        }
     }
 }
 
@@ -233,6 +248,15 @@ function* loadDocumentationConcepts(documentationConcepts, selectedConceptId = n
     }
 }
 
+export interface ConceptViewerConfigs {
+    concepts: DocumentationConcept[],
+    selectedConceptId: string,
+    availablePlatforms: string[],
+    screen: string,
+    language: DocumentationLanguage,
+    canChangePlatform: boolean,
+}
+
 export default function (bundle: Bundle) {
     bundle.addSaga(function* (app: App) {
         if ('main' !== app.environment) {
@@ -244,12 +268,70 @@ export default function (bundle: Bundle) {
                 if (concept) {
                     app.dispatch(documentationConceptSelected(concept));
                 }
-                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationBig}});
+                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
             },
         };
 
-        yield* takeEvery(DocumentationActionTypes.DocumentationLoad, function* (action: DocumentationLoadAction) {
+        yield* takeEvery(documentationLoad, function* (action) {
             yield* call(documentationLoadSaga, action.payload.standalone, action.payload.hasTaskInstructions);
+        });
+
+        yield* takeEvery(documentationOpenInNewWindow, function* (action) {
+            const searchParams = new URLSearchParams(document.location.search);
+            searchParams.set('documentation', '1');
+            // const documentationUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + searchParams.toString();
+            // Always open a static domain in HTTPS because tasks can be open in frames and not in Codecast
+            // TODO: use version 7.3
+            const documentationUrl = "https://codecast-dev.france-ioi.org/next/task" + '?' + searchParams.toString();
+
+            const fullscreenWindow = window.open(documentationUrl);
+            const channel = window.Channel.build({window: fullscreenWindow, origin: '*', scope: 'test'});
+
+            const state = yield* appSelect();
+            const language = state.documentation.language;
+            const currentTask = state.task.currentTask;
+            const screen = state.screen;
+            const availablePlatforms = state.task.availablePlatforms;
+            const selectedConceptId = state.documentation.selectedConceptId;
+            const hasTaskInstructions = action.payload.hasTaskInstructions;
+            const canChangePlatform = state.options.canChangePlatform;
+
+            channel.bind('getConceptViewerConfigs', (): ConceptViewerConfigs => {
+                const concepts = getConceptsFromLanguage(hasTaskInstructions, currentTask, language);
+
+                return {
+                    concepts,
+                    selectedConceptId,
+                    language,
+                    availablePlatforms,
+                    canChangePlatform,
+                    screen,
+                };
+            });
+
+            channel.bind('useCodeExample', (instance, {code, language}) => {
+                app.dispatch(documentationUseCodeExample(code, language));
+            });
+        });
+
+        yield* takeEvery(documentationUseCodeExample, function* (action) {
+            const {code, language} = action.payload;
+
+            yield* put({
+                type: BufferActionTypes.BufferReset,
+                buffer: 'source',
+                model: documentModelFromString(code),
+            });
+            yield* put({
+                type: CommonActionTypes.PlatformChanged,
+                payload: {
+                    platform: 'c' === language ? CodecastPlatform.Unix : language,
+                },
+            });
+            yield* put({
+                type: CommonActionTypes.AppSwitchToScreen,
+                payload: {screen: null},
+            });
         });
 
         // @ts-ignore

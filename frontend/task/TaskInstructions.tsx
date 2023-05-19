@@ -1,6 +1,5 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../hooks";
-import {toHtml} from "../utils/sanitize";
 import {getMessage} from "../lang";
 import {formatTaskInstructions} from './utils';
 import {Button} from '@blueprintjs/core';
@@ -13,10 +12,11 @@ import {documentationConceptSelected} from './documentation/documentation_slice'
 import {faMinus} from '@fortawesome/free-solid-svg-icons/faMinus';
 import {quickAlgoLibraries} from './libs/quickalgo_libraries';
 import {PlatformSelection} from '../common/PlatformSelection';
-import {LayoutView, selectActiveView} from './layout/layout';
-import convertHtmlToReact from '@hedgedoc/html-to-react';
+import convertHtmlToReact, {processNodes} from '@hedgedoc/html-to-react';
 import {Editor} from '../buffers/Editor';
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
+import {generatePropsFromAttributes} from '@hedgedoc/html-to-react/dist/utils/generatePropsFromAttributes';
+import {VOID_ELEMENTS} from '@hedgedoc/html-to-react/dist/dom/elements/VoidElements';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -48,12 +48,17 @@ const defaultInstructionsHtml = `
     <div class="advice">
         Pour le fonctionnement des blocs de boucle, pense à regarder la documentation.
     </div>
+    <p class="easy medium hard">
+      Aide : <a class="aide" onclick="conceptViewer.showConcept('blockly_controls_repeat')">
+      <span data-lang="blockly scratch">Boucle de répétition</span>
+      <span data-lang="python">Boucle for</span></a>
+   </p>
     <p class="long">
         Plus de détails sur la mission
     </p>
 `;
 
-function transformNode(node, context: {platform: CodecastPlatform}) {
+function transformNode(node, index: string|number, context: {platform: CodecastPlatform}) {
     if (node.attribs && 'select-lang-selector' in node.attribs) {
         return <PlatformSelection key="platform-selection" withoutLabel/>;
     } else if (node.attribs && 'data-show-source' in node.attribs) {
@@ -78,6 +83,21 @@ function transformNode(node, context: {platform: CodecastPlatform}) {
             dragEnabled={false}
             maxLines={Infinity}
         />
+    } else if (node.attribs && 'onclick' in node.attribs) {
+        const tagName = node.tagName;
+        const props = generatePropsFromAttributes(node.attribs, index);
+        // @ts-ignore
+        props['onClick'] = () => {
+            eval(node.attribs.onclick);
+        }
+
+        // If the node is not a void element and has children then process them
+        let children = null;
+        if (VOID_ELEMENTS.indexOf(tagName) === -1) {
+            children = processNodes(node.children, (node, index) => transformNode(node, index, context));
+        }
+
+        return React.createElement(tagName, props, children)
     }
 
     return undefined;
@@ -98,6 +118,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
     const dispatch = useDispatch();
     const platform = useAppSelector(state => state.options.platform);
+    const [hasShortOrLong, setHasShortOrLong] = useState(false);
 
     const toggleTaskInstructions = () => {
         if (documentationOpen) {
@@ -136,8 +157,9 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         setInstructionsTitle(newInstructionsTitle);
         setInstructionsHtml(instructionsJQuery.html());
 
+        let hasShortOrLongInstructions = 0 < instructionsJQuery.find('.short').length || 0 < instructionsJQuery.find('.long').length;
+        setHasShortOrLong(hasShortOrLongInstructions);
         if (props.changeDisplayShowMore) {
-            let hasShortOrLong = 0 < instructionsJQuery.find('.short').length || 0 < instructionsJQuery.find('.long').length;
             props.changeDisplayShowMore(hasShortOrLong);
         }
     }, [contextId]);
@@ -152,10 +174,10 @@ export function TaskInstructions(props: TaskInstructionsProps) {
 
             {!props.withoutTitle && <h1>{instructionsTitle ? instructionsTitle : getMessage('TASK_INSTRUCTIONS')}</h1>}
 
-            <div>{convertHtmlToReact(instructionsHtml, {transform: (node) => transformNode(node, {platform})})}</div>
+            <div>{convertHtmlToReact(instructionsHtml, {transform: (node, index) => transformNode(node, index, {platform})})}</div>
             {/*<div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>*/}
 
-            {!props.hideShowMoreButton && !props.expanded && <Button
+            {!props.hideShowMoreButton && !props.expanded && hasShortOrLong && <Button
                 className="quickalgo-button mt-2"
                 onClick={toggleTaskInstructions}
                 icon={<FontAwesomeIcon icon={documentationOpen ? faMinus : faPlus}/>}

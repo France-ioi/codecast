@@ -2,18 +2,20 @@ import React, {ReactFragment, useEffect, useState} from 'react';
 import {Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
-import {convertPlatformToDocumentationLanguage, documentationLoad, sendCodeExampleToOpener} from "./doc";
+import {
+    documentationLoad,
+    documentationOpenInNewWindow,
+    documentationUseCodeExample,
+    sendCodeExampleToOpener
+} from "./doc";
 import {useAppSelector} from "../../hooks";
-import {documentationConceptSelected, documentationLanguageChanged} from "./documentation_slice";
+import {documentationConceptSelected} from "./documentation_slice";
 import {Screen} from "../../common/screens";
-import {select} from "typed-redux-saga";
+import {call, select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
-import {ActionTypes} from "../../buffers/actionTypes";
-import {documentModelFromString} from "../../buffers";
 import {getMessage} from "../../lang";
 import {TaskInstructions} from '../TaskInstructions';
-import {CodecastPlatform} from '../../stepper/platforms';
 import {DocumentationLanguageSelector} from './DocumentationLanguageSelector';
 
 interface DocumentationProps {
@@ -29,10 +31,10 @@ export function Documentation(props: DocumentationProps) {
     const selectedConceptId = useAppSelector(state => state.documentation.selectedConceptId);
     const selectedConcept = selectedConceptId ? concepts.find(concept => selectedConceptId === concept.id) : null;
     const documentationLanguage = useAppSelector(state => state.documentation.language);
-    const platform = useAppSelector(state => state.options.platform);
     const screen = useAppSelector(state => state.screen);
     const firstConcepts = concepts.slice(0, 3);
     const isTralalere = useAppSelector(state => 'tralalere' === state.options.app);
+    const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
 
     const [iframeRef, setIframeRef] = useState(null);
 
@@ -49,6 +51,9 @@ export function Documentation(props: DocumentationProps) {
             urlSplit[0] = urlSplit[0].replace(/index_en\.html/g, 'index_tralalere_en.html');
         }
         conceptUrl = urlSplit.join('#');
+        if (-1 !== conceptUrl.indexOf('http://') && 'https:' === window.location.protocol) {
+            conceptUrl = conceptUrl.replace(/http:\/\//, 'https://');
+        }
     }
 
     useEffect(() => {
@@ -76,25 +81,7 @@ export function Documentation(props: DocumentationProps) {
     };
 
     const openDocumentationInNewWindow = () => {
-        const searchParams = new URLSearchParams(document.location.search);
-        searchParams.set('documentation', '1');
-        const documentationUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + searchParams.toString();
-
-        const fullscreenWindow = window.open(documentationUrl);
-        const channel = window.Channel.build({window: fullscreenWindow, origin: '*', scope: 'test'});
-
-        channel.bind('getConceptViewerConfigs', () => {
-            return {
-                concepts,
-                selectedConceptId,
-                language: documentationLanguage,
-                screen,
-            };
-        });
-
-        channel.bind('useCodeExample', (instance, {code, language}) => {
-            useCodeExample(code, language);
-        });
+        dispatch(documentationOpenInNewWindow(false !== props.hasTaskInstructions));
     };
 
     const useCodeExample = (code, language) => {
@@ -102,18 +89,7 @@ export function Documentation(props: DocumentationProps) {
             return;
         }
 
-        dispatch({
-            type: ActionTypes.BufferReset,
-            buffer: 'source',
-            model: documentModelFromString(code),
-        });
-        dispatch({
-            type: CommonActionTypes.PlatformChanged,
-            payload: {
-                platform: 'c' === language ? CodecastPlatform.Unix : language,
-            },
-        });
-        closeDocumentation();
+        dispatch(documentationUseCodeExample(code, language));
     };
 
     const openDocumentationBig = () => {
@@ -147,9 +123,9 @@ export function Documentation(props: DocumentationProps) {
                     <Icon icon="zoom-in"/>
                 </div>
                 <h2>{getMessage('TASK_DOCUMENTATION')}</h2>
-                <div className="documentation-language-selector">
+                {canChangePlatform && <div className="documentation-language-selector">
                     <DocumentationLanguageSelector/>
-                </div>
+                </div>}
                 {!props.standalone && <div className="documentation-new-window">
                     <a onClick={openDocumentationInNewWindow}>
                         <FontAwesomeIcon icon={faExternalLinkAlt}/>
@@ -164,9 +140,9 @@ export function Documentation(props: DocumentationProps) {
                 <div className="documentation-tabs-menu">
                     <Icon icon="code"/>
                 </div>
-                <div className="documentation-category-selector">
+                {canChangePlatform && <div className="documentation-category-selector">
                     <DocumentationLanguageSelector/>
-                </div>
+                </div>}
             </div>
             <div className="documentation-category-dropdown">
                 <div className="documentation-tabs-menu">

@@ -180,50 +180,6 @@ html, body, #react-container {
     }
   }
 
-  .task-mission {
-    color: #7c7c7c;
-
-    .short, .long {
-      display: none !important;
-    }
-
-    h1 {
-      color: #30242B;
-      margin-bottom: 1rem;
-      font-size: 1.5em !important;
-    }
-    h2 {
-      font-size: 1.35em !important;
-    }
-    h3 {
-      font-size: 1.2em !important;
-    }
-
-    ul {
-      margin-bottom: 1rem !important;
-    }
-
-    :last-child {
-      margin-bottom: 0 !important;
-    }
-
-    &:not(.is-expanded) .short {
-      display: block !important;
-    }
-
-    &.is-expanded .long {
-      display: block !important;
-    }
-
-    .task-mission-platform-selection {
-      max-width: 200px;
-      hr {
-        margin-top: 1rem !important;
-        margin-bottom: 1rem !important;
-      }
-    }
-  }
-
   hr {
     width: 100%;
     border-bottom: solid 1px #e7e7e7;
@@ -544,6 +500,50 @@ html, body, #react-container {
       .bp3-icon {
         color: #fff;
       }
+    }
+  }
+}
+
+.task-mission {
+  color: #7c7c7c;
+
+  .short, .long {
+    display: none !important;
+  }
+
+  h1 {
+    color: #30242B;
+    margin-bottom: 1rem;
+    font-size: 1.5em !important;
+  }
+  h2 {
+    font-size: 1.35em !important;
+  }
+  h3 {
+    font-size: 1.2em !important;
+  }
+
+  ul {
+    margin-bottom: 1rem !important;
+  }
+
+  :last-child {
+    margin-bottom: 0 !important;
+  }
+
+  &:not(.is-expanded) .short {
+    display: block !important;
+  }
+
+  &.is-expanded .long {
+    display: block !important;
+  }
+
+  .task-mission-platform-selection {
+    max-width: 200px;
+    hr {
+      margin-top: 1rem !important;
+      margin-bottom: 1rem !important;
     }
   }
 }
