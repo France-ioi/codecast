@@ -148,7 +148,7 @@ export function* createQuickalgoLibrary() {
             yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
         }
     }
-    yield* call(loadFonts, state.options.theme);
+    yield* call(loadFonts, state.options.theme, currentTask);
 
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {

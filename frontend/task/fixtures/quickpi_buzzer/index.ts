@@ -3,7 +3,7 @@ import {QuickalgoTask} from '../../task_slice';
 export default {
     gridInfos: {
         context: 'quickpi',
-        importModules: ['quickpi-board', 'quickpi-connection', 'quickpi-screen', 'blockly-quickpi', 'font-awesome'],
+        importModules: ['quickpi-board', 'quickpi-connection', 'quickpi-screen', 'blockly-quickpi'],
         hideSaveOrLoad: false,
         actionDelay: 100,
 
