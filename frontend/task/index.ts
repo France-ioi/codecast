@@ -633,6 +633,7 @@ export default function (bundle: Bundle) {
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: true,
+                successRate: 1,
                 noGrading: true,
             });
         });

@@ -108,23 +108,13 @@ screen and (min-width: 768px) and (orientation: portrait) {
 }
 
 /* QuickPi connexion popup */
+#popupMessage.dialog-message {
+    text-align: left !important;
+}
 #popupMessage .container {
     position: relative;
     margin: .5em 0;
     padding: 8px;
-}
-#popupMessage.floatingMessage .container {
-    min-height: 100px;
-    width: 94%;
-    max-width: 680px;
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 5px;
-    background: #fff;
-    color:#787878;
-    padding: 20px;
-    top: 50%;
-    transform: translate(0,-50%);
 }
 #popupMessage .container img.messageArrow {
     display: none;
@@ -265,7 +255,7 @@ screen and (min-width: 768px) and (orientation: portrait) {
     font-weight: bold;
     line-height: 1.5;
     border: none;
-    font-size: 0.9rem;
+    font-size: 0.9rem !important;
     position: relative;
 }
 #popupMessage .qpi .btn .icon {
