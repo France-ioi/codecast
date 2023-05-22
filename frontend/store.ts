@@ -84,6 +84,7 @@ export interface CodecastOptions {
     taskPlatformUrl?: string,
     canAddUserTests?: boolean,
     viewTestDetails?: boolean,
+    logAttempts?: boolean,
 }
 
 export interface Panes {

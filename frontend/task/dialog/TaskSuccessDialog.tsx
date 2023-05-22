@@ -5,7 +5,7 @@ import {useDispatch} from "react-redux";
 import {getMessage} from "../../lang";
 import {taskChangeLevel} from "../index";
 import {taskLevelsList} from "../platform/platform_slice";
-import {submissionTriggerPlatformValidate} from '../../submission/submission';
+import {callPlatformValidate} from '../../submission/submission';
 
 export interface TaskSuccessDialogProps {
     onClose: () => void,
@@ -49,7 +49,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
         if ('next-level' === nextAction) {
             dispatch(taskChangeLevel(taskLevelsList[currentLevelIndex + 1]));
         } else {
-            dispatch(submissionTriggerPlatformValidate(nextAction));
+            dispatch(callPlatformValidate(nextAction));
         }
     }
 

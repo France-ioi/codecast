@@ -36,6 +36,7 @@ import {
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
 import {isServerTask, TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
+import {DeferredPromise} from '../utils/app';
 
 export const levelScoringData = {
     basic: {
@@ -238,15 +239,11 @@ class TaskSubmissionExecutor {
 
         const submissionId = submissionData.submissionId;
 
-        let promiseResolve;
-        const promise = new Promise<TaskSubmissionServerResult>((resolve) => {
-            promiseResolve = resolve;
-        });
-
-        yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, promiseResolve);
+        const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
+        yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
 
         const outcome = yield* race({
-            result: call(() => promise),
+            result: call(() => deferredPromise.promise),
             timeout: delay(10*60*1000), // 10 min
         });
 
