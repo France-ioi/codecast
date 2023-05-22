@@ -28,6 +28,7 @@ import {SmartContractLib} from './smart_contract/smart_contract_lib';
 import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
 import {platformsList} from '../../stepper/platforms';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
+import {taskApi} from '../platform/platform';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -200,6 +201,9 @@ export function* createQuickalgoLibrary() {
     log.getLogger('libraries').debug('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     log.getLogger('libraries').debug('Created context', context);
+    taskApi.displayedSubTask = {
+        context,
+    };
     // if (!context.blocklyHelper) {
     //     context.blocklyHelper = {
     //         updateSize: () => {},
