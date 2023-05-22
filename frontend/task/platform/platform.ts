@@ -159,9 +159,10 @@ function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 }
 
 function* getSupportedViews() {
-    const {options} = yield* call(platformApi.getTaskParams);
+    const {supportsTabs} = yield* call(platformApi.getTaskParams);
+    console.log('Supports tabs', supportsTabs);
 
-    if (options.supportsTabs) {
+    if (supportsTabs) {
         return {
             [LayoutView.Task]: {},
             [LayoutView.Editor]: {},

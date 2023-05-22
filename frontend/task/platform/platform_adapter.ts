@@ -7,7 +7,7 @@ export default function (platform) {
     }
 
     function getTaskParams (key?, defaultValue?) {
-        return new Promise<{randomSeed: string, options: any, minScore: number, maxScore: number, noScore: number}>(function (resolve, reject) {
+        return new Promise<{randomSeed: string, options: any, minScore: number, maxScore: number, noScore: number, supportsTabs?: boolean}>(function (resolve, reject) {
             platform.getTaskParams(key, defaultValue, resolve, reject);
         });
     }
