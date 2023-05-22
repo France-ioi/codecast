@@ -6,12 +6,18 @@ import {faChevronDown} from '@fortawesome/free-solid-svg-icons/faChevronDown';
 import {faArrowRight} from '@fortawesome/free-solid-svg-icons/faArrowRight';
 import {capitalizeFirstLetter, nl2br} from '../../../common/utils';
 import {toHtml} from '../../../utils/sanitize';
+import {convertMichelsonStorageToCodecastFormat} from './smart_contract_utils';
+import {useAppSelector} from '../../../hooks';
+import {AnalysisFunctionLocals} from '../../../stepper/analysis/AnalysisFunctionLocals';
+import {AnalysisVariable} from '../../../stepper/analysis/AnalysisVariable';
 
 interface SmartContractViewTransactionProps {
     log: SmartContractResultLogLine
 }
 
 export function SmartContractViewTransaction(props: SmartContractViewTransactionProps) {
+    const task = useAppSelector(state => state.task.currentTask);
+
     const truncateString = (string: string, maxLength: number) => {
         return string && string.length > maxLength ? string.substring(0, maxLength) + '...' : string;
     };
@@ -23,6 +29,24 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
     const seeMore = () => {
         setExpanded(true);
     };
+
+    let displayedStorage = undefined !== log.updated_storage ? log.updated_storage : log.storage;
+    if (task.gridInfos.expectedStorage) {
+        const storageVariables = convertMichelsonStorageToCodecastFormat(displayedStorage, task.gridInfos.expectedStorage);
+
+        displayedStorage = <div className="scope-function-blocks">
+            <ul className='global-scope'>
+                {storageVariables.map((variable, variableIndex) =>
+                    <li key={variableIndex}>
+                        <AnalysisVariable
+                            variable={variable}
+                            stackFrameId={0}
+                        />
+                    </li>
+                )}
+            </ul>
+        </div>;
+    }
 
     return (
         <div className="smart-contract-log">
@@ -48,14 +72,14 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                     <span>{log.entrypoint}({log.arg})</span>
                 </div>}
 
-                {undefined !== log.storage && <div className="smart-contract-log__storage smart-contract-scalar">
-                    <div className="smart-contract-scalar__header">Storage {undefined !== log.storage_size ? `(${log.storage_size} bits)` : ''}</div>
-                    <div className="smart-contract-scalar__value">{log.storage}</div>
-                </div>}
-
-                {undefined !== log.updated_storage && <div className="smart-contract-log__storage smart-contract-scalar">
-                    <div className="smart-contract-scalar__header">Updated storage {undefined !== log.storage_size ? `(${log.storage_size} bits)` : ''}</div>
-                    <div className="smart-contract-scalar__value">{log.updated_storage}</div>
+                {undefined !== displayedStorage && <div className="smart-contract-log__storage smart-contract-scalar">
+                    <div className="smart-contract-scalar__header">
+                        {undefined !== log.updated_storage ? 'Updated storage' : 'Storage'}
+                        {undefined !== log.storage_size ? ` (${log.storage_size} bits)` : ''}
+                    </div>
+                    <div className="smart-contract-scalar__value">
+                        {displayedStorage}
+                    </div>
                 </div>}
 
                 {!expanded && needsExpansion && <p className="smart-contract-log__see-more mt-2">

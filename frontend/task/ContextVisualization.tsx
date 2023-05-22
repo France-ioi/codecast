@@ -15,6 +15,7 @@ import {submissionChangeDisplayedError, SubmissionErrorType} from '../submission
 import {Alert} from "react-bootstrap";
 import {toHtml} from '../utils/sanitize';
 import {nl2br} from '../common/utils';
+import {Button} from '@blueprintjs/core';
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
@@ -44,7 +45,11 @@ export function ContextVisualization() {
 
     const dismissSubmissionError = () => {
         dispatch(submissionChangeDisplayedError(null));
-    }
+    };
+
+    const showCompilationError = () => {
+        dispatch(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
+    };
 
     const testsSelectorEnabled = submissionPaneEnabled;
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
@@ -69,10 +74,26 @@ export function ContextVisualization() {
         innerVisualization = createAlertVisualization(submission.result.compilationMessage);
     } else if (submission && SubmissionErrorType.ExecutionError === submissionDisplayedError && submission.result && submission.result.errorMessage) {
         innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(nl2br(submission.result.errorMessage))}></div>);
+    } else if (submission && submission.result && submission.result.compilationError) {
+        innerVisualization = <div className="task-visualization-not-public">
+            <div>
+                <p>
+                    {getMessage('SUBMISSION_VIEW_COMPILATION_ERROR')}
+                </p>
+                <p>
+                    <Button
+                        className="quickalgo-button"
+                        onClick={showCompilationError}
+                    >
+                        {getMessage('SUBMISSION_VIEW_COMPILATION_ERROR_BUTTON')}
+                    </Button>
+                </p>
+            </div>
+        </div>;
     } else if (currentTestResult && currentTestResult.noFeedback) {
         innerVisualization = <div className="task-visualization-not-public">
             {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
-        </div>
+        </div>;
     } else if (currentTestPublic || (currentTestResult && !currentTestResult.noFeedback)) {
         innerVisualization = <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
             {Visualization ? <Visualization/> :

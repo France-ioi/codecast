@@ -151,6 +151,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                         wholeCategories: ['smart_contract_main_blocks', 'smart_contract_types'],
                     },
                 },
+                // expectedStorage: "(Pair (string %names) (nat %nb_calls))",
             },
             hints: [
                 {content: 'Indice 1'},
