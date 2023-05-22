@@ -51,7 +51,7 @@ import {Directive, parseDirectives} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
     ActionTypes,
-    stepperDisplayError, stepperExecutionEnd,
+    stepperDisplayError, stepperExecutionEnd, stepperExecutionEndConditionReached,
     stepperExecutionError,
     stepperExecutionSuccess, stepperRunBackground, stepperRunBackgroundFinished
 } from "./actionTypes";
@@ -1021,34 +1021,7 @@ function* stepperStepSaga(app: App, action) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
                     } catch (executionResult: unknown) {
-                        // checkEndCondition can throw the message or an object with more details
-                        const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : executionResult as string;
-
-                        const computeGrade = taskContext.infos.computeGrade ? taskContext.infos.computeGrade : (context: QuickAlgoLibrary, message: string) => {
-                            let rate = 0;
-                            if (context.success) {
-                                rate = 1;
-                            }
-
-                            return {
-                                successRate: rate,
-                                message: message
-                            };
-                        };
-
-                        const gradeResult: {successRate: number, message: string} = computeGrade(taskContext, message);
-                        const aggregatedLibraryTestResult = executionResult instanceof LibraryTestResult
-                            ? executionResult : LibraryTestResult.fromString(message);
-                        aggregatedLibraryTestResult.successRate = gradeResult.successRate;
-                        aggregatedLibraryTestResult.message = gradeResult.message;
-
-                        if (taskContext.doNotStartGrade) {
-                            yield* put(stepperExecutionEnd());
-                        } else if (taskContext.success) {
-                            yield* put(stepperExecutionSuccess(aggregatedLibraryTestResult));
-                        } else {
-                            yield* put(stepperExecutionError(aggregatedLibraryTestResult));
-                        }
+                        yield* put(stepperExecutionEndConditionReached(executionResult));
                     }
                 }
             }
