@@ -160,7 +160,6 @@ function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 
 function* getSupportedViews() {
     const {supportsTabs} = yield* call(platformApi.getTaskParams);
-    console.log('Supports tabs', supportsTabs);
 
     if (supportsTabs) {
         return {
