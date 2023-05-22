@@ -366,6 +366,9 @@ function* taskRunExecution(app: App, {type, payload}) {
     log.getLogger('task').debug('START RUN EXECUTION', type, payload);
     const {level, testId, tests, options, answer, resolve} = payload;
 
+    log.getLogger('task').debug('Unload any previous context');
+    quickAlgoLibraries.unloadContext('background');
+
     yield* put({type: AppActionTypes.AppInit, payload: {options: {...options}, environment: 'background'}});
     yield* put(platformAnswerLoaded(answer));
     yield* put(taskLoad({testId, level, tests, reloadContext: true}));

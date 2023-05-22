@@ -54,6 +54,16 @@ export class QuickAlgoLibraries {
         return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]][environment] : null;
     }
 
+    unloadContext(environment: string): void {
+        for (let name of Object.keys(this.libraries)) {
+            const context = this.libraries[name][environment];
+            if (context) {
+                context.unload();
+                delete this.libraries[name][environment];
+            }
+        }
+    }
+
     reset(taskInfos = null, appState: AppStore = null) {
         this.applyOnLibraries('reset', [taskInfos, appState]);
     }
@@ -120,7 +130,7 @@ export function* createQuickalgoLibrary() {
     log.getLogger('libraries').debug('Create a context', context, state.environment);
     if (context) {
         log.getLogger('libraries').debug('Unload initial context first');
-        context.unload();
+        quickAlgoLibraries.unloadContext(state.environment);
     }
 
     const display = 'main' === state.environment;
@@ -155,9 +165,11 @@ export function* createQuickalgoLibrary() {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
         }
-        window.quickAlgoLibrariesList.push(['smart_contract', (display, infos) => {
-            return new SmartContractLib(display, infos);
-        }]);
+        if (!window.quickAlgoLibrariesList.find(lib => 'smart_contract' === lib[0])) {
+            window.quickAlgoLibrariesList.push(['smart_contract', (display, infos) => {
+                return new SmartContractLib(display, infos);
+            }]);
+        }
 
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
         if (-1 !== libraryIndex) {
