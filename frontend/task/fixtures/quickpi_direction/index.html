@@ -1,0 +1,96 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Afficher la direction</title>
+    <script>
+        window.stringsLanguage = 'fr';
+
+        window.quickPiHello = "Bonjour";
+
+        window.quickPiPress = "Appuyez";
+        window.quickPiThankYou = "Merci";
+
+        window.quickPiDirection = "Direction ?";
+        window.quickPiUp = "Haut";
+        window.quickPiDown = "Bas";
+        window.quickPiLeft = "Gauche";
+        window.quickPiRight = "Droite";
+
+
+    </script>
+    <!-- <script class="remove" type="text/javascript" src="../../../_common/modules/ext/quickpi/quickpi.js"></script> -->
+    <script class="remove" type="text/javascript" src="../../../_common/modules/pemFioi/importModules-1.4-mobileFirst.js" id="import-modules"></script>
+    <script class="remove" type="text/javascript">
+        var modulesPath = '../../../_common/modules/';
+          importModules([
+          'jquery-1.7.1', 'JSON-js', 'raphael-2.2.1', 'beaver-task-2.0', 'jschannel', 'raphaelFactory-1.0', 'delayFactory-1.0', 'simulationFactory-1.0',
+          'platform-pr', 'buttonsAndMessages', 'beav-1.0', 'installationAPI.01', 'miniPlatform',
+          'conceptDisplay-1.0', 'conceptViewer-1.0', 'conceptViewer_css-1.0',
+          'taskStyles-mobileFirst', 'quickpi-board', 'quickpi-connection', 'blockly-quickpi' ]);
+
+
+        // set Blockly as default language when none is specified through ?language=
+        importLanguageModules('blockly');
+    </script>
+    <script class="remove" type="text/javascript">
+        var json = {
+            "id": "test-template",
+            "language": "fr",
+            "version": "fr.01",
+            "authors": "",
+            "translators": [],
+            "license": "",
+            "taskPathPrefix": "",
+            "modulesPathPrefix": "",
+            "browserSupport": [],
+            "acceptedAnswers": [""],
+            "fullFeedback": true,
+            "minWidth": "auto"
+        };
+
+        var strings = {
+            outputCorrect: "Bravo ! La sortie est correcte.",
+            outputIncorrect: "La sortie est incorrecte."
+        };
+    </script>
+    <script type="text/javascript" src="task.js"></script>
+    <script type="text/javascript" src="../outputGenerator.js"></script>
+</head>
+
+   <body onresize="task.displayedSubTask.updateScale()">
+      <div id="task">
+         <h1>Afficher la direction</h1>
+
+         <div id="tabsContainer"></div>
+         <div id="taskContent">
+            <img src="icon.png" style="display:none" />
+            <div id="taskIntro">
+                <div class="easy">
+                    <p>Écrivez un programme qui laisse l'écran vide au début, puis affiche le texte "Bonjour" dès que l'on appuie sur le bouton, et le laisse affiché.</p>
+                    <p>
+                    Votre programme devra boucler indéfiniment, et tester en permanence si le bouton est enfoncé. Notez qu'un texte affiché à l'écran y reste jusqu'à ce que l'on affiche autre chose.
+                </div>
+                <div class="medium">
+                     <p>Écrivez un programme qui :
+                     <li>affiche le texte "Appuyez"
+                     <li>affiche le texte "Merci" dès que l'on appuie sur le bouton, et le laisse affiché.
+                     </p>
+                </div>
+                <div class="hard">
+                     <p>Écrivez un programme qui :
+                        <li>affiche le texte "Direction ?" dès le début
+                        <li>puis lorsque l'on appuie sur une direction, affiche le texte "Haut", "Droite", "Bas" ou "Gauche" selon la direction appuyée.
+                     </p>
+                </div>
+               <p>Utilisez <a style='font-weight:bold;text-decoration: underline;cursor:pointer' onclick="conceptViewer.showConcept('blockly_controls_if')"><span data-lang="blockly scratch">le bloc si</span><span data-lang="python">l'instruction if</span></a>,
+               <a style='font-weight:bold;text-decoration: underline;cursor:pointer' onclick="conceptViewer.showConcept('quickpi_screen')">l'écran</a><span class="hard">, <a style='font-weight:bold;text-decoration: underline;cursor:pointer' onclick="conceptViewer.showConcept('quickpi_button')">la manette</a>
+               et
+               <a style='font-weight:bold;text-decoration: underline;cursor:pointer' onclick="conceptViewer.showConcept('blockly_controls_infiniteloop')"><span data-lang="blockly scratch">le bloc répéter indéfiniment</span><span data-lang="python">une boucle infinie</span></a>.
+            </div>
+            <div id="gridContainer"></div>
+            <div id="blocklyLibContent"></div>
+         </div>
+      </div><!-- task -->
+   </body>
+</html>
