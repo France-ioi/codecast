@@ -207,6 +207,13 @@ export function* createQuickalgoLibrary() {
     yield* call(createDisplayHelper);
     if (hasBlockPlatform(state.options.platform) && currentTask) {
         yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
+    } else {
+        // Create a fake blockly helper to make other libs like Turtle work
+        contextLib.blocklyHelper = {
+            updateSize() {
+
+            },
+        };
     }
 
     const testData = selectCurrentTestData(state);
