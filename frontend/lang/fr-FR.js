@@ -213,6 +213,7 @@ module.exports = {
     TASK_BLOCKS_REMAINING_BLOCKS: '{remaining} Bloc|{remaining} Blocs',
     TASK_BLOCKS_LIMIT_REMAINING: 'reste :',
     TASK_BLOCKS_OVER_LIMIT: '{overLimit} bloc en trop utilisé pour {limit} autorisés|{overLimit} blocs en trop utilisés pour {limit} autorisés',
+    TASK_POST_COMPILATION_ERROR: "Cependant, votre programme ne valide pas l'exercice : ",
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",
     TASK_BLOCK_CATEGORY_SENSORS: "Capteurs",
     TASK_BLOCK_CATEGORY_LOOPS: "Boucles",
