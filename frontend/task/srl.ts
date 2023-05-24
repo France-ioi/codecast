@@ -1,5 +1,5 @@
 import {Bundle} from "../linker";
-import {call, select, takeEvery} from "typed-redux-saga";
+import {call, put, select, takeEvery} from "typed-redux-saga";
 import {ActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {Screen} from "../common/screens";
@@ -12,6 +12,7 @@ import {AppStore} from "../store";
 import {taskSetBlocksUsage, taskSuccess} from "./task_slice";
 import log from 'loglevel';
 import {appSelect} from '../hooks';
+import {callPlatformValidate} from '../submission/submission';
 
 export interface StatsState {
     timeSpentSeconds?: number,
@@ -91,13 +92,25 @@ export default function (bundle: Bundle) {
         });
 
         // @ts-ignore
-        yield* takeEvery(StepperActionTypes.StepperStep, function* ({payload: {mode, useSpeed}}) {
-            if (window.SrlLogger) {
-                const context = quickAlgoLibraries.getContext(null, 'main');
-                if (useSpeed && StepperStepMode.Run !== mode) {
+        yield* takeEvery(StepperActionTypes.StepperStepFromControls, function* ({payload: {mode, useSpeed}}) {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (useSpeed && StepperStepMode.Run !== mode) {
+                if (window.SrlLogger) {
                     window.SrlLogger.stepByStep({context}, 'step');
-                } else if (useSpeed && StepperStepMode.Run === mode) {
+                }
+            } else if (useSpeed && StepperStepMode.Run === mode) {
+                if (window.SrlLogger) {
                     window.SrlLogger.stepByStep({context}, 'play');
+                }
+            }
+        });
+
+        // @ts-ignore
+        yield* takeEvery(StepperActionTypes.Compile, function* ({payload: {fromControls}}) {
+            if (fromControls) {
+                const logAttempts = yield* appSelect(state => state.options.logAttempts);
+                if (logAttempts) {
+                    yield* put(callPlatformValidate('log'));
                 }
             }
         });

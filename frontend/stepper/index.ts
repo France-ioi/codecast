@@ -1209,7 +1209,8 @@ function* stepperCompileFromControlsSaga(app: App) {
             callback(result) {
                 app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
                 deferredPromise.resolve(CompileStatus.Done === result);
-            }
+            },
+            fromControls: true,
         },
     });
 

@@ -599,7 +599,7 @@ function getAppropriateXmlLayout(layoutType: LayoutType, layoutMobileMode: Layou
 }
 
 export function createLayout(layoutProps: LayoutProps): ReactElement {
-    const instructionsAvailable = layoutProps.currentTask && 'solve' !== layoutProps.activeView && !(layoutProps.showVariables && 'variables' === layoutProps.advisedVisualization);
+    const instructionsAvailable = layoutProps.currentTask && LayoutView.Editor !== layoutProps.activeView && !(layoutProps.showVariables && 'variables' === layoutProps.advisedVisualization);
 
     const xmlToReact = new XMLToReact({
         HorizontalLayout: (attrs) => ({
@@ -702,9 +702,9 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         layoutXml = '<Documentation/>';
     }
 
-    if (layoutProps.fullScreenActive || 'editor' === layoutProps.activeView) {
+    if (layoutProps.fullScreenActive) {
         layoutXml = '<Editor/>';
-    } else if ('instructions' === layoutProps.activeView) {
+    } else if (LayoutView.Task === layoutProps.activeView) {
         return <TaskInstructions hideShowMoreButton expanded/>;
     }
 
@@ -746,9 +746,8 @@ function layoutViewsChangedReducer(state: AppStore, {payload: {views}}) {
 }
 
 export enum LayoutView {
-    Editor = 'editor',
-    Instructions = 'instructions',
-    Solve = 'solve', // everything without instructions
+    Task = 'task', // instructions
+    Editor = 'editor', // solving interface (everything without instructions)
 }
 
 export function selectActiveView(state: AppStore): LayoutView|null {

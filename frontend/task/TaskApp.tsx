@@ -157,7 +157,7 @@ export function TaskApp() {
                             }
                         </div>
 
-                        {LayoutView.Instructions !== activeView && <MenuTask/>}
+                        {LayoutView.Task !== activeView && <MenuTask/>}
                     </div>
 
                     <ContextVisualizationImages/>

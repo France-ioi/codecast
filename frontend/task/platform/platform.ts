@@ -43,6 +43,7 @@ import {taskLoad} from '../index';
 import {taskLoaded} from '../task_slice';
 import {appSelect} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
+import {LayoutView} from '../layout/layout';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -153,21 +154,30 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
 }
 
 function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGetViewsEvent>) {
-    /* XXX only the 'task' view is declared */
-
-    const views = {
-        instructions: {},
-        editor: {},
-        solve: {},
-    };
-
+    const views = yield* call(getSupportedViews);
     yield* call(success, views);
 }
 
-function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof taskShowViewsEvent>) {
-    /* The reducer has stored the views to show, just call success. */
+function* getSupportedViews() {
+    const {supportsTabs} = yield* call(platformApi.getTaskParams);
 
-    yield* put({type: LayoutActionTypes.LayoutViewsChanged, payload: {views}});
+    if (supportsTabs) {
+        return {
+            [LayoutView.Task]: {},
+            [LayoutView.Editor]: {},
+        }
+    } else {
+        return {
+            [LayoutView.Task]: {},
+        };
+    }
+}
+
+function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof taskShowViewsEvent>) {
+    const supportedViews = yield* call(getSupportedViews);
+    // Use views system only if we support at least 2 views, otherwise we display everything
+    let selectedViews = Object.keys(supportedViews).length >= 2 ? views : {};
+    yield* put({type: LayoutActionTypes.LayoutViewsChanged, payload: {views: selectedViews}});
     yield* call(success);
 }
 

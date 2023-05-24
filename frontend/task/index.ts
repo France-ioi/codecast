@@ -751,7 +751,7 @@ export default function (bundle: Bundle) {
             } else if (error) {
                 yield* put(stepperDisplayError(error));
             } else if (score > 0) {
-                yield* put(stepperDisplayError(message));
+                yield* put(stepperDisplayError(`${message} (${Math.round(score * 100)}%)`));
             }
         });
 

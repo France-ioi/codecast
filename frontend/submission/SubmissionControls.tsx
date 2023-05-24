@@ -5,7 +5,7 @@ import {Button} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {getMessage} from "../lang";
-import {submissionTriggerPlatformValidate} from "./submission";
+import {callPlatformValidate} from "./submission";
 
 export function SubmissionControls() {
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
@@ -13,7 +13,7 @@ export function SubmissionControls() {
     const dispatch = useDispatch();
 
     const submit = () => {
-        dispatch(submissionTriggerPlatformValidate());
+        dispatch(callPlatformValidate());
     };
 
     return (

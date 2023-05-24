@@ -105,6 +105,10 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
             options.mode = CodecastOptionsMode.Play;
         }
     }
+
+    if ('log' in query) {
+        options.logAttempts = true;
+    }
 }
 
 function appInitReducer(state: AppStore, {payload: {options, query}}) {
@@ -115,6 +119,10 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
 
     if (isLocalStorageEnabled() && window.localStorage.getItem('platform')) {
         state.options.platform = window.localStorage.getItem('platform') as CodecastPlatform;
+    }
+
+    if ('tralalere' === state.options.app) {
+        state.options.logAttempts = true;
     }
 
     loadOptionsFromQuery(options, query);
