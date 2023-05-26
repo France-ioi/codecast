@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>test-map</title>
+        <script>
+            window.stringsLanguage = 'en';
+        </script>
+        <script class="remove" type="text/javascript" src="../../../_common/modules/pemFioi/importModules-1.1.js" id="import-modules"></script>
+        <script class="remove" type="text/javascript">
+            var modulesPath = '../../../_common/modules/';
+            importModules([
+                'jquery-1.7.1', 'JSON-js', 'raphael-2.2.1', 'beaver-task-2.0', 'jschannel',
+                'raphaelFactory-1.0', 'delayFactory-1.0', 'simulationFactory-1.0',
+                'platform-pr', 'buttonsAndMessages', 'beav-1.0', 'installationAPI.01', 'miniPlatform',
+                'taskStyles-0.1', 'conceptViewer-1.0', 'conceptViewer_css-1.0',
+                'blockly_map', 'map', 
+                'logger'
+            ]);
+            importLanguageModules('blockly');
+        </script>
+        <script class="remove" type="text/javascript">
+            var json = {
+                "id": "test-map",
+                "language": "fr",
+                "version": "fr.01",
+                "authors": "",
+                "translators": [],
+                "license": "",
+                "taskPathPrefix": "",
+                "modulesPathPrefix": "",
+                "browserSupport": [],
+                "acceptedAnswers": [""],
+                "fullFeedback": true,
+                "minWidth": "auto"
+            }
+            var strings = {
+                complete: 'Complete'
+            }
+        </script>
+        <script type="text/javascript" src="task.js"></script>
+    </head>
+
+    <body onresize="task.displayedSubTask.updateScale()">
+        <div id="task">
+            <h1>test-map</h1>
+            <div id="tabsContainer"></div>
+            <div id="taskContent">
+            <div id="gridContainer"></div>
+            <div id="blocklyLibContent"></div>
+        </div>
+    </body>
+</html>
+

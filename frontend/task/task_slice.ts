@@ -11,6 +11,7 @@ import StringsLoginFixture from './fixtures/14_strings_01_login';
 import DatabaseFixture from './fixtures/test_database';
 import P5Fixture from './fixtures/test_p5';
 import CraneFixture from './fixtures/test_crane';
+import MapFixture from './fixtures/test_map';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
@@ -30,6 +31,7 @@ const availableTasks = {
     p5: P5Fixture,
     crane: CraneFixture,
     login: StringsLoginFixture,
+    map: MapFixture,
 };
 
 export enum TaskActionTypes {
