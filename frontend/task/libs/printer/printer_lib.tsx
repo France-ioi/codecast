@@ -304,8 +304,8 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (this.taskInfos && this.taskInfos.output) {
             this.innerState.expectedOutput = this.taskInfos.output;
         }
-        if (appState && appState.ioPane.mode) {
-            this.ioMode = appState.ioPane.mode;
+        if (appState && appState.options.ioMode) {
+            this.ioMode = appState.options.ioMode;
         }
     };
 

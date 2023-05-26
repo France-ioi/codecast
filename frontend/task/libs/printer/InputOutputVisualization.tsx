@@ -11,7 +11,7 @@ import {Card} from 'react-bootstrap';
 import {Icon} from '@blueprintjs/core';
 
 export function InputOutputVisualization() {
-    const ioMode = useAppSelector(state => state.ioPane.mode);
+    const ioMode = useAppSelector(state => state.options.ioMode);
     const hasStepper = useAppSelector(state => !!getCurrentStepperState(state) || !state.task.resetDone);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const taskState = useAppSelector(state => state.task.state);

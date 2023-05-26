@@ -4,7 +4,7 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {ActionTypes as BufferActionTypes} from '../buffers/actionTypes';
 import {Bundle} from "../linker";
-import {put, select, takeEvery} from "typed-redux-saga";
+import {put, takeEvery} from "typed-redux-saga";
 import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
@@ -15,6 +15,7 @@ import {appSelect} from '../hooks';
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {BlockDocumentModel, DocumentModel} from '../buffers';
 import {hasBlockPlatform} from '../stepper/js';
+import {IoMode} from '../stepper/io';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -109,10 +110,19 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('log' in query) {
         options.logAttempts = true;
     }
+    if ('allowExecutionOverBlocksLimit' in query) {
+        options.allowExecutionOverBlocksLimit = true;
+    }
+    if ('ioMode' in query && 'split' === query.ioMode) {
+        options.ioMode = IoMode.Split;
+    }
 }
 
 function appInitReducer(state: AppStore, {payload: {options, query}}) {
     state.options = options;
+    if (!options.ioMode) {
+        options.ioMode = IoMode.Terminal;
+    }
     if (!query || options.disableQueryOptions) {
         return;
     }
