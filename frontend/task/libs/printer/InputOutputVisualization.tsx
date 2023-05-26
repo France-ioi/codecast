@@ -38,11 +38,11 @@ export function InputOutputVisualization() {
                                 readOnly={!!currentTask}
                                 requiredWidth='100%'
                                 requiredHeight='150px'
-                                editorProps={{
+                                editorProps={currentTask ? {
                                     hideCursor: true,
                                     highlightActiveLine: false,
                                     dragEnabled: false,
-                                }}
+                                } : {}}
                             />
                         </Card.Body>
                     </Card>

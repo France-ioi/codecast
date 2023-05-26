@@ -92,7 +92,7 @@ export function ContextVisualization() {
         innerVisualization = <div className="task-visualization-not-public">
             {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
         </div>;
-    } else if (currentTestPublic || (currentTestResult && !currentTestResult.noFeedback)) {
+    } else if (!currentTask || currentTestPublic || (currentTestResult && !currentTestResult.noFeedback)) {
         innerVisualization = <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
             {Visualization ? <Visualization/> :
                 <div id="taskContent">
