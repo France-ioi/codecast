@@ -664,7 +664,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(stepperExecutionEndConditionReached, function* ({payload: {executionResult}}) {
             const context = quickAlgoLibraries.getContext(null, app.environment);
             // checkEndCondition can throw the message or an object with more details
-            const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : executionResult as string;
+            const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : String(executionResult);
 
             const computeGrade = context.infos.computeGrade ? context.infos.computeGrade : (context: QuickAlgoLibrary, message: string) => {
                 let rate = 0;
