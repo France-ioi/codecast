@@ -1,4 +1,5 @@
 import {LibraryTestResult} from '../task/libs/library_test_result';
+import {createAction} from '@reduxjs/toolkit';
 
 export enum ActionTypes {
     StepperTaskCancelled = 'Stepper.Task.Cancelled',
@@ -31,6 +32,7 @@ export enum ActionTypes {
     StepperSynchronizingAnalysisChanged = 'Stepper.Synchronizing.Analysis.Changed',
     StepperExecutionSuccess = 'Stepper.Execution.Success',
     StepperExecutionError = 'Stepper.Execution.Error',
+    StepperExecutionEnd = 'Stepper.Execution.End', // End of program without success nor error (for experiment mode)
     StepperDisplayError = 'Stepper.Execution.DisplayError',
     StepperClearError = 'Stepper.Execution.ClearError',
     Compile = 'Compile',
@@ -55,6 +57,16 @@ export const stepperExecutionError = (testResult: LibraryTestResult, clearHighli
         clearHighlight,
     },
 });
+
+export const stepperExecutionEnd = () => ({
+    type: ActionTypes.StepperExecutionEnd,
+});
+
+export const stepperExecutionEndConditionReached = createAction('stepper/endConditionReached', (executionResult: unknown) => ({
+    payload: {
+        executionResult,
+    },
+}));
 
 export const stepperDisplayError = (error: string|LibraryTestResult) => ({
     type: ActionTypes.StepperDisplayError,

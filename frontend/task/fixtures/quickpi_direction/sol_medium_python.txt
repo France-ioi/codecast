@@ -1,0 +1,8 @@
+displayText("Appuyez")
+while True:
+    if isButtonPressed():
+        displayText("Merci")
+
+
+
+

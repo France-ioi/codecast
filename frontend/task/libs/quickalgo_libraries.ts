@@ -28,6 +28,7 @@ import {SmartContractLib} from './smart_contract/smart_contract_lib';
 import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
 import {platformsList} from '../../stepper/platforms';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
+import {taskApi} from '../platform/platform';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -51,6 +52,16 @@ export class QuickAlgoLibraries {
         }
 
         return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]][environment] : null;
+    }
+
+    unloadContext(environment: string): void {
+        for (let name of Object.keys(this.libraries)) {
+            const context = this.libraries[name][environment];
+            if (context) {
+                context.unload();
+                delete this.libraries[name][environment];
+            }
+        }
     }
 
     reset(taskInfos = null, appState: AppStore = null) {
@@ -119,7 +130,7 @@ export function* createQuickalgoLibrary() {
     log.getLogger('libraries').debug('Create a context', context, state.environment);
     if (context) {
         log.getLogger('libraries').debug('Unload initial context first');
-        context.unload();
+        quickAlgoLibraries.unloadContext(state.environment);
     }
 
     const display = 'main' === state.environment;
@@ -148,15 +159,17 @@ export function* createQuickalgoLibrary() {
             yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
         }
     }
-    yield* call(loadFonts, state.options.theme);
+    yield* call(loadFonts, state.options.theme, currentTask);
 
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
         }
-        window.quickAlgoLibrariesList.push(['smart_contract', (display, infos) => {
-            return new SmartContractLib(display, infos);
-        }]);
+        if (!window.quickAlgoLibrariesList.find(lib => 'smart_contract' === lib[0])) {
+            window.quickAlgoLibrariesList.push(['smart_contract', (display, infos) => {
+                return new SmartContractLib(display, infos);
+            }]);
+        }
 
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
         if (-1 !== libraryIndex) {
@@ -200,6 +213,9 @@ export function* createQuickalgoLibrary() {
     log.getLogger('libraries').debug('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     log.getLogger('libraries').debug('Created context', context);
+    taskApi.displayedSubTask = {
+        context,
+    };
     // if (!context.blocklyHelper) {
     //     context.blocklyHelper = {
     //         updateSize: () => {},
@@ -334,7 +350,7 @@ class DisplayHelper {
         }
     }
     async showPopupDialog(message) {
-        const dialog = `<div id="popupMessage">${message}</div>`;
+        const dialog = `<div id="popupMessage" class="dialog-message" style="display: block">${message}</div>`;
         const mainStore = Codecast.environments['main'].store;
         mainStore.dispatch(displayModal({message: dialog, mode: ModalType.dialog}));
     }

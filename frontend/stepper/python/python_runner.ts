@@ -49,7 +49,6 @@ export default class PythonRunner extends AbstractRunner {
     private availableBlocks = [] as Block[];
     public _isFinished = false;
     private quickAlgoCallsExecutor;
-    private _nbActions = 0;
     public hasCalledHandler = false;
 
     constructor(context) {
@@ -529,7 +528,10 @@ export default class PythonRunner extends AbstractRunner {
 
     private _resetInterpreterState() {
         this._steps = 0;
+        this._stepsWithoutAction = 0;
+        this._lastNbActions = 0;
         this._nbActions = 0;
+        this._allowStepsWithoutDelay = 0;
 
         this._isRunning = false;
         this.stepMode = false;
@@ -567,6 +569,12 @@ export default class PythonRunner extends AbstractRunner {
         this._debugger.enable_step_mode();
         this._debugger.resume.call(this._debugger, resolve, reject);
         this._steps += 1;
+        if(this._lastNbActions != this._nbActions) {
+            this._lastNbActions = this._nbActions;
+            this._stepsWithoutAction = 0;
+        } else {
+            this._stepsWithoutAction += 1;
+        }
     }
 
     // Used in Skulpt

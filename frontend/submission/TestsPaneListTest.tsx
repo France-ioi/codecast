@@ -83,7 +83,6 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const testResult = props.submission ? props.submission.result.tests.find(otherTest => otherTest.testId === test.id) : null;
     const testIndex = useAppSelector(state => state.task.taskTests.findIndex(otherTest => otherTest.id === test.id));
 
-    const testName = test.name ?? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1});
     const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;
     const submissionDisplayError = useAppSelector(state => state.submission.submissionDisplayedError);
 
@@ -115,7 +114,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
             {testResult && errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
                 <FontAwesomeIcon icon={errorCodeData.icon}/>
             </div>}
-            <span className="submission-result-test-title">{testName}</span>
+            <span className="submission-result-test-title">{test.name}</span>
             {testResult && <span className="submission-result-test-result">{message}</span>}
         </div>
     )

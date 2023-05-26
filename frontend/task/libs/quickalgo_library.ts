@@ -43,6 +43,7 @@ export abstract class QuickAlgoLibrary {
     needsRedrawDisplay: boolean = false;
     environment: string;
     success?: boolean;
+    doNotStartGrade?: boolean;
 
     constructor(display: boolean, infos: any) {
         this.display = display;

@@ -79,6 +79,7 @@ export interface TaskSubmissionResultPayload {
     message?: string,
     steps?: number,
     testResult?: LibraryTestResult,
+    noGrading?: boolean,
 }
 
 export const callPlatformValidate = createAction('submission/callPlatformValidate', (action?: string) => ({

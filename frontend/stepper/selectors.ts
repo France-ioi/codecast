@@ -27,6 +27,7 @@ interface StepperControlsStateToProps {
     compileOrExecuteMessage: string,
     controls: any,
     canInterrupt: boolean,
+    canGoToEnd: boolean,
     canStep: boolean,
     canExit: boolean,
     canStepOut: boolean,
@@ -58,7 +59,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
     let showCompile = false, showControls = true, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
     let canStepOver = false;
-    let canInterrupt = false, canUndo = false, canRedo = false;
+    let canInterrupt = false, canUndo = false, canRedo = false, canGoToEnd = false;
     let isFinished = false;
     let showExpr = !!platformData.hasMicroSteps;
     let compileOrExecuteMessage = '';
@@ -90,6 +91,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
             showCompile = true;
             canCompile = enabled;
             canStep = true;
+            canGoToEnd = true;
         } else if (status === 'idle') {
             const currentStepperState = stepper.currentStepperState;
 
@@ -97,6 +99,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
             showEdit = true;
             showControls = true;
             canExit = enabled;
+            canGoToEnd = !currentStepperState.isFinished;
             if (hasBlockPlatform(platform)) {
                 canStep = !currentStepperState.isFinished;
             } else if (platform === CodecastPlatform.Python) {
@@ -125,11 +128,13 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
             showEdit = true;
             showControls = true;
             canInterrupt = enabled && !isStepperInterrupting(state) && !inputNeeded;
+            canGoToEnd = true;
         }
     }
 
     canStep = canStep && !runningBackground;
     canRestart = canRestart || runningBackground;
+    canGoToEnd = canGoToEnd && !runningBackground;
 
     return {
         showStepper, showControls, controls,
@@ -137,7 +142,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
         showExpr,
         showCompile, canCompile,
         canRestart, canStep, canStepOut, canInterrupt, canStepOver,
-        canUndo, canRedo,
+        canUndo, canRedo, canGoToEnd,
         compileOrExecuteMessage,
         isFinished,
         speed,
