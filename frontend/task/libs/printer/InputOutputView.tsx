@@ -8,6 +8,7 @@ import {useAppSelector} from '../../../hooks';
 import {isTestPublic, selectCurrentTest, selectCurrentTestData} from '../../task_slice';
 
 export function InputOutputView() {
+    const currentTask = useAppSelector(state => state.task.currentTask);
     const taskState = useAppSelector(state => state.task.state);
 
     return (
@@ -52,7 +53,7 @@ export function InputOutputView() {
                     />
                 </Card.Body>
             </Card>
-            <Card>
+            {currentTask && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INITIAL_OUTPUT")}
                     <Icon icon='lock'/>
@@ -71,7 +72,7 @@ export function InputOutputView() {
                         }}
                     />
                 </Card.Body>
-            </Card>
+            </Card>}
         </div>
     );
 }

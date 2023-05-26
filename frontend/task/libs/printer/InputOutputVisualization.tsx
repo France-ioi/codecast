@@ -47,7 +47,7 @@ export function InputOutputVisualization() {
                         </Card.Body>
                     </Card>
 
-                    {!!currentTask &&
+                    {currentTask &&
                         <Card>
                             <Card.Header className="terminal-view-header">
                                 {getMessage("IOPANE_INITIAL_OUTPUT")}

@@ -174,7 +174,7 @@ class TaskSubmissionExecutor {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
         const currentTask = state.task.currentTask;
-        const tests = extractTestsFromTask(currentTask, level);
+        const tests = currentTask ? extractTestsFromTask(currentTask, level) : state.task.taskTests;
 
         return yield new Promise<TaskSubmissionResultPayload>(resolve => {
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
