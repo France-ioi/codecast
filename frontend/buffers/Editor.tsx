@@ -313,7 +313,7 @@ export function Editor(props: EditorProps) {
 
         const {onInit, onSelect, onEdit} = props;
         if (undefined !== props.content) {
-            reset(documentFromString(props.content));
+            reset(documentFromString(String(props.content)));
         }
 
         if (typeof onInit === 'function') {
