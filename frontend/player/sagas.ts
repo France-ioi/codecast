@@ -20,12 +20,12 @@ import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {taskLoad} from "../task";
-import {inputBufferLibTest, PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
+import {PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
-import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
+import {currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
 import {isTaskPlatformLinked, setTaskEventsEnvironment} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
@@ -315,7 +315,9 @@ function ensureBackwardsCompatibility(events: any[], version?: string) {
         }
 
         if (key.split('.')[0] === 'buffer' && params[0] === 'input') {
-            params[0] = inputBufferLibTest;
+            //TODO: fix this because we don't use buffer anymore
+            // Change directly the current test
+            // params[0] = inputBufferLibTest;
         }
         if (key.split('.')[0] === 'buffer' && params[0] === 'output' && versionComponents[0] < 7) {
             // There was no such thing as expected output before v7

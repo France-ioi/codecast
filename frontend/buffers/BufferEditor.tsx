@@ -73,6 +73,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     }
 
     return <Editor
+        name={buffer}
         onInit={onInit}
         onEdit={onEdit}
         onSelect={onSelect}
