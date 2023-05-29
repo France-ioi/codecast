@@ -263,12 +263,14 @@ export default function (bundle: Bundle) {
             return;
         }
 
+        const tralalere = yield* appSelect(state => 'tralalere' === state.options.app);
+
         window.conceptViewer = {
             showConcept(concept, show) {
                 if (concept) {
                     app.dispatch(documentationConceptSelected(concept));
                 }
-                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
+                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: tralalere ? Screen.DocumentationBig : Screen.DocumentationSmall}});
             },
         };
 
