@@ -15,11 +15,14 @@ import {updateCurrentTestId} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
 import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
 import {CodecastPlatform} from '../stepper/platforms';
-import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_slice';
+import {submissionChangeDisplayedError, SubmissionErrorType, submissionSlice} from './submission_slice';
 import {getMessage} from '../lang';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {createAction} from '@reduxjs/toolkit';
 import {TaskLevelName} from '../task/platform/platform_slice';
+import {App} from '../index';
+import {addAutoRecordingBehaviour} from '../recorder/record';
+import {analysisTogglePath} from '../stepper/analysis/analysis_slice';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -165,6 +168,17 @@ export default function (bundle: Bundle) {
             } else if (null === payload) {
                 yield* put(stepperClearError());
             }
-        })
+        });
+    });
+
+    bundle.defer(function (app: App) {
+        if ('main' !== app.environment) {
+            return;
+        }
+
+        addAutoRecordingBehaviour(app, {
+            sliceName: submissionSlice.name,
+            actions: [],
+        });
     });
 }
