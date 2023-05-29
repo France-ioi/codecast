@@ -1112,6 +1112,7 @@ export function* updateSourceHighlightSaga(state: AppStoreReplay) {
     log.getLogger('stepper').debug('update source hightlight');
     const stepperState = state.stepper.currentStepperState;
     if (!stepperState) {
+        yield* call(clearSourceHighlightSaga);
         return;
     }
 
