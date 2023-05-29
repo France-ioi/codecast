@@ -875,10 +875,20 @@ export default function (bundle: Bundle) {
             }
         });
 
+        if ('main' !== app.environment) {
+            return;
+        }
+
         addAutoRecordingBehaviour(app, {
             sliceName: taskSlice.name,
-            actionNames: taskRecordableActions,
-            actions: taskSlice.actions,
+            actions: [
+                taskSuccess,
+                taskSuccessClear,
+                taskInputNeeded,
+                updateCurrentTestId,
+                taskSetBlocksPanelCollapsed,
+                taskChangeSoundEnabled,
+            ],
             onResetDisabled: true,
         });
 

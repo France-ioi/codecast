@@ -110,6 +110,8 @@ export class BlockDocumentModel extends BufferContentModel {
 export class BufferState {
     [immerable] = true;
 
+    public dirty; // Has the buffer been modified completely recently, in which case it needs to be entirely reloaded
+
     constructor(public model = new DocumentModel()) {
 
     }
@@ -179,6 +181,7 @@ function bufferResetReducer(state: AppStore, action): void {
     const {buffer, model} = action;
     initBufferIfNeeded(state, buffer);
     state.buffers[buffer].model = model;
+    state.buffers[buffer].dirty = false;
 }
 
 function bufferEditReducer(state: AppStore, action): void {
@@ -193,6 +196,7 @@ function bufferEditPlainReducer(state: AppStore, action): void {
     const {buffer, document} = action;
     initBufferIfNeeded(state, buffer);
     state.buffers[buffer].model.document = document;
+    state.buffers[buffer].dirty = true;
 }
 
 function bufferSelectReducer(state: AppStore, action): void {
@@ -529,8 +533,9 @@ function addReplayHooks({replayApi}: App) {
         log.getLogger('editor').debug('Editor Buffer Reset', state);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
+            const dirty = state.buffers[buffer].dirty;
 
-            yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick && model instanceof DocumentModel});
+            yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick && !dirty && model instanceof DocumentModel});
         }
 
         yield* call(updateSourceHighlightSaga, state);

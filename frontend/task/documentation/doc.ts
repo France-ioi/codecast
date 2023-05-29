@@ -6,7 +6,7 @@ import {
     documentationConceptSelected,
     documentationConceptsLoaded,
     DocumentationLanguage,
-    documentationLanguageChanged
+    documentationLanguageChanged, documentationSlice
 } from "./documentation_slice";
 import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
@@ -14,11 +14,19 @@ import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
 import {CodecastPlatform} from '../../stepper/platforms';
-import {QuickalgoTaskIncludeBlocks, Task, TaskActionTypes, taskSetAvailablePlatforms} from '../task_slice';
+import taskSlice, {
+    QuickalgoTaskIncludeBlocks,
+    Task,
+    TaskActionTypes,
+    taskRecordableActions,
+    taskSetAvailablePlatforms
+} from '../task_slice';
 import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
 import {createAction} from '@reduxjs/toolkit';
 import {documentModelFromString} from '../../buffers';
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
+import {addAutoRecordingBehaviour} from '../../recorder/record';
+import {documentFromString} from '../../buffers/document';
 
 let openerChannel;
 
@@ -259,6 +267,30 @@ export interface ConceptViewerConfigs {
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* (app: App) {
+        yield* takeEvery(documentationUseCodeExample, function* (action) {
+            const {code, language} = action.payload;
+
+            yield* put({
+                type: BufferActionTypes.BufferEditPlain,
+                buffer: 'source',
+                document: documentFromString(code),
+            });
+            const newPlatform = 'c' === language ? CodecastPlatform.Unix : language;
+            const currentPlatform = yield* appSelect(state => state.options.platform);
+            if (newPlatform !== currentPlatform) {
+                yield* put({
+                    type: CommonActionTypes.PlatformChanged,
+                    payload: {
+                        platform: newPlatform,
+                    },
+                });
+            }
+            yield* put({
+                type: CommonActionTypes.AppSwitchToScreen,
+                payload: {screen: null},
+            });
+        });
+
         if ('main' !== app.environment) {
             return;
         }
@@ -314,26 +346,6 @@ export default function (bundle: Bundle) {
             });
         });
 
-        yield* takeEvery(documentationUseCodeExample, function* (action) {
-            const {code, language} = action.payload;
-
-            yield* put({
-                type: BufferActionTypes.BufferReset,
-                buffer: 'source',
-                model: documentModelFromString(code),
-            });
-            yield* put({
-                type: CommonActionTypes.PlatformChanged,
-                payload: {
-                    platform: 'c' === language ? CodecastPlatform.Unix : language,
-                },
-            });
-            yield* put({
-                type: CommonActionTypes.AppSwitchToScreen,
-                payload: {screen: null},
-            });
-        });
-
         // @ts-ignore
         yield* takeEvery([ActionTypes.PlatformChanged, TaskActionTypes.TaskLoad], function* () {
             const newPlatform = yield* appSelect(state => state.options.platform);
@@ -342,6 +354,13 @@ export default function (bundle: Bundle) {
             if (platformDocumentationLanguage !== documentationLanguage) {
                 yield* put(documentationLanguageChanged(platformDocumentationLanguage));
             }
+        });
+
+        addAutoRecordingBehaviour(app, {
+            actions: [
+                documentationUseCodeExample,
+            ],
+            onResetDisabled: true,
         });
     });
 }
