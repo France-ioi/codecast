@@ -697,20 +697,21 @@ export default function (bundle: Bundle) {
             } else {
                 // Do a post-compilation if is has not been done entirely before starting the execution
                 const state = yield* appSelect();
-                if (state.options.allowExecutionOverBlocksLimit) {
-                    const answer = selectAnswer(state);
-                    const platform = state.options.platform;
-                    try {
-                        checkCompilingCode(answer, platform, state);
-                    } catch (e) {
-                        log.getLogger('task').debug('Post compilation error', e);
-                        aggregatedLibraryTestResult.message = `${aggregatedLibraryTestResult.message} ${getMessage('TASK_POST_COMPILATION_ERROR').s} ${e.toString()}`;
-                        yield* put(stepperExecutionError(aggregatedLibraryTestResult));
-                        return;
-                    }
-                }
 
                 if (context.success) {
+                    if (state.options.allowExecutionOverBlocksLimit) {
+                        const answer = selectAnswer(state);
+                        const platform = state.options.platform;
+                        try {
+                            checkCompilingCode(answer, platform, state);
+                        } catch (e) {
+                            log.getLogger('task').debug('Post compilation error', e);
+                            aggregatedLibraryTestResult.message = `${aggregatedLibraryTestResult.message} ${getMessage('TASK_POST_COMPILATION_ERROR').s} ${e.toString()}`;
+                            yield* put(stepperExecutionError(aggregatedLibraryTestResult));
+                            return;
+                        }
+                    }
+
                     yield* put(stepperExecutionSuccess(aggregatedLibraryTestResult));
                 } else {
                     yield* put(stepperExecutionError(aggregatedLibraryTestResult));
