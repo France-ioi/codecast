@@ -312,9 +312,6 @@ export function Editor(props: EditorProps) {
         }
 
         const {onInit, onSelect, onEdit} = props;
-        if (undefined !== props.content) {
-            reset(documentFromString(String(props.content)));
-        }
 
         if (typeof onInit === 'function') {
             const api = {
@@ -334,12 +331,19 @@ export function Editor(props: EditorProps) {
             };
             onInit(api);
         }
+
         if (typeof onSelect === 'function') {
             session.selection.on("changeCursor", onSelectionChanged, true);
             session.selection.on("changeSelection", onSelectionChanged, true);
         }
         if (typeof onEdit === 'function') {
             session.on("change", onTextChanged);
+        }
+
+        if (undefined !== props.content) {
+            setTimeout(() => {
+                reset(documentFromString(String(props.content)));
+            });
         }
 
         // @ts-ignore
@@ -443,6 +447,10 @@ export function Editor(props: EditorProps) {
         }
 
         const value = props.content ? props.content : '';
+        if (value === editor.current.getSession().getValue()) {
+            return;
+        }
+
         wrapModelToEditor(() => {
             editor.current.getSession().setValue(value);
             editor.current.resize(true);

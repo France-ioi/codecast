@@ -87,7 +87,6 @@ export interface TaskTest {
     contextState: any,
 }
 
-
 export interface QuickalgoTaskIncludeBlocks {
     groupByCategory?: boolean,
     originalGroupByCategory?: boolean,
@@ -176,7 +175,7 @@ export function isServerTask(object: Task): boolean {
 }
 
 export function isServerTest(object: TaskTest): boolean {
-    return null !== object.id && undefined !== object.id;
+    return null !== object.groupType && undefined !== object.groupType;
 }
 
 // TODO: update this function when we will have a "public" field in tm_task_tests
@@ -276,22 +275,20 @@ export const taskSlice = createSlice({
             state.currentTestId = action.payload.testId;
         },
         updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
-            if (null === state.currentTestId) {
+            if (null === state.currentTestId || !(state.currentTestId in state.taskTests)) {
                 // Create a new test
                 state.taskTests.push({
                     data: action.payload,
                     contextState: null,
                 } as TaskTest);
                 state.currentTestId = state.taskTests.length - 1;
-            } else if (state.currentTestId in state.taskTests) {
+            } else {
                 let currentTest = state.taskTests[state.currentTestId].data;
 
                 state.taskTests[state.currentTestId].data = {
                     ...currentTest,
                     ...action.payload,
                 };
-            } else {
-                state.taskTests[state.currentTestId].data = action.payload;
             }
         },
         updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any}>) {

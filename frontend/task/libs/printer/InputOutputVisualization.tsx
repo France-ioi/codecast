@@ -8,9 +8,8 @@ import {getMessage} from "../../../lang";
 import {Card} from 'react-bootstrap';
 import {Icon} from '@blueprintjs/core';
 import {Editor} from '../../../buffers/Editor';
-import {updateCurrentTest} from '../../task_slice';
-import {useDispatch} from 'react-redux';
-import {documentFromString} from '../../../buffers/document';
+import {BufferEditor} from '../../../buffers/BufferEditor';
+import {inputBufferLibTest} from './printer_lib';
 
 export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.options.ioMode);
@@ -23,15 +22,6 @@ export function InputOutputVisualization() {
     currentTestDataRef.current = currentTestData;
 
     let visualization;
-
-    const dispatch = useDispatch();
-
-    const onEditTestInputBuffer = (delta) => {
-        const currentTestInput = currentTestDataRef.current ? currentTestDataRef.current.input : '';
-        const oldDoc = documentFromString(currentTestInput);
-        const newDoc = oldDoc.applyDelta(delta);
-        dispatch(updateCurrentTest({input: newDoc.toString()}));
-    };
 
     if (IoMode.Terminal === ioMode) {
         visualization = <TerminalView/>;
@@ -47,19 +37,19 @@ export function InputOutputVisualization() {
                             {!!currentTask && <Icon icon='lock'/>}
                         </Card.Header>
                         <Card.Body>
-                            <Editor
-                                name="test_input"
+                            {/*Use a buffer to allow recording cursor moves here*/}
+                            <BufferEditor
+                                buffer={inputBufferLibTest}
                                 mode='text'
-                                content={currentTestData ? currentTestData.input : ''}
-                                onEdit={onEditTestInputBuffer}
                                 readOnly={!!currentTask}
-                                width='100%'
-                                height='150px'
-                                {...(currentTask ? {
+                                content={currentTestData ? currentTestData.input : ''}
+                                requiredWidth='100%'
+                                requiredHeight='150px'
+                                editorProps={currentTask ? {
                                     hideCursor: true,
                                     highlightActiveLine: false,
                                     dragEnabled: false,
-                                } : {})}
+                                } : {}}
                             />
                         </Card.Body>
                     </Card>

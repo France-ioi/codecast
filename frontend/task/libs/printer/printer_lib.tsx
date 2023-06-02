@@ -6,11 +6,11 @@ import {AppStore} from "../../../store";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
 import {
     taskInputEntered,
-    taskInputNeeded,
+    taskInputNeeded, updateCurrentTest,
 } from "../../task_slice";
 import {App} from "../../../index";
 import {IoMode} from "../../../stepper/io";
-import {delay} from "../../../player/sagas";
+import {delay, ReplayContext} from "../../../player/sagas";
 import {createDraft} from "immer";
 import log from 'loglevel';
 import {PayloadAction} from "@reduxjs/toolkit";
@@ -24,6 +24,7 @@ import {
 } from '../quickalgo_libraries';
 import {CodecastPlatform} from '../../../stepper/platforms';
 import {LibraryTestResult} from '../library_test_result';
+import {ActionTypes} from '../../../buffers/actionTypes';
 
 export function getTerminalText(events) {
     return events
@@ -52,6 +53,8 @@ export enum PrinterLibActionTypes {
     PrinterLibTerminalInputBackSpace = 'printerLib/terminalInputBackSpace',
     PrinterLibTerminalInputEnter = 'printerLib/terminalInputEnter',
 }
+
+export const inputBufferLibTest = 'printerLibTestInput';
 
 export const printerLibTerminalInputKey = (key: string) => ({
     type: PrinterLibActionTypes.PrinterLibTerminalInputKey,
@@ -181,6 +184,7 @@ export interface PrinterLibState {
 }
 
 let printerLibInstance = 0;
+let recordApiInit = false;
 
 export class PrinterLib extends QuickAlgoLibrary {
     success: boolean = false;
@@ -708,7 +712,17 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     *getSaga(app: App) {
-        log.getLogger('printer_lib').debug('START PRINTER LIB SAGA');
+        const environment = yield* appSelect(state => state.environment);
+        log.getLogger('printer_lib').debug('START PRINTER LIB SAGA', environment);
+
+        yield* takeEvery(ActionTypes.BufferEdit, function* (action) {
+            // @ts-ignore
+            const {buffer} = action;
+            if (inputBufferLibTest === buffer) {
+                const inputValue = yield* appSelect(state => state.buffers[inputBufferLibTest].model.document.toString());
+                yield* put(updateCurrentTest({input: inputValue}));
+            }
+        });
 
         yield* takeEvery(StepperActionTypes.StepperDisplayError, function* (action) {
             // @ts-ignore
@@ -746,5 +760,20 @@ export class PrinterLib extends QuickAlgoLibrary {
                 }
             }
         });
+
+        if (!recordApiInit && 'main' === app.environment) {
+            recordApiInit = true;
+
+            app.replayApi.on('start', function* (replayContext: ReplayContext, event) {
+                const {buffers} = event[2];
+                let currentTest: {input?: string, output?: string} = {};
+                if (buffers[inputBufferLibTest]) {
+                    currentTest.input = buffers[inputBufferLibTest].document;
+                }
+                if (Object.keys(currentTest).length) {
+                    yield* put(updateCurrentTest(currentTest));
+                }
+            });
+        }
     }
 }

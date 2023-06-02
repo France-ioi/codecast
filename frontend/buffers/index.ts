@@ -71,6 +71,7 @@ import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/action
 import {hasBlockPlatform} from '../stepper/js';
 import {appSelect} from '../hooks';
 import {CodecastPlatform} from '../stepper/platforms';
+import {inputBufferLibTest} from '../task/libs/printer/printer_lib';
 
 const AceThemes = [
     'github',
@@ -139,7 +140,7 @@ export default function(bundle: Bundle) {
             bufferResetReducer(state, {buffer: 'source', text: new DocumentModel(documentFromString(source || ''))});
         }
         if (input) {
-            bufferResetReducer(state, {buffer: 'input', text: new DocumentModel(documentFromString(input || ''))});
+            bufferResetReducer(state, {buffer: inputBufferLibTest, text: new DocumentModel(documentFromString(input || ''))});
         }
     });
 

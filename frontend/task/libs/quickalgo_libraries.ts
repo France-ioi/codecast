@@ -37,7 +37,7 @@ export enum QuickAlgoLibrariesActionType {
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
 export class QuickAlgoLibraries {
-    libraries: {[name: string]: {[mode: string]: QuickAlgoLibrary}} = {};
+    libraries: {[name: string]: {[environment: string]: QuickAlgoLibrary}} = {};
 
     addLibrary(library: QuickAlgoLibrary, name: string, environment: string) {
         if (!(name in this.libraries)) {
@@ -84,9 +84,9 @@ export class QuickAlgoLibraries {
         return null;
     }
 
-    getSagas(app: App) {
+    getSagas(app: App, environment: string) {
         const sagas = [];
-        for (let library of this.getAllLibraries()) {
+        for (let library of this.getAllLibraries(environment)) {
             const librarySagas = library.getSaga(app);
             if (librarySagas) {
                 sagas.push(librarySagas);
@@ -112,8 +112,12 @@ export class QuickAlgoLibraries {
         return listeners;
     }
 
-    getAllLibraries() {
-        return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...Object.values(libs)], []);
+    getAllLibraries(environment: string = null) {
+        if (environment) {
+            return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...(environment in libs ? [libs[environment]] : [])], []);
+        } else {
+            return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...Object.values(libs)], []);
+        }
     }
 }
 
