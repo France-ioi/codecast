@@ -180,7 +180,7 @@ export function isServerTest(object: TaskTest): boolean {
 
 // TODO: update this function when we will have a "public" field in tm_task_tests
 export function isTestPublic(task: Task, test: TaskTest|null): boolean {
-    if (null === test || !isServerTest(test)) {
+    if (!test || !isServerTest(test)) {
         return true;
     }
 

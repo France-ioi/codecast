@@ -154,6 +154,10 @@ export function Editor(props: EditorProps) {
 
     const reset = (value: Document, newSelection = null, firstVisibleRow = null) => {
         wrapModelToEditor(() => {
+            if (undefined !== props.content) {
+                value = documentFromString(String(null !== props.content ? props.content : ''));
+            }
+
             editor.current.getSession().setValue(null === value ? '' : value.toString());
             editor.current.resize(true);
             selection.current = null;
@@ -341,9 +345,7 @@ export function Editor(props: EditorProps) {
         }
 
         if (undefined !== props.content) {
-            setTimeout(() => {
-                reset(documentFromString(String(props.content)));
-            });
+            reset(documentFromString(String(null !== props.content ? props.content : '')));
         }
 
         // @ts-ignore

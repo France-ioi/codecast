@@ -766,12 +766,12 @@ export class PrinterLib extends QuickAlgoLibrary {
 
             app.replayApi.on('start', function* (replayContext: ReplayContext, event) {
                 const {buffers} = event[2];
-                let currentTest: {input?: string, output?: string} = {};
-                if (buffers[inputBufferLibTest]) {
-                    currentTest.input = buffers[inputBufferLibTest].document;
-                }
-                if (Object.keys(currentTest).length) {
-                    yield* put(updateCurrentTest(currentTest));
+                const currentTask = yield* appSelect(state => state.task.currentTask);
+                if (buffers[inputBufferLibTest] && !currentTask) {
+                    yield* put(updateCurrentTest({
+                        input: buffers[inputBufferLibTest].document,
+                        output: '',
+                    }));
                 }
             });
         }
