@@ -37,7 +37,6 @@ const availableTasks = {
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
-    TaskUnload = 'task/unload',
     TaskRunExecution = 'task/runExecution',
 }
 
@@ -307,6 +306,9 @@ export const taskSlice = createSlice({
                 state.inputs.shift();
             }
         },
+        taskUnload(state: TaskState) {
+            state.loaded = false;
+        },
         taskLoaded(state: TaskState) {
             state.loaded = true;
         },
@@ -382,6 +384,7 @@ export const {
     taskChangeSoundEnabled,
     taskSetMenuHelpsOpen,
     taskSetAvailablePlatforms,
+    taskUnload,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [
