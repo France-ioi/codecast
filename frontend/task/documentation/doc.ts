@@ -158,7 +158,7 @@ function findConceptByFunction(filteredConcepts, functionName) {
 
 function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task|null, language: DocumentationLanguage) {
     let context = quickAlgoLibraries.getContext(null, 'main');
-    if (context.infos.conceptViewer) {
+    if (context?.infos.conceptViewer) {
         let concepts = [], allConcepts = [];
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
