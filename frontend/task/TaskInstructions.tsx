@@ -17,6 +17,7 @@ import {Editor} from '../buffers/Editor';
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {generatePropsFromAttributes} from '@hedgedoc/html-to-react/dist/utils/generatePropsFromAttributes';
 import {VOID_ELEMENTS} from '@hedgedoc/html-to-react/dist/dom/elements/VoidElements';
+import {SmartContractStorage} from './libs/smart_contract/SmartContractStorage';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -61,6 +62,8 @@ const defaultInstructionsHtml = `
 function transformNode(node, index: string|number, context: {platform: CodecastPlatform}) {
     if (node.attribs && 'select-lang-selector' in node.attribs) {
         return <PlatformSelection key="platform-selection" withoutLabel/>;
+    } else if (node.attribs && 'smart-contract-storage' in node.attribs) {
+        return <SmartContractStorage/>;
     } else if (node.attribs && 'data-show-source' in node.attribs) {
         const code = node.attribs['data-code'];
         const lang = node.attribs['data-lang'];
