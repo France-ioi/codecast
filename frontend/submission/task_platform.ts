@@ -72,7 +72,6 @@ export interface TaskServer extends TaskNormalized {
     strings: TaskStringNormalized[],
     subTasks: TaskSubtaskNormalized[],
     tests: TaskTestServer[],
-    hints?: TaskHint[],
 }
 
 
@@ -153,11 +152,11 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                 },
                 // expectedStorage: "(string %names)",
                 // expectedStorage: "(Pair (string %names) (nat %nb_calls))",
+                // hints: [
+                //     {content: 'Indice 1'},
+                //     {content: 'Indice 2'},
+                // ],
             },
-            hints: [
-                {content: 'Indice 1'},
-                {content: 'Indice 2'},
-            ],
         };
     } else {
         return {
