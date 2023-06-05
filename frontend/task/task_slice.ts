@@ -15,6 +15,7 @@ import {isLocalStorageEnabled} from "../common/utils";
 import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {CodecastPlatform} from '../stepper/platforms';
+import {TaskHint} from './hints/hints_slice';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -143,6 +144,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     forceNextTaskAfter?: number,
     defaultLevel?: TaskLevelName,
     expectedStorage?: string,
+    hints?: TaskHint[],
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
