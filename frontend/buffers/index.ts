@@ -379,11 +379,15 @@ function pickFileAndGetContent() {
             }
         }
 
+        // Add fail-safe to avoid memory leaks if the window has regained focus for more than 10 secs
         document.body.onfocus = () => {
             document.body.onfocus = null;
-            if (!fileSelected) {
-                reject();
-            }
+            setTimeout(() => {
+                if (!fileSelected) {
+                    console.log('No file selected');
+                    reject();
+                }
+            }, 10000);
         };
 
         input.click();
