@@ -97,12 +97,13 @@ import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 
-export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
+export const taskLoad = ({testId, level, tests, reloadContext, selectedTask, callback}: {
     testId?: number,
     level?: TaskLevelName,
     tests?: any[],
     reloadContext?: boolean,
     selectedTask?: string,
+    callback?: () => void,
 } = {}) => ({
     type: TaskActionTypes.TaskLoad,
     payload: {
@@ -111,6 +112,7 @@ export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
         tests,
         reloadContext,
         selectedTask,
+        callback,
     },
 });
 
@@ -302,6 +304,9 @@ function* taskLoadSaga(app: App, action) {
 
     log.getLogger('task').debug('task loaded', app.environment);
     yield* put(taskLoaded());
+    if (action.payload.callback) {
+        action.payload.callback();
+    }
 }
 
 function* handleLibrariesEventListenerSaga(app: App) {
