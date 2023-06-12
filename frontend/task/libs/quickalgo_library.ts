@@ -140,13 +140,13 @@ export abstract class QuickAlgoLibrary {
         let computedDelay = null !== delay ? delay : (this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed);
         log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay);
         if (this.runner) {
-            this.runner.noDelay(callback, value);
             if (computedDelay > 0 && 'main' === this.environment) {
                 this.delaysStartedCount++;
                 setTimeout(() => {
                     this.delayOver();
                 }, computedDelay);
             }
+            this.runner.noDelay(callback, value);
         } else {
             // When a function is used outside an execution
             setTimeout(function () {
@@ -276,7 +276,9 @@ export abstract class QuickAlgoLibrary {
         log.getLogger('libraries').debug('delay over', this.delaysStartedCount, this.delaysEndedCount, this.callbacksOnReady);
         if (this.delaysEndedCount === this.delaysStartedCount) {
             if (this.callbacksOnReady.length) {
-                for (let callback of this.callbacksOnReady) {
+                const callbacks = this.callbacksOnReady;
+                this.callbacksOnReady = [];
+                for (let callback of callbacks) {
                     callback();
                 }
             }

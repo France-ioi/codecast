@@ -36,10 +36,11 @@ const images = [
 export default {
     gridInfos: {
         context: 'crane',
-        importModules: ['blockly-crane-1.0', 'beav-1.0'],
+        importModules: ['blockly-crane-1.1', 'beav-1.0', 'randomGenerator-1.0'],
         images,
         conceptViewer: true,
         showLabels: true,
+        // backgroundSrc: window.modulesPath + 'img/algorea/crane/foret.jpg',
         rowLabelEnabled: false,
         showContLabels: true,
         showContOutline: true,
@@ -56,23 +57,13 @@ export default {
         includeBlocks: {
             groupByCategory: false,
             generatedBlocks: {
-                robot: [ "take" ]
+                robot: [ "take", "putDown", "right", "left", "up", "down", "readBlock", "drop" ]
             },
             standardBlocks: {
-                includeAll: false
+                includeAll: false,
+                singleBlocks: ["controls_if", "logic_compare", "math_number"]
             }
-        },
-        // computeGrade: function (context, message) {
-        //     var rate = 0;
-        //     if (context.success) {
-        //         rate = 0.5;
-        //         message += " Partial score granted.";
-        //     }
-        //     return {
-        //         successRate: rate,
-        //         message: message
-        //     };
-        // },
+        }
     },
     data: {
         easy: [
@@ -84,22 +75,54 @@ export default {
                     [ 1, 1, 1, 1, 1, 1],
                     [ 1, 1, 1, 1, 1, 1],
                     [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 2, 1, 1, 1, 1]
+                    [ 1, 2, 1, 3, 2, 1]
                 ],
                 broken: [
 
                 ],
-                target: [
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1]
-                ],
                 initItems: [
+                    { row: 3, col: 0, type: "die", val: 1 } // die init value
                 ],
                 customItems: {
                 },
-                initCranePos: 1
+                scoring: [
+                    {
+                        score: 1,
+                        target: [
+                            [ 1, 1, 1, 1, 1, 1],
+                            [ 1, 1, 1, 1, 1, 1],
+                            [ 1, 1, 1, 2, 1, 1],
+                            [ 1, 1, 1, 3, 2, 1]
+                        ]
+                    },
+                    {
+                        score: 0.6,
+                        target: [
+                            [ 1, 1, 1, 1, 1, 1],
+                            [ 1, 1, 1, 1, 1, 1],
+                            [ 1, 1, 1, 2, 1, 1],
+                            [ 1, 1, 1, 3, 2, 1]
+                        ],
+                        subset: [
+                            [ 0, 0, 0, 0, 0, 0],
+                            [ 0, 0, 0, 0, 0, 0],
+                            [ 0, 0, 1, 1, 0, 0],
+                            [ 0, 0, 1, 1, 0, 0]
+                        ],
+                    },
+                    {
+                        score: 0.4,
+                        target: [
+                            [ 1, 1, 1, 1, 1, 1],
+                            [ 1, 1, 1, 1, 1, 1],
+                            [ 1, 1, 1, 1, 1, 1],
+                            [ 1, 1, 1, 3, 2, 1]
+                        ]
+                    }
+                ],
+
+                initCranePos: 1,
+                initTool: 0
             }
         ],
         medium: [
@@ -110,23 +133,28 @@ export default {
                 tiles: [
                     [ 1, 1, 1, 1, 1, 1],
                     [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 2, 1, 1, 1, 1]
+                    [ 1, 1, 1, 3, 4, 1],
+                    [ 1, 2, 1, 5, 6, 1]
                 ],
                 broken: [
 
                 ],
                 target: [
                     [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1]
+                    [ 1, 1, 1, 2, 1, 1],
+                    [ 1, 1, 1, 3, 4, 1],
+                    [ 1, 1, 1, 5, 6, 1]
                 ],
                 initItems: [
                 ],
                 customItems: {
                 },
-                initCranePos: 1
+                successAnim: {
+                    img: [
+                        { src: "assets/png/anim.png", row: 2, col: 3, width: 2, height: 2, loop: true }
+                    ]
+                },
+                initCranePos: 0
             }
         ]
     },
