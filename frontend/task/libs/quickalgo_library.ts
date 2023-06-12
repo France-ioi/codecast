@@ -44,6 +44,7 @@ export abstract class QuickAlgoLibrary {
     environment: string;
     success?: boolean;
     doNotStartGrade?: boolean;
+    callsToExecute: {action: string, args: any[], callback?: Function}[] = [];
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -295,6 +296,10 @@ export abstract class QuickAlgoLibrary {
             log.getLogger('libraries').debug('not ready yet');
             this.callbacksOnReady.push(callback);
         }
+    }
+
+    executeCallWhenReady(module: string, action: string, args: any[], callback?: Function) {
+        this.callsToExecute.push({action, args, callback});
     }
 
     checkOutputHelper() {
