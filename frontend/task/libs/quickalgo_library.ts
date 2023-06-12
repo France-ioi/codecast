@@ -298,7 +298,7 @@ export abstract class QuickAlgoLibrary {
         }
     }
 
-    executeCallWhenReady(module: string, action: string, args: any[], callback?: Function) {
+    executeCallWhenReady(module: string, action: string, args: any[] = [], callback?: Function) {
         this.callsToExecute.push({action, args, callback});
     }
 
