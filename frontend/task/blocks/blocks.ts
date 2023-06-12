@@ -235,7 +235,7 @@ function* checkSourceSaga() {
 
     let blocksUsage: BlocksUsage = {};
     try {
-        checkCompilingCode(answer, state.options.platform, state, false);
+        checkCompilingCode(answer, state.options.platform, state, ['empty']);
     } catch (e) {
         blocksUsage.error = e.toString();
     }

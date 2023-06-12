@@ -86,8 +86,8 @@ export function getAvailableModules(context) {
     }
 }
 
-export function checkCompilingCode(code, platform: CodecastPlatform, state: AppStore, withEmptyCheck: boolean = true) {
-    if (withEmptyCheck && !code) {
+export function checkCompilingCode(code, platform: CodecastPlatform, state: AppStore, disabledValidations: string[] = []) {
+    if (-1 === disabledValidations.indexOf('empty') && !code) {
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
     if (null === code) {
@@ -97,10 +97,10 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context && state.task.currentTask) {
         if (CodecastPlatform.Python === platform) {
-            checkPythonCode(code, context, state, withEmptyCheck);
+            checkPythonCode(code, context, state, disabledValidations);
         }
         if (hasBlockPlatform(platform)) {
-            checkBlocklyCode(code, context, state, withEmptyCheck);
+            checkBlocklyCode(code, context, state, disabledValidations);
         }
     }
 }

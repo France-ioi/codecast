@@ -79,7 +79,7 @@ export default function(bundle: Bundle) {
         yield* takeLatest(ActionTypes.Compile, function* () {
             let state = yield* appSelect();
             const source = selectAnswer(state);
-            const {platform} = state.options;
+            const {platform, allowExecutionOverBlocksLimit} = state.options;
 
             yield* put({
                 type: ActionTypes.CompileStarted,
@@ -90,7 +90,7 @@ export default function(bundle: Bundle) {
             Codecast.runner = yield* call(createRunnerSaga);
 
             try {
-                checkCompilingCode(source, platform, state);
+                checkCompilingCode(source, platform, state, allowExecutionOverBlocksLimit ? ['blocks_limit'] : []);
             } catch (e) {
                 yield* put({
                     type: ActionTypes.CompileFailed,
