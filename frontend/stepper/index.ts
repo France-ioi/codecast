@@ -51,7 +51,7 @@ import {Directive, parseDirectives} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
     ActionTypes,
-    stepperDisplayError,
+    stepperDisplayError, stepperExecutionEnd, stepperExecutionEndConditionReached,
     stepperExecutionError,
     stepperExecutionSuccess, stepperRunBackground, stepperRunBackgroundFinished
 } from "./actionTypes";
@@ -1021,33 +1021,7 @@ function* stepperStepSaga(app: App, action) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
                     } catch (executionResult: unknown) {
-                        // checkEndCondition can throw the message or an object with more details
-                        const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : executionResult as string;
-
-                        const computeGrade = taskContext.infos.computeGrade ? taskContext.infos.computeGrade : (context: QuickAlgoLibrary, message: string) => {
-                            let rate = 0;
-                            if (context.success) {
-                                rate = 1;
-                            }
-
-                            return {
-                                successRate: rate,
-                                message: message
-                            };
-                        };
-
-                        const gradeResult: {successRate: number, message: string} = computeGrade(taskContext, message);
-                        const aggregatedLibraryTestResult = executionResult instanceof LibraryTestResult
-                            ? executionResult : LibraryTestResult.fromString(message);
-                        aggregatedLibraryTestResult.successRate = gradeResult.successRate;
-                        aggregatedLibraryTestResult.message = gradeResult.message;
-
-                        // @ts-ignore
-                        if (taskContext.success) {
-                            yield* put(stepperExecutionSuccess(aggregatedLibraryTestResult));
-                        } else {
-                            yield* put(stepperExecutionError(aggregatedLibraryTestResult));
-                        }
+                        yield* put(stepperExecutionEndConditionReached(executionResult));
                     }
                 }
             }
@@ -1357,6 +1331,7 @@ function postLink(app: App) {
         yield* takeEvery([
             StepperActionTypes.StepperExecutionSuccess,
             StepperActionTypes.StepperExecutionError,
+            StepperActionTypes.StepperExecutionEnd,
             StepperActionTypes.CompileFailed,
         // @ts-ignore
         ], function*({payload}) {
@@ -1365,7 +1340,7 @@ function postLink(app: App) {
                 yield* put({type: ActionTypes.StepperInterrupting, payload: {}});
             }
             // yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-            yield* call(stepperDisabledSaga, null, true, false !== payload.clearHighlight);
+            yield* call(stepperDisabledSaga, null, true, false !== payload?.clearHighlight);
         });
 
         /* Highlight the range of the current source fragment. */

@@ -1,4 +1,5 @@
 import {
+    checkCompilingCode,
     getCurrentImmerState,
     getDefaultSourceCode,
     getTaskPlatformMode,
@@ -57,7 +58,12 @@ import PlatformBundle, {
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
 import {LayoutMobileMode, LayoutType, ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {PlayerInstant} from "../player";
-import {ActionTypes as StepperActionTypes, stepperClearError, stepperDisplayError} from "../stepper/actionTypes";
+import {
+    ActionTypes as StepperActionTypes,
+    stepperClearError,
+    stepperDisplayError, stepperExecutionEnd,
+    stepperExecutionEndConditionReached, stepperExecutionError, stepperExecutionSuccess
+} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {clearSourceHighlightSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import { makeContext, StepperContext} from "../stepper/api";
@@ -93,6 +99,8 @@ import {extractTestsFromTask} from '../submission/tests';
 import {TaskSubmissionResultPayload} from "../submission/submission";
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
+import {QuickAlgoLibrary} from './libs/quickalgo_library';
+import {getMessage} from '../lang';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -359,6 +367,9 @@ function* taskRunExecution(app: App, {type, payload}) {
     log.getLogger('task').debug('START RUN EXECUTION', type, payload);
     const {level, testId, tests, options, answer, resolve} = payload;
 
+    log.getLogger('task').debug('Unload any previous context');
+    quickAlgoLibraries.unloadContext('background');
+
     yield* put({type: AppActionTypes.AppInit, payload: {options: {...options}, environment: 'background'}});
     yield* put(platformAnswerLoaded(answer));
     yield* put(taskLoad({testId, level, tests, reloadContext: true}));
@@ -559,8 +570,14 @@ function* onEditSource() {
     }
 
     const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
-    yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
-    yield* put(submissionChangePaneOpen(false));
+
+    const state = yield* appSelect();
+    if (state.task.blocksPanelCollapsed === blocksPanelWasOpen) {
+        yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
+    }
+    if (false !== state.submission.submissionsPaneOpen) {
+        yield* put(submissionChangePaneOpen(false));
+    }
 }
 
 export default function (bundle: Bundle) {
@@ -627,6 +644,16 @@ export default function (bundle: Bundle) {
             });
         });
 
+        yield* takeEvery(StepperActionTypes.StepperExecutionEnd, function* () {
+            const currentTestId = yield* appSelect(state => state.task.currentTestId);
+            yield taskSubmissionExecutor.afterExecution({
+                testId: currentTestId,
+                result: true,
+                successRate: 1,
+                noGrading: true,
+            });
+        });
+
         // @ts-ignore
         yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function* ({payload}) {
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
@@ -639,6 +666,56 @@ export default function (bundle: Bundle) {
                 message: testResult.message,
                 testResult,
             });
+        });
+
+        yield* takeEvery(stepperExecutionEndConditionReached, function* ({payload: {executionResult}}) {
+            const context = quickAlgoLibraries.getContext(null, app.environment);
+            // checkEndCondition can throw the message or an object with more details
+            const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : executionResult as string;
+
+            const computeGrade = context.infos.computeGrade ? context.infos.computeGrade : (context: QuickAlgoLibrary, message: string) => {
+                let rate = 0;
+                if (context.success) {
+                    rate = 1;
+                }
+
+                return {
+                    successRate: rate,
+                    message: message
+                };
+            };
+
+            const gradeResult: {successRate: number, message: string} = computeGrade(context, message);
+            const aggregatedLibraryTestResult = executionResult instanceof LibraryTestResult
+                ? executionResult : LibraryTestResult.fromString(message);
+            aggregatedLibraryTestResult.successRate = gradeResult.successRate;
+            aggregatedLibraryTestResult.message = gradeResult.message;
+
+            if (context.doNotStartGrade) {
+                yield* put(stepperExecutionEnd());
+            } else {
+                // Do a post-compilation if is has not been done entirely before starting the execution
+                const state = yield* appSelect();
+
+                if (context.success) {
+                    if (state.options.allowExecutionOverBlocksLimit) {
+                        const answer = selectAnswer(state);
+                        const platform = state.options.platform;
+                        try {
+                            checkCompilingCode(answer, platform, state);
+                        } catch (e) {
+                            log.getLogger('task').debug('Post compilation error', e);
+                            aggregatedLibraryTestResult.message = `${aggregatedLibraryTestResult.message} ${getMessage('TASK_POST_COMPILATION_ERROR').s} ${e.toString()}`;
+                            yield* put(stepperExecutionError(aggregatedLibraryTestResult));
+                            return;
+                        }
+                    }
+
+                    yield* put(stepperExecutionSuccess(aggregatedLibraryTestResult));
+                } else {
+                    yield* put(stepperExecutionError(aggregatedLibraryTestResult));
+                }
+            }
         });
 
         yield* takeEvery(StepperActionTypes.StepperExit, function* () {

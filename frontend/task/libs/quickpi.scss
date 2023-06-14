@@ -43,6 +43,25 @@ h2.sectionTitle .icon {
 }
 
 /* QuickPi */
+
+#introControls {
+    //position: absolute;
+    width: 100%;
+    //right: 0;
+    //bottom: 10px;
+    padding: 0 10px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap-reverse;
+    //margin-bottom: -10px; /* Compensate margin bottom needed when buttons wrapped */
+    z-index: 1;
+}
+#introControls .showLongIntro {
+    align-self: flex-end;
+    margin-bottom: 10px; /* Needed to space buttons when wrapped */
+}
+
 #taskIntro.piui .introContent {
     padding: 10px 20px 2em;
 }
@@ -89,23 +108,13 @@ screen and (min-width: 768px) and (orientation: portrait) {
 }
 
 /* QuickPi connexion popup */
+#popupMessage.dialog-message {
+    text-align: left !important;
+}
 #popupMessage .container {
     position: relative;
     margin: .5em 0;
     padding: 8px;
-}
-#popupMessage.floatingMessage .container {
-    min-height: 100px;
-    width: 94%;
-    max-width: 680px;
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 5px;
-    background: #fff;
-    color:#787878;
-    padding: 20px;
-    top: 50%;
-    transform: translate(0,-50%);
 }
 #popupMessage .container img.messageArrow {
     display: none;
@@ -220,8 +229,9 @@ screen and (min-width: 768px) and (orientation: portrait) {
 }
 #popupMessage .qpi .input-group .input-group-prepend {
     border-radius: 5px 0 0 5px;
-    line-height: 1.2rem;
-    padding: 6px 12px;
+    line-height: 0rem !important;
+    display: flex;
+    align-items: center;
     border: none;
     color: #c5c4c4;
     padding: 6px 9px;
@@ -246,7 +256,7 @@ screen and (min-width: 768px) and (orientation: portrait) {
     font-weight: bold;
     line-height: 1.5;
     border: none;
-    font-size: 0.9rem;
+    font-size: 0.9rem !important;
     position: relative;
 }
 #popupMessage .qpi .btn .icon {

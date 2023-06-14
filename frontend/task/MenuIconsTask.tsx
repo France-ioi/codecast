@@ -13,7 +13,7 @@ interface MenuIconsTaskProps {
 }
 
 export function MenuIconsTask(props: MenuIconsTaskProps) {
-    const showDocumentation = useAppSelector(state => state.options.showDocumentation);
+    const showDocumentation = useAppSelector(state => state.options.showDocumentation && (!state.task.currentTask || state.task.currentTask?.gridInfos?.conceptViewer));
     const showFullScreen = useAppSelector(state => state.options.showFullScreen);
     const showMenu = useAppSelector(state => state.options.showMenu);
     const showHints = useAppSelector(state => selectAvailableHints(state).length > 0);

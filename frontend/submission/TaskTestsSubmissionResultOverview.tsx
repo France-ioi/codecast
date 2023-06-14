@@ -5,6 +5,7 @@ import {ActionTypes} from "../stepper/actionTypes";
 import {StepperStepMode} from "../stepper";
 import {getMessage} from "../lang";
 import {TaskSubmissionResultPayload} from './submission';
+import {useAppSelector} from '../hooks';
 
 export interface TaskTestsSubmissionResultOverviewProps {
     results: TaskSubmissionResultPayload[],
@@ -12,6 +13,7 @@ export interface TaskTestsSubmissionResultOverviewProps {
 
 export function TaskTestsSubmissionResultOverview(props: TaskTestsSubmissionResultOverviewProps) {
     const dispatch = useDispatch();
+    const tests = useAppSelector(state => state.task.taskTests);
 
     const seeFailedTest = (testId) => {
         dispatch(updateCurrentTestId({testId}));
@@ -25,9 +27,9 @@ export function TaskTestsSubmissionResultOverview(props: TaskTestsSubmissionResu
                     key={testResult.testId}
                     className="test-result"
                 >
-                    {true === testResult.result && <span className="test-success">{getMessage('TESTS_RESULT_OVERVIEW_SUCCESS').format({index: testResult.testId + 1})}</span>}
+                    {true === testResult.result && <span className="test-success">{getMessage('TESTS_RESULT_OVERVIEW_SUCCESS').format({testName: tests[testResult.testId].name})}</span>}
                     {false === testResult.result && <React.Fragment>
-                        <span className="test-error">{getMessage('TESTS_RESULT_OVERVIEW_FAILURE').format({index: testResult.testId + 1})}</span>
+                        <span className="test-error">{getMessage('TESTS_RESULT_OVERVIEW_FAILURE').format({testName: tests[testResult.testId].name})}</span>
                         <span className="test-link" onClick={() => seeFailedTest(testResult.testId)}>{getMessage('TESTS_RESULT_OVERVIEW_VIEW')}</span>
                     </React.Fragment>}
                 </div>

@@ -1,0 +1,15 @@
+displayText("Direction ?")
+while True:
+    if isButtonPressed("stick1.up"):
+        displayText("Haut")
+    if isButtonPressed("stick1.down"):
+        displayText("Bas")
+    if isButtonPressed("stick1.right"):
+        displayText("Droite")
+    if isButtonPressed("stick1.left"):
+        displayText("Gauche")
+
+
+
+
+

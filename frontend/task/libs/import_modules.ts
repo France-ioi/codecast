@@ -1,6 +1,7 @@
 // Extracted from "importModules-1.4-mobileFirst.js"
 
 import {hasBlockPlatform} from "../../stepper/js";
+import {Task} from '../task_slice';
 
 let importedModules = {};
 
@@ -331,9 +332,12 @@ export async function importPlatformModules(platform, modulesPath) {
     await importModules(modulesToImport[platform], modulesPath);
 }
 
-export function loadFonts(theme: string) {
+export function loadFonts(theme: string, task: Task|null) {
     if (window.FontsLoader) {
         const fontsToLoad = ['inconsolata', 'blueprint-16'];
+        if ('quickpi' === task?.gridInfos?.context) {
+            fontsToLoad.push('fontawesome');
+        }
         if ('coursera' === theme) {
             fontsToLoad.push('source-sans-pro');
         } else {

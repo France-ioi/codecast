@@ -5,6 +5,10 @@ export default abstract class AbstractRunner {
     //TODO: improve this
     public _isFinished: boolean = false;
     public _steps: number = 0;
+    public _stepsWithoutAction: number = 0;
+    public _lastNbActions = null;
+    public _nbActions = 0;
+    public _allowStepsWithoutDelay = 0;
 
     constructor(context) {
         context.runner = this;
@@ -64,4 +68,9 @@ export default abstract class AbstractRunner {
     noDelay(callback, value) {
         callback(value);
     }
+
+    public signalAction() {
+        // Allows a context to signal an "action" happened
+        this._stepsWithoutAction = 0;
+    };
 }

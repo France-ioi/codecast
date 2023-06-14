@@ -109,6 +109,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('log' in query) {
         options.logAttempts = true;
     }
+    if ('allowExecutionOverBlocksLimit' in query) {
+        options.allowExecutionOverBlocksLimit = true;
+    }
 }
 
 function appInitReducer(state: AppStore, {payload: {options, query}}) {
@@ -123,6 +126,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
 
     if ('tralalere' === state.options.app) {
         state.options.logAttempts = true;
+        state.options.allowExecutionOverBlocksLimit = true;
     }
 
     loadOptionsFromQuery(options, query);

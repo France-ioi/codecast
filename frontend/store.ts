@@ -85,6 +85,7 @@ export interface CodecastOptions {
     canAddUserTests?: boolean,
     viewTestDetails?: boolean,
     logAttempts?: boolean,
+    allowExecutionOverBlocksLimit?: boolean,
 }
 
 export interface Panes {

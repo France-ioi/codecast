@@ -60,9 +60,9 @@ export function ContextVisualization() {
         currentTestResult = submission.result.tests.find(test => test.testId === taskTests[currentTestId].id);
     }
 
-    // console.log('inner visuzalition', {submission, submissionDisplayedError});
     const createAlertVisualization = (content: any) => {
         return <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
+            <Alert.Heading>{getMessage('SUBMISSION_VIEW_ALERT_HEADER')}</Alert.Heading>
             <div className="error-content">{content}</div>
         </Alert></div>
     }

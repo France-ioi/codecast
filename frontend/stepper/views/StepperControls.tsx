@@ -84,7 +84,7 @@ export function StepperControls(props: StepperControlsProps) {
                 disabled = !stepperControlsState.canCompile;
                 break;
             case 'gotoend':
-                disabled = stepperControlsState.isFinished;
+                disabled = !stepperControlsState.canGoToEnd;
                 break;
         }
 
