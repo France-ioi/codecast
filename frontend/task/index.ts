@@ -475,18 +475,21 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
             throw "Couldn't update test during replay, check if the replay is using the appropriate task";
         }
         context.iTestCase = state.task.currentTestId;
-        const contextState = state.task.taskTests[state.task.currentTestId].contextState;
-        if (null !== contextState) {
-            const currentTest = selectCurrentTestData(state);
-            log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);
-            context.resetAndReloadState(currentTest, state, contextState);
-        } else {
-            const currentTest = selectCurrentTestData(state);
-            log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
-            context.resetAndReloadState(currentTest, state);
-        }
 
-        yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+        if (!payload.withoutContextState) {
+            const contextState = state.task.taskTests[state.task.currentTestId].contextState;
+            if (null !== contextState) {
+                const currentTest = selectCurrentTestData(state);
+                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);
+                context.resetAndReloadState(currentTest, state, contextState);
+            } else {
+                const currentTest = selectCurrentTestData(state);
+                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
+                context.resetAndReloadState(currentTest, state);
+            }
+
+            yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+        }
     }
 }
 
@@ -811,12 +814,20 @@ export default function (bundle: Bundle) {
         app.recordApi.onStart(function* (init) {
             const state = yield* appSelect();
             init.testId = state.task.currentTestId;
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (context) {
+                const currentState = getCurrentImmerState(context.getInnerState());
+                init.contextState = currentState;
+            }
         });
 
         app.replayApi.on('start', function*(replayContext: ReplayContext, event) {
-            const {testId} = event[2];
+            const {testId, contextState} = event[2];
             if (null !== testId && undefined !== testId) {
-                yield* put(updateCurrentTestId({testId}));
+                yield* put(updateCurrentTestId({testId, withoutContextState: !!contextState}));
+            }
+            if (contextState) {
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, contextState);
             }
         });
 
