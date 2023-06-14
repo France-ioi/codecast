@@ -666,7 +666,7 @@ export default function (bundle: Bundle) {
                 testId: currentTestId,
                 result: false,
                 successRate: testResult.successRate,
-                steps: Codecast.runner._steps,
+                steps: Codecast.runner?._steps,
                 message: testResult.message,
                 testResult,
             });
