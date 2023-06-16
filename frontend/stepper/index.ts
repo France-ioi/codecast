@@ -808,7 +808,8 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
     if ('main' === state.environment) {
         if (null !== stepperContext.speed && undefined !== stepperContext.speed) {
             stepperContext.speed = getStepper(state).speed;
-            newDelay = stepperMaxSpeed - stepperContext.speed;
+            const maxSpeed = context && context.infos && 'initActionDelay' in context.infos ? context.infos.initActionDelay : stepperMaxSpeed;
+            newDelay = maxSpeed - stepperContext.speed;
         }
         // log.getLogger('stepper').debug('stepper interact before background run data', stepperContext.backgroundRunData);
         if (stepperContext.backgroundRunData && stepperContext.backgroundRunData.steps) {
