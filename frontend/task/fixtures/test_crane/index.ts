@@ -57,7 +57,7 @@ export default {
         includeBlocks: {
             groupByCategory: false,
             generatedBlocks: {
-                robot: [ "take", "putDown", "right", "left", "up", "down", "readBlock", "drop" ]
+                robot: [ "take", "putDown", "right", "left", "up", "down", "readBlock", "drop", "flip" ]
             },
             standardBlocks: {
                 includeAll: false,

@@ -49,6 +49,9 @@ class QuickalgoExecutor {
         }
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ready for call');
+        if (null !== context.plannedNewDelay && undefined !== context.plannedNewDelay) {
+            context.infos.actionDelay = context.plannedNewDelay;
+        }
 
         if (this.stepperContext.state) {
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] stepper context before', this.stepperContext.state.contextState);
@@ -70,7 +73,7 @@ class QuickalgoExecutor {
                     hideDisplay = true;
                     // context.needsRedrawDisplay = true;
                     // } else if ('end' === this.stepperContext.taskDisplayNoneStatus) {
-                    context.changeDelay(0);
+                    context.planNewDelay(0);
                     this.stepperContext.taskDisplayNoneStatus = null;
                 }
             }
@@ -81,7 +84,7 @@ class QuickalgoExecutor {
             if (hideDisplay) {
                 // context.display = true;
                 // } else {
-                context.changeDelay(previousDelay);
+                context.planNewDelay(previousDelay);
             }
 
             // Leave stepperThrottleDisplayDelay ms before displaying again the context
@@ -96,7 +99,7 @@ class QuickalgoExecutor {
             if (hideDisplay) {
                 // context.display = true;
                 // } else {
-                context.changeDelay(previousDelay);
+                context.planNewDelay(previousDelay);
             }
 
             await this.stepperContext.dispatch({

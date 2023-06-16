@@ -45,6 +45,7 @@ export abstract class QuickAlgoLibrary {
     success?: boolean;
     doNotStartGrade?: boolean;
     callsToExecute: {action: string, args: any[], callback?: Function}[] = [];
+    plannedNewDelay: number = null;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -122,10 +123,13 @@ export abstract class QuickAlgoLibrary {
         }
     };
 
-    // Default implementations
-    changeDelay(newDelay) {
-        this.infos.actionDelay = newDelay;
-    };
+    // The effective change will occur in the Quickalgo executor
+    // just before the call to the lib endpoint. Because
+    // if we change the delay during the execution of a call
+    // and between two animations, it can break the delay calculations
+    planNewDelay(newDelay) {
+        this.plannedNewDelay = newDelay;
+    }
 
     // Default implementation
     changeSoundEnabled(soundEnabled: boolean): void {

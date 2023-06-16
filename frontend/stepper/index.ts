@@ -834,8 +834,8 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
         stepperContext.delayToWait = Math.round(newDelay);
     }
 
-    if (context && context.changeDelay) {
-        context.changeDelay(newDelay);
+    if (context && context.planNewDelay) {
+        context.planNewDelay(newDelay);
     }
 
     if (context && context.changeSoundEnabled) {
