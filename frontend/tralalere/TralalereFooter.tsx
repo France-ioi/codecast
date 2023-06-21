@@ -16,6 +16,7 @@ import {getMessage} from '../lang';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {nl2br} from '../common/utils';
 import {TaskTestsSubmissionResultOverview} from '../submission/TaskTestsSubmissionResultOverview';
+import {taskSetBlocksUsage} from '../task/task_slice';
 
 export interface TralalereFooterProps {
     instructionsExpanded?: boolean,
@@ -30,6 +31,7 @@ export function TralalereFooter (props: TralalereFooterProps) {
     const layoutType = useAppSelector(state => state.layout.type);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);
+    const allowExecutionOverBlocksLimit = useAppSelector(state => state.options.allowExecutionOverBlocksLimit);
     let hasError = !!stepperError;
     let errorClosable = true;
 
@@ -56,13 +58,16 @@ export function TralalereFooter (props: TralalereFooterProps) {
         }
     } else if (blocksUsage && blocksUsage.error) {
         hasError = true;
-        errorClosable = false;
+        errorClosable = !!allowExecutionOverBlocksLimit;
         error = <div dangerouslySetInnerHTML={toHtml(blocksUsage.error)}/>;
     }
 
     const onClearError = () => {
         if (errorClosable) {
             dispatch(stepperClearError());
+            if (blocksUsage && blocksUsage.error && allowExecutionOverBlocksLimit) {
+                dispatch(taskSetBlocksUsage({...blocksUsage, error: null}));
+            }
         }
     };
 

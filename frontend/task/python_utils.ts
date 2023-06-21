@@ -355,7 +355,7 @@ export const getPythonBlocksUsage = function (code: string, context: QuickAlgoLi
     };
 };
 
-export const checkPythonCode = function (code: string, context: QuickAlgoLibrary, state: AppStore, withEmptyCheck: boolean = true) {
+export const checkPythonCode = function (code: string, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
     const includeBlocks = context.infos.includeBlocks;
     const forbidden = pythonForbidden(code, includeBlocks, context.getNotionsList());
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
@@ -365,7 +365,7 @@ export const checkPythonCode = function (code: string, context: QuickAlgoLibrary
     }
 
     const totalCount = pythonCount(code);
-    if (maxInstructions && totalCount > maxInstructions) {
+    if (-1 === disabledValidations.indexOf('blocks_limit') && maxInstructions && totalCount > maxInstructions) {
         throw getMessageChoices('TASK_BLOCKS_OVER_LIMIT', totalCount - maxInstructions).format({
             limit: maxInstructions,
             overLimit: totalCount - maxInstructions,
@@ -381,7 +381,7 @@ export const checkPythonCode = function (code: string, context: QuickAlgoLibrary
         }
     }
 
-    if (withEmptyCheck && pythonCount(code) <= 0) {
+    if (-1 === disabledValidations.indexOf('empty') && pythonCount(code) <= 0) {
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 

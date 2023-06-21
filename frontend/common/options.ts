@@ -133,6 +133,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
 
     if ('tralalere' === state.options.app) {
         state.options.logAttempts = true;
+        state.options.allowExecutionOverBlocksLimit = true;
     }
 
     loadOptionsFromQuery(options, query);

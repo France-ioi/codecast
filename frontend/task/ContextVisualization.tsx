@@ -62,6 +62,7 @@ export function ContextVisualization() {
 
     const createAlertVisualization = (content: any) => {
         return <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
+            <Alert.Heading>{getMessage('SUBMISSION_VIEW_ALERT_HEADER')}</Alert.Heading>
             <div className="error-content">{content}</div>
         </Alert></div>
     }

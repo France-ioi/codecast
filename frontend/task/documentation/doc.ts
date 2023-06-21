@@ -165,6 +165,16 @@ function findConceptByFunction(filteredConcepts, functionName) {
 }
 
 function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task|null, language: DocumentationLanguage) {
+    let documentationConcepts: DocumentationConcept[] = [];
+    if (hasTaskInstructions && currentTask) {
+        const taskConcept = {
+            id: 'task-instructions',
+            name: getMessage('TASK_DOCUMENTATION_INSTRUCTIONS').s,
+        };
+
+        documentationConcepts.push(taskConcept);
+    }
+
     let context = quickAlgoLibraries.getContext(null, 'main');
     if (context.infos.conceptViewer) {
         let concepts = [], allConcepts = [];
@@ -193,23 +203,11 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task
             }])
         }
 
-        const taskConcept = {
-            id: 'task-instructions',
-            name: getMessage('TASK_DOCUMENTATION_INSTRUCTIONS').s,
-        };
-
-        let documentationConcepts: DocumentationConcept[] = window.conceptsFill(concepts, allConcepts);
-        if (hasTaskInstructions) {
-            documentationConcepts = [
-                taskConcept,
-                ...documentationConcepts,
-            ];
-        }
-
-        return documentationConcepts;
+        const newConcepts = window.conceptsFill(concepts, allConcepts);
+        documentationConcepts = [...documentationConcepts, ...newConcepts];
     }
 
-    return null;
+    return documentationConcepts.length ? documentationConcepts : null;
 }
 
 function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolean) {
@@ -295,12 +293,14 @@ export default function (bundle: Bundle) {
             return;
         }
 
+        const tralalere = yield* appSelect(state => 'tralalere' === state.options.app);
+
         window.conceptViewer = {
             showConcept(concept, show) {
                 if (concept) {
                     app.dispatch(documentationConceptSelected(concept));
                 }
-                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
+                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: tralalere ? Screen.DocumentationBig : Screen.DocumentationSmall}});
             },
         };
 
