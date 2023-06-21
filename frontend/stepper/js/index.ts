@@ -179,20 +179,19 @@ export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     };
 };
 
-export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, state: AppStore, withEmptyCheck: boolean = true) {
+export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
     log.getLogger('blockly_runner').debug('check blockly code', answer, context.strings.code);
 
     if (!answer || !answer.blockly) {
         return;
     }
 
-
     const blocks = getBlocksFromXml(answer.blockly);
 
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
     const totalCount = blocklyCount(blocks, context);
 
-    if (maxInstructions && totalCount > maxInstructions) {
+    if (-1 === disabledValidations.indexOf('blocks_limit') && maxInstructions && totalCount > maxInstructions) {
         throw getMessageChoices('TASK_BLOCKS_OVER_LIMIT', totalCount - maxInstructions).format({
             limit: maxInstructions,
             overLimit: totalCount - maxInstructions,
@@ -208,7 +207,7 @@ export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, sta
         }
     }
 
-    if (withEmptyCheck && totalCount <= 0) {
+    if (-1 === disabledValidations.indexOf('empty') && totalCount <= 0) {
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 }
@@ -383,7 +382,7 @@ export default function(bundle: Bundle) {
                 }
                 blocklyHelper.reloading = false;
 
-                blocklyHelper.programs[0].blocklyJS = blocklyHelper.getCode("javascript");
+                blocklyHelper.programs[0].blocklyJS = blocklyHelper.getCode("javascript", null, false, true);
 
                 let fullCode = blocklyHelper.getBlocklyLibCode(blocklyHelper.generators)
                     + blocklyHelper.programs[0].blocklyJS

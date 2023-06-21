@@ -44,6 +44,8 @@ export abstract class QuickAlgoLibrary {
     environment: string;
     success?: boolean;
     doNotStartGrade?: boolean;
+    callsToExecute: {action: string, args: any[], callback?: Function}[] = [];
+    plannedNewDelay: number = null;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -121,10 +123,13 @@ export abstract class QuickAlgoLibrary {
         }
     };
 
-    // Default implementations
-    changeDelay(newDelay) {
-        this.infos.actionDelay = newDelay;
-    };
+    // The effective change will occur in the Quickalgo executor
+    // just before the call to the lib endpoint. Because
+    // if we change the delay during the execution of a call
+    // and between two animations, it can break the delay calculations
+    planNewDelay(newDelay) {
+        this.plannedNewDelay = newDelay;
+    }
 
     // Default implementation
     changeSoundEnabled(soundEnabled: boolean): void {
@@ -140,13 +145,13 @@ export abstract class QuickAlgoLibrary {
         let computedDelay = null !== delay ? delay : (this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed);
         log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay);
         if (this.runner) {
-            this.runner.noDelay(callback, value);
             if (computedDelay > 0 && 'main' === this.environment) {
                 this.delaysStartedCount++;
                 setTimeout(() => {
                     this.delayOver();
                 }, computedDelay);
             }
+            this.runner.noDelay(callback, value);
         } else {
             // When a function is used outside an execution
             setTimeout(function () {
@@ -276,7 +281,9 @@ export abstract class QuickAlgoLibrary {
         log.getLogger('libraries').debug('delay over', this.delaysStartedCount, this.delaysEndedCount, this.callbacksOnReady);
         if (this.delaysEndedCount === this.delaysStartedCount) {
             if (this.callbacksOnReady.length) {
-                for (let callback of this.callbacksOnReady) {
+                const callbacks = this.callbacksOnReady;
+                this.callbacksOnReady = [];
+                for (let callback of callbacks) {
                     callback();
                 }
             }
@@ -293,6 +300,10 @@ export abstract class QuickAlgoLibrary {
             log.getLogger('libraries').debug('not ready yet');
             this.callbacksOnReady.push(callback);
         }
+    }
+
+    executeCallWhenReady(action: string, args: any[] = [], callback?: Function) {
+        this.callsToExecute.push({action, args, callback});
     }
 
     checkOutputHelper() {

@@ -18,7 +18,7 @@ import {
     callPlatformValidate,
     TaskSubmissionEvaluateOn
 } from '../submission/submission';
-import { Dropdown } from "react-bootstrap";
+import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
 import {isServerTask, isTestPublic} from './task_slice';

@@ -640,6 +640,10 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     font-family: $font-family-monospace;
     overflow-x: auto;
   }
+  .alert-heading {
+    font-size: 1.2em;
+    margin-bottom: 1rem;
+  }
 }
 
 @include mobile {

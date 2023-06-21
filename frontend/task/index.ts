@@ -1,4 +1,5 @@
 import {
+    checkCompilingCode,
     getCurrentImmerState,
     getDefaultSourceCode,
     getTaskPlatformMode,
@@ -96,6 +97,7 @@ import {TaskSubmissionResultPayload} from "../submission/submission";
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
+import {getMessage} from '../lang';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask, callback}: {
     testId?: number,
@@ -593,8 +595,14 @@ function* onEditSource() {
     }
 
     const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
-    yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
-    yield* put(submissionChangePaneOpen(false));
+
+    const state = yield* appSelect();
+    if (state.task.blocksPanelCollapsed === blocksPanelWasOpen) {
+        yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
+    }
+    if (false !== state.submission.submissionsPaneOpen) {
+        yield* put(submissionChangePaneOpen(false));
+    }
 }
 
 export default function (bundle: Bundle) {
@@ -710,10 +718,28 @@ export default function (bundle: Bundle) {
 
             if (context.doNotStartGrade) {
                 yield* put(stepperExecutionEnd());
-            } else if (context.success) {
-                yield* put(stepperExecutionSuccess(aggregatedLibraryTestResult));
             } else {
-                yield* put(stepperExecutionError(aggregatedLibraryTestResult));
+                // Do a post-compilation if is has not been done entirely before starting the execution
+                const state = yield* appSelect();
+
+                if (context.success) {
+                    if (state.options.allowExecutionOverBlocksLimit) {
+                        const answer = selectAnswer(state);
+                        const platform = state.options.platform;
+                        try {
+                            checkCompilingCode(answer, platform, state);
+                        } catch (e) {
+                            log.getLogger('task').debug('Post compilation error', e);
+                            aggregatedLibraryTestResult.message = `${aggregatedLibraryTestResult.message} ${getMessage('TASK_POST_COMPILATION_ERROR').s} ${e.toString()}`;
+                            yield* put(stepperExecutionError(aggregatedLibraryTestResult));
+                            return;
+                        }
+                    }
+
+                    yield* put(stepperExecutionSuccess(aggregatedLibraryTestResult));
+                } else {
+                    yield* put(stepperExecutionError(aggregatedLibraryTestResult));
+                }
             }
         });
 
