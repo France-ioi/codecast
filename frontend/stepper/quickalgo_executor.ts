@@ -18,7 +18,7 @@ class QuickalgoExecutor {
         this.stepperContext = stepperContext;
     }
     
-    async execute (module: string, action: string, args: any[], callback?: Function) {
+    async execute(module: string, action: string, args: any[], callback?: Function) {
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] call quickalgo', module, action, args, callback);
         let libraryCallResult;
         const context = this.stepperContext.quickAlgoContext;
@@ -103,7 +103,7 @@ class QuickalgoExecutor {
                 type: CompileActionTypes.StepperInterrupting,
             });
 
-            Codecast.runner.stop();
+            Codecast.runner?.stop();
 
             await this.stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(String(e)), false));
         }

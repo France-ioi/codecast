@@ -309,6 +309,8 @@ function* taskLoadSaga(app: App, action) {
     }
 }
 
+let replayContextSave;
+
 function* handleLibrariesEventListenerSaga(app: App) {
     const stepperContext: StepperContext = makeContext(null, {
         interactAfter: (arg) => {
@@ -332,19 +334,30 @@ function* handleLibrariesEventListenerSaga(app: App) {
             app.recordApi.on(eventName, function* (addEvent, {payload}) {
                 yield* call(addEvent, eventName, payload);
             });
-
             app.replayApi.on(eventName, function* (replayContext: ReplayContext, event) {
                 const payload = event[2];
                 log.getLogger('task').debug('trigger method ', method, 'for event name ', eventName);
+                replayContextSave = replayContext;
                 yield* put({type: eventName, payload});
             });
         }
 
         // @ts-ignore
-        yield* takeEvery(eventName, function* ({payload}) {
+        yield* takeEvery(eventName, function* ({payload, onlyLog}) {
+            if (onlyLog) {
+                return;
+            }
+
             log.getLogger('task').debug('make payload', payload);
             const args = payload ? payload : [];
             const state = yield* appSelect();
+
+            if (replayContextSave) {
+                stepperContext.quickAlgoCallsLogger = (call) => {
+                    replayContextSave.addQuickAlgoLibraryCall(call);
+                };
+            }
+
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 log.getLogger('task').debug('exec done, update task state');
                 const context = quickAlgoLibraries.getContext(null, state.environment);
@@ -934,4 +947,3 @@ export default function (bundle: Bundle) {
         });
     });
 }
-
