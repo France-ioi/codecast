@@ -16,6 +16,7 @@ import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
 import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
+import {TaskHint} from './hints/hints_slice';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -34,7 +35,6 @@ const availableTasks = {
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
-    TaskUnload = 'task/unload',
     TaskRunExecution = 'task/runExecution',
 }
 
@@ -147,6 +147,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     defaultLevel?: TaskLevelName,
     expectedStorage?: string,
     initActionDelay?: number,
+    hints?: TaskHint[],
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
@@ -306,6 +307,9 @@ export const taskSlice = createSlice({
                 state.inputs.shift();
             }
         },
+        taskUnload(state: TaskState) {
+            state.loaded = false;
+        },
         taskLoaded(state: TaskState) {
             state.loaded = true;
         },
@@ -381,6 +385,7 @@ export const {
     taskChangeSoundEnabled,
     taskSetMenuHelpsOpen,
     taskSetAvailablePlatforms,
+    taskUnload,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [
