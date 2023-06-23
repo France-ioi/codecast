@@ -298,6 +298,8 @@ module.exports = {
     SUBMISSION_ERROR_EXECUTION: "Erreur d'exécution",
     SUBMISSION_NO_ERROR: "Compilation réussie",
     SUBMISSION_NO_TESTS: "Il n'existe pas de tests pour ce problème.",
+    SUBMISSION_CREATE_TEST: "Créer un test",
+    SUBMISSION_OWN_TEST_LABEL: "Test perso {index}",
     SUBMISSION_COMPILATION_OUTPUT: "Résultat de la compilation :",
     SUBMISSION_VIEW_COMPILATION_ERROR: "Ce test n'a pas pu être exécuté en raison d'une erreur de compilation de votre programme.",
     SUBMISSION_VIEW_COMPILATION_ERROR_BUTTON: "Afficher l'erreur",

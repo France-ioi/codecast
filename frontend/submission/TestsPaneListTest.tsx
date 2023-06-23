@@ -11,9 +11,10 @@ import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {isServerSubmission, TaskSubmission, TaskSubmissionServerTestResult} from './submission';
-import {TaskTest, updateCurrentTestId} from '../task/task_slice';
+import {removeTaskTest, TaskTest, updateCurrentTestId} from '../task/task_slice';
 import {useDispatch} from 'react-redux';
 import {useAppSelector} from '../hooks';
+import {faTrash} from '@fortawesome/free-solid-svg-icons/faTrash';
 
 export interface SubmissionResultTestProps {
     index: number,
@@ -103,6 +104,11 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
         }
     }
 
+    const deleteTest = (e) => {
+        dispatch(removeTaskTest(props.index));
+        e.stopPropagation();
+    };
+
     const dispatch = useDispatch();
 
     const selectTest = () => {
@@ -116,6 +122,9 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
             </div>}
             <span className="submission-result-test-title">{test.name}</span>
             {testResult && <span className="submission-result-test-result">{message}</span>}
+            {TaskTestGroupType.User === test.groupType && <span className="submission-result-test-delete" onClick={deleteTest}>
+                <FontAwesomeIcon icon={faTrash}/>
+            </span>}
         </div>
     )
 }

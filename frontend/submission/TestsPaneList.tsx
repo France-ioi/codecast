@@ -11,6 +11,9 @@ import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_
 import {platformsList} from '../stepper/platforms';
 import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
+import {faPlus} from "@fortawesome/free-solid-svg-icons/faPlus";
+import {addNewTaskTest, updateCurrentTestId} from '../task/task_slice';
+import {TaskTestGroupType} from './task_platform';
 
 export interface SubmissionResultProps {
     submission?: TaskSubmission,
@@ -27,6 +30,35 @@ export function TestsPaneList(props: SubmissionResultProps) {
     const dispatch = useDispatch();
     const showSubmissionError = (type: SubmissionErrorType) => {
         dispatch(submissionChangeDisplayedError(type));
+    };
+
+    const createNewTest = () => {
+        const testsCount = testsOrdered.length + 1;
+
+        let nextId = 1;
+        let nextName = 1;
+        for (let test of testsOrdered.filter(test => TaskTestGroupType.User === test.groupType)) {
+            if (test.name) {
+                const matches = test.name.match(new RegExp(getMessage('SUBMISSION_OWN_TEST_LABEL').format({index: "(\\d+)"})));
+                if (matches) {
+                    nextName = Math.max(nextName, Number(matches[1]) + 1);
+                }
+            }
+
+            const matches = test.id.match(/user-(\d+)/);
+            if (matches) {
+                nextId = Math.max(nextId, Number(matches[1]) + 1);
+            }
+        }
+
+        dispatch(addNewTaskTest({
+            data: null,
+            contextState: null,
+            id: `user-${nextId}`,
+            groupType: TaskTestGroupType.User,
+            name: getMessage('SUBMISSION_OWN_TEST_LABEL').format({index: String(nextName)}),
+        }));
+        dispatch(updateCurrentTestId({testId: testsCount - 1}));
     };
 
     const createCompilationStatusBlock = (submissionErrorType: SubmissionErrorType, text: string, color: string) => {
@@ -95,6 +127,14 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             />
                         )}
                     </React.Fragment>}
+                    <div className={`submission-result-test submission-result-create-test`} onClick={createNewTest}>
+                        <div className="submission-result-test-icon">
+                            <FontAwesomeIcon icon={faPlus}/>
+                        </div>
+                        <span className="submission-result-test-title">
+                            {getMessage('SUBMISSION_CREATE_TEST')}
+                        </span>
+                    </div>
                 </React.Fragment>
             </React.Fragment>
         </div>

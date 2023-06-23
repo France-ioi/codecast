@@ -286,6 +286,8 @@ module.exports = {
     SUBMISSION_ERROR_COMPILATION: "Compilation error:",
     SUBMISSION_ERROR_EXECUTION: "Execution error:",
     SUBMISSION_NO_TESTS: "There are no tests for this task.",
+    SUBMISSION_CREATE_TEST: "Create new test",
+    SUBMISSION_OWN_TEST_LABEL: "My test {index}",
     SUBMISSION_COMPILATION_OUTPUT: "Compilation result:",
     SUBMISSION_VIEW_COMPILATION_ERROR: "This test could not be executed because of a compilation error in your program.",
     SUBMISSION_VIEW_COMPILATION_ERROR_BUTTON: "Show error",

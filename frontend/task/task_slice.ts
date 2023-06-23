@@ -272,6 +272,17 @@ export const taskSlice = createSlice({
             state.previousTestId = null;
             state.currentTestId = null;
         },
+        addNewTaskTest(state: TaskState, action: PayloadAction<TaskTest>) {
+            state.taskTests.push(action.payload);
+        },
+        removeTaskTest(state: TaskState, action: PayloadAction<number>) {
+            if (state.currentTestId === action.payload) {
+                state.currentTestId = null;
+            } else if (state.currentTestId > action.payload) {
+                state.currentTestId--;
+            }
+            state.taskTests.splice(action.payload, 1);
+        },
         updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean}>) {
             state.previousTestId = state.currentTestId;
             state.currentTestId = action.payload.testId;
@@ -385,6 +396,8 @@ export const {
     taskSetMenuHelpsOpen,
     taskSetAvailablePlatforms,
     taskUnload,
+    addNewTaskTest,
+    removeTaskTest,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

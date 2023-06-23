@@ -103,6 +103,31 @@
   font-size: 0.8em;
 }
 
+.submission-result-test-delete {
+  color: var(--primary-color);
+  font-size: .9em;
+}
+
+.submission-result-create-test {
+  .submission-result-test-icon {
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    padding: 3px;
+    margin-right: 7px;
+    svg {
+      width: 0.7em;
+      height: 0.7em;
+      display: block;
+    }
+  }
+  .submission-result-test-title {
+    color: var(--primary-color);
+    font-size: .9em;
+  }
+}
+
+
 .submission-result-icon-container {
   border-radius: 500px;
   display: flex;
