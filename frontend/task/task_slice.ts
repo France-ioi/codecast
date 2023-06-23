@@ -146,6 +146,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     forceNextTaskAfter?: number,
     defaultLevel?: TaskLevelName,
     expectedStorage?: string,
+    initActionDelay?: number,
     hints?: TaskHint[],
 }
 

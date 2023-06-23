@@ -115,8 +115,8 @@ export function addStepperRecordAndReplayHooks(app: App) {
             const speed = yield* appSelect(state => state.stepper.speed);
             log.getLogger('stepper').debug('[stepper.step] set speed', speed);
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (context && context.changeDelay) {
-                context.changeDelay(stepperMaxSpeed - speed);
+            if (context && context.planNewDelay) {
+                context.planNewDelay(stepperMaxSpeed - speed);
             }
         });
     });
@@ -170,9 +170,9 @@ export function addStepperRecordAndReplayHooks(app: App) {
             replayContext.addSaga(function* () {
                 log.getLogger('replay').debug('[stepper.step] set delay to wait', delayToWait);
                 const context = quickAlgoLibraries.getContext(null, 'main');
-                if (context && context.changeDelay) {
+                if (context && context.planNewDelay) {
                     // Apply a factor to avoid taking more time than during recording and being always laggy behind the recording
-                    context.changeDelay(delayToWait * 0.9);
+                    context.planNewDelay(delayToWait * 0.9);
                 }
             });
         }
@@ -252,8 +252,8 @@ export function addStepperRecordAndReplayHooks(app: App) {
 
         replayContext.addSaga(function* () {
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (context && context.changeDelay) {
-                context.changeDelay(stepperMaxSpeed - speed);
+            if (context && context.planNewDelay) {
+                context.planNewDelay(stepperMaxSpeed - speed);
             }
         });
     });
