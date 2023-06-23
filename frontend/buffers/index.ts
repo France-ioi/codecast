@@ -384,7 +384,7 @@ function pickFileAndGetContent() {
             document.body.onfocus = null;
             setTimeout(() => {
                 if (!fileSelected) {
-                    console.log('No file selected');
+                    log.getLogger('editor').debug('No file selected');
                     reject();
                 }
             }, 10000);
