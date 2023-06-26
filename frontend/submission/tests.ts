@@ -1,8 +1,6 @@
-import {Task, TaskState, TaskTest} from '../task/task_slice';
-import {TaskLevelName} from '../task/platform/platform_slice';
+import {Task, TaskTest} from '../task/task_types';
 import {TaskTestServer} from './task_platform';
 import {getMessage} from '../lang';
-import {AppStore} from '../store';
 
 export function extractTestsFromTask(task: Task): TaskTest[] {
     const tests = getTestsFromTask(task);
@@ -90,16 +88,3 @@ function nameTaskTests(taskTests: TaskTest[], task: Task): void {
     }
 }
 
-export function selectTaskTests(state: AppStore) {
-    return selectTaskTestsInTaskStore(state.task);
-}
-
-export function selectTaskTestsInTaskStore(state: TaskState) {
-    if (null === state.currentLevel) {
-        return state.taskTests;
-    }
-
-    return state.taskTests.filter(test => {
-        return state.currentLevel === test.level;
-    });
-}

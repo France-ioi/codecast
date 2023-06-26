@@ -86,7 +86,7 @@ import {appSelect} from '../hooks';
 import {TaskSubmissionResultPayload} from '../submission/submission';
 import {CodecastPlatform} from './platforms';
 import {LibraryTestResult} from '../task/libs/library_test_result';
-import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
+import {selectTaskTests} from '../submission/submission_selectors';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -1150,7 +1150,7 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     const level = state.task.currentLevel;
     const testId = state.task.currentTestId;
 
-    const tests = yield* appSelect(state => state.task.taskTests);
+    const tests = yield* appSelect(selectTaskTests);
 
     let preExecutionTests: number[] = [];
     if (null !== testId) {

@@ -14,6 +14,7 @@ import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
 import {faPlus} from "@fortawesome/free-solid-svg-icons/faPlus";
 import {addNewTaskTest, updateCurrentTestId} from '../task/task_slice';
 import {TaskTestGroupType} from './task_platform';
+import {selectTaskTests} from './submission_selectors';
 
 export interface SubmissionResultProps {
     submission?: TaskSubmission,
@@ -21,7 +22,7 @@ export interface SubmissionResultProps {
 
 export function TestsPaneList(props: SubmissionResultProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const testsOrdered = useAppSelector(state => state.task.taskTests);
+    const testsOrdered = useAppSelector(selectTaskTests);
     const submission = props.submission;
     const subTasksOrdered = currentTask.subTasks ? [...currentTask.subTasks] : [];
     subTasksOrdered.sort((a, b) => a.rank - b.rank);

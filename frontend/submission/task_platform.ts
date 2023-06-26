@@ -1,10 +1,9 @@
 import {call, put} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
-import {Task} from '../task/task_slice';
+import {Task} from '../task/task_types';
 import {appSelect} from '../hooks';
 import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission';
 import {submissionUpdateTaskSubmission} from './submission_slice';
-import {TaskHint} from '../task/hints/hints_slice';
 
 export interface TaskNormalized {
     id: string,

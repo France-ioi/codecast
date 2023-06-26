@@ -21,9 +21,10 @@ import {
 import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
-import {isServerTask, isTestPublic} from './task_slice';
+import {isServerTask, isTestPublic} from './task_types';
 import {LibraryTestResult} from './libs/library_test_result';
 import {getStepperControlsSelector} from '../stepper/selectors';
+import {selectTaskTests} from '../submission/submission_selectors';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -31,7 +32,7 @@ export function ControlsAndErrors() {
     const {showStepper} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
-    const taskTests = useAppSelector(state => state.task.taskTests);
+    const taskTests = useAppSelector(selectTaskTests);
     const executionMode = useAppSelector(state => state.submission.executionMode);
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
     const stepperStatus = useAppSelector(state => state.stepper.status);

@@ -11,10 +11,12 @@ import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {isServerSubmission, TaskSubmission, TaskSubmissionServerTestResult} from './submission';
-import {removeTaskTest, TaskTest, updateCurrentTestId} from '../task/task_slice';
+import {removeTaskTest, updateCurrentTestId} from '../task/task_slice';
 import {useDispatch} from 'react-redux';
 import {useAppSelector} from '../hooks';
 import {faTrash} from '@fortawesome/free-solid-svg-icons/faTrash';
+import {selectTaskTests} from './submission_selectors';
+import {TaskTest} from '../task/task_types';
 
 export interface SubmissionResultTestProps {
     index: number,
@@ -82,7 +84,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const test = props.test;
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const testResult = props.submission ? props.submission.result.tests.find(otherTest => otherTest.testId === test.id) : null;
-    const testIndex = useAppSelector(state => state.task.taskTests.findIndex(otherTest => otherTest.id === test.id));
+    const testIndex = useAppSelector(state => selectTaskTests(state).findIndex(otherTest => otherTest.id === test.id));
 
     const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;
     const submissionDisplayError = useAppSelector(state => state.submission.submissionDisplayedError);

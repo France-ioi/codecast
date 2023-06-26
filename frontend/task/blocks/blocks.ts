@@ -1,10 +1,10 @@
 import {AppStoreReplay} from "../../store";
 import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
-import {getCSpecificBlocks} from "../../stepper/views/c/utils";
 import {Bundle} from "../../linker";
 import {call, debounce, put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
-import {BlocksUsage, taskSetBlocksUsage} from "../task_slice";
+import {BlocksUsage} from "../task_types";
+import {taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
 import {QuickAlgoLibrary} from "../libs/quickalgo_library";

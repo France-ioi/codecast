@@ -14,7 +14,7 @@ import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_library";
 import {analysisDirectiveViewDict} from "../stepper/views";
 import {getNotionsBagFromIncludeBlocks, NotionArborescence, NotionsBag} from './blocks/notions';
-import {QuickalgoTaskIncludeBlocks} from './task_slice';
+import {QuickalgoTaskIncludeBlocks} from './task_types';
 
 const pythonNotionsToBlocks = {
     'dicts_create_with': ['dict_brackets'],

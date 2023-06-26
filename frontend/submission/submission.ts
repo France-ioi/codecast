@@ -32,6 +32,7 @@ import {TaskLevelName} from '../task/platform/platform_slice';
 import {App} from '../index';
 import {addAutoRecordingBehaviour} from '../recorder/record';
 import {analysisTogglePath} from '../stepper/analysis/analysis_slice';
+import {selectTaskTests} from './submission_selectors';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -131,7 +132,9 @@ export function selectSubmissionsPaneEnabled(state: AppStore) {
         return false;
     }
 
-    return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && state.task.taskTests.length > 1))
+    const taskTests = selectTaskTests(state);
+
+    return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && taskTests.length > 1))
 }
 
 export default function (bundle: Bundle) {
@@ -142,7 +145,7 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(updateCurrentTestId, function* ({payload}) {
-            const newTest = yield* appSelect(state => state.task.taskTests[state.task.currentTestId]);
+            const newTest = yield* appSelect(state => selectTaskTests(state)[state.task.currentTestId]);
             const submission = yield* appSelect(selectCurrentServerSubmission);
             const submissionDisplayedError = yield* appSelect(state => state.submission.submissionDisplayedError);
             if (null !== submissionDisplayedError) {

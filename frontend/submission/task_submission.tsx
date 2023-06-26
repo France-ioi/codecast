@@ -25,7 +25,6 @@ import {longPollServerSubmissionResults, makeServerSubmission} from "./task_plat
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
-import {extractTestsFromTask} from './tests';
 import {
     selectSubmissionsPaneEnabled,
     TaskSubmissionEvaluateOn,
@@ -34,9 +33,11 @@ import {
     TaskSubmissionServerResult
 } from './submission';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
-import {isServerTask, TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
+import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
+import {selectTaskTests} from './submission_selectors';
+import {isServerTask} from '../task/task_types';
 
 export const levelScoringData = {
     basic: {
@@ -73,7 +74,7 @@ class TaskSubmissionExecutor {
         const environment = state.environment;
         const level = state.task.currentLevel;
         const answer = selectAnswer(state);
-        const tests = yield* appSelect(state => state.task.taskTests);
+        const tests = yield* appSelect(selectTaskTests);
         if (!tests || 0 === Object.values(tests).length || result.noGrading) {
             return;
         }
@@ -173,8 +174,7 @@ class TaskSubmissionExecutor {
     *makeBackgroundExecution(level, testId, answer) {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
-        const currentTask = state.task.currentTask;
-        const tests = currentTask ? extractTestsFromTask(currentTask, level) : state.task.taskTests;
+        const tests = state.task.taskTests;
 
         return yield new Promise<TaskSubmissionResultPayload>(resolve => {
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
@@ -276,7 +276,7 @@ class TaskSubmissionExecutor {
         const state = yield* appSelect();
         const environment = state.environment;
         let lastMessage = null;
-        const tests = yield* appSelect(state => state.task.taskTests);
+        const tests = yield* appSelect(selectTaskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,

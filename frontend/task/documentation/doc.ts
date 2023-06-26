@@ -14,19 +14,16 @@ import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
 import {CodecastPlatform} from '../../stepper/platforms';
-import taskSlice, {
-    QuickalgoTaskIncludeBlocks,
-    Task,
+import {
     TaskActionTypes,
-    taskRecordableActions,
     taskSetAvailablePlatforms
 } from '../task_slice';
 import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
 import {createAction} from '@reduxjs/toolkit';
-import {documentModelFromString} from '../../buffers';
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {addAutoRecordingBehaviour} from '../../recorder/record';
 import {documentFromString} from '../../buffers/document';
+import {QuickalgoTaskIncludeBlocks, Task} from '../task_types';
 
 let openerChannel;
 

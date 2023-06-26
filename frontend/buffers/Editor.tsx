@@ -428,7 +428,6 @@ export function Editor(props: EditorProps) {
     }, [props.theme]);
 
     useEffect(() => {
-        console.log('change highlight active line', false !== props.highlightActiveLine, editor.current)
         if (editor.current) {
             editor.current.setHighlightActiveLine(false !== props.highlightActiveLine);
         }

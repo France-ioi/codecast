@@ -17,7 +17,7 @@ import {IoMode} from "./stepper/io";
 import {SubtitlesState} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
-import {QuickalgoTask, TaskState} from "./task/task_slice";
+import {QuickalgoTask, TaskState} from "./task/task_types";
 import {LayoutState} from "./task/layout/layout";
 import {DocumentationState} from "./task/documentation/documentation_slice";
 import {BufferState} from "./buffers";

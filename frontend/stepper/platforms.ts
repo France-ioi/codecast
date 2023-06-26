@@ -1,5 +1,5 @@
 import {getPythonSpecificBlocks} from '../task/python_utils';
-import {QuickalgoTaskIncludeBlocks} from '../task/task_slice';
+import {QuickalgoTaskIncludeBlocks} from '../task/task_types';
 import {Block} from '../task/blocks/blocks';
 import {getCSpecificBlocks} from './views/c/utils';
 import {NotionsBag} from '../task/blocks/notions';

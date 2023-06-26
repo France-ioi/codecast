@@ -9,6 +9,7 @@ import {faCaretUp} from '@fortawesome/free-solid-svg-icons/faCaretUp';
 import {faCaretDown} from '@fortawesome/free-solid-svg-icons/faCaretDown';
 import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneListTest';
 import { TaskSubmissionServer} from './submission';
+import {selectTaskTests} from './submission_selectors';
 
 export interface SubmissionResultSubTaskProps {
     submission: TaskSubmissionServer,
@@ -16,7 +17,7 @@ export interface SubmissionResultSubTaskProps {
 }
 
 export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
-    const taskTests = useAppSelector(state => state.task.taskTests);
+    const taskTests = useAppSelector(selectTaskTests);
     const subTask = props.subTask;
     const subTaskResult = props.submission && props.submission.result.subTasks ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
     const [open, setOpen] = useState(false);

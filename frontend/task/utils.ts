@@ -5,7 +5,7 @@ import {getMessage} from "../lang";
 import {AppStore} from "../store";
 import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
-import {isServerTask, Task} from './task_slice';
+import {isServerTask, Task} from './task_types';
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
 
 export enum TaskPlatformMode {

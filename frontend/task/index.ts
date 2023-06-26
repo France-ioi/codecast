@@ -34,11 +34,9 @@ import taskSlice, {
     taskInputEntered,
     taskInputNeeded,
     taskLoaded,
-    taskRecordableActions,
     taskResetDone, taskSetBlocksPanelCollapsed,
     taskSuccess,
     taskSuccessClear,
-    TaskTest,
     taskUnload,
     taskUpdateState,
     updateCurrentTestId,
@@ -95,12 +93,14 @@ import {
     submissionChangePlatformName,
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
-import {extractTestsFromTask} from '../submission/tests';
+import {selectTaskTests} from '../submission/submission_selectors';
 import {TaskSubmissionResultPayload} from "../submission/submission";
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {getMessage} from '../lang';
+import {TaskTest} from './task_types';
+import {extractTestsFromTask} from '../submission/tests';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -160,28 +160,35 @@ function* taskLoadSaga(app: App, action) {
 
     let state = yield* appSelect();
 
-    if (urlParameters.has('taskId')) {
-        let task: TaskServer|null = null;
-        const taskId = urlParameters.get('taskId');
-        try {
-            task = yield* getTaskFromId(taskId);
-        } catch (e) {
-            console.error(e);
-            yield* put({type: ActionTypes.Error, payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`}});
-        }
+    let extractTests = false;
+    if (!state.task.currentTask) {
+        extractTests = true;
+        if (urlParameters.has('taskId')) {
+            let task: TaskServer | null = null;
+            const taskId = urlParameters.get('taskId');
+            try {
+                task = yield* getTaskFromId(taskId);
+            } catch (e) {
+                console.error(e);
+                yield* put({
+                    type: ActionTypes.Error,
+                    payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`}
+                });
+            }
 
-        const convertedTask = convertServerTaskToCodecastFormat(task);
-        yield* put(currentTaskChange(convertedTask));
-        if (urlParameters.has('sPlatform')) {
-            yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));
+            const convertedTask = convertServerTaskToCodecastFormat(task);
+            yield* put(currentTaskChange(convertedTask));
+            if (urlParameters.has('sPlatform')) {
+                yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));
+            }
+            if (convertedTask?.gridInfos?.hints?.length) {
+                yield* put(hintsLoaded(convertedTask.gridInfos.hints));
+            }
+        } else if (state.options.task) {
+            yield* put(currentTaskChange(state.options.task));
+        } else if (selectedTask) {
+            yield* put(currentTaskChangePredefined(selectedTask));
         }
-        if (convertedTask?.gridInfos?.hints?.length) {
-            yield* put(hintsLoaded(convertedTask.gridInfos.hints));
-        }
-    } else if (state.options.task) {
-        yield* put(currentTaskChange(state.options.task));
-    } else if (selectedTask) {
-        yield* put(currentTaskChangePredefined(selectedTask));
     }
 
     // yield* put(hintsLoaded([
@@ -226,8 +233,8 @@ function* taskLoadSaga(app: App, action) {
     let tests: TaskTest[] = [];
     if (action.payload && action.payload.tests) {
         tests = action.payload.tests;
-    } else if (currentTask) {
-        tests = extractTestsFromTask(currentTask, currentLevel);
+    } else if (currentTask && extractTests) {
+        tests = extractTestsFromTask(currentTask);
     }
     log.getLogger('task').debug('[task.load] update task tests', tests);
     yield* put(updateTaskTests(tests));
@@ -425,10 +432,6 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     }
     yield* put(platformAnswerLoaded(newLevelAnswer));
 
-    const tests = extractTestsFromTask(currentTask, newLevel);
-    log.getLogger('task').debug('[task.currentLevelChange] update task tests', tests);
-    yield* put(updateTaskTests(tests));
-
     yield* put(updateCurrentTestId({testId: 0, record: false, recreateContext: true}));
 
     yield* call(taskLevelLoadedSaga);
@@ -465,13 +468,14 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
     if (payload.recreateContext) {
         yield* call(createQuickalgoLibrary);
     } else if (context) {
-        log.getLogger('task').debug('task update test', state.task.taskTests, state.task.currentTestId);
-        if (!(state.task.currentTestId in state.task.taskTests)) {
+        const taskTests = yield* appSelect(selectTaskTests);
+        log.getLogger('task').debug('task update test', taskTests, state.task.currentTestId);
+        if (!(state.task.currentTestId in taskTests)) {
             console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task);
             throw "Couldn't update test during replay, check if the replay is using the appropriate task";
         }
         context.iTestCase = state.task.currentTestId;
-        const contextState = state.task.taskTests[state.task.currentTestId].contextState;
+        const contextState = taskTests[state.task.currentTestId].contextState;
         if (null !== contextState) {
             const currentTest = selectCurrentTestData(state);
             log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);

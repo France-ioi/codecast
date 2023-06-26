@@ -6,7 +6,7 @@ import {getCurrentImmerState} from "../utils";
 import {mainQuickAlgoLogger} from "./quickalgo_libraries";
 import {stepperMaxSpeed} from "../../stepper";
 import log from 'loglevel';
-import {QuickalgoLibraryInfos} from '../task_slice';
+import {QuickalgoLibraryInfos} from '../task_types';
 import {TaskSubmissionServerTestResult} from '../../submission/submission';
 import {defaultNotions, NotionArborescence} from '../blocks/notions';
 import {CodecastPlatform} from '../../stepper/platforms';

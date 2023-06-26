@@ -5,11 +5,12 @@ import {getMessage} from "../../../lang";
 import {useAppSelector} from '../../../hooks';
 import {Editor} from '../../../buffers/Editor';
 import {PrinterLib, PrinterLibState} from './printer_lib';
+import {selectCurrentTest} from '../../task_slice';
 
 export function InputOutputView() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const taskState: PrinterLibState = useAppSelector(state => state.task.state);
-    const currentTestData = useAppSelector(state => state.task.taskTests[state.task.currentTestId]?.data);
+    const currentTestData = useAppSelector(state => selectCurrentTest(state)?.data);
     const libOutput = PrinterLib.getOutputTextFromEvents(taskState ? taskState.ioEvents : []);
 
     return (

@@ -4,7 +4,7 @@ import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
 import {useDispatch} from "react-redux";
-import {isTestPublic} from './task_slice';
+import {isTestPublic} from './task_types';
 import {getMessage} from '../lang';
 import {
     isServerSubmission,
@@ -16,12 +16,13 @@ import {Alert} from "react-bootstrap";
 import {toHtml} from '../utils/sanitize';
 import {nl2br} from '../common/utils';
 import {Button} from '@blueprintjs/core';
+import {selectTaskTests} from '../submission/submission_selectors';
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
-    const taskTests = useAppSelector(state => state.task.taskTests);
+    const taskTests = useAppSelector(selectTaskTests);
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const {width, height, ref} = useResizeDetector();
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
