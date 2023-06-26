@@ -118,16 +118,14 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             />
                         )}
                     </div>}
-                    {subTasksOrdered.length === 0 && <React.Fragment>
-                        {testsOrdered.map((test, testIndex) =>
-                            <TestsPaneListTest
-                                key={testIndex}
-                                index={testIndex}
-                                test={test}
-                                submission={submission}
-                            />
-                        )}
-                    </React.Fragment>}
+                    {testsOrdered.filter(test => !test.subtaskId).map((test, testIndex) =>
+                        <TestsPaneListTest
+                            key={testIndex}
+                            index={testIndex}
+                            test={test}
+                            submission={submission}
+                        />
+                    )}
                     <div className={`submission-result-test submission-result-create-test`} onClick={createNewTest}>
                         <div className="submission-result-test-icon">
                             <FontAwesomeIcon icon={faPlus}/>

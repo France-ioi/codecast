@@ -107,7 +107,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     }
 
     const deleteTest = (e) => {
-        dispatch(removeTaskTest(props.index));
+        dispatch(removeTaskTest(testIndex));
         e.stopPropagation();
     };
 

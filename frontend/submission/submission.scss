@@ -182,6 +182,10 @@
   border-top: solid 1px #cecece;
 }
 
+.submission-result-subtasks + .submission-result-test {
+  border-top: none;
+}
+
 .submission-result-subtask {
   .submission-result-test {
     padding-left: 25px;

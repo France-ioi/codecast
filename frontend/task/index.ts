@@ -23,9 +23,10 @@ import SrlBundle, {statsGetStateSaga} from './srl';
 import BehaviourBundle from './behaviour';
 import stringify from 'json-stable-stringify-without-jsonify';
 import taskSlice, {
+    addNewTaskTest,
     currentTaskChange,
     currentTaskChangePredefined,
-    recordingEnabledChange,
+    recordingEnabledChange, removeTaskTest,
     selectCurrentTestData,
     TaskActionTypes,
     taskAddInput,
@@ -917,6 +918,8 @@ export default function (bundle: Bundle) {
                     updateCurrentTestId,
                     taskSetBlocksPanelCollapsed,
                     taskChangeSoundEnabled,
+                    addNewTaskTest,
+                    removeTaskTest,
                 ],
                 onResetDisabled: true,
             });

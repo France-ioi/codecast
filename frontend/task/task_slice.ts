@@ -261,13 +261,4 @@ export const {
     removeTaskTest,
 } = taskSlice.actions;
 
-export const taskRecordableActions = [
-    'taskSuccess',
-    'taskSuccessClear',
-    'taskInputNeeded',
-    'updateCurrentTestId',
-    'taskSetBlocksPanelCollapsed',
-    'taskChangeSoundEnabled',
-];
-
 export default taskSlice;
