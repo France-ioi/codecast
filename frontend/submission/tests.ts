@@ -70,6 +70,8 @@ function nameTaskTests(taskTests: TaskTest[], task: Task): void {
             let testNumber;
             if (null !== subTask) {
                 testNumber = taskTests.filter(otherTest => otherTest.subtaskId === subTask.id).findIndex(otherTest => otherTest.id === test.id);
+            } else if (test.level) {
+                testNumber = taskTests.filter(otherTest => otherTest.level === test.level).findIndex(otherTest => otherTest.id === test.id);
             } else {
                 testNumber = index;
             }
