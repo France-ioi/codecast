@@ -81,7 +81,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             width="100%"
             hideGutter
             hideCursor
-            printMarginColumn={false}
+            showPrintMargin={false}
             highlightActiveLine={false}
             dragEnabled={false}
             maxLines={Infinity}

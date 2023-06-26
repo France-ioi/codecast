@@ -143,7 +143,7 @@ export abstract class QuickAlgoLibrary {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
         let computedDelay = null !== delay ? delay : (this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed);
-        log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay);
+        log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay, delay, this.infos.actionDelay, stepperMaxSpeed);
         if (this.runner) {
             if (computedDelay > 0 && 'main' === this.environment) {
                 this.delaysStartedCount++;

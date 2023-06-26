@@ -30,7 +30,7 @@ export interface EditorProps {
     content?: string,
     errorHighlight?: Range,
     hideGutter?: boolean,
-    printMarginColumn?: boolean,
+    showPrintMargin?: boolean,
     highlightActiveLine?: boolean,
     maxLines?: number,
     dragEnabled?: boolean,
@@ -305,15 +305,6 @@ export function Editor(props: EditorProps) {
         if (props.hideGutter) {
             editor.current.renderer.setShowGutter(false);
         }
-        if (false === props.highlightActiveLine) {
-            editor.current.setHighlightActiveLine(false);
-        }
-        if (false === props.printMarginColumn) {
-            editor.current.renderer.setPrintMarginColumn(false);
-        }
-        if (props.hideCursor) {
-            editor.current.renderer.$cursorLayer.element.style.display = "none";
-        }
 
         const {onInit, onSelect, onEdit} = props;
 
@@ -435,6 +426,25 @@ export function Editor(props: EditorProps) {
             editor.current.setTheme(`ace/theme/${props.theme || 'textmate'}`);
         }
     }, [props.theme]);
+
+    useEffect(() => {
+        console.log('change highlight active line', false !== props.highlightActiveLine, editor.current)
+        if (editor.current) {
+            editor.current.setHighlightActiveLine(false !== props.highlightActiveLine);
+        }
+    }, [props.highlightActiveLine]);
+
+    useEffect(() => {
+        if (editor.current) {
+            editor.current.setShowPrintMargin(false !== props.showPrintMargin);
+        }
+    }, [props.showPrintMargin]);
+
+    useEffect(() => {
+        if (editor.current) {
+            editor.current.renderer.$cursorLayer.element.style.display = props.hideCursor ? "none" : 'block';
+        }
+    }, [props.hideCursor]);
 
     useEffect(() => {
         if (editor.current && availableBlocks) {

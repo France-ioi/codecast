@@ -55,6 +55,7 @@ export enum PrinterLibActionTypes {
 }
 
 export const inputBufferLibTest = 'printerLibTestInput';
+export const outputBufferLibTest = 'printerLibTestOutput';
 
 export const printerLibTerminalInputKey = (key: string) => ({
     type: PrinterLibActionTypes.PrinterLibTerminalInputKey,
@@ -721,6 +722,9 @@ export class PrinterLib extends QuickAlgoLibrary {
             if (inputBufferLibTest === buffer) {
                 const inputValue = yield* appSelect(state => state.buffers[inputBufferLibTest].model.document.toString());
                 yield* put(updateCurrentTest({input: inputValue}));
+            } else if (outputBufferLibTest === buffer) {
+                const outputValue = yield* appSelect(state => state.buffers[outputBufferLibTest].model.document.toString());
+                yield* put(updateCurrentTest({output: outputValue}));
             }
         });
 
@@ -767,10 +771,10 @@ export class PrinterLib extends QuickAlgoLibrary {
             app.replayApi.on('start', function* (replayContext: ReplayContext, event) {
                 const {buffers} = event[2];
                 const currentTask = yield* appSelect(state => state.task.currentTask);
-                if (buffers[inputBufferLibTest] && !currentTask) {
+                if (!currentTask && (buffers[inputBufferLibTest] || buffers[outputBufferLibTest])) {
                     yield* put(updateCurrentTest({
-                        input: buffers[inputBufferLibTest].document,
-                        output: '',
+                        input: buffers[inputBufferLibTest] ? buffers[inputBufferLibTest].document : '',
+                        output: buffers[outputBufferLibTest] ? buffers[outputBufferLibTest].document : '',
                     }));
                 }
             });
