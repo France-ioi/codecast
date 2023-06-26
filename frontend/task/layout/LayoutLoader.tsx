@@ -4,7 +4,7 @@ import {AppStore, CodecastOptions} from "../../store";
 import {createLayout, LayoutMobileMode, LayoutType, selectActiveView} from "./layout";
 import {StepperStatus} from "../../stepper";
 import {ActionTypes} from "./actionTypes";
-import {withResizeDetector} from 'react-resize-detector/build/withPolyfill';
+import {withResizeDetector} from 'react-resize-detector';
 import {Directive} from "../../stepper/python/directives";
 import {Screen} from "../../common/screens";
 import {getNotionsBagFromIncludeBlocks} from '../blocks/notions';

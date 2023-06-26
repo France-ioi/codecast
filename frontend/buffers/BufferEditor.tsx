@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {Editor, EditorProps} from "./Editor";
 import {ActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
-import {withResizeDetector} from "react-resize-detector/build/withPolyfill";
+import {withResizeDetector} from "react-resize-detector";
 import {Block} from "../task/blocks/blocks";
 import {BlocklyEditor} from "../stepper/js/BlocklyEditor";
 import {hasBlockPlatform} from "../stepper/js";
