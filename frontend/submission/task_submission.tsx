@@ -289,9 +289,9 @@ class TaskSubmissionExecutor {
             if ('main' === environment) {
                 yield* delay(0);
             }
-            log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
+            log.getLogger('tests').debug('[Tests] Start new execution grading for test', testIndex);
             const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(level, testIndex, answer);
-            log.getLogger('tests').debug('[Tests] End execution client, result=', payload);
+            log.getLogger('tests').debug('[Tests] End execution grading, result=', payload);
             if ('main' === environment) {
                 yield* delay(0);
             }
