@@ -26,7 +26,8 @@ import taskSlice, {
     currentTaskChange,
     currentTaskChangePredefined,
     recordingEnabledChange,
-    selectCurrentTestData, TaskActionTypes,
+    selectCurrentTestData,
+    TaskActionTypes,
     taskAddInput,
     taskChangeSoundEnabled,
     taskCurrentLevelChange,
@@ -36,7 +37,9 @@ import taskSlice, {
     taskRecordableActions,
     taskResetDone, taskSetBlocksPanelCollapsed,
     taskSuccess,
-    taskSuccessClear, TaskTest,
+    taskSuccessClear,
+    TaskTest,
+    taskUnload,
     taskUpdateState,
     updateCurrentTestId,
     updateTaskTests,
@@ -118,10 +121,6 @@ export const taskLoad = ({testId, level, tests, reloadContext, selectedTask, cal
     },
 });
 
-export const taskUnload = () => ({
-    type: TaskActionTypes.TaskUnload,
-});
-
 export const taskChangeLevel = createAction('task/changeLevel', (level: TaskLevelName) => ({
     payload: {
         level,
@@ -178,8 +177,8 @@ function* taskLoadSaga(app: App, action) {
         if (urlParameters.has('sPlatform')) {
             yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));
         }
-        if (convertedTask.hints && convertedTask.hints.length) {
-            yield* put(hintsLoaded(convertedTask.hints));
+        if (convertedTask?.gridInfos?.hints?.length) {
+            yield* put(hintsLoaded(convertedTask.gridInfos.hints));
         }
     } else if (state.options.task) {
         yield* put(currentTaskChange(state.options.task));
@@ -802,6 +801,8 @@ export default function (bundle: Bundle) {
                 yield* put(stepperDisplayError(error));
             } else if (score > 0) {
                 yield* put(stepperDisplayError(`${message} (${Math.round(score * 100)}%)`));
+            } else if (message) {
+                yield* put(stepperDisplayError(message));
             }
         });
 

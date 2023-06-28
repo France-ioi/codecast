@@ -17,6 +17,24 @@ export function convertMichelsonStorageToCodecastFormat(actualStorage: string, s
     return storageData;
 }
 
+export interface SmartContractStorageElement {
+    name: string,
+    type: string,
+}
+
+export function getStorageFormat(storageType: string) {
+    const p = new Parser();
+
+    const storageFormat = p.parseMichelineExpression(storageType) as Prim;
+
+    const storageData: SmartContractStorageElement[] = [];
+
+    walkStorageTypeAndExtractVariables(storageFormat, storageData);
+
+
+    return storageData;
+}
+
 function isPrim(object: Expr): object is Prim {
     return 'prim' in object;
 }
@@ -56,3 +74,25 @@ function matchMichelsonStorageToObject(actualStorage: Expr, storageType: Prim, s
 
     return null;
 }
+
+function walkStorageTypeAndExtractVariables(storageType: Prim, storageData: SmartContractStorageElement[]) {
+    if (storageType.annots?.length) {
+        const name = storageType.annots[0].substring(1);
+        storageData.push({
+            name,
+            type: storageType.prim,
+        });
+    }
+
+    if (storageType.args?.length) {
+        for (let argIndex = 0; argIndex < storageType.args.length; argIndex++) {
+            const storageTypeArg = storageType.args[argIndex];
+            if (isPrim(storageTypeArg)) {
+                walkStorageTypeAndExtractVariables(storageTypeArg, storageData);
+            }
+        }
+    }
+
+    return storageData;
+}
+

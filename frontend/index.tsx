@@ -151,6 +151,7 @@ declare global {
         implementGetResources?: (task: any) => void,
         log: any,
         quickAlgoLanguageStrings: any,
+        taskStrings?: any,
     }
 }
 

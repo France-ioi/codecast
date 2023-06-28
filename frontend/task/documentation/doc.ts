@@ -133,7 +133,7 @@ function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allCon
             let includedConceptIds = [];
             // We remove all concepts which have no "python" attribute
             let filteredConcepts = allConcepts.filter(function (concept) {
-                return concept.python && concept.python != [];
+                return concept.python && concept.python.length;
             });
             for (let functionKey in includeBlocks.generatedBlocks[genName]) {
                 let functionName = includeBlocks.generatedBlocks[genName][functionKey];
@@ -176,7 +176,7 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task
     }
 
     let context = quickAlgoLibraries.getContext(null, 'main');
-    if (context.infos.conceptViewer) {
+    if (context?.infos.conceptViewer) {
         let concepts = [], allConcepts = [];
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
