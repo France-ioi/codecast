@@ -313,6 +313,10 @@ export class PrinterLib extends QuickAlgoLibrary {
         ];
     };
 
+    supportsCustomTests(): boolean {
+        return true;
+    }
+
     getInnerState() {
         return this.innerState;
     };

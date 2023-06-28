@@ -15,6 +15,7 @@ import {faPlus} from "@fortawesome/free-solid-svg-icons/faPlus";
 import {addNewTaskTest, updateCurrentTestId} from '../task/task_slice';
 import {TaskTestGroupType} from './task_platform';
 import {selectTaskTests} from './submission_selectors';
+import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
 
 export interface SubmissionResultProps {
     submission?: TaskSubmission,
@@ -27,6 +28,8 @@ export function TestsPaneList(props: SubmissionResultProps) {
     const subTasksOrdered = currentTask.subTasks ? [...currentTask.subTasks] : [];
     subTasksOrdered.sort((a, b) => a.rank - b.rank);
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    const canCreateOwnTests = context.supportsCustomTests();
 
     const dispatch = useDispatch();
     const showSubmissionError = (type: SubmissionErrorType) => {
@@ -92,6 +95,11 @@ export function TestsPaneList(props: SubmissionResultProps) {
         </div>;
     }
 
+    let displayedIndividualTests = testsOrdered.filter(test => !test.subtaskId);
+    if ('UserTest' === submission?.result?.mode) {
+        displayedIndividualTests = displayedIndividualTests.filter(test => TaskTestGroupType.User === test.groupType);
+    }
+
     return (
         <div className="submission-result">
             {submission && isServerSubmission(submission) && 'UserTest' === submission.result.mode && <div>
@@ -109,7 +117,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
                 </div>}
 
                 <React.Fragment>
-                    {subTasksOrdered.length > 0 && <div className="submission-result-subtasks">
+                    {subTasksOrdered.length > 0 && 'UserTest' !== submission?.result?.mode && <div className="submission-result-subtasks">
                         {subTasksOrdered.map((subTask, subTaskIndex) =>
                             <TestsPaneListSubTask
                                 key={subTaskIndex}
@@ -118,7 +126,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             />
                         )}
                     </div>}
-                    {testsOrdered.filter(test => !test.subtaskId).map((test, testIndex) =>
+                    {displayedIndividualTests.map((test, testIndex) =>
                         <TestsPaneListTest
                             key={testIndex}
                             index={testIndex}
@@ -126,14 +134,14 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             submission={submission}
                         />
                     )}
-                    <div className={`submission-result-test submission-result-create-test`} onClick={createNewTest}>
+                    {canCreateOwnTests && <div className={`submission-result-test submission-result-create-test`} onClick={createNewTest}>
                         <div className="submission-result-test-icon">
                             <FontAwesomeIcon icon={faPlus}/>
                         </div>
                         <span className="submission-result-test-title">
                             {getMessage('SUBMISSION_CREATE_TEST')}
                         </span>
-                    </div>
+                    </div>}
                 </React.Fragment>
             </React.Fragment>
         </div>

@@ -70,7 +70,7 @@
   border-top: solid 2px #e7e7e7;
   height: 100%;
   overflow-y: auto;
-  .submission-results__submission-loader {
+  .submission-results__submission-loader, .submission-results__submission-crashed {
     text-align: center;
     padding: 1rem;
   }
@@ -266,6 +266,13 @@
     background: conic-gradient(#f5a623 0, #f9d762 var(--progression), transparent var(--progression), transparent 360deg), conic-gradient(#969696 0deg, #969696 360deg);
     &.submission-label-icon-success {
       background: conic-gradient(#9acc68 0, #9acc68 360deg);
+    }
+    &.submission-label-icon-crash {
+      background: conic-gradient(#ff0f2c 0, #ff0f2c 360deg);
+      .submission-label-score {
+        color: #ff0f2c;
+        font-size: 1em;
+      }
     }
 
     $submission-label-width: 76%;

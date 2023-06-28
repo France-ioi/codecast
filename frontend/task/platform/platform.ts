@@ -44,6 +44,8 @@ import {taskLoaded} from '../task_slice';
 import {appSelect} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {LayoutView} from '../layout/layout';
+import {SubmissionExecutionScope} from '../../submission/submission_slice';
+import {getMessage} from '../../lang';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -404,7 +406,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             yield* call(success, scoreWithPlatformParameters, message, scoreToken);
         }
     } catch (ex: any) {
-        const message = ex.message === 'Network request failed' ? "Vous n'êtes actuellement pas connecté à Internet."
+        const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
             : (ex.message ? ex.message : ex.toString());
         yield* put(platformAnswerGraded({error: message}));
         console.error(ex);
@@ -440,6 +442,7 @@ function getTopLevel(levels: TaskLevelName[]) {
 export interface PlatformTaskGradingParameters {
     level?: TaskLevelName,
     answer?: any,
+    scope?: SubmissionExecutionScope,
 }
 
 export interface PlatformTaskGradingResult {

@@ -16,12 +16,12 @@ import {
     submissionChangeCurrentSubmissionId,
     submissionChangeDisplayedError,
     submissionChangePaneOpen,
-    SubmissionErrorType,
+    SubmissionErrorType, SubmissionExecutionScope,
     submissionSetTestResult,
     submissionStartExecutingTest,
     submissionUpdateTaskSubmission,
 } from "./submission_slice";
-import {longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
+import {longPollServerSubmissionResults, makeServerSubmission, TaskTestGroupType} from "./task_platform";
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
@@ -38,6 +38,8 @@ import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
 import {selectTaskTests} from './submission_selectors';
 import {isServerTask} from '../task/task_types';
+import {platformAnswerGraded} from '../task/platform/actionTypes';
+import {getMessage} from '../lang';
 
 export const levelScoringData = {
     basic: {
@@ -205,13 +207,14 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {level, answer} = parameters;
+        const {level, answer, scope} = parameters;
         const state = yield* appSelect();
 
         const randomSeed = state.platform.taskRandomSeed;
         const newTaskToken = getTaskTokenForLevel(level, randomSeed);
         const answerToken = getAnswerTokenForLevel(stringify(answer), level, randomSeed);
         const platform = state.options.platform;
+        const userTests = SubmissionExecutionScope.MyTests === scope ? selectTaskTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
 
         const serverSubmission: TaskSubmissionServer = {
             evaluated: false,
@@ -230,44 +233,58 @@ class TaskSubmissionExecutor {
 
         yield* put(submissionChangeCurrentSubmissionId(submissionIndex));
 
-        const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken, platform);
-        if (!submissionData.success) {
-            yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
+        try {
+            const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken, platform, userTests);
+            if (!submissionData.success) {
+                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 
-            return {score: 0};
-        }
-
-        const submissionId = submissionData.submissionId;
-
-        const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
-        yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
-
-        const outcome = yield* race({
-            result: call(() => deferredPromise.promise),
-            timeout: delay(10*60*1000), // 10 min
-        });
-
-        if (outcome.result) {
-            const submissionResult = outcome.result;
-            if (submissionResult.compilationError) {
-                yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
-            } else if (!submissionsPaneEnabled) {
-                const tests = submissionResult.tests;
-                if (tests.length) {
-                    yield* put(updateCurrentTestId({testId: 0}));
-                }
+                return {score: 0};
             }
 
-            return {
-                score: outcome.result.score / 100,
-                message: outcome.result.errorMessage,
-            };
-        } else {
+            const submissionId = submissionData.submissionId;
+
+            const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
+            yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
+
+            const outcome = yield* race({
+                result: call(() => deferredPromise.promise),
+                timeout: delay(10*60*1000), // 10 min
+            });
+
+            if (outcome.result) {
+                const submissionResult = outcome.result;
+                if (submissionResult.compilationError) {
+                    yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
+                } else if (!submissionsPaneEnabled) {
+                    const tests = submissionResult.tests;
+                    if (tests.length) {
+                        yield* put(updateCurrentTestId({testId: 0}));
+                    }
+                }
+
+                return {
+                    score: outcome.result.score / 100,
+                    message: outcome.result.errorMessage,
+                };
+            } else {
+                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
+
+                return {
+                    score: 0,
+                };
+            }
+        } catch (ex: any) {
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 
+            console.error(ex);
+
+            const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
+                : (ex.res?.body?.error ?? ex.message ?? ex.toString());
+            yield* put(platformAnswerGraded({error: message}));
+
             return {
-                score: 0,
-            };
+                error: message,
+            }
         }
     }
 

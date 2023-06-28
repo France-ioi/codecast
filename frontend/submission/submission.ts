@@ -22,7 +22,7 @@ import {CodecastPlatform} from '../stepper/platforms';
 import {
     submissionChangeCurrentSubmissionId,
     submissionChangeDisplayedError,
-    SubmissionErrorType,
+    SubmissionErrorType, SubmissionExecutionScope,
     submissionSlice
 } from './submission_slice';
 import {getMessage} from '../lang';
@@ -33,6 +33,10 @@ import {App} from '../index';
 import {addAutoRecordingBehaviour} from '../recorder/record';
 import {analysisTogglePath} from '../stepper/analysis/analysis_slice';
 import {selectTaskTests} from './submission_selectors';
+import {taskSubmissionExecutor} from './task_submission';
+import {selectAnswer} from '../task/selectors';
+import stringify from 'json-stable-stringify-without-jsonify';
+import {platformAnswerGraded} from '../task/platform/actionTypes';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -65,6 +69,7 @@ export interface TaskSubmissionResult {
     compilationError?: boolean,
     compilationMessage?: string|null,
     errorMessage?: string|null,
+    mode?: string,
 }
 
 export interface TaskSubmissionClient extends TaskSubmission {
@@ -101,7 +106,7 @@ export const callPlatformValidate = createAction('submission/callPlatformValidat
     },
 }));
 
-
+export const submissionExecuteMyTests = createAction('submission/executeMyTests');
 
 export function selectCurrentServerSubmission(state: AppStore) {
     if (null === state.submission.currentSubmissionId) {
@@ -188,6 +193,19 @@ export default function (bundle: Bundle) {
             } else if (null === payload) {
                 yield* put(stepperClearError());
             }
+        });
+
+        yield* takeEvery(submissionExecuteMyTests, function* () {
+            const answer = yield* appSelect(selectAnswer);
+            const level = yield* appSelect(state => state.task.currentLevel);
+
+            const {score, message, scoreToken} = yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer],{
+                level,
+                answer: stringify(answer),
+                scope: SubmissionExecutionScope.MyTests,
+            });
+
+            console.log('exec result', {score, message});
         });
     });
 

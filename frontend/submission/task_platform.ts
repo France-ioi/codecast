@@ -1,6 +1,6 @@
 import {call, put} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
-import {Task} from '../task/task_types';
+import {Task, TaskTest} from '../task/task_types';
 import {appSelect} from '../hooks';
 import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission';
 import {submissionUpdateTaskSubmission} from './submission_slice';
@@ -214,7 +214,7 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
     }
 }
 
-export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string, platform: string) {
+export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string, platform: string, userTests: TaskTest[]) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
     const answerDecoded = JSON.parse(answer);
@@ -226,7 +226,11 @@ export function* makeServerSubmission(answer: string, taskToken: string, answerT
             language: platform,
             sourceCode: answerDecoded,
         },
-        userTests: [],
+        userTests: userTests.map(test => ({
+            name: test.name,
+            input: test.data?.input ? test.data?.input : '',
+            output: test.data?.output ? test.data?.output : '',
+        })),
         sLocale: state.options.language.split('-')[0],
         platform: state.submission.platformName,
         taskId: String(state.task.currentTask.id),

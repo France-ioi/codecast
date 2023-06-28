@@ -291,6 +291,8 @@ module.exports = {
     SUBMISSION_RESULTS_TESTS_TITLE: 'Liste des tests',
     SUBMISSION_RESULTS_TITLE: 'Résultat des tests',
     SUBMISSION_RESULTS_EVALUATING: 'Évaluation en cours...',
+    SUBMISSION_RESULTS_CRASHED: "Une erreur s'est produite durant l'évaluation.",
+    SUBMISSION_RESULTS_CRASHED_NETWORK: "Vous n'êtes actuellement pas connecté à Internet.",
     SUBMISSION_RESULTS_LABEL: 'Soumission en {platform}',
     SUBMISSION_TEST_NUMBER: "Test {testNumber}",
     SUBMISSION_USER_TEST_WARNING: "Attention : cette évaluation a été réalisée sur vos propres tests. Pour obtenir une note, n'oubliez pas de Valider votre réponse.",
