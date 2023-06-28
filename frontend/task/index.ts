@@ -218,22 +218,25 @@ function* taskLoadSaga(app: App, action) {
 
             yield* put(taskCurrentLevelChange({level: defaultLevel, record: false}));
         }
-        currentLevel = yield* appSelect(state => state.task.currentLevel);
-        log.getLogger('task').debug('new current level', currentLevel);
+    }
 
-        let tests: TaskTest[];
-        if (action.payload && action.payload.tests) {
-            tests = action.payload.tests;
-        } else {
-            tests = extractTestsFromTask(currentTask, currentLevel);
-        }
-        log.getLogger('task').debug('[task.load] update task tests', tests);
-        yield* put(updateTaskTests(tests));
+    const currentLevel = yield* appSelect(state => state.task.currentLevel);
+    log.getLogger('task').debug('new current level', currentLevel);
 
-        const testId = action.payload && action.payload.testId ? action.payload.testId : (tests.length ? 0 : null);
-        log.getLogger('task').debug('[task.load] update current test id', testId);
-        yield* put(updateCurrentTestId({testId, record: false}));
+    let tests: TaskTest[] = [];
+    if (action.payload && action.payload.tests) {
+        tests = action.payload.tests;
+    } else if (currentTask) {
+        tests = extractTestsFromTask(currentTask, currentLevel);
+    }
+    log.getLogger('task').debug('[task.load] update task tests', tests);
+    yield* put(updateTaskTests(tests));
 
+    const testId = action.payload && action.payload.testId ? action.payload.testId : (tests.length ? 0 : null);
+    log.getLogger('task').debug('[task.load] update current test id', testId);
+    yield* put(updateCurrentTestId({testId, record: false}));
+
+    if (currentTask) {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         if (0 === Object.keys(taskLevels).length) {
             const levels = {};
@@ -274,7 +277,7 @@ function* taskLoadSaga(app: App, action) {
 
     oldSagasTasks[app.environment] = yield* fork(function* () {
         try {
-            const sagas = quickAlgoLibraries.getSagas(app);
+            const sagas = quickAlgoLibraries.getSagas(app, app.environment);
             sagas.push(handleLibrariesEventListenerSaga(app));
             yield* all(sagas);
         } finally {
@@ -671,7 +674,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(stepperExecutionEndConditionReached, function* ({payload: {executionResult}}) {
             const context = quickAlgoLibraries.getContext(null, app.environment);
             // checkEndCondition can throw the message or an object with more details
-            const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : executionResult as string;
+            const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : String(executionResult);
 
             const computeGrade = context.infos.computeGrade ? context.infos.computeGrade : (context: QuickAlgoLibrary, message: string) => {
                 let rate = 0;
@@ -902,12 +905,20 @@ export default function (bundle: Bundle) {
             }
         });
 
-        addAutoRecordingBehaviour(app, {
-            sliceName: taskSlice.name,
-            actionNames: taskRecordableActions,
-            actions: taskSlice.actions,
-            onResetDisabled: true,
-        });
+        if ('main' === app.environment) {
+            addAutoRecordingBehaviour(app, {
+                sliceName: taskSlice.name,
+                actions: [
+                    taskSuccess,
+                    taskSuccessClear,
+                    taskInputNeeded,
+                    updateCurrentTestId,
+                    taskSetBlocksPanelCollapsed,
+                    taskChangeSoundEnabled,
+                ],
+                onResetDisabled: true,
+            });
+        }
 
         app.recordApi.on(taskChangeLevel.type, function* (addEvent, {payload}) {
             yield* call(addEvent, taskChangeLevel.type, payload.level);

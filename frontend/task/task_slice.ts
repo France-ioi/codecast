@@ -11,6 +11,7 @@ import StringsLoginFixture from './fixtures/14_strings_01_login';
 import DatabaseFixture from './fixtures/test_database';
 import P5Fixture from './fixtures/test_p5';
 import CraneFixture from './fixtures/test_crane';
+import MapFixture from './fixtures/test_map';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
@@ -31,6 +32,7 @@ const availableTasks = {
     p5: P5Fixture,
     crane: CraneFixture,
     login: StringsLoginFixture,
+    map: MapFixture,
 };
 
 export enum TaskActionTypes {
@@ -84,7 +86,6 @@ export interface TaskTest {
     data: any,
     contextState: any,
 }
-
 
 export interface QuickalgoTaskIncludeBlocks {
     groupByCategory?: boolean,
@@ -176,12 +177,12 @@ export function isServerTask(object: Task): boolean {
 }
 
 export function isServerTest(object: TaskTest): boolean {
-    return null !== object.id && undefined !== object.id;
+    return null !== object.groupType && undefined !== object.groupType;
 }
 
 // TODO: update this function when we will have a "public" field in tm_task_tests
 export function isTestPublic(task: Task, test: TaskTest|null): boolean {
-    if (null === test || !isServerTest(test)) {
+    if (!test || !isServerTest(test)) {
         return true;
     }
 
@@ -276,22 +277,20 @@ export const taskSlice = createSlice({
             state.currentTestId = action.payload.testId;
         },
         updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
-            if (null === state.currentTestId) {
+            if (null === state.currentTestId || !(state.currentTestId in state.taskTests)) {
                 // Create a new test
                 state.taskTests.push({
                     data: action.payload,
                     contextState: null,
                 } as TaskTest);
                 state.currentTestId = state.taskTests.length - 1;
-            } else if (state.currentTestId in state.taskTests) {
+            } else {
                 let currentTest = state.taskTests[state.currentTestId].data;
 
                 state.taskTests[state.currentTestId].data = {
                     ...currentTest,
                     ...action.payload,
                 };
-            } else {
-                state.taskTests[state.currentTestId].data = action.payload;
             }
         },
         updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any}>) {

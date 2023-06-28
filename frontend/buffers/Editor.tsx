@@ -13,6 +13,7 @@ import log from 'loglevel';
 const Range = window.ace.acequire('ace/range').Range;
 
 export interface EditorProps {
+    name?: string,
     readOnly?: boolean,
     shield?: boolean,
     theme?: string,
@@ -27,6 +28,7 @@ export interface EditorProps {
     onScroll?: Function,
     onDropBlock?: Function,
     content?: string,
+    errorHighlight?: Range,
     hideGutter?: boolean,
     printMarginColumn?: boolean,
     highlightActiveLine?: boolean,
@@ -70,7 +72,7 @@ export function Editor(props: EditorProps) {
     const marker = useRef();
 
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector({state, context}) : []);
+    const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector({state, context}) : null);
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const contextStrings = useAppSelector(state => state.task.contextStrings);
 
@@ -152,6 +154,10 @@ export function Editor(props: EditorProps) {
 
     const reset = (value: Document, newSelection = null, firstVisibleRow = null) => {
         wrapModelToEditor(() => {
+            if (undefined !== props.content) {
+                value = documentFromString(String(null !== props.content ? props.content : ''));
+            }
+
             editor.current.getSession().setValue(null === value ? '' : value.toString());
             editor.current.resize(true);
             selection.current = null;
@@ -310,9 +316,6 @@ export function Editor(props: EditorProps) {
         }
 
         const {onInit, onSelect, onEdit} = props;
-        if (undefined !== props.content) {
-            reset(documentFromString(props.content));
-        }
 
         if (typeof onInit === 'function') {
             const api = {
@@ -332,12 +335,17 @@ export function Editor(props: EditorProps) {
             };
             onInit(api);
         }
+
         if (typeof onSelect === 'function') {
             session.selection.on("changeCursor", onSelectionChanged, true);
             session.selection.on("changeSelection", onSelectionChanged, true);
         }
         if (typeof onEdit === 'function') {
             session.on("change", onTextChanged);
+        }
+
+        if (undefined !== props.content) {
+            reset(documentFromString(String(null !== props.content ? props.content : '')));
         }
 
         // @ts-ignore
@@ -429,10 +437,33 @@ export function Editor(props: EditorProps) {
     }, [props.theme]);
 
     useEffect(() => {
-        if (editor.current) {
+        if (editor.current && availableBlocks) {
             addAutocompletion(availableBlocks, contextStrings);
         }
     }, [availableBlocks, contextStrings]);
+
+    useEffect(() => {
+        if ('source' === props.name) {
+            // Don't use content for source buffer (for now)
+            return;
+        }
+
+        const value = props.content ? props.content : '';
+        if (value === editor.current.getSession().getValue()) {
+            return;
+        }
+
+        wrapModelToEditor(() => {
+            editor.current.getSession().setValue(value);
+            editor.current.resize(true);
+        });
+    }, [props.content]);
+
+    useEffect(() => {
+        if (undefined !== props.errorHighlight) {
+            highlight(props.errorHighlight, 'error-highlight');
+        }
+    }, [props.errorHighlight]);
 
     const {width, height, shield} = props;
 

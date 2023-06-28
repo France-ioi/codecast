@@ -2,7 +2,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 import {addAutoRecordingBehaviour} from "../../recorder/record";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
-import analysisSlice, {analysisRecordableActions} from "./analysis_slice";
+import analysisSlice, {analysisRecordableActions, analysisTogglePath} from "./analysis_slice";
 
 // DebugAdapterProtocol format
 export interface AnalysisSnapshot {
@@ -149,10 +149,14 @@ const fetchPreviousValuesFromLastAnalysis = (lastAnalysis: AnalysisSnapshot) => 
 
 export default function (bundle: Bundle) {
     bundle.defer(function (app: App) {
+        if ('main' !== app.environment) {
+            return;
+        }
+
         addAutoRecordingBehaviour(app, {
-            sliceName: analysisSlice.name,
-            actionNames: analysisRecordableActions,
-            actions: analysisSlice.actions,
+            actions: [
+                analysisTogglePath,
+            ],
             onResetDisabled: true,
         });
     });

@@ -1,14 +1,16 @@
 import React from "react";
 import {Card} from 'react-bootstrap'
 import {Icon} from "@blueprintjs/core";
-import {BufferEditor} from "../../../buffers/BufferEditor";
 import {getMessage} from "../../../lang";
-import {outputBufferLibTest} from './printer_lib';
 import {useAppSelector} from '../../../hooks';
-import {isTestPublic, selectCurrentTest, selectCurrentTestData} from '../../task_slice';
+import {Editor} from '../../../buffers/Editor';
+import {PrinterLib, PrinterLibState} from './printer_lib';
 
 export function InputOutputView() {
-    const taskState = useAppSelector(state => state.task.state);
+    const currentTask = useAppSelector(state => state.task.currentTask);
+    const taskState: PrinterLibState = useAppSelector(state => state.task.state);
+    const currentTestData = useAppSelector(state => state.task.taskTests[state.task.currentTestId]?.data);
+    const libOutput = PrinterLib.getOutputTextFromEvents(taskState ? taskState.ioEvents : []);
 
     return (
         <div>
@@ -18,17 +20,16 @@ export function InputOutputView() {
                     <Icon icon='lock'/>
                 </Card.Header>
                 <Card.Body>
-                    <BufferEditor
-                        buffer='printerLibInput'
+                    <Editor
+                        name="printer_input"
+                        content={taskState ? taskState.initial : ''}
                         readOnly
                         mode='text'
-                        requiredWidth='100%'
-                        requiredHeight='100px'
-                        editorProps={{
-                            hideCursor: true,
-                            highlightActiveLine: false,
-                            dragEnabled: false,
-                        }}
+                        width='100%'
+                        height='100px'
+                        hideCursor
+                        highlightActiveLine={false}
+                        dragEnabled={false}
                     />
                 </Card.Body>
             </Card>}
@@ -38,40 +39,39 @@ export function InputOutputView() {
                     <Icon icon='lock'/>
                 </Card.Header>
                 <Card.Body>
-                    <BufferEditor
-                        buffer='printerLibOutput'
+                    <Editor
+                        name="printer_output"
+                        content={libOutput}
                         readOnly
                         mode='text'
-                        requiredWidth='100%'
-                        requiredHeight='100px'
-                        editorProps={{
-                            hideCursor: true,
-                            highlightActiveLine: false,
-                            dragEnabled: false,
-                        }}
+                        width='100%'
+                        height='100px'
+                        errorHighlight={taskState && taskState.errorHighlight ? taskState.errorHighlight : null}
+                        hideCursor
+                        highlightActiveLine={false}
+                        dragEnabled={false}
                     />
                 </Card.Body>
             </Card>
-            <Card>
+            {currentTask && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INITIAL_OUTPUT")}
                     <Icon icon='lock'/>
                 </Card.Header>
                 <Card.Body>
-                    <BufferEditor
-                        buffer={outputBufferLibTest}
+                    <Editor
+                        name="test_output"
+                        content={currentTestData ? currentTestData.output : ''}
                         readOnly
                         mode='text'
-                        requiredWidth='100%'
-                        requiredHeight='100px'
-                        editorProps={{
-                            hideCursor: true,
-                            highlightActiveLine: false,
-                            dragEnabled: false,
-                        }}
+                        width='100%'
+                        height='100px'
+                        hideCursor
+                        highlightActiveLine={false}
+                        dragEnabled={false}
                     />
                 </Card.Body>
-            </Card>
+            </Card>}
         </div>
     );
 }

@@ -14,6 +14,7 @@ import {getMessage} from "../lang";
 import {PlatformSelection} from './PlatformSelection';
 import {hasBlockPlatform} from '../stepper/js';
 import {getJsLibLoaded} from '../task/libs/import_modules';
+import {CodecastPlatform} from '../stepper/platforms';
 
 interface SettingsDialogProps {
     open: boolean,
@@ -24,9 +25,9 @@ interface SettingsDialogProps {
 export function SettingsDialog(props: SettingsDialogProps) {
     const {baseUrl, baseDataUrl, platform, canChangePlatform, canChangeLanguage, canDownload} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const {mode: ioMode, modeSelect} = useAppSelector(state => state.ioPane);
+    const ioMode = useAppSelector(state => state.options.ioMode);
     const stepper = useAppSelector(state => state.stepper);
-    const ioModeSelect = modeSelect && (!stepper || stepper.status === StepperStatus.Clear) && !currentTask;
+    const ioModeSelect = CodecastPlatform.Arduino !== platform && (!stepper || stepper.status === StepperStatus.Clear) && !currentTask;
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const layoutRequiredType = useAppSelector(state => state.layout.requiredType);
 

@@ -71,6 +71,7 @@ import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/action
 import {hasBlockPlatform} from '../stepper/js';
 import {appSelect} from '../hooks';
 import {CodecastPlatform} from '../stepper/platforms';
+import {inputBufferLibTest} from '../task/libs/printer/printer_lib';
 
 const AceThemes = [
     'github',
@@ -110,6 +111,8 @@ export class BlockDocumentModel extends BufferContentModel {
 export class BufferState {
     [immerable] = true;
 
+    public dirty; // Has the buffer been modified completely recently, in which case it needs to be entirely reloaded
+
     constructor(public model = new DocumentModel()) {
 
     }
@@ -137,7 +140,7 @@ export default function(bundle: Bundle) {
             bufferResetReducer(state, {buffer: 'source', text: new DocumentModel(documentFromString(source || ''))});
         }
         if (input) {
-            bufferResetReducer(state, {buffer: 'input', text: new DocumentModel(documentFromString(input || ''))});
+            bufferResetReducer(state, {buffer: inputBufferLibTest, text: new DocumentModel(documentFromString(input || ''))});
         }
     });
 
@@ -179,6 +182,7 @@ function bufferResetReducer(state: AppStore, action): void {
     const {buffer, model} = action;
     initBufferIfNeeded(state, buffer);
     state.buffers[buffer].model = model;
+    state.buffers[buffer].dirty = false;
 }
 
 function bufferEditReducer(state: AppStore, action): void {
@@ -193,6 +197,7 @@ function bufferEditPlainReducer(state: AppStore, action): void {
     const {buffer, document} = action;
     initBufferIfNeeded(state, buffer);
     state.buffers[buffer].model.document = document;
+    state.buffers[buffer].dirty = true;
 }
 
 function bufferSelectReducer(state: AppStore, action): void {
@@ -533,8 +538,9 @@ function addReplayHooks({replayApi}: App) {
         log.getLogger('editor').debug('Editor Buffer Reset', state);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
+            const dirty = state.buffers[buffer].dirty;
 
-            yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick && model instanceof DocumentModel});
+            yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick && !dirty && model instanceof DocumentModel});
         }
 
         yield* call(updateSourceHighlightSaga, state);

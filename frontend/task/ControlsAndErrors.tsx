@@ -103,7 +103,7 @@ export function ControlsAndErrors() {
 
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
     const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
-    const clientControlsEnabled = currentTestPublic && platformHasClientRunner;
+    const clientControlsEnabled = (!currentTask || currentTestPublic) && platformHasClientRunner;
     const serverTask = null !== currentTask && isServerTask(currentTask);
 
     return (

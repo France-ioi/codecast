@@ -25,7 +25,7 @@ import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
-import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
+import {currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
 import {isTaskPlatformLinked, setTaskEventsEnvironment} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
@@ -317,6 +317,10 @@ function ensureBackwardsCompatibility(events: any[], version?: string) {
         if (key.split('.')[0] === 'buffer' && params[0] === 'input') {
             params[0] = inputBufferLibTest;
         }
+        if (key === 'start' && params.length && params[0].buffers && 'input' in params[0].buffers) {
+            params[0].buffers[inputBufferLibTest] = params[0].buffers.input;
+            delete params[0].buffers.input;
+        }
         if (key.split('.')[0] === 'buffer' && params[0] === 'output' && versionComponents[0] < 7) {
             // There was no such thing as expected output before v7
             continue;
@@ -339,6 +343,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     let pos, progress, lastProgress = 0, range = null;
     const recordingEvents = replayContext.events;
     const events = ensureBackwardsCompatibility(recordingEvents, replayContext.recordingVersion);
+    log.getLogger('player').debug('Backward protected events', events);
     const duration = events[events.length - 1][0];
     const replayStore = Codecast.environments['replay'].store;
 

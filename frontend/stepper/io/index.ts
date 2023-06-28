@@ -1,4 +1,4 @@
-import {call, put, select} from 'typed-redux-saga';
+import {call, put} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
@@ -6,30 +6,21 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {AppStore} from "../../store";
-import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
-import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 import log from 'loglevel';
-import {appSelect} from '../../hooks';
 import {CodecastPlatform} from '../platforms';
+import {appSelect} from '../../hooks';
+import {PlayerInstant} from '../../player';
 
 export enum IoMode {
     Terminal = 'terminal',
     Split = 'split',
 }
-
-export const initialStateIoPane = {
-    mode: IoMode.Terminal,
-    modeSelect: false
-};
-
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.ioPane = {...initialStateIoPane};
-
         updateIoPaneState(state);
     });
     bundle.addReducer(CommonActionTypes.PlatformChanged, (state: AppStore) => {
@@ -41,10 +32,7 @@ export default function(bundle: Bundle) {
 
         if (platform === CodecastPlatform.Arduino) {
             /* Arduino is forced to terminal mode. */
-            state.ioPane.mode = IoMode.Terminal;
-            state.ioPane.modeSelect = false;
-        } else {
-            state.ioPane.modeSelect = true;
+            state.options.ioMode = IoMode.Terminal;
         }
     }
 
@@ -53,28 +41,25 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.IoPaneModeChanged, ioPaneModeChangedReducer);
 
     function ioPaneModeChangedReducer(state: AppStore, {payload: {mode}}): void {
-        state.ioPane.mode = mode;
+        state.options.ioMode = mode;
     }
 
     bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
         recordApi.onStart(function* (init) {
             const state = yield* appSelect();
 
-            init.ioPaneMode = state.ioPane.mode;
+            init.ioPaneMode = state.options.ioMode;
         });
         replayApi.on('start', function* (replayContext: ReplayContext, event) {
             const {ioPaneMode} = event[2];
 
-            const newState = {
-                ...initialStateIoPane,
-                mode: ioPaneMode,
-            };
-
-            yield* put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'ioPane', state: newState}});
+            if (ioPaneMode) {
+                yield* put({type: ActionTypes.IoPaneModeChanged, payload: {mode: ioPaneMode}});
+            }
         });
 
         replayApi.onReset(function* (instant: PlayerInstant) {
-            const {mode} = instant.state.ioPane;
+            const mode = instant.state.options.ioMode;
 
             yield* put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
         });

@@ -13,7 +13,7 @@ import {Screen} from "./common/screens";
 import {initialStatePlayer} from "./player";
 import {initialStateRecorder} from "./recorder/store";
 import {initialStateArduino} from "./stepper/arduino";
-import {initialStateIoPane} from "./stepper/io";
+import {IoMode} from "./stepper/io";
 import {SubtitlesState} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
@@ -86,6 +86,7 @@ export interface CodecastOptions {
     viewTestDetails?: boolean,
     logAttempts?: boolean,
     allowExecutionOverBlocksLimit?: boolean,
+    ioMode: IoMode,
 }
 
 export interface Panes {
@@ -99,7 +100,6 @@ export interface Panes {
 }
 
 export interface AppStoreReplay {
-    ioPane: typeof initialStateIoPane,
     arduino: typeof initialStateArduino,
     buffers: {[key: string]: BufferState},
     stepper: Stepper,

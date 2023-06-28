@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>map</title>
+        <script type="text/javascript" src="../../modules/ext/jquery/1.7/jquery.min.js"></script>
+        <script type="text/javascript" src="../../modules/pemFioi/map/map.js"></script>
+    </head>
+    <body>
+        <script type="text/javascript">
+
+            var options = {
+                width: 600,
+                height: 600,
+                pin_file: 'img/pin.png',
+                map_file: 'img/carteDeFrance.png',
+                map_lng_left: -4.85,
+                map_lng_right: 9.65,
+                map_lat_top: 51.6,
+                map_lat_bottom: 41.7
+            }
+
+            function createTest(callback) {
+                var el = document.createElement('div');
+                el.style.width = options.width + 'px';
+                el.style.height = options.height + 'px';
+                el.style.margin = '2px';
+                el.style.float = 'left';
+                document.body.appendChild(el);
+
+                options.parent = el;
+                var map = new Map(options);
+
+                setTimeout(function() {
+                    map.clearMap();
+                    callback(map);
+                }, 200);
+            }
+
+
+            createTest(function(map) {
+                for(var i=0,city; city = map.cities[i]; i++) {
+                    map.addLocation(
+                        map.getLongitude(city.name),
+                        map.getLatitude(city.name),
+                        city.name
+                    );
+                }
+            })
+
+
+            createTest(function(map) {
+                for(var i=0,city1; city1 = map.cities[i]; i++) {
+                    for(var j=0,city2; city2 = map.cities[j]; j++) {
+                        if(i == j) continue;
+                        map.addRoad(
+                            map.getLongitude(city1.name),
+                            map.getLatitude(city1.name),
+                            map.getLongitude(city2.name),
+                            map.getLatitude(city2.name),
+                            0.1
+                        );
+                    }
+                }
+            })
+
+
+
+            createTest(function(map) {
+                do {
+                    var i = Math.floor(Math.random() * map.cities.length);
+                    var j = Math.floor(Math.random() * map.cities.length);
+                } while(i == j)
+                var path = map.shortestPath(map.cities[i].name, map.cities[j].name);
+                var prev_city = null;
+                for(var i=0,name; name=path[i]; i++) {
+                    var city = map.findCity(name);
+                    map.addLocation(
+                        map.getLongitude(city.name),
+                        map.getLatitude(city.name),
+                        city.name
+                    );
+                    if(prev_city) {
+                        map.addRoad(
+                            map.getLongitude(city.name),
+                            map.getLatitude(city.name),
+                            map.getLongitude(prev_city.name),
+                            map.getLatitude(prev_city.name),
+                            1
+                        );
+                    }
+                    prev_city = city;
+                }
+            });
+        </script>
+    </body>
+</html>

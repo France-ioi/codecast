@@ -20,21 +20,20 @@ import {Bundle} from "../linker";
 import {ReplayContext} from "../player/sagas";
 import {App} from "../index";
 import {PlayerInstant, playerReset} from "../player";
-import {PayloadAction} from "@reduxjs/toolkit";
+import {ActionCreatorWithPayload, PayloadAction} from "@reduxjs/toolkit";
 import log from 'loglevel';
 import {appSelect} from '../hooks';
+import {Action, ActionCreator} from 'redux';
 
 export interface AutoRecordingParams {
-    sliceName: string,
-    actionNames: string[],
-    actions: any,
+    sliceName?: string,
+    actions: {type: string}[],
     initialState?: any,
     onResetDisabled?: boolean,
 }
 
-export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceName, actions, actionNames, initialState, onResetDisabled}: AutoRecordingParams) {
-    for (let actionName of actionNames) {
-        const action = actions[actionName];
+export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceName, actions, initialState, onResetDisabled}: AutoRecordingParams) {
+    for (let action of actions) {
         recordApi.on(action.type, function* (addEvent, {payload}) {
             yield* call(addEvent, action.type, payload);
         });

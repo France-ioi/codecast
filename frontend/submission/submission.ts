@@ -13,13 +13,25 @@ import {
 import {appSelect} from '../hooks';
 import {updateCurrentTestId} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
-import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
+import {
+    quickAlgoLibraries,
+    QuickAlgoLibrariesActionType,
+    quickAlgoLibraryResetAndReloadStateSaga
+} from '../task/libs/quickalgo_libraries';
 import {CodecastPlatform} from '../stepper/platforms';
-import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_slice';
+import {
+    submissionChangeCurrentSubmissionId,
+    submissionChangeDisplayedError,
+    SubmissionErrorType,
+    submissionSlice
+} from './submission_slice';
 import {getMessage} from '../lang';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {createAction} from '@reduxjs/toolkit';
 import {TaskLevelName} from '../task/platform/platform_slice';
+import {App} from '../index';
+import {addAutoRecordingBehaviour} from '../recorder/record';
+import {analysisTogglePath} from '../stepper/analysis/analysis_slice';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -123,7 +135,7 @@ export function selectSubmissionsPaneEnabled(state: AppStore) {
 }
 
 export default function (bundle: Bundle) {
-    bundle.addSaga(function* () {
+    bundle.addSaga(function* (app: App) {
         yield* takeEvery(callPlatformValidate, function* (action) {
             const platformAction = action.payload.action ?? 'done';
             yield* call([platformApi, platformApi.validate], platformAction);
@@ -157,6 +169,14 @@ export default function (bundle: Bundle) {
             }
         });
 
+        yield* takeEvery(submissionChangeCurrentSubmissionId, function* ({payload}) {
+            const submissionId = yield* appSelect(state => state.submission.currentSubmissionId);
+            if (null === submissionId) {
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+                yield* put(stepperClearError());
+            }
+        });
+
         yield* takeEvery(submissionChangeDisplayedError, function* ({payload}) {
             if (SubmissionErrorType.CompilationError === payload) {
                 const error = getMessage('SUBMISSION_ERROR_COMPILATION').s;
@@ -165,6 +185,17 @@ export default function (bundle: Bundle) {
             } else if (null === payload) {
                 yield* put(stepperClearError());
             }
-        })
+        });
+    });
+
+    bundle.defer(function (app: App) {
+        if ('main' !== app.environment) {
+            return;
+        }
+
+        addAutoRecordingBehaviour(app, {
+            sliceName: submissionSlice.name,
+            actions: [],
+        });
     });
 }

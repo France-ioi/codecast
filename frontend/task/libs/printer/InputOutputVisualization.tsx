@@ -1,20 +1,25 @@
-import React from "react";
+import React, {useRef} from "react";
 import {TerminalView} from "./TerminalView";
 import {InputOutputView} from "./InputOutputView";
 import {getCurrentStepperState} from "../../../stepper/selectors";
 import {IoMode} from "../../../stepper/io";
-import {BufferEditor} from "../../../buffers/BufferEditor";
 import {useAppSelector} from "../../../hooks";
-import {inputBufferLibTest, outputBufferLibTest} from "./printer_lib";
 import {getMessage} from "../../../lang";
 import {Card} from 'react-bootstrap';
 import {Icon} from '@blueprintjs/core';
+import {Editor} from '../../../buffers/Editor';
+import {BufferEditor} from '../../../buffers/BufferEditor';
+import {inputBufferLibTest} from './printer_lib';
 
 export function InputOutputVisualization() {
-    const ioMode = useAppSelector(state => state.ioPane.mode);
+    const ioMode = useAppSelector(state => state.options.ioMode);
     const hasStepper = useAppSelector(state => !!getCurrentStepperState(state) || !state.task.resetDone);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const taskState = useAppSelector(state => state.task.state);
+    const currentTestData = useAppSelector(state => state.task.taskTests[state.task.currentTestId]?.data);
+
+    const currentTestDataRef = useRef<any>();
+    currentTestDataRef.current = currentTestData;
 
     let visualization;
 
@@ -32,39 +37,40 @@ export function InputOutputVisualization() {
                             {!!currentTask && <Icon icon='lock'/>}
                         </Card.Header>
                         <Card.Body>
+                            {/*Use a buffer to allow recording cursor moves here*/}
                             <BufferEditor
                                 buffer={inputBufferLibTest}
                                 mode='text'
                                 readOnly={!!currentTask}
+                                content={currentTestData ? currentTestData.input : ''}
                                 requiredWidth='100%'
                                 requiredHeight='150px'
-                                editorProps={{
+                                editorProps={currentTask ? {
                                     hideCursor: true,
                                     highlightActiveLine: false,
                                     dragEnabled: false,
-                                }}
+                                } : {}}
                             />
                         </Card.Body>
                     </Card>
 
-                    {!!currentTask &&
+                    {currentTask &&
                         <Card>
                             <Card.Header className="terminal-view-header">
                                 {getMessage("IOPANE_INITIAL_OUTPUT")}
                                 <Icon icon='lock'/>
                             </Card.Header>
                             <Card.Body>
-                                <BufferEditor
-                                    buffer={outputBufferLibTest}
+                                <Editor
+                                    name="test_output"
+                                    content={currentTestData ? currentTestData.output : ''}
                                     readOnly
                                     mode='text'
-                                    requiredWidth='100%'
-                                    requiredHeight='150px'
-                                    editorProps={{
-                                        hideCursor: true,
-                                        highlightActiveLine: false,
-                                        dragEnabled: false,
-                                    }}
+                                    width='100%'
+                                    height='150px'
+                                    hideCursor
+                                    highlightActiveLine={false}
+                                    dragEnabled={false}
                                 />
                             </Card.Body>
                         </Card>

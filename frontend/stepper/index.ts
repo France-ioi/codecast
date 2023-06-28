@@ -1018,12 +1018,19 @@ function* stepperStepSaga(app: App, action) {
                 if (taskContext && taskContext.needsRedrawDisplay) {
                     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
                 }
+
+                let endConditionReached = false;
                 if (taskContext && taskContext.infos.checkEndCondition) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
                     } catch (executionResult: unknown) {
+                        endConditionReached = true;
                         yield* put(stepperExecutionEndConditionReached(executionResult));
                     }
+                }
+
+                if (!endConditionReached) {
+                    yield* put(stepperExecutionEnd());
                 }
             }
 
@@ -1106,6 +1113,7 @@ export function* updateSourceHighlightSaga(state: AppStoreReplay) {
     log.getLogger('stepper').debug('update source hightlight');
     const stepperState = state.stepper.currentStepperState;
     if (!stepperState) {
+        yield* call(clearSourceHighlightSaga);
         return;
     }
 
