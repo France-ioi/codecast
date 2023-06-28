@@ -96,6 +96,9 @@ class QuickalgoExecutor {
             }
         } catch (e: unknown) {
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] context error 2', e);
+            if (e instanceof Error) {
+                console.error(e);
+            }
             if (hideDisplay) {
                 // context.display = true;
                 // } else {

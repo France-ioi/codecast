@@ -130,7 +130,7 @@ function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allCon
             let includedConceptIds = [];
             // We remove all concepts which have no "python" attribute
             let filteredConcepts = allConcepts.filter(function (concept) {
-                return concept.python && concept.python != [];
+                return concept.python && concept.python.length;
             });
             for (let functionKey in includeBlocks.generatedBlocks[genName]) {
                 let functionName = includeBlocks.generatedBlocks[genName][functionKey];

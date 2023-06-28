@@ -17,6 +17,7 @@ import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
 import {selectTaskTests, selectTaskTestsInTaskStore} from '../submission/submission_selectors';
 import {BlocksUsage, QuickalgoTaskIncludeBlocks, Task, TaskState, TaskTest} from './task_types';
+import {TaskHint} from './hints/hints_slice';
 
 const availableTasks = {
     robot: SokobanFixture,
