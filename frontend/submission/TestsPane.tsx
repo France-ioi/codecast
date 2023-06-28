@@ -11,10 +11,11 @@ import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {capitalizeFirstLetter} from '../common/utils';
-import {isServerSubmission, TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission';
+import {isServerSubmission} from './submission';
 import {DateTime} from 'luxon';
 import {faClock} from '@fortawesome/free-solid-svg-icons';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
+import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission_types';
 
 export function TestsPane() {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
@@ -38,9 +39,9 @@ export function TestsPane() {
                         <FontAwesomeIcon icon={faTimes}/>
                     </div>
                 </div>
-                : <div className="submission-label-loader">
-                    <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
-                </div>)
+                    : <div className="submission-label-loader">
+                        <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
+                    </div>)
             }
             <div className="submission-label-name">
                 <p>{getMessage('SUBMISSION_RESULTS_LABEL').format({platform: capitalizeFirstLetter(submissionResult.platform)})}</p>
@@ -100,12 +101,12 @@ export function TestsPane() {
                     />
                     :
                     (currentSubmission.crashed ? <div className="submission-results__submission-crashed">
-                            {getMessage('SUBMISSION_RESULTS_CRASHED')}
-                        </div>
-                    : <div className="submission-results__submission-loader">
-                        <FontAwesomeIcon icon={faSpinner} className="fa-spin mr-2"/>
-                        {getMessage('SUBMISSION_RESULTS_EVALUATING')}
-                    </div>)
+                        {getMessage('SUBMISSION_RESULTS_CRASHED')}
+                    </div>
+                        : <div className="submission-results__submission-loader">
+                            <FontAwesomeIcon icon={faSpinner} className="fa-spin mr-2"/>
+                            {getMessage('SUBMISSION_RESULTS_EVALUATING')}
+                        </div>)
                 }
             </div>}
             {null === currentSubmission && <div className="submission-results__submission">

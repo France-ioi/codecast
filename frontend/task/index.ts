@@ -8,14 +8,10 @@ import {
 } from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {all, call, cancel, cancelled, delay, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {all, call, cancel, cancelled, fork, put, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
-import {App, Codecast} from "../index";
 import {AppStore} from "../store";
 import QuickalgoLibsBundle, {
-    createQuickalgoLibrary,
-    mainQuickAlgoLogger,
-    quickAlgoLibraries,
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from "./libs/quickalgo_libraries";
@@ -23,10 +19,9 @@ import SrlBundle, {statsGetStateSaga} from './srl';
 import BehaviourBundle from './behaviour';
 import stringify from 'json-stable-stringify-without-jsonify';
 import taskSlice, {
-    addNewTaskTest,
     currentTaskChange,
     currentTaskChangePredefined,
-    recordingEnabledChange, removeTaskTest,
+    recordingEnabledChange,
     selectCurrentTestData,
     TaskActionTypes,
     taskAddInput,
@@ -35,7 +30,8 @@ import taskSlice, {
     taskInputEntered,
     taskInputNeeded,
     taskLoaded,
-    taskResetDone, taskSetBlocksPanelCollapsed,
+    taskResetDone,
+    taskSetBlocksPanelCollapsed,
     taskSuccess,
     taskSuccessClear,
     taskUnload,
@@ -55,22 +51,25 @@ import PlatformBundle, {
     taskGradeAnswerEventSaga
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
-import {LayoutMobileMode, LayoutType, ZOOM_LEVEL_HIGH} from "./layout/layout";
+import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {PlayerInstant} from "../player";
 import {
     ActionTypes as StepperActionTypes,
     stepperClearError,
-    stepperDisplayError, stepperExecutionEnd,
-    stepperExecutionEndConditionReached, stepperExecutionError, stepperExecutionSuccess
+    stepperDisplayError,
+    stepperExecutionEnd,
+    stepperExecutionEndConditionReached,
+    stepperExecutionError,
+    stepperExecutionSuccess
 } from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {clearSourceHighlightSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
-import { makeContext, StepperContext} from "../stepper/api";
+import {makeContext, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {platformAnswerGraded, platformAnswerLoaded, taskGradeAnswerEvent,} from "./platform/actionTypes";
-import {BlockDocumentModel, DocumentModel, documentModelFromString} from "../buffers";
+import {documentModelFromString} from "../buffers";
 import {
     getDefaultTaskLevel,
     platformSaveAnswer,
@@ -80,53 +79,34 @@ import {
     taskLevelsList
 } from "./platform/platform_slice";
 import {getTaskTokenForLevel} from "./platform/task_token";
-import {createAction} from "@reduxjs/toolkit";
 import {selectAnswer} from "./selectors";
-import {hasBlockPlatform, loadBlocklyHelperSaga} from "../stepper/js";
-import {ObjectDocument} from "../buffers/document";
+import {loadBlocklyHelperSaga} from "../stepper/js";
+import {BlockDocumentModel, DocumentModel, ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
-import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
+import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
-import {convertServerTaskToCodecastFormat, getTaskFromId, TaskServer} from "../submission/task_platform";
+import {convertServerTaskToCodecastFormat, getTaskFromId} from "../submission/task_platform";
 import {
     submissionChangeCurrentSubmissionId,
-    submissionChangeExecutionMode, submissionChangePaneOpen,
+    submissionChangePaneOpen,
     submissionChangePlatformName,
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
 import {selectTaskTests} from '../submission/submission_selectors';
-import {TaskSubmissionResultPayload} from "../submission/submission";
-import {CodecastPlatform, platformsList} from '../stepper/platforms';
+import {hasBlockPlatform} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {getMessage} from '../lang';
-import {TaskTest} from './task_types';
+import {TaskServer, TaskTest} from './task_types';
 import {extractTestsFromTask} from '../submission/tests';
-
-export const taskLoad = ({testId, level, tests, reloadContext, selectedTask, callback}: {
-    testId?: number,
-    level?: TaskLevelName,
-    tests?: any[],
-    reloadContext?: boolean,
-    selectedTask?: string,
-    callback?: () => void,
-} = {}) => ({
-    type: TaskActionTypes.TaskLoad,
-    payload: {
-        testId,
-        level,
-        tests,
-        reloadContext,
-        selectedTask,
-        callback,
-    },
-});
-
-export const taskChangeLevel = createAction('task/changeLevel', (level: TaskLevelName) => ({
-    payload: {
-        level,
-    },
-}));
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {taskChangeLevel, taskLoad} from './task_actions';
+import {App, Codecast} from '../app_types';
+import {mainQuickAlgoLogger} from './libs/quick_algo_logger';
+import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
+import {TaskSubmissionResultPayload} from '../submission/submission_types';
+import {LayoutMobileMode, LayoutType} from './layout/layout_types';
+import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -481,6 +461,10 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
     // Stop current execution if there is one
     if (state.stepper && state.stepper.status !== StepperStatus.Clear) {
         yield* put({type: StepperActionTypes.StepperExit, payload: {record: false}});
+    }
+
+    if (null === state.task.currentTestId) {
+        return;
     }
 
     // Reload context state for the new test
@@ -949,8 +933,6 @@ export default function (bundle: Bundle) {
                     updateCurrentTestId,
                     taskSetBlocksPanelCollapsed,
                     taskChangeSoundEnabled,
-                    addNewTaskTest,
-                    removeTaskTest,
                 ],
                 onResetDisabled: true,
             });

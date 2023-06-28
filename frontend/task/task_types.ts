@@ -1,5 +1,4 @@
 import {TaskLevelName} from './platform/platform_slice';
-import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {TaskHint} from './hints/hints_slice';
 
@@ -33,6 +32,13 @@ export interface TaskState {
     blocksUsage?: BlocksUsage,
     soundEnabled?: boolean,
     menuHelpsOpen?: boolean,
+}
+
+export enum TaskTestGroupType {
+    Example = 'Example',
+    User = 'User',
+    Evaluation = 'Evaluation',
+    Submission = 'Submission',
 }
 
 export interface TaskTest {
@@ -127,6 +133,67 @@ export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDep
 export interface QuickalgoTask {
     gridInfos: QuickalgoTaskGridInfos,
     data?: any,
+}
+
+export interface TaskNormalized {
+    id: string,
+    textId: string,
+    supportedLanguages: string[],
+    author: string,
+    showLimits: boolean,
+    userTests: boolean,
+    isEvaluable: boolean,
+    scriptAnimation: string,
+    hasSubtasks: boolean,
+}
+
+export interface TaskLimitNormalized {
+    id: string,
+    taskId: string,
+    language: string,
+    maxTime: number,
+    maxMemory: number,
+}
+
+export interface TaskStringNormalized {
+    id: string,
+    taskId: string,
+    language: string,
+    title: string,
+    statement: string,
+    solution: string | null,
+}
+
+export interface TaskSubtaskNormalized {
+    id: string,
+    taskId: string,
+    rank: number,
+    name: string,
+    comments: string | null,
+    pointsMax: number,
+    active: boolean,
+}
+
+export interface TaskTestServer {
+    id: string,
+    taskId: string,
+    subtaskId: string | null,
+    submissionId: string | null,
+    groupType: TaskTestGroupType,
+    userId: string | null,
+    platformId: string | null,
+    rank: number,
+    active: boolean,
+    name: string,
+    input: string,
+    output: string,
+}
+
+export interface TaskServer extends TaskNormalized {
+    limits: TaskLimitNormalized[],
+    strings: TaskStringNormalized[],
+    subTasks: TaskSubtaskNormalized[],
+    tests: TaskTestServer[],
 }
 
 export type Task = QuickalgoTask & Partial<TaskServer>;

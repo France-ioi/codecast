@@ -1,6 +1,6 @@
 import request from 'superagent';
 import audioDecode from 'audio-decode';
-import {eventChannel} from 'redux-saga'
+import {eventChannel} from 'redux-saga';
 
 export function readFileAsText(file) {
     return new Promise<string>(function(resolve, reject) {

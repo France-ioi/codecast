@@ -1,10 +1,11 @@
 import React, {useState} from "react";
-import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
-import {Block, BlockType, getContextBlocksDataSelector} from "./blocks";
+import {getContextBlocksDataSelector} from "./blocks";
 import {useAppSelector} from "../../hooks";
 import {AvailableBlock} from "./AvailableBlock";
 import {AvailableBlockCategory} from "./AvailableBlockCategory";
 import {getMessage} from "../../lang";
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {Block, BlockType} from './block_types';
 
 export interface AvailableBlocksProps {
     collapsed: boolean,

@@ -5,11 +5,11 @@ import {
     stepperExecutionEndConditionReached,
     stepperExecutionError
 } from './actionTypes';
-import {Codecast} from '../index';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {getCurrentImmerState} from '../task/utils';
 import {QuickalgoLibraryCall, StepperContext} from './api';
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
+import {Codecast} from '../app_types';
 
 class QuickalgoExecutor {
     private stepperContext;

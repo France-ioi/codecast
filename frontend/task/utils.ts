@@ -1,12 +1,13 @@
-import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
 import {current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
 import {AppStore} from "../store";
-import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
+import {checkBlocklyCode, getBlocklyBlocksUsage} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
 import {isServerTask, Task} from './task_types';
-import {CodecastPlatform, platformsList} from '../stepper/platforms';
+import {hasBlockPlatform, platformsList} from '../stepper/platforms';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 
 export enum TaskPlatformMode {
     Source = 'source',

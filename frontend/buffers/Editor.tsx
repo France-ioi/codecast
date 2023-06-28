@@ -1,14 +1,13 @@
 import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
-import {Document, documentFromString} from "./document";
+import {Document, documentFromString, DocumentModel} from "./document";
 import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
-import {DocumentModel} from "./index";
 import log from 'loglevel';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 
 const Range = window.ace.acequire('ace/range').Range;
 

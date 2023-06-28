@@ -1,5 +1,4 @@
 import {AppStoreReplay} from "../../store";
-import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {Bundle} from "../../linker";
 import {call, debounce, put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
@@ -10,35 +9,15 @@ import {selectAnswer} from "../selectors";
 import {QuickAlgoLibrary} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
 import {appSelect} from '../../hooks';
-import {CodecastPlatform, platformsList} from '../../stepper/platforms';
+import {platformsList} from '../../stepper/platforms';
 import {getNotionsBagFromIncludeBlocks} from './notions';
-
-export enum BlockType {
-    Function = 'function',
-    Constant = 'constant',
-    Token = 'token',
-    Directive = 'directive',
-}
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {Block, BlockType} from './block_types';
 
 export interface DraggableBlockItem {
     block: Block,
 }
-
-export interface Block {
-    name: string,
-    type: BlockType,
-    description?: string // displayed on the blocks list and in autocomplete
-    code?: string, // code that will inserted by Codecast
-    snippet?: string, // code that will be inserted by Ace editor
-    caption?: string, // how the block will be displayed on the interface
-    captionMeta?: string, // optional category that will appear in autocomplete
-    category?: string,
-    generatorName?: string,
-    value?: string, // for constant
-    params?: any, // for function
-    showInBlocks?: boolean,
-}
-
 
 function getSnippet(proto) {
     let parenthesisOpenIndex = proto.indexOf("(");

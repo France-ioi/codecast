@@ -5,7 +5,8 @@ import {useAppSelector} from "../hooks";
 import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import {useDispatch} from "react-redux";
 import {Screen} from '../common/screens';
-import {selectAvailableHints} from './hints/hints_slice';
+
+import {selectAvailableHints} from './hints/hints_selectors';
 
 interface MenuIconsTaskProps {
     toggleMenu: () => void,

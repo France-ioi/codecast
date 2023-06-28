@@ -1,16 +1,16 @@
-import {App, Codecast} from "../../index";
 import {AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
 import merge from 'lodash.merge';
 import {getCurrentImmerState} from "../utils";
-import {mainQuickAlgoLogger} from "./quickalgo_libraries";
 import {stepperMaxSpeed} from "../../stepper";
 import log from 'loglevel';
 import {QuickalgoLibraryInfos} from '../task_types';
-import {TaskSubmissionServerTestResult} from '../../submission/submission';
 import {defaultNotions, NotionArborescence} from '../blocks/notions';
-import {CodecastPlatform} from '../../stepper/platforms';
 import {LibraryTestResult} from './library_test_result';
+import {TaskSubmissionServerTestResult} from '../../submission/submission_types';
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {App, Codecast} from '../../app_types';
+import {mainQuickAlgoLogger} from './quick_algo_logger';
 
 export abstract class QuickAlgoLibrary {
     display: boolean;

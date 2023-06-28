@@ -1,7 +1,6 @@
 import {default as createSagaMiddleware, Saga} from 'redux-saga';
 import {all, call} from 'typed-redux-saga';
 import produce from "immer";
-import {App, CodecastEnvironmentMonitoring} from "./index";
 import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";
@@ -12,6 +11,7 @@ import platformSlice from "./task/platform/platform_slice";
 import analysisSlice from "./stepper/analysis/analysis_slice";
 import modalSlice from "./common/modal_slice";
 import submissionSlice from "./submission/submission_slice";
+import {App, CodecastEnvironmentMonitoring} from './app_types';
 
 export interface Linker {
     scope: App,

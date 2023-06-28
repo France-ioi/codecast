@@ -4,9 +4,9 @@ import {useDispatch} from "react-redux";
 import {ActionTypes} from "../stepper/actionTypes";
 import {StepperStepMode} from "../stepper";
 import {getMessage} from "../lang";
-import {TaskSubmissionResultPayload} from './submission';
 import {useAppSelector} from '../hooks';
 import {selectTaskTests} from './submission_selectors';
+import {TaskSubmissionResultPayload} from './submission_types';
 
 export interface TaskTestsSubmissionResultOverviewProps {
     results: TaskSubmissionResultPayload[],

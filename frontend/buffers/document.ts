@@ -1,6 +1,5 @@
 import {List} from 'immutable';
 import {immerable} from "immer";
-import {BlockDocumentModel, DocumentModel, documentModelFromString} from "./index";
 
 interface Range {
     row: number,
@@ -139,6 +138,37 @@ export const uncompressIntoDocument = function (content) {
         return new ObjectDocument({blockly: content});
     } else {
         return documentFromString(content);
+    }
+}
+
+export abstract class BufferContentModel {
+    [immerable] = true;
+
+    public document;
+    public selection;
+    public firstVisibleRow: number = 0;
+}
+
+export class DocumentModel extends BufferContentModel {
+    [immerable] = true;
+
+    constructor(
+        public document: Document = emptyDocument,
+        public selection: Selection = new Selection(),
+        public firstVisibleRow: number = 0
+    ) {
+        super();
+    }
+}
+
+export class BlockDocumentModel extends BufferContentModel {
+    [immerable] = true;
+
+    constructor(
+        public document: ObjectDocument = new ObjectDocument(null),
+        public selection: string = null,
+    ) {
+        super();
     }
 }
 

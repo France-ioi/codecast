@@ -8,9 +8,9 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
-import {App} from "../index";
 import {Screen} from "../common/screens";
 import {appSelect} from '../hooks';
+import {App} from '../app_types';
 
 interface LogData {
     type: any,

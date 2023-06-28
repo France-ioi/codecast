@@ -15,9 +15,8 @@ import MapFixture from './fixtures/test_map';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
-import {selectTaskTests, selectTaskTestsInTaskStore} from '../submission/submission_selectors';
+import {selectTaskTests} from '../submission/submission_selectors';
 import {BlocksUsage, QuickalgoTaskIncludeBlocks, Task, TaskState, TaskTest} from './task_types';
-import {TaskHint} from './hints/hints_slice';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -127,44 +126,22 @@ export const taskSlice = createSlice({
             state.currentTestId = null;
         },
         addNewTaskTest(state: TaskState, action: PayloadAction<TaskTest>) {
-            state.taskTests.push({
-                ...action.payload,
-                level: state.currentLevel,
-            });
+            state.taskTests.push(action.payload);
         },
         removeTaskTest(state: TaskState, action: PayloadAction<number>) {
-            if (state.currentTestId === action.payload) {
-                state.currentTestId = null;
-            } else if (state.currentTestId > action.payload) {
-                state.currentTestId--;
-            }
-
-            const removedTest = selectTaskTestsInTaskStore(state)[action.payload];
-            const removedTestPosition = state.taskTests.indexOf(removedTest);
-            state.taskTests.splice(removedTestPosition, 1);
+            state.taskTests.splice(action.payload, 1);
         },
         updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean, withoutContextState?: boolean}>) {
             state.previousTestId = state.currentTestId;
             state.currentTestId = action.payload.testId;
         },
-        updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
-            const taskTests = selectTaskTestsInTaskStore(state);
-            if (null === state.currentTestId || !(state.currentTestId in taskTests)) {
-                // Create a new test
-                state.taskTests.push({
-                    data: action.payload,
-                    contextState: null,
-                    level: state.currentLevel,
-                } as TaskTest);
-                state.currentTestId = selectTaskTestsInTaskStore(state).length - 1;
-            } else {
-                let currentTest = taskTests[state.currentTestId].data;
+        updateTaskTest(state: TaskState, action: PayloadAction<{testIndex: number, data: object}>) {
+            let currentTest = state.taskTests[action.payload.testIndex].data;
 
-                taskTests[state.currentTestId].data = {
-                    ...currentTest,
-                    ...action.payload,
-                };
-            }
+            state.taskTests[action.payload.testIndex].data = {
+                ...currentTest,
+                ...action.payload.data,
+            };
         },
         updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any}>) {
             state.taskTests[action.payload.testId].contextState = action.payload.contextState;
@@ -236,7 +213,7 @@ export const {
     recordingEnabledChange,
     taskSuccess,
     taskSuccessClear,
-    updateCurrentTest,
+    updateTaskTest,
     updateTaskTests,
     updateCurrentTestId,
     taskInputNeeded,

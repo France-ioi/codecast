@@ -9,7 +9,8 @@ import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
 import {CodecastAnalysisSnapshot} from "../../stepper/analysis/analysis";
 import log from 'loglevel';
-import {CodecastPlatform} from '../../stepper/platforms';
+
+import {CodecastPlatform} from '../../stepper/codecast_platform';
 
 interface LayoutDirectiveProps {
     directive: any,

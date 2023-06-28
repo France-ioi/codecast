@@ -4,7 +4,9 @@ import {getMessage} from '../lang';
 import {useAppSelector} from '../hooks';
 import {TestsPaneListSubTask} from './TestsPaneListSubTask';
 import {TestsPaneListTest} from './TestsPaneListTest';
-import {isServerSubmission, TaskSubmission, TaskSubmissionServer} from './submission';
+import {
+    isServerSubmission
+} from './submission';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {useDispatch} from 'react-redux';
 import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_slice';
@@ -13,9 +15,11 @@ import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclama
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
 import {faPlus} from "@fortawesome/free-solid-svg-icons/faPlus";
 import {addNewTaskTest, updateCurrentTestId} from '../task/task_slice';
-import {TaskTestGroupType} from './task_platform';
 import {selectTaskTests} from './submission_selectors';
-import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
+import {TaskTestGroupType} from '../task/task_types';
+import {TaskSubmission, TaskSubmissionMode, TaskSubmissionServer} from './submission_types';
+import {submissionCreateTest} from './submission_actions';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 
 export interface SubmissionResultProps {
     submission?: TaskSubmission,
@@ -37,32 +41,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
     };
 
     const createNewTest = () => {
-        const testsCount = testsOrdered.length + 1;
-
-        let nextId = 1;
-        let nextName = 1;
-        for (let test of testsOrdered.filter(test => TaskTestGroupType.User === test.groupType)) {
-            if (test.name) {
-                const matches = test.name.match(new RegExp(getMessage('SUBMISSION_OWN_TEST_LABEL').format({index: "(\\d+)"})));
-                if (matches) {
-                    nextName = Math.max(nextName, Number(matches[1]) + 1);
-                }
-            }
-
-            const matches = test.id.match(/user-(\d+)/);
-            if (matches) {
-                nextId = Math.max(nextId, Number(matches[1]) + 1);
-            }
-        }
-
-        dispatch(addNewTaskTest({
-            data: null,
-            contextState: null,
-            id: `user-${nextId}`,
-            groupType: TaskTestGroupType.User,
-            name: getMessage('SUBMISSION_OWN_TEST_LABEL').format({index: String(nextName)}),
-        }));
-        dispatch(updateCurrentTestId({testId: testsCount - 1}));
+        dispatch(submissionCreateTest());
     };
 
     const createCompilationStatusBlock = (submissionErrorType: SubmissionErrorType, text: string, color: string) => {
@@ -95,14 +74,9 @@ export function TestsPaneList(props: SubmissionResultProps) {
         </div>;
     }
 
-    let displayedIndividualTests = testsOrdered.filter(test => !test.subtaskId);
-    if ('UserTest' === submission?.result?.mode) {
-        displayedIndividualTests = displayedIndividualTests.filter(test => TaskTestGroupType.User === test.groupType);
-    }
-
     return (
         <div className="submission-result">
-            {submission && isServerSubmission(submission) && 'UserTest' === submission.result.mode && <div>
+            {submission && isServerSubmission(submission) && TaskSubmissionMode.UserTest === submission.result.mode && <div>
                 <Alert intent={Intent.WARNING}>{getMessage('SUBMISSION_USER_TEST_WARNING')}</Alert>
             </div>}
             {submission && !submission.evaluated && <div>
@@ -117,7 +91,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
                 </div>}
 
                 <React.Fragment>
-                    {subTasksOrdered.length > 0 && 'UserTest' !== submission?.result?.mode && <div className="submission-result-subtasks">
+                    {subTasksOrdered.length > 0 && <div className="submission-result-subtasks">
                         {subTasksOrdered.map((subTask, subTaskIndex) =>
                             <TestsPaneListSubTask
                                 key={subTaskIndex}
@@ -126,7 +100,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             />
                         )}
                     </div>}
-                    {displayedIndividualTests.map((test, testIndex) =>
+                    {testsOrdered.filter(test => !test.subtaskId).map((test, testIndex) =>
                         <TestsPaneListTest
                             key={testIndex}
                             index={testIndex}

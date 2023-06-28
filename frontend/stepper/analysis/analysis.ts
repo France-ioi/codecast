@@ -1,8 +1,8 @@
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {addAutoRecordingBehaviour} from "../../recorder/record";
 import {Bundle} from "../../linker";
-import {App} from "../../index";
 import analysisSlice, {analysisRecordableActions, analysisTogglePath} from "./analysis_slice";
+import {App} from '../../app_types';
 
 // DebugAdapterProtocol format
 export interface AnalysisSnapshot {

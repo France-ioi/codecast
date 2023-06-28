@@ -1,6 +1,10 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from './submission';
-import {SubmissionTestErrorCode} from './task_platform';
+import {
+    SubmissionTestErrorCode,
+    TaskSubmission,
+    TaskSubmissionEvaluateOn,
+    TaskSubmissionResultPayload
+} from './submission_types';
 
 export enum SubmissionExecutionScope {
     ThisTest = 'this_test',

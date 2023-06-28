@@ -1,15 +1,10 @@
 import {QuickAlgoLibrary} from "../quickalgo_library";
 import {call, put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
-import {App} from "../../../index";
 import log from 'loglevel';
 import {SmartContractView} from './SmartContractView';
-import {
-    TaskSubmissionServerTestResult,
-} from '../../../submission/submission';
 import {appSelect} from '../../../hooks';
 import {
-    quickAlgoLibraries,
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../quickalgo_libraries';
@@ -19,6 +14,9 @@ import {
     smartContractPlatforms
 } from './smart_contract_blocks';
 import {LibraryTestResult} from '../library_test_result';
+import {TaskSubmissionServerTestResult} from '../../../submission/submission_types';
+import {App} from '../../../app_types';
+import {quickAlgoLibraries} from '../quick_algo_libraries_model';
 
 export interface SmartContractResultLogLine {
     amount: number,

@@ -3,7 +3,6 @@ import {StepperControls} from "../stepper/views/StepperControls";
 import {stepperClearError} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
 import {Button, Icon} from "@blueprintjs/core";
-import {LayoutMobileMode, LayoutType} from "./layout/layout";
 import {ActionTypes} from "./layout/actionTypes";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCogs, faFileAlt, faPencilAlt, faPlay, faSpinner} from "@fortawesome/free-solid-svg-icons";
@@ -14,10 +13,6 @@ import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
 import {submissionChangeExecutionMode} from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
-import {
-    callPlatformValidate,
-    TaskSubmissionEvaluateOn
-} from '../submission/submission';
 import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
@@ -25,6 +20,9 @@ import {isServerTask, isTestPublic} from './task_types';
 import {LibraryTestResult} from './libs/library_test_result';
 import {getStepperControlsSelector} from '../stepper/selectors';
 import {selectTaskTests} from '../submission/submission_selectors';
+import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
+import {callPlatformValidate} from '../submission/submission_actions';
+import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);

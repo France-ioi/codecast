@@ -4,10 +4,10 @@
 */
 
 import log from "loglevel";
-import {Block, BlockType} from "../../task/blocks/blocks";
 import AbstractRunner from "../abstract_runner";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
+import {Block, BlockType} from '../../task/blocks/block_types';
 
 function definePythonNumber() {
     // Create a class which behaves as a Number, but can have extra properties

@@ -8,14 +8,14 @@ import {put, takeEvery} from "typed-redux-saga";
 import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
-import {taskLoad} from "../task";
 import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
-import {CodecastPlatform, platformsList} from '../stepper/platforms';
-import {BlockDocumentModel, DocumentModel} from '../buffers';
-import {hasBlockPlatform} from '../stepper/js';
+import {hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {IoMode} from '../stepper/io';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {taskLoad} from '../task/task_actions';
+import {BlockDocumentModel, DocumentModel} from '../buffers/document';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {

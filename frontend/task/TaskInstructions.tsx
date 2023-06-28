@@ -10,14 +10,15 @@ import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {useDispatch} from 'react-redux';
 import {documentationConceptSelected} from './documentation/documentation_slice';
 import {faMinus} from '@fortawesome/free-solid-svg-icons/faMinus';
-import {quickAlgoLibraries} from './libs/quickalgo_libraries';
 import {PlatformSelection} from '../common/PlatformSelection';
 import convertHtmlToReact, {processNodes} from '@hedgedoc/html-to-react';
 import {Editor} from '../buffers/Editor';
-import {CodecastPlatform, platformsList} from '../stepper/platforms';
+import {platformsList} from '../stepper/platforms';
 import {generatePropsFromAttributes} from '@hedgedoc/html-to-react/dist/utils/generatePropsFromAttributes';
 import {VOID_ELEMENTS} from '@hedgedoc/html-to-react/dist/dom/elements/VoidElements';
 import {SmartContractStorage} from './libs/smart_contract/SmartContractStorage';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,

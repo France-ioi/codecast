@@ -1,5 +1,4 @@
 import {apply, call, put, race, spawn} from "typed-redux-saga";
-import {Codecast} from "../index";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
 import React from "react";
@@ -16,49 +15,31 @@ import {
     submissionChangeCurrentSubmissionId,
     submissionChangeDisplayedError,
     submissionChangePaneOpen,
-    SubmissionErrorType, SubmissionExecutionScope,
+    SubmissionErrorType,
+    SubmissionExecutionScope,
     submissionSetTestResult,
     submissionStartExecutingTest,
     submissionUpdateTaskSubmission,
 } from "./submission_slice";
-import {longPollServerSubmissionResults, makeServerSubmission, TaskTestGroupType} from "./task_platform";
+import {longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
-import {
-    selectSubmissionsPaneEnabled,
-    TaskSubmissionEvaluateOn,
-    TaskSubmissionResultPayload,
-    TaskSubmissionServer,
-    TaskSubmissionServerResult
-} from './submission';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
 import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
-import {selectTaskTests} from './submission_selectors';
-import {isServerTask} from '../task/task_types';
+import {selectSubmissionsPaneEnabled, selectTaskTests} from './submission_selectors';
+import {isServerTask, TaskTestGroupType} from '../task/task_types';
 import {platformAnswerGraded} from '../task/platform/actionTypes';
 import {getMessage} from '../lang';
-
-export const levelScoringData = {
-    basic: {
-        stars: 1,
-        scoreCoefficient: 0.25,
-    },
-    easy: {
-        stars: 2,
-        scoreCoefficient: 0.5,
-    },
-    medium: {
-        stars: 3,
-        scoreCoefficient: 0.75,
-    },
-    hard: {
-        stars: 4,
-        scoreCoefficient: 1,
-    },
-}
+import {
+    TaskSubmissionEvaluateOn,
+    TaskSubmissionResultPayload,
+    TaskSubmissionServer,
+    TaskSubmissionServerResult
+} from './submission_types';
+import {Codecast} from '../app_types';
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;

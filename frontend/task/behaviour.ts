@@ -3,9 +3,9 @@ import {call, delay, put, race, take, takeEvery} from "typed-redux-saga";
 import {ActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {Screen} from "../common/screens";
-import {App} from "../index";
 import {TaskActionTypes, taskSetMenuHelpsOpen} from "./task_slice";
 import {appSelect} from '../hooks';
+import {App} from '../app_types';
 
 const MENU_HELPS_MINIMUM_EXECUTION_ERRORS = 3;
 const MENU_HELPS_MINIMUM_TIME = 15 * 60; // sec

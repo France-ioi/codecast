@@ -25,7 +25,6 @@ import {
     taskGetResourcesPost,
     platformTaskLink,
 } from './actionTypes';
-import {Codecast} from "../../index";
 import {Action, ActionCreator} from "redux";
 import {
     platformTokenUpdated,
@@ -35,17 +34,18 @@ import {
     TaskLevelName,
 } from "./platform_slice";
 import {generateTokenUrl} from "./task_token";
-import {levelScoringData} from "../../submission/task_submission";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
-import {taskLoad} from '../index';
 import {taskLoaded} from '../task_slice';
 import {appSelect} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
-import {LayoutView} from '../layout/layout';
 import {SubmissionExecutionScope} from '../../submission/submission_slice';
 import {getMessage} from '../../lang';
+import {LayoutView} from '../layout/layout_types';
+import {taskLoad} from '../task_actions';
+import {levelScoringData} from '../../submission/scoring';
+import {Codecast} from '../../app_types';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;

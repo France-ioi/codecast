@@ -1,8 +1,6 @@
 import {AppStore} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
-import {App, Codecast} from "../../index";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {selectAnswer} from "../../task/selectors";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {TaskLevelName} from "../../task/platform/platform_slice";
@@ -10,11 +8,13 @@ import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
 import {put} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
-import {LayoutType} from "../../task/layout/layout";
 import {taskIncreaseContextId} from "../../task/task_slice";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
-import {CodecastPlatform} from '../platforms';
+import {hasBlockPlatform} from '../platforms';
+import {App, Codecast} from '../../app_types';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {LayoutType} from '../../task/layout/layout_types';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
@@ -211,10 +211,6 @@ export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, sta
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 }
-
-export const hasBlockPlatform = (platform: CodecastPlatform) => {
-    return CodecastPlatform.Blockly === platform || CodecastPlatform.Scratch === platform;
-};
 
 const getBlockCount = function (block, context: QuickAlgoLibrary) {
     // How many "blocks" a specific block counts towards the total

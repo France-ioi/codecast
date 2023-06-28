@@ -11,15 +11,15 @@ import {getMessage} from "../lang";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
-import {hasBlockPlatform} from "../stepper/js";
 import {getJsLibLoaded} from "./libs/import_modules";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faDownload} from '@fortawesome/free-solid-svg-icons/faDownload';
 import {faUpload} from '@fortawesome/free-solid-svg-icons/faUpload';
-import {quickAlgoLibraries} from './libs/quickalgo_libraries';
 import {PrinterLib} from './libs/printer/printer_lib';
 import {displayModal} from '../common/prompt_modal';
 import {ModalType} from '../common/modal_slice';
+import {hasBlockPlatform} from '../stepper/platforms';
+import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);

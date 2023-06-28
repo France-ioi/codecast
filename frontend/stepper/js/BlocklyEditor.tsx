@@ -1,12 +1,11 @@
 import React, {useEffect, useRef} from "react";
 import {useAppSelector} from "../../hooks";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
-import {ObjectDocument} from "../../buffers/document";
-import {BlockDocumentModel} from "../../buffers";
+import {BlockDocumentModel, ObjectDocument} from "../../buffers/document";
 import log from 'loglevel';
 import {stepperDisplayError} from '../actionTypes';
 import {useDispatch} from 'react-redux';
 import {getMessage} from '../../lang';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 
 export interface BlocklyEditorProps {
     onInit: Function,

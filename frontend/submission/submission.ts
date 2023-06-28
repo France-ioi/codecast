@@ -1,112 +1,40 @@
 import {Bundle} from "../linker";
 import {call, put, takeEvery} from "typed-redux-saga";
-import {AppAction, AppStore} from "../store";
-import {
-    platformApi,
-} from "../task/platform/platform";
-import {
-    SubmissionNormalized,
-    SubmissionSubtaskNormalized,
-    SubmissionTestErrorCode,
-    SubmissionTestNormalized
-} from './task_platform';
+import {AppStore} from "../store";
+import {platformApi} from "../task/platform/platform";
 import {appSelect} from '../hooks';
-import {updateCurrentTestId} from '../task/task_slice';
+import {addNewTaskTest, removeTaskTest, updateCurrentTestId, updateTaskTest} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
-import {
-    quickAlgoLibraries,
-    QuickAlgoLibrariesActionType,
-    quickAlgoLibraryResetAndReloadStateSaga
-} from '../task/libs/quickalgo_libraries';
-import {CodecastPlatform} from '../stepper/platforms';
+import {quickAlgoLibraryResetAndReloadStateSaga} from '../task/libs/quickalgo_libraries';
 import {
     submissionChangeCurrentSubmissionId,
     submissionChangeDisplayedError,
-    SubmissionErrorType, SubmissionExecutionScope,
+    SubmissionErrorType,
+    SubmissionExecutionScope,
     submissionSlice
 } from './submission_slice';
 import {getMessage} from '../lang';
-import {LibraryTestResult} from '../task/libs/library_test_result';
-import {createAction} from '@reduxjs/toolkit';
-import {TaskLevelName} from '../task/platform/platform_slice';
-import {App} from '../index';
 import {addAutoRecordingBehaviour} from '../recorder/record';
-import {analysisTogglePath} from '../stepper/analysis/analysis_slice';
 import {selectTaskTests} from './submission_selectors';
 import {taskSubmissionExecutor} from './task_submission';
 import {selectAnswer} from '../task/selectors';
 import stringify from 'json-stable-stringify-without-jsonify';
-import {platformAnswerGraded} from '../task/platform/actionTypes';
-
-export interface TaskSubmissionTestResult {
-    executing?: boolean,
-    testId: string,
-    message?: string,
-    score: number,
-    errorCode: SubmissionTestErrorCode,
-}
-
-export enum TaskSubmissionEvaluateOn {
-    Client = 'client',
-    Server = 'server',
-}
-
-export interface TaskSubmission {
-    type: TaskSubmissionEvaluateOn,
-    date: string, // ISO format
-    evaluated: boolean,
-    crashed?: boolean,
-    platform: CodecastPlatform,
-    result?: TaskSubmissionResult,
-}
+import {TaskTest, TaskTestGroupType} from '../task/task_types';
+import {getRandomId} from '../utils/app';
+import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission_types';
+import {
+    callPlatformValidate,
+    submissionCreateTest,
+    submissionExecuteMyTests,
+    submissionRemoveTest,
+    submissionUpdateCurrentTest
+} from './submission_actions';
+import {App} from '../app_types';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 
 export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
     return TaskSubmissionEvaluateOn.Server === object.type;
 }
-
-export interface TaskSubmissionResult {
-    tests: TaskSubmissionTestResult[],
-    compilationError?: boolean,
-    compilationMessage?: string|null,
-    errorMessage?: string|null,
-    mode?: string,
-}
-
-export interface TaskSubmissionClient extends TaskSubmission {
-    type: TaskSubmissionEvaluateOn.Client,
-}
-
-export interface TaskSubmissionServer extends TaskSubmission {
-    result?: TaskSubmissionServerResult,
-    type: TaskSubmissionEvaluateOn.Server,
-}
-
-export interface TaskSubmissionServerResult extends SubmissionNormalized {
-    subTasks?: SubmissionSubtaskNormalized[],
-    tests: TaskSubmissionServerTestResult[],
-}
-
-export interface TaskSubmissionServerTestResult extends TaskSubmissionTestResult, SubmissionTestNormalized {
-
-}
-
-export interface TaskSubmissionResultPayload {
-    testId: number,
-    result: boolean,
-    successRate?: number, // Between 0 and 1
-    message?: string,
-    steps?: number,
-    testResult?: LibraryTestResult,
-    noGrading?: boolean,
-}
-
-export const callPlatformValidate = createAction('submission/callPlatformValidate', (action?: string) => ({
-    payload: {
-        action,
-    },
-}));
-
-export const submissionExecuteMyTests = createAction('submission/executeMyTests');
 
 export function selectCurrentServerSubmission(state: AppStore) {
     if (null === state.submission.currentSubmissionId) {
@@ -130,16 +58,6 @@ export interface TestResultDiffLog {
     truncatedAfter?: boolean,
     excerptRow: number,
     excerptCol: number,
-}
-
-export function selectSubmissionsPaneEnabled(state: AppStore) {
-    if (!state.task.currentTask || state.task.currentTask.gridInfos.hiddenTests) {
-        return false;
-    }
-
-    const taskTests = selectTaskTests(state);
-
-    return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && taskTests.length > 1))
 }
 
 export default function (bundle: Bundle) {
@@ -206,6 +124,98 @@ export default function (bundle: Bundle) {
             });
 
             console.log('exec result', {score, message});
+        });
+
+        yield* takeEvery(submissionCreateTest, function* () {
+            const level = yield* appSelect(state => state.task.currentLevel);
+
+            const allTaskTests = yield* appSelect(state => state.task.taskTests);
+
+            let nextId = 1;
+            let nextName = 1;
+            for (let test of allTaskTests.filter(test => TaskTestGroupType.User === test.groupType)) {
+                if (test.name) {
+                    const matches = test.name.match(new RegExp(getMessage('SUBMISSION_OWN_TEST_LABEL').format({index: "(\\d+)"})));
+                    if (matches) {
+                        nextName = Math.max(nextName, Number(matches[1]) + 1);
+                    }
+                }
+
+                const matches = test.id.match(/user-(\d+)/);
+                if (matches) {
+                    nextId = Math.max(nextId, Number(matches[1]) + 1);
+                }
+            }
+
+            const newTestId = `user-${nextId}`;
+
+            const newTest: TaskTest = {
+                id: newTestId,
+                name: getMessage('SUBMISSION_OWN_TEST_LABEL').format({index: String(nextName)}),
+                data: null,
+                contextState: null,
+                groupType: TaskTestGroupType.User,
+                level,
+            };
+
+            yield* put(addNewTaskTest(newTest));
+
+            const newTaskTests = yield* appSelect(selectTaskTests);
+            const newTestIndex = newTaskTests.findIndex(test => newTestId === test.id);
+            if (-1 !== newTestIndex) {
+                yield* put(updateCurrentTestId({testId: newTestIndex}));
+            }
+        });
+
+        yield* takeEvery(submissionUpdateCurrentTest, function* ({payload: {data}}) {
+            const taskTests = yield* appSelect(selectTaskTests);
+            const currentTestId = yield* appSelect(state => state.task.currentTestId);
+
+            if (null === currentTestId || !(currentTestId in taskTests)) {
+                const level = yield* appSelect(state => state.task.currentLevel);
+
+                const newTestId = getRandomId();
+
+                // Create a new test
+                const newTest: TaskTest = {
+                    id: newTestId,
+                    data,
+                    contextState: null,
+                    level,
+                };
+
+                yield* put(addNewTaskTest(newTest));
+                const newTaskTests = yield* appSelect(selectTaskTests);
+                const newTestIndex = newTaskTests.findIndex(test => newTestId === test.id);
+                if (-1 !== newTestIndex) {
+                    yield* put(updateCurrentTestId({testId: newTestIndex}));
+                }
+            } else {
+                const newData = {
+                    ...taskTests[currentTestId].data,
+                    ...data,
+                };
+                yield* put(updateTaskTest({testIndex: currentTestId, data: newData}));
+            }
+        });
+
+        yield* takeEvery(submissionRemoveTest, function* ({payload: {testIndex}}) {
+            let currentTestId = yield* appSelect(state => state.task.currentTestId);
+            if (currentTestId === testIndex) {
+                currentTestId = null;
+            } else if (currentTestId > testIndex) {
+                currentTestId--;
+            }
+
+            yield* put(updateCurrentTestId({testId: currentTestId}));
+
+            const taskTests = yield* appSelect(selectTaskTests);
+            const removedTest = taskTests[testIndex];
+
+            const allTaskTests = yield* appSelect(state => state.task.taskTests);
+            const removedTestPosition = allTaskTests.indexOf(removedTest);
+            console.log('remove test', {removedTestPosition})
+            yield* put(removeTaskTest(removedTestPosition));
         });
     });
 

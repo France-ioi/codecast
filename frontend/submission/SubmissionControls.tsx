@@ -5,9 +5,10 @@ import {Button} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {getMessage} from "../lang";
-import {submissionExecuteMyTests} from "./submission";
 import {selectTaskTests} from './submission_selectors';
-import {TaskTestGroupType} from './task_platform';
+
+import {TaskTestGroupType} from '../task/task_types';
+import {submissionExecuteMyTests} from './submission_actions';
 
 export function SubmissionControls() {
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);

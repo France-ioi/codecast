@@ -1,12 +1,13 @@
 import React, {useState} from "react";
-import {Block} from "./blocks";
 import {Collapse} from "react-bootstrap";
 import {AvailableBlock} from "./AvailableBlock";
 import {getMessage} from "../../lang";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCaretUp} from "@fortawesome/free-solid-svg-icons/faCaretUp";
 import {faCaretDown} from "@fortawesome/free-solid-svg-icons/faCaretDown";
-import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
+
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {Block} from './block_types';
 
 export interface AvailableBlockCategoryProps {
     blocks: Block[],

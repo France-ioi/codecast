@@ -9,12 +9,13 @@ Codecast note: this module comes from https://github.com/France-ioi/bebras-modul
 
 import {getAvailableModules} from "./utils";
 import {getMessage, getMessageChoices} from "../lang";
-import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
+import {getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_library";
 import {analysisDirectiveViewDict} from "../stepper/views";
 import {getNotionsBagFromIncludeBlocks, NotionArborescence, NotionsBag} from './blocks/notions';
 import {QuickalgoTaskIncludeBlocks} from './task_types';
+import {Block, BlockType} from './blocks/block_types';
 
 const pythonNotionsToBlocks = {
     'dicts_create_with': ['dict_brackets'],

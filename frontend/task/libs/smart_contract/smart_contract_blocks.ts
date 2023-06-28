@@ -1,5 +1,5 @@
-import {BlockType} from '../../blocks/blocks';
 import {generateAvailableBlocksFromNotions, NotionsBag} from '../../blocks/notions';
+import {BlockType} from '../../blocks/block_types';
 
 export enum SmartContractPlatform {
     SmartPy = 'smartpy',

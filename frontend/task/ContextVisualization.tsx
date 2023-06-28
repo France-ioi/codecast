@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
+import {QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
 import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
@@ -7,16 +7,16 @@ import {useDispatch} from "react-redux";
 import {isTestPublic} from './task_types';
 import {getMessage} from '../lang';
 import {
-    isServerSubmission,
-    selectSubmissionsPaneEnabled,
-    TaskSubmissionServerTestResult
+    isServerSubmission
 } from '../submission/submission';
 import {submissionChangeDisplayedError, SubmissionErrorType} from '../submission/submission_slice';
 import {Alert} from "react-bootstrap";
 import {toHtml} from '../utils/sanitize';
 import {nl2br} from '../common/utils';
 import {Button} from '@blueprintjs/core';
-import {selectTaskTests} from '../submission/submission_selectors';
+import {selectSubmissionsPaneEnabled, selectTaskTests} from '../submission/submission_selectors';
+import {TaskSubmissionServerTestResult} from '../submission/submission_types';
+import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();

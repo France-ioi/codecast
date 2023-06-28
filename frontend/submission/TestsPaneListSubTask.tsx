@@ -1,15 +1,13 @@
 import React, {useState} from "react";
 import {useAppSelector} from "../hooks";
 import {Collapse} from 'react-bootstrap';
-import {
-    TaskSubtaskNormalized
-} from './task_platform';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCaretUp} from '@fortawesome/free-solid-svg-icons/faCaretUp';
 import {faCaretDown} from '@fortawesome/free-solid-svg-icons/faCaretDown';
 import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneListTest';
-import { TaskSubmissionServer} from './submission';
 import {selectTaskTests} from './submission_selectors';
+import {TaskSubmissionServer} from './submission_types';
+import {TaskSubtaskNormalized} from '../task/task_types';
 
 export interface SubmissionResultSubTaskProps {
     submission: TaskSubmissionServer,
@@ -41,8 +39,6 @@ export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
                     testsByIcon[testResult.errorCode] = 0;
                 }
                 testsByIcon[testResult.errorCode]++;
-            } else {
-                console.error('Test result not found', test, props.submission.result.tests);
             }
         }
 

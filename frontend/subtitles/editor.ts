@@ -12,9 +12,9 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {AppStore} from "../store";
 import {SubtitlesOptions, SubtitlesState} from "./index";
 import {Bundle} from "../linker";
-import {App} from "../index";
 import {Screen} from "../common/screens";
 import {appSelect} from '../hooks';
+import {App} from '../app_types';
 
 export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SubtitlesSelected);

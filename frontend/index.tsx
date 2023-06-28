@@ -1,5 +1,5 @@
+import './buffers/ace_loader';
 import './style.scss';
-
 import url from 'url';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -23,9 +23,6 @@ import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
 import {AppErrorBoundary} from "./common/AppErrorBoundary";
 import {setAutoFreeze} from "immer";
-import {ReplayApi} from "./player/replay";
-import {RecordApi} from "./recorder/record";
-import {StepperApi} from "./stepper/api";
 import {EnhancedStore} from "@reduxjs/toolkit";
 import {ConceptViewer} from "./task/documentation/doc";
 import {Documentation} from "./task/documentation/Documentation";
@@ -35,9 +32,9 @@ import '@france-ioi/skulpt/dist/debugger.js';
 import {Portal} from "@blueprintjs/core";
 import {DndProvider} from "react-dnd";
 import {CustomDragLayer} from "./task/CustomDragLayer";
-import AbstractRunner from "./stepper/abstract_runner";
 import {TralalereApp} from "./tralalere/TralalereApp";
 import {TaskLevelName} from "./task/platform/platform_slice";
+import {App, CodecastType} from './app_types';
 
 setAutoFreeze(true);
 
@@ -67,42 +64,13 @@ log.getLogger('task').setDefaultLevel('info');
 log.getLogger('tests').setDefaultLevel('info');
 window.log = log;
 
-export interface CodecastEnvironmentMonitoring {
-    effectTriggered: Function,
-    effectResolved: Function,
-    effectRejected: Function,
-    effectCancelled: Function,
-    clearListeners: Function,
-}
-
-interface CodecastEnvironment {
-    store: AppStore,
-    restart: Function,
-    monitoring: CodecastEnvironmentMonitoring,
-}
-
-interface Codecast {
-    environments: {[key: string]: CodecastEnvironment},
-    start?: Function,
-    restartSagas?: Function,
-    runner?: AbstractRunner,
-}
-
-export interface App {
-    recordApi: RecordApi,
-    replayApi: ReplayApi,
-    stepperApi: StepperApi,
-    dispatch: Function,
-    environment: string,
-}
-
 declare global {
     const Sk: any;
 
     interface Window extends WindowLocalStorage {
         store: EnhancedStore<AppStore>,
         replayStore: EnhancedStore<AppStore>,
-        Codecast: Codecast,
+        Codecast: CodecastType,
         currentPythonRunner: any,
         languageStrings: any,
         __REDUX_DEVTOOLS_EXTENSION__: any,
@@ -169,10 +137,6 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
     // 'Player.Tick': true
 };
 
-window.Codecast = {
-    environments: {},
-}
-
 for (let environment of ['main', 'replay', 'background']) {
     const initScope = {environment} as App;
 
@@ -208,9 +172,8 @@ for (let environment of ['main', 'replay', 'background']) {
     window.Codecast.environments[environment] = {store, restart, monitoring};
 }
 
-export const Codecast: Codecast = window.Codecast;
-Codecast.restartSagas = () => {
-    for (let [, {restart}] of Object.entries(Codecast.environments)) {
+window.Codecast.restartSagas = () => {
+    for (let [, {restart}] of Object.entries(window.Codecast.environments)) {
         restart();
     }
 }
@@ -243,11 +206,11 @@ function clearUrl() {
     token: string
   }
 **/
-Codecast.start = function(options) {
+window.Codecast.start = function(options) {
     // Fix bug when bundle is loaded in head before body is initialized, dialogs would not appear
     Portal.defaultProps.container = document.body;
 
-    const mainStore = Codecast.environments['main'].store;
+    const mainStore = window.Codecast.environments['main'].store;
 
     const urlParameters = new URLSearchParams(window.location.search);
     const queryParameters = Object.fromEntries(urlParameters);
@@ -261,7 +224,7 @@ Codecast.start = function(options) {
     // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
     /* Run the sagas (must be done before calling autoLogin) */
-    Codecast.restartSagas();
+    window.Codecast.restartSagas();
 
     if (!isLocalMode() && /editor|player|sandbox/.test(options.start)) {
         mainStore.dispatch({type: StatisticsActionTypes.StatisticsInitLogData});
@@ -343,6 +306,6 @@ function autoLogin() {
         return;
     }
 
-    const mainStore = Codecast.environments['main'].store;
+    const mainStore = window.Codecast.environments['main'].store;
     mainStore.dispatch({type: CommonActionTypes.LoginFeedback, payload: {user, token}});
 }

@@ -1,8 +1,4 @@
 import React from "react";
-import {
-    SubmissionTestErrorCode,
-    TaskTestGroupType
-} from './task_platform';
 import {getMessage} from '../lang';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
@@ -10,13 +6,15 @@ import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclama
 import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf';
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {isServerSubmission, TaskSubmission, TaskSubmissionServerTestResult} from './submission';
-import {removeTaskTest, updateCurrentTestId} from '../task/task_slice';
+import {isServerSubmission} from './submission';
+import {updateCurrentTestId} from '../task/task_slice';
 import {useDispatch} from 'react-redux';
 import {useAppSelector} from '../hooks';
 import {faTrash} from '@fortawesome/free-solid-svg-icons/faTrash';
 import {selectTaskTests} from './submission_selectors';
-import {TaskTest} from '../task/task_types';
+import {TaskTest, TaskTestGroupType} from '../task/task_types';
+import {SubmissionTestErrorCode, TaskSubmission, TaskSubmissionServerTestResult} from './submission_types';
+import {submissionRemoveTest} from './submission_actions';
 
 export interface SubmissionResultTestProps {
     index: number,
@@ -107,7 +105,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     }
 
     const deleteTest = (e) => {
-        dispatch(removeTaskTest(testIndex));
+        dispatch(submissionRemoveTest(testIndex));
         e.stopPropagation();
     };
 

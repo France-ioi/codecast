@@ -6,25 +6,29 @@ import {AppStore} from "../../../store";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
 import {
     taskInputEntered,
-    taskInputNeeded, updateCurrentTest,
+    taskInputNeeded,
 } from "../../task_slice";
-import {App} from "../../../index";
 import {IoMode} from "../../../stepper/io";
-import {delay, ReplayContext} from "../../../player/sagas";
+import {ReplayContext} from "../../../player/sagas";
 import {createDraft} from "immer";
 import log from 'loglevel';
 import {PayloadAction} from "@reduxjs/toolkit";
 import {appSelect} from '../../../hooks';
-import {TaskSubmissionServerTestResult, TestResultDiffLog} from '../../../submission/submission';
+import {
+    TestResultDiffLog
+} from '../../../submission/submission';
 import {getMessage} from '../../../lang';
 import {
-    quickAlgoLibraries,
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../quickalgo_libraries';
-import {CodecastPlatform} from '../../../stepper/platforms';
 import {LibraryTestResult} from '../library_test_result';
 import {ActionTypes} from '../../../buffers/actionTypes';
+import {TaskSubmissionServerTestResult} from '../../../submission/submission_types';
+import {submissionUpdateCurrentTest} from '../../../submission/submission_actions';
+import {CodecastPlatform} from '../../../stepper/codecast_platform';
+import {App} from '../../../app_types';
+import {quickAlgoLibraries} from '../quick_algo_libraries_model';
 
 export function getTerminalText(events) {
     return events
@@ -725,10 +729,10 @@ export class PrinterLib extends QuickAlgoLibrary {
             const {buffer} = action;
             if (inputBufferLibTest === buffer) {
                 const inputValue = yield* appSelect(state => state.buffers[inputBufferLibTest].model.document.toString());
-                yield* put(updateCurrentTest({input: inputValue}));
+                yield* put(submissionUpdateCurrentTest({input: inputValue}));
             } else if (outputBufferLibTest === buffer) {
                 const outputValue = yield* appSelect(state => state.buffers[outputBufferLibTest].model.document.toString());
-                yield* put(updateCurrentTest({output: outputValue}));
+                yield* put(submissionUpdateCurrentTest({output: outputValue}));
             }
         });
 
@@ -776,7 +780,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 const {buffers} = event[2];
                 const currentTask = yield* appSelect(state => state.task.currentTask);
                 if (!currentTask && (buffers[inputBufferLibTest] || buffers[outputBufferLibTest])) {
-                    yield* put(updateCurrentTest({
+                    yield* put(submissionUpdateCurrentTest({
                         input: buffers[inputBufferLibTest] ? buffers[inputBufferLibTest].document : '',
                         output: buffers[outputBufferLibTest] ? buffers[outputBufferLibTest].document : '',
                     }));

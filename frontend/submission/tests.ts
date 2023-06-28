@@ -1,5 +1,4 @@
-import {Task, TaskTest} from '../task/task_types';
-import {TaskTestServer} from './task_platform';
+import {Task, TaskTest, TaskTestServer} from '../task/task_types';
 import {getMessage} from '../lang';
 
 export function extractTestsFromTask(task: Task): TaskTest[] {

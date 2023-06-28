@@ -1,7 +1,7 @@
 // Extracted from "importModules-1.4-mobileFirst.js"
 
-import {hasBlockPlatform} from "../../stepper/js";
 import {Task} from '../task_types';
+import {hasBlockPlatform} from '../../stepper/platforms';
 
 let importedModules = {};
 

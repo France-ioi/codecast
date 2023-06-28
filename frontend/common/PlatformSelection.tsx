@@ -3,9 +3,9 @@ import {ActionTypes as CommonActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from '../hooks';
 import {select} from 'typed-redux-saga';
-import {hasBlockPlatform} from '../stepper/js';
 import {getJsLibLoaded} from '../task/libs/import_modules';
 import {getMessage} from '../lang';
+import {hasBlockPlatform} from '../stepper/platforms';
 
 export interface PlatformSelectionProps {
     withoutLabel?: boolean

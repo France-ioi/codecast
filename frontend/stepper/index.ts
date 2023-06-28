@@ -44,7 +44,7 @@ import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
-import BlocklyBundle, {hasBlockPlatform} from './js';
+import BlocklyBundle from './js';
 import {analyseState, AnalysisC, collectDirectives} from './c/analysis';
 import {convertSkulptStateToAnalysisSnapshot, getSkulptSuspensionsCopy} from "./python/analysis";
 import {Directive, parseDirectives} from "./python/directives";
@@ -64,8 +64,7 @@ import {AppStore, AppStoreReplay} from "../store";
 import {TermBuffer} from "./io/terminal";
 import {delay} from "../player/sagas";
 import {Bundle} from "../linker";
-import {App, Codecast} from "../index";
-import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
+import {QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
 import {selectCurrentTestData, taskResetDone, updateCurrentTestId} from "../task/task_slice";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
@@ -79,14 +78,18 @@ import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecast
 import log from "loglevel";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
-import {LayoutMobileMode} from "../task/layout/layout";
 import {DeferredPromise} from "../utils/app";
 import {addStepperRecordAndReplayHooks} from './replay';
 import {appSelect} from '../hooks';
-import {TaskSubmissionResultPayload} from '../submission/submission';
-import {CodecastPlatform} from './platforms';
+import {hasBlockPlatform} from './platforms';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {selectTaskTests} from '../submission/submission_selectors';
+import {CodecastPlatform} from './codecast_platform';
+import {App, Codecast} from '../app_types';
+import {mainQuickAlgoLogger} from '../task/libs/quick_algo_logger';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {TaskSubmissionResultPayload} from '../submission/submission_types';
+import {LayoutMobileMode} from '../task/layout/layout_types';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms

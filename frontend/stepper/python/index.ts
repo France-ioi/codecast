@@ -7,16 +7,16 @@ import {
 import {AppStore} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
-import {App, Codecast} from "../../index";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {Action} from "redux";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {selectAnswer} from "../../task/selectors";
 import {delay} from "../../player/sagas";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
-import {CodecastPlatform} from '../platforms';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
+import {CodecastPlatform} from '../codecast_platform';
+import {App, Codecast} from '../../app_types';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 
 export function* compilePythonCodeSaga(source: string) {
     log.getLogger('python_runner').debug('compile python code', source);

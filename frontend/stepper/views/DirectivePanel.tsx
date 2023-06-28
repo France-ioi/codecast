@@ -1,7 +1,8 @@
 import React from "react";
 import {DirectiveFrame} from "./DirectiveFrame";
 import {analysisDirectiveViewDict, C_directiveViewDict} from "./index";
-import {CodecastPlatform} from '../platforms';
+
+import {CodecastPlatform} from '../codecast_platform';
 
 export function DirectivePanel({scale, directive, controls, context, functionCallStack, platform, onChange, allocatedWidth, allocatedHeight}) {
     const {kind} = directive;

@@ -1,5 +1,6 @@
 import {getMessage} from "../lang";
-import {Block, BlockType} from "../task/blocks/blocks";
+
+import {Block, BlockType} from '../task/blocks/block_types';
 
 const hiddenWords = ['__getitem__', '__setitem__'];
 

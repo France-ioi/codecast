@@ -5,12 +5,13 @@ import {useAppSelector} from "../../hooks";
 import {AvailableBlocks} from "../blocks/AvailableBlocks";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
-import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {getContextBlocksDataSelector} from "../blocks/blocks";
 import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
-import {CodecastPlatform, platformsList} from '../../stepper/platforms';
+import {platformsList} from '../../stepper/platforms';
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 
 export interface LayoutEditorProps {
     style?: any,

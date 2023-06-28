@@ -26,23 +26,18 @@ user interaction change the view.
 
 */
 
-import {call, put, select, takeEvery} from 'typed-redux-saga';
+import {call, put, takeEvery} from 'typed-redux-saga';
 import {
+    BufferContentModel,
     compressDocument,
     compressRange,
     Document,
-    documentFromString,
-    emptyDocument,
-    expandRange, modelFromDocument,
+    documentFromString, DocumentModel,
+    expandRange,
+    modelFromDocument,
     ObjectDocument,
-    Selection, uncompressIntoDocument
+    uncompressIntoDocument
 } from "./document";
-
-window.ace = require("ace-builds");
-window.ace.acequire = window.ace.require || window.ace.acequire;
-window.ace.config.set("loadWorkerFromBlob", false);
-
-
 import "ace-builds/src-min-noconflict/mode-c_cpp";
 import "ace-builds/src-min-noconflict/mode-python";
 import "ace-builds/src-min-noconflict/mode-javascript";
@@ -61,52 +56,22 @@ import {AppStore} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
-import {App} from "../index";
 import {updateSourceHighlightSaga} from "../stepper";
-import {BlockType} from "../task/blocks/blocks";
 import log from 'loglevel';
 import {stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
-import {hasBlockPlatform} from '../stepper/js';
 import {appSelect} from '../hooks';
-import {CodecastPlatform} from '../stepper/platforms';
+import {hasBlockPlatform} from '../stepper/platforms';
 import {inputBufferLibTest} from '../task/libs/printer/printer_lib';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {App} from '../app_types';
+import {BlockType} from '../task/blocks/block_types';
+
 
 const AceThemes = [
     'github',
 ];
-
-export abstract class BufferContentModel {
-    [immerable] = true;
-
-    public document;
-    public selection;
-    public firstVisibleRow: number = 0;
-}
-
-export class DocumentModel extends BufferContentModel {
-    [immerable] = true;
-
-    constructor(
-        public document: Document = emptyDocument,
-        public selection: Selection = new Selection(),
-        public firstVisibleRow: number = 0
-    ) {
-        super();
-    }
-}
-
-export class BlockDocumentModel extends BufferContentModel {
-    [immerable] = true;
-
-    constructor(
-        public document: ObjectDocument = new ObjectDocument(null),
-        public selection: string = null,
-    ) {
-        super();
-    }
-}
 
 export class BufferState {
     [immerable] = true;

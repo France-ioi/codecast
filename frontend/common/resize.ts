@@ -5,7 +5,8 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {computeLayoutType} from "../task/layout/layout";
-import {App} from "../index";
+
+import {App} from '../app_types';
 
 export const mainViewGeometries = [
     {size: 'lg', width: 1140, svgScale: 1.0},

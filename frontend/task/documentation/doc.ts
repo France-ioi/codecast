@@ -1,6 +1,5 @@
 import {Bundle} from "../../linker";
 import {call, put, takeEvery} from "typed-redux-saga";
-import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {
     DocumentationConcept,
     documentationConceptSelected,
@@ -10,10 +9,8 @@ import {
 } from "./documentation_slice";
 import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
-import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
-import {CodecastPlatform} from '../../stepper/platforms';
 import {
     TaskActionTypes,
     taskSetAvailablePlatforms
@@ -24,6 +21,9 @@ import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {addAutoRecordingBehaviour} from '../../recorder/record';
 import {documentFromString} from '../../buffers/document';
 import {QuickalgoTaskIncludeBlocks, Task} from '../task_types';
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {App} from '../../app_types';
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 
 let openerChannel;
 

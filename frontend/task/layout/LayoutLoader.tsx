@@ -1,14 +1,16 @@
 import React from "react";
 import {connect} from "react-redux";
 import {AppStore, CodecastOptions} from "../../store";
-import {createLayout, LayoutMobileMode, LayoutType, selectActiveView} from "./layout";
+import {createLayout, selectActiveView} from "./layout";
 import {StepperStatus} from "../../stepper";
 import {ActionTypes} from "./actionTypes";
 import {withResizeDetector} from 'react-resize-detector';
 import {Directive} from "../../stepper/python/directives";
 import {Screen} from "../../common/screens";
 import {getNotionsBagFromIncludeBlocks} from '../blocks/notions';
-import {quickAlgoLibraries} from '../libs/quickalgo_libraries';
+
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {LayoutMobileMode, LayoutType} from './layout_types';
 
 interface LayoutLoaderStateToProps {
     advisedVisualization: string,

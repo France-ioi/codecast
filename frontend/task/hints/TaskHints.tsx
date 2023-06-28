@@ -5,9 +5,10 @@ import {Carousel} from 'react-bootstrap';
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../../hooks";
 import {toHtml} from "../../utils/sanitize";
-import {hintUnlocked, selectAvailableHints} from "./hints_slice";
+import {hintUnlocked} from "./hints_slice";
 import {getMessage} from '../../lang';
 import {formatTaskInstructions} from '../utils';
+import {selectAvailableHints} from './hints_selectors';
 
 export interface TaskHintProps {
     askHintClassName?: string

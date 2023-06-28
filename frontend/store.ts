@@ -27,7 +27,8 @@ import {AnalysisState} from "./stepper/analysis/analysis_slice";
 import {ModalState} from "./common/modal_slice";
 import {HintsState, TaskHint} from "./task/hints/hints_slice";
 import {SubmissionState} from "./submission/submission_slice";
-import {CodecastPlatform} from './stepper/platforms';
+
+import {CodecastPlatform} from './stepper/codecast_platform';
 
 export enum CodecastOptionsMode {
     Edit = 'edit',

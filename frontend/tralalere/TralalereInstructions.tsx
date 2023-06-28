@@ -1,7 +1,7 @@
 import {TaskInstructions} from "../task/TaskInstructions";
 import React, {useState} from "react";
-import {LayoutType} from "../task/layout/layout";
 import {useAppSelector} from "../hooks";
+import {LayoutType} from '../task/layout/layout_types';
 
 export interface TralalereInstructionsProps {
     expanded?: boolean

@@ -7,11 +7,10 @@ import {useAppSelector} from "../../../hooks";
 import {getMessage} from "../../../lang";
 import {Card} from 'react-bootstrap';
 import {Icon} from '@blueprintjs/core';
-import {Editor} from '../../../buffers/Editor';
 import {BufferEditor} from '../../../buffers/BufferEditor';
 import {inputBufferLibTest, outputBufferLibTest} from './printer_lib';
-import {TaskTestGroupType} from '../../../submission/task_platform';
 import {selectCurrentTest} from '../../task_slice';
+import {TaskTestGroupType} from '../../task_types';
 
 export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.options.ioMode);
