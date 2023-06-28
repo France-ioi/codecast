@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
-import {Document, documentFromString, DocumentModel} from "./document";
+import {Document, documentFromString, DocumentModel, ObjectDocument} from "./document";
 import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
@@ -24,6 +24,7 @@ export interface EditorProps {
     onInit?: Function,
     onSelect?: Function,
     onEdit?: Function,
+    onEditPlain?: Function,
     onScroll?: Function,
     onDropBlock?: Function,
     content?: string,
@@ -456,12 +457,19 @@ export function Editor(props: EditorProps) {
             return;
         }
 
+        console.log('update props content', props.content);
+
         const value = props.content ? props.content : '';
         if (value === editor.current.getSession().getValue()) {
             return;
         }
 
+        console.log('change because', value, editor.current.getSession().getValue())
+
         wrapModelToEditor(() => {
+            if (props.onEditPlain) {
+                props.onEditPlain(documentFromString(value));
+            }
             editor.current.getSession().setValue(value);
             editor.current.resize(true);
         });

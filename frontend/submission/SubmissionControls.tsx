@@ -9,12 +9,15 @@ import {selectTaskTests} from './submission_selectors';
 
 import {TaskTestGroupType} from '../task/task_types';
 import {submissionExecuteMyTests} from './submission_actions';
+import {StepperStatus} from '../stepper';
+import {SubmissionExecutionScope} from './submission_slice';
 
 export function SubmissionControls() {
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
     const isEvaluating = lastSubmission && !lastSubmission.evaluated && !lastSubmission.crashed;
     const dispatch = useDispatch();
     const hasOwnTests = useAppSelector(state => 0 < selectTaskTests(state).filter(test => TaskTestGroupType.User === test.groupType).length);
+    const stepperStatus = useAppSelector(state => state.stepper.status);
 
     const executeOnMyTests = () => {
         dispatch(submissionExecuteMyTests());
@@ -34,7 +37,8 @@ export function SubmissionControls() {
                 <Button
                     className="quickalgo-button"
                     onClick={executeOnMyTests}
-                    icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>}
+                    disabled={isEvaluating || StepperStatus.Clear !== stepperStatus}
+                    icon={isEvaluating && SubmissionExecutionScope.MyTests === lastSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>}
                 >
                     {getMessage('SUBMISSION_EXECUTE_MY_TESTS')}
                 </Button>

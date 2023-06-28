@@ -5,7 +5,7 @@ import {TaskSubmissionMode} from './submission_types';
 export function selectTaskTests(state: AppStore) {
     const taskLevelsTests = getTaskLevelTests(state);
 
-    if (state.submission.currentSubmissionId) {
+    if (null !== state.submission.currentSubmissionId) {
         const submission = state.submission.taskSubmissions[state.submission.currentSubmissionId];
         if (TaskSubmissionMode.UserTest === submission?.result?.mode) {
             const submissionUserTests = [];

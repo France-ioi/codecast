@@ -77,6 +77,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         name={buffer}
         onInit={onInit}
         onEdit={onEdit}
+        onEditPlain={onEditPlain}
         onSelect={onSelect}
         onScroll={onScroll}
         onDropBlock={onDropBlock}

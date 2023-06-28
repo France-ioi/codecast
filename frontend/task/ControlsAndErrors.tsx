@@ -11,7 +11,7 @@ import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "../submission/TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
-import {submissionChangeExecutionMode} from "../submission/submission_slice";
+import {submissionChangeExecutionMode, SubmissionExecutionScope} from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
 import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
@@ -169,7 +169,7 @@ export function ControlsAndErrors() {
                             <Button
                                 className="quickalgo-button is-medium"
                                 disabled={isEvaluating || StepperStatus.Clear !== stepperStatus}
-                                icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
+                                icon={isEvaluating && SubmissionExecutionScope.Submit === lastSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
                                 onClick={submitSubmission}
                             >
                                 {getMessage('SUBMISSION_EXECUTE_SUBMIT')}

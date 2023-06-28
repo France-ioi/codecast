@@ -2,6 +2,7 @@ import {TaskTest} from '../task/task_types';
 
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {LibraryTestResult} from '../task/libs/library_test_result';
+import {SubmissionExecutionScope} from './submission_slice';
 
 export interface SubmissionNormalized {
     id: string,
@@ -76,6 +77,7 @@ export interface TaskSubmission {
     crashed?: boolean,
     platform: CodecastPlatform,
     result?: TaskSubmissionResult,
+    scope?: SubmissionExecutionScope,
 }
 
 export enum TaskSubmissionMode {

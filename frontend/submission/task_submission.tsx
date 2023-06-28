@@ -202,6 +202,7 @@ class TaskSubmissionExecutor {
             date: new Date().toISOString(),
             platform,
             type: TaskSubmissionEvaluateOn.Server,
+            scope: scope ?? SubmissionExecutionScope.Submit,
         };
         yield* put(submissionAddNewTaskSubmission(serverSubmission));
 

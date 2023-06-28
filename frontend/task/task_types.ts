@@ -213,7 +213,7 @@ export function isTestPublic(task: Task, test: TaskTest|null): boolean {
     }
 
     if (task && task.gridInfos && 'printer' === task.gridInfos.context) {
-        return !(test && test.data && !test.data.input);
+        return !(test && test.data && null === test.data.input);
     }
 
     return true;
