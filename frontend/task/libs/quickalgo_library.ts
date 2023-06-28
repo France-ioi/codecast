@@ -1,4 +1,4 @@
-import {App} from "../../index";
+import {App, Codecast} from "../../index";
 import {AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
 import merge from 'lodash.merge';
@@ -317,6 +317,10 @@ export abstract class QuickAlgoLibrary {
             CodecastPlatform.Scratch,
             CodecastPlatform.Python,
         ];
+    }
+
+    dispatchContextEvent(event) {
+        Codecast.environments['main'].store.dispatch(event);
     }
 }
 

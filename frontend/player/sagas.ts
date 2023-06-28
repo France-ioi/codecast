@@ -34,6 +34,7 @@ import {platformTaskLink} from '../task/platform/actionTypes';
 import log from 'loglevel';
 import {appSelect} from '../hooks';
 import {CodecastPlatform} from '../stepper/platforms';
+import {DeferredPromise} from '../utils/app';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -348,7 +349,10 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     const replayStore = Codecast.environments['replay'].store;
 
     yield* call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, environment: 'replay'}});
-    yield* call(replayStore.dispatch, taskLoad());
+
+    const deferredPromise = new DeferredPromise();
+    yield* call(replayStore.dispatch, taskLoad({callback: deferredPromise.resolve}));
+    yield deferredPromise.promise;
 
     for (pos = 0; pos < events.length; pos += 1) {
         const event = events[pos];

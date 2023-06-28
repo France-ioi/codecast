@@ -143,7 +143,7 @@ export const taskSlice = createSlice({
             const removedTestPosition = state.taskTests.indexOf(removedTest);
             state.taskTests.splice(removedTestPosition, 1);
         },
-        updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean}>) {
+        updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean, withoutContextState?: boolean}>) {
             state.previousTestId = state.currentTestId;
             state.currentTestId = action.payload.testId;
         },

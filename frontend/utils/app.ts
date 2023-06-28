@@ -9,7 +9,7 @@ export const isLocalMode = () => {
 
 export class DeferredPromise<T> {
     public promise: Promise<T>;
-    public resolve: (value: T) => void;
+    public resolve: (value?: T) => void;
     public reject: Function;
 
     constructor() {

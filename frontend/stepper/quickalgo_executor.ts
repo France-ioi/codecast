@@ -109,7 +109,7 @@ class QuickalgoExecutor {
                 type: CompileActionTypes.StepperInterrupting,
             });
 
-            Codecast.runner.stop();
+            Codecast.runner?.stop();
 
             await this.stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(String(e)), false));
         }

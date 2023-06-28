@@ -203,6 +203,9 @@ export function* createQuickalgoLibrary() {
     log.getLogger('libraries').debug('created context', contextLib);
     contextLib.iTestCase = state.task.currentTestId;
     contextLib.environment = state.environment;
+    // For QuickPi lib, with this option, the program is graded even when context.display = false
+    // (which happens in particular in the case of a replay)
+    contextLib.forceGradingWithoutDisplay = true;
 
     if (contextLib.changeSoundEnabled) {
         contextLib.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);

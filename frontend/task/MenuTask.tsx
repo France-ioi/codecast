@@ -16,6 +16,10 @@ import {getJsLibLoaded} from "./libs/import_modules";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faDownload} from '@fortawesome/free-solid-svg-icons/faDownload';
 import {faUpload} from '@fortawesome/free-solid-svg-icons/faUpload';
+import {quickAlgoLibraries} from './libs/quickalgo_libraries';
+import {PrinterLib} from './libs/printer/printer_lib';
+import {displayModal} from '../common/prompt_modal';
+import {ModalType} from '../common/modal_slice';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -60,6 +64,13 @@ export function MenuTask() {
     const toggleRecording = () => {
         dispatch(recordingEnabledChange(!recordingEnabled));
         setMenuOpen(false);
+
+        if (!recordingEnabled) {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (context && !('robot' in context || context instanceof PrinterLib || 'quickpi' in context || 'database' in context)) {
+                dispatch(displayModal({message: getMessage('RECORDING_LIBRARY_NOT_WORKING'), mode: ModalType.message}));
+            }
+        }
     };
 
     const toggleEditRecording = () => {
