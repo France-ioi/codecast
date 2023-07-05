@@ -1,13 +1,5 @@
 import {QuickAlgoLibrary} from "../quickalgo_library";
-import {call, put, takeEvery} from "typed-redux-saga";
-import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
-import log from 'loglevel';
 import {SmartContractView} from './SmartContractView';
-import {appSelect} from '../../../hooks';
-import {
-    QuickAlgoLibrariesActionType,
-    quickAlgoLibraryResetAndReloadStateSaga
-} from '../quickalgo_libraries';
 import {
     generateGetSmartContractSpecificBlocks,
     SmartContractPlatform,
@@ -15,8 +7,6 @@ import {
 } from './smart_contract_blocks';
 import {LibraryTestResult} from '../library_test_result';
 import {TaskSubmissionServerTestResult} from '../../../submission/submission_types';
-import {App} from '../../../app_types';
-import {quickAlgoLibraries} from '../quick_algo_libraries_model';
 
 export interface SmartContractResultLogLine {
     amount: number,
@@ -116,28 +106,14 @@ export class SmartContractLib extends QuickAlgoLibrary {
         return this.display ? SmartContractView : null;
     }
 
-    *getSaga(app: App) {
-        log.getLogger('smart_contract_lib').debug('Start Smart Contract Lib Saga');
+    getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult): SmartContractLibState {
+        const output = JSON.parse(testResult.output);
+        const log = output.log;
 
-        yield* takeEvery(StepperActionTypes.StepperDisplayError, function* (action) {
-            // @ts-ignore
-            const {payload} = action;
-            if (payload.error instanceof LibraryTestResult && 'task-submission-test-result-smart-contract' === payload.error.getType()) {
-                // state
-                const log = payload.error.props.log;
-                const environment = yield* appSelect(state => state.environment);
-                const context = quickAlgoLibraries.getContext(null, environment);
-                if (context) {
-                    const innerState: SmartContractLibState = {
-                        resultLog: log,
-                        errorMessage: payload.error.message,
-                    };
-
-                    yield* call(quickAlgoLibraryResetAndReloadStateSaga, innerState);
-                    yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-                }
-            }
-        });
+        return {
+            resultLog: log,
+            errorMessage: output.error?.message,
+        };
     }
 
     getErrorFromTestResult(testResult: TaskSubmissionServerTestResult): LibraryTestResult {
@@ -145,11 +121,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
             const output = JSON.parse(testResult.output);
 
             return new LibraryTestResult(
-                output.error?.message,
-                'task-submission-test-result-smart-contract',
-                {
-                    log: output.log,
-                },
+                output.error?.message
             );
         } catch (e) {
             return LibraryTestResult.fromString(testResult.log);

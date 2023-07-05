@@ -457,14 +457,10 @@ export function Editor(props: EditorProps) {
             return;
         }
 
-        console.log('update props content', props.content);
-
         const value = props.content ? props.content : '';
         if (value === editor.current.getSession().getValue()) {
             return;
         }
-
-        console.log('change because', value, editor.current.getSession().getValue())
 
         wrapModelToEditor(() => {
             if (props.onEditPlain) {

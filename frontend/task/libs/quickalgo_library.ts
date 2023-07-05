@@ -311,6 +311,8 @@ export abstract class QuickAlgoLibrary {
 
     getErrorFromTestResult?(testResult: TaskSubmissionServerTestResult): LibraryTestResult;
 
+    getContextStateFromTestResult?(testResult: TaskSubmissionServerTestResult): any|null;
+
     getSupportedPlatforms(): string[] {
         return [
             CodecastPlatform.Blockly,

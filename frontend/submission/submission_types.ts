@@ -1,4 +1,4 @@
-import {TaskTest} from '../task/task_types';
+import {TaskTest, TaskTestServer} from '../task/task_types';
 
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {LibraryTestResult} from '../task/libs/library_test_result';
@@ -59,7 +59,7 @@ export interface SubmissionTestNormalized {
 export interface TaskSubmissionTestResult {
     executing?: boolean,
     testId: string,
-    test?: TaskTest, // For user tests
+    test?: TaskTestServer, // For user tests
     message?: string,
     score: number,
     errorCode: SubmissionTestErrorCode,

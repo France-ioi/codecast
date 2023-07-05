@@ -1,34 +1,27 @@
 import React from "react";
 import {InputOutputVisualization} from "./InputOutputVisualization";
 import {QuickAlgoLibrary} from "../quickalgo_library";
-import {apply, call, put, race, take, takeEvery} from "typed-redux-saga";
+import {apply, put, race, take, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../../../store";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
-import {
-    taskInputEntered,
-    taskInputNeeded,
-} from "../../task_slice";
+import {taskInputEntered, taskInputNeeded,} from "../../task_slice";
 import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
 import {createDraft} from "immer";
 import log from 'loglevel';
 import {PayloadAction} from "@reduxjs/toolkit";
 import {appSelect} from '../../../hooks';
-import {
-    TestResultDiffLog
-} from '../../../submission/submission';
+import {TestResultDiffLog} from '../../../submission/submission';
 import {getMessage} from '../../../lang';
-import {
-    QuickAlgoLibrariesActionType,
-    quickAlgoLibraryResetAndReloadStateSaga
-} from '../quickalgo_libraries';
 import {LibraryTestResult} from '../library_test_result';
 import {ActionTypes} from '../../../buffers/actionTypes';
-import {TaskSubmissionServerTestResult} from '../../../submission/submission_types';
+import {
+    SubmissionTestErrorCode,
+    TaskSubmissionServerTestResult,
+} from '../../../submission/submission_types';
 import {submissionUpdateCurrentTest} from '../../../submission/submission_actions';
 import {CodecastPlatform} from '../../../stepper/codecast_platform';
 import {App} from '../../../app_types';
-import {quickAlgoLibraries} from '../quick_algo_libraries_model';
 
 export function getTerminalText(events) {
     return events
@@ -710,14 +703,53 @@ export class PrinterLib extends QuickAlgoLibrary {
 
             return new LibraryTestResult(
                 getMessage('IOPANE_ERROR').format({line: log.diffRow}),
-                'task-submission-test-result-diff',
-                {
-                    log,
-                }
             );
         } catch (e) {
             return LibraryTestResult.fromString(testResult.log);
         }
+    }
+
+    getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult): PrinterLibState|null {
+        if (testResult.log) {
+            const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
+            const errorHighlightRange = {
+                start: {
+                    row: log.diffRow - 1,
+                    column: log.diffCol - 1,
+                },
+                end: {
+                    row: log.diffRow - 1,
+                    column: log.diffCol,
+                },
+            };
+
+            return {
+                initial: log.remainingInput ? log.remainingInput : '',
+                unknownInput: undefined === log.remainingInput,
+                ioEvents: [
+                    {type: PrinterLineEventType.output, content: log.displayedSolutionOutput},
+                ],
+                inputBuffer: '',
+                inputPosition: {event: 0, pos: 0},
+                expectedOutput: log.displayedExpectedOutput,
+                errorHighlight: errorHighlightRange,
+            };
+        } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
+            const initTest = testResult.test;
+
+            return {
+                initial: '',
+                unknownInput: true,
+                ioEvents: [
+                    {type: PrinterLineEventType.output, content: initTest ? initTest.output : testResult.output},
+                ],
+                inputBuffer: '',
+                inputPosition: {event: 0, pos: 0},
+                expectedOutput: testResult.expectedOutput,
+            };
+        }
+
+        return null;
     }
 
     *getSaga(app: App) {
@@ -733,43 +765,6 @@ export class PrinterLib extends QuickAlgoLibrary {
             } else if (outputBufferLibTest === buffer) {
                 const outputValue = yield* appSelect(state => state.buffers[outputBufferLibTest].model.document.toString());
                 yield* put(submissionUpdateCurrentTest({output: outputValue}));
-            }
-        });
-
-        yield* takeEvery(StepperActionTypes.StepperDisplayError, function* (action) {
-            // @ts-ignore
-            const {payload} = action;
-            if (payload.error instanceof LibraryTestResult && 'task-submission-test-result-diff' === payload.error.getType()) {
-                const log: TestResultDiffLog = payload.error.props.log;
-                const environment = yield* appSelect(state => state.environment);
-                const context = quickAlgoLibraries.getContext(null, environment);
-                if (context) {
-                    const errorHighlightRange = {
-                        start: {
-                            row: log.diffRow - 1,
-                            column: log.diffCol - 1,
-                        },
-                        end: {
-                            row: log.diffRow - 1,
-                            column: log.diffCol,
-                        },
-                    };
-
-                    const innerState: PrinterLibState = {
-                        initial: log.remainingInput ? log.remainingInput : '',
-                        unknownInput: undefined === log.remainingInput,
-                        ioEvents: [
-                            {type: PrinterLineEventType.output, content: log.displayedSolutionOutput},
-                        ],
-                        inputBuffer: '',
-                        inputPosition: {event: 0, pos: 0},
-                        expectedOutput: log.displayedExpectedOutput,
-                        errorHighlight: errorHighlightRange,
-                    };
-
-                    yield* call(quickAlgoLibraryResetAndReloadStateSaga, innerState);
-                    yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-                }
             }
         });
 

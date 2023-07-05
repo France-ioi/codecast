@@ -87,7 +87,7 @@ import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {convertServerTaskToCodecastFormat, getTaskFromId} from "../submission/task_platform";
 import {
-    submissionChangeCurrentSubmissionId,
+    submissionChangeCurrentSubmissionId, submissionChangeDisplayedError,
     submissionChangePaneOpen,
     submissionChangePlatformName,
 } from "../submission/submission_slice";
@@ -107,6 +107,7 @@ import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
+import {isServerSubmission, selectCurrentServerSubmission} from '../submission/submission';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -480,7 +481,7 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
         context.iTestCase = state.task.currentTestId;
 
         if (!payload.withoutContextState) {
-            const contextState = taskTests[state.task.currentTestId].contextState;
+            const contextState = yield* call(getTestContextState);
             if (null !== contextState) {
                 log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', contextState);
                 yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
@@ -493,6 +494,26 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         }
     }
+}
+
+function* getTestContextState() {
+    const state = yield* appSelect();
+    const taskTests = selectTaskTests(state);
+    const newTest = taskTests[state.task.currentTestId];
+
+    const submission = selectCurrentServerSubmission(state);
+    if (null !== submission && null !== newTest && isServerSubmission(submission)) {
+        const testResult = submission.result.tests.find(test => test.testId === newTest.id);
+        const context = quickAlgoLibraries.getContext(null, 'main');
+        if (undefined !== testResult && !testResult.noFeedback && context.getContextStateFromTestResult) {
+            const contextState = context.getContextStateFromTestResult(testResult);
+            if (contextState) {
+                return contextState;
+            }
+        }
+    }
+
+    return newTest.contextState;
 }
 
 function* getTaskAnswer () {
