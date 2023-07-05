@@ -767,7 +767,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                         errorHighlight: errorHighlightRange,
                     };
 
-                    yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, innerState);
+                    yield* call(quickAlgoLibraryResetAndReloadStateSaga, innerState);
                     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
                 }
             }

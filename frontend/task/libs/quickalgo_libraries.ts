@@ -20,7 +20,7 @@ window.quickAlgoContext = function (display: boolean, infos: any) {
     return new DefaultQuickalgoLibrary(display, infos);
 }
 
-export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = null) {
+export function* quickAlgoLibraryResetAndReloadStateSaga(innerState = null) {
     const state = yield* appSelect();
     const currentTest = selectCurrentTestData(state);
 
@@ -47,7 +47,7 @@ export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
 }
 
 export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: QuickalgoLibraryCall[]) {
-    yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+    yield* call(quickAlgoLibraryResetAndReloadStateSaga);
 
     log.getLogger('libraries').debug('replay previous quickalgo calls', quickAlgoCalls);
     if (!Codecast.runner) {
@@ -99,13 +99,12 @@ export default function(bundle: Bundle) {
             const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
                 context.needsRedrawDisplay = false;
-                const currentTest = selectCurrentTestData(state);
                 const contextState = getCurrentImmerState(context.getInnerState());
                 if ('main' === app.environment){
                     context.display = true;
                 }
                 // For libs like barcode where we need to call context.reset to recreate context
-                context.resetAndReloadState(currentTest, state, contextState);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
 
                 // @ts-ignore
                 if (context.redrawDisplay) {

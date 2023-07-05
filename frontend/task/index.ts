@@ -482,13 +482,12 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
         if (!payload.withoutContextState) {
             const contextState = taskTests[state.task.currentTestId].contextState;
             if (null !== contextState) {
-                const currentTest = selectCurrentTestData(state);
-                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);
-                context.resetAndReloadState(currentTest, state, contextState);
+                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', contextState);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
             } else {
                 const currentTest = selectCurrentTestData(state);
                 log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
-                context.resetAndReloadState(currentTest, state);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             }
 
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
@@ -740,7 +739,7 @@ export default function (bundle: Bundle) {
                 Codecast.runner.stop();
             }
             yield* call(clearSourceHighlightSaga);
-            yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             log.getLogger('task').debug('put task reset done to true');
             yield* put(taskResetDone(true));
         });
@@ -856,7 +855,7 @@ export default function (bundle: Bundle) {
                 yield* put(updateCurrentTestId({testId, withoutContextState: !!contextState}));
             }
             if (contextState) {
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, contextState);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
             }
         });
 
@@ -917,7 +916,7 @@ export default function (bundle: Bundle) {
 
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && (!quick || (instant.event && -1 !== ['compile.success'].indexOf(instant.event[1])) || hasChangedLevel || hasChangedTest)) {
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, taskData && taskData.state ? taskData.state : null);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, taskData && taskData.state ? taskData.state : null);
                 log.getLogger('replay').debug('DO RESET DISPLAY');
                 yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
             }

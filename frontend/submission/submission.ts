@@ -31,6 +31,7 @@ import {
 } from './submission_actions';
 import {App} from '../app_types';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {askConfirmation} from '../alert';
 
 export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
     return TaskSubmissionEvaluateOn.Server === object.type;
@@ -74,6 +75,8 @@ export default function (bundle: Bundle) {
             if (null !== submissionDisplayedError) {
                 yield* put(submissionChangeDisplayedError(null));
             }
+
+            let displayError = false;
             if (null !== submission && null !== newTest && isServerSubmission(submission)) {
                 const testResult = submission.result.tests.find(test => test.testId === newTest.id);
                 if (undefined !== testResult) {
@@ -87,18 +90,22 @@ export default function (bundle: Bundle) {
                     }
 
                     if (null !== error) {
+                        displayError = true;
                         yield* put(stepperDisplayError(error));
-                    } else {
-                        yield* put(stepperClearError());
                     }
                 }
+            }
+
+            const stepperError = yield* appSelect(state => state.stepper.error);
+            if (!displayError && stepperError) {
+                yield* put(stepperClearError());
             }
         });
 
         yield* takeEvery(submissionChangeCurrentSubmissionId, function* ({payload}) {
             const submissionId = yield* appSelect(state => state.submission.currentSubmissionId);
             if (null === submissionId) {
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga);
                 yield* put(stepperClearError());
             }
         });
@@ -117,13 +124,11 @@ export default function (bundle: Bundle) {
             const answer = yield* appSelect(selectAnswer);
             const level = yield* appSelect(state => state.task.currentLevel);
 
-            const {score, message, scoreToken} = yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer],{
+            yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer],{
                 level,
                 answer: stringify(answer),
                 scope: SubmissionExecutionScope.MyTests,
             });
-
-            console.log('exec result', {score, message});
         });
 
         yield* takeEvery(submissionCreateTest, function* () {
@@ -214,7 +219,6 @@ export default function (bundle: Bundle) {
 
             const allTaskTests = yield* appSelect(state => state.task.taskTests);
             const removedTestPosition = allTaskTests.indexOf(removedTest);
-            console.log('remove test', {removedTestPosition})
             yield* put(removeTaskTest(removedTestPosition));
         });
     });

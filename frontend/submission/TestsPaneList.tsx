@@ -33,7 +33,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
     subTasksOrdered.sort((a, b) => a.rank - b.rank);
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const canCreateOwnTests = context.supportsCustomTests();
+    const canCreateOwnTests = context.supportsCustomTests() && !props.submission;
 
     const dispatch = useDispatch();
     const showSubmissionError = (type: SubmissionErrorType) => {

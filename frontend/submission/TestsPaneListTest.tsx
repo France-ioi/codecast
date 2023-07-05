@@ -15,6 +15,8 @@ import {selectTaskTests} from './submission_selectors';
 import {TaskTest, TaskTestGroupType} from '../task/task_types';
 import {SubmissionTestErrorCode, TaskSubmission, TaskSubmissionServerTestResult} from './submission_types';
 import {submissionRemoveTest} from './submission_actions';
+import {call} from 'typed-redux-saga';
+import {askConfirmation} from '../alert';
 
 export interface SubmissionResultTestProps {
     index: number,
@@ -105,7 +107,16 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     }
 
     const deleteTest = (e) => {
-        dispatch(submissionRemoveTest(testIndex));
+        askConfirmation({
+            text: getMessage('SUBMISSION_REMOVE_TEST_CONFIRM'),
+            confirmText: getMessage('CONFIRM'),
+            cancelText: getMessage('CANCEL'),
+        }).then((confirmed) => {
+            if (confirmed) {
+                dispatch(submissionRemoveTest(testIndex));
+            }
+        });
+
         e.stopPropagation();
     };
 
@@ -122,7 +133,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
             </div>}
             <span className="submission-result-test-title">{test.name}</span>
             {testResult && <span className="submission-result-test-result">{message}</span>}
-            {TaskTestGroupType.User === test.groupType && <span className="submission-result-test-delete" onClick={deleteTest}>
+            {TaskTestGroupType.User === test.groupType && !props.submission && <span className="submission-result-test-delete" onClick={deleteTest}>
                 <FontAwesomeIcon icon={faTrash}/>
             </span>}
         </div>

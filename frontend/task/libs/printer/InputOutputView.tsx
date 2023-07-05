@@ -12,6 +12,7 @@ export function InputOutputView() {
     const taskState: PrinterLibState = useAppSelector(state => state.task.state);
     const currentTestData = useAppSelector(state => selectCurrentTest(state)?.data);
     const libOutput = PrinterLib.getOutputTextFromEvents(taskState ? taskState.ioEvents : []);
+    const libExpectedOutput = taskState ? taskState.expectedOutput : '';
 
     return (
         <div>
@@ -62,7 +63,7 @@ export function InputOutputView() {
                 <Card.Body>
                     <Editor
                         name="test_output"
-                        content={currentTestData ? currentTestData.output : ''}
+                        content={libExpectedOutput ? libExpectedOutput : ''}
                         readOnly
                         mode='text'
                         width='100%'

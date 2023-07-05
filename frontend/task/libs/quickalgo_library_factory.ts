@@ -22,7 +22,7 @@ import {taskApi} from '../platform/platform';
 import {ActionTypes as IOActionTypes} from '../../stepper/io/actionTypes';
 import {IoMode} from '../../stepper/io';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
-import {QuickAlgoLibrariesActionType} from './quickalgo_libraries';
+import {QuickAlgoLibrariesActionType, quickAlgoLibraryResetAndReloadStateSaga} from './quickalgo_libraries';
 
 export function* createQuickalgoLibrary() {
     let state = yield* appSelect();
@@ -157,8 +157,7 @@ export function* createQuickalgoLibrary() {
     }
 
     yield* put(taskSetAvailablePlatforms(availablePlatforms));
-
-    context.resetAndReloadState(testData, state);
+    yield* call(quickAlgoLibraryResetAndReloadStateSaga);
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
 
     return true;
