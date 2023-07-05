@@ -30,6 +30,7 @@ module.exports = {
     START_RECORDING: "Start recording",
     STOP_RECORDING: "Stop recording",
     DELETE_RECORDING: "Delete",
+    RECORDING_LIBRARY_NOT_WORKING: "Warning, this library is not available with Codecast recordings.",
     ENCODING_IN_PROGRESS: "Encoding in progress, please wait.",
     ENCODING_COMPLETE: "Encoding complete, ready to upload.",
     UPLOADING_PREPARING: "Preparing recording...",
