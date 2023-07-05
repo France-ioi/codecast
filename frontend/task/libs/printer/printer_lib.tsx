@@ -15,10 +15,7 @@ import {TestResultDiffLog} from '../../../submission/submission';
 import {getMessage} from '../../../lang';
 import {LibraryTestResult} from '../library_test_result';
 import {ActionTypes} from '../../../buffers/actionTypes';
-import {
-    SubmissionTestErrorCode,
-    TaskSubmissionServerTestResult,
-} from '../../../submission/submission_types';
+import {SubmissionTestErrorCode, TaskSubmissionServerTestResult,} from '../../../submission/submission_types';
 import {submissionUpdateCurrentTest} from '../../../submission/submission_actions';
 import {CodecastPlatform} from '../../../stepper/codecast_platform';
 import {App} from '../../../app_types';
@@ -614,9 +611,18 @@ export class PrinterLib extends QuickAlgoLibrary {
                         excerptCol: 1,
                     };
 
-                    throw(new LibraryTestResult(getMessage('IOPANE_ERROR').format({line: iLine + 1}), 'task-submission-test-result-diff', {
-                        log,
-                    }));
+                    this.innerState.errorHighlight = {
+                        start: {
+                            row: log.diffRow - 1,
+                            column: log.diffCol - 1,
+                        },
+                        end: {
+                            row: log.diffRow - 1,
+                            column: log.diffCol,
+                        },
+                    };
+
+                    throw (new LibraryTestResult(getMessage('IOPANE_ERROR').format({line: iLine + 1})));
                 }
             }
 

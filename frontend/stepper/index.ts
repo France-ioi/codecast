@@ -65,7 +65,7 @@ import {TermBuffer} from "./io/terminal";
 import {delay} from "../player/sagas";
 import {Bundle} from "../linker";
 import {QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
-import {selectCurrentTestData, taskResetDone, updateCurrentTestId} from "../task/task_slice";
+import {selectCurrentTestData, taskResetDone, taskUpdateState, updateCurrentTestId} from "../task/task_slice";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
@@ -1027,6 +1027,10 @@ function* stepperStepSaga(app: App, action) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
                     } catch (executionResult: unknown) {
+                        // Update test context state with latest data from checkEndCondition
+                        const contextState = getCurrentImmerState(taskContext.getInnerState());
+                        yield* put(taskUpdateState(contextState));
+
                         endConditionReached = true;
                         yield* put(stepperExecutionEndConditionReached(executionResult));
                     }
