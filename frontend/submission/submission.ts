@@ -7,6 +7,7 @@ import {addNewTaskTest, removeTaskTest, updateCurrentTestId, updateTaskTest} fro
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
 import {quickAlgoLibraryResetAndReloadStateSaga} from '../task/libs/quickalgo_libraries';
 import {
+    submissionAddNewTaskSubmission,
     submissionChangeCurrentSubmissionId,
     submissionChangeDisplayedError,
     SubmissionErrorType,
@@ -207,7 +208,10 @@ export default function (bundle: Bundle) {
                     ...taskTests[currentTestId].data,
                     ...data,
                 };
-                yield* put(updateTaskTest({testIndex: currentTestId, data: newData}));
+                const allTaskTests = yield* appSelect(state => state.task.taskTests);
+                const updatedTestPosition = allTaskTests.indexOf(taskTests[currentTestId]);
+
+                yield* put(updateTaskTest({testIndex: updatedTestPosition, data: newData}));
             }
         });
 
@@ -244,7 +248,10 @@ export default function (bundle: Bundle) {
 
         addAutoRecordingBehaviour(app, {
             sliceName: submissionSlice.name,
-            actions: [],
+            actions: [
+                submissionCreateTest,
+                submissionRemoveTest,
+            ],
         });
     });
 }
