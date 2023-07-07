@@ -205,16 +205,23 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(submissionRemoveTest, function* ({payload: {testIndex}}) {
+            const taskTests = yield* appSelect(selectTaskTests);
             let currentTestId = yield* appSelect(state => state.task.currentTestId);
             if (currentTestId === testIndex) {
-                currentTestId = null;
+                currentTestId--;
             } else if (currentTestId > testIndex) {
                 currentTestId--;
+            }
+            if (currentTestId < 0) {
+                if (taskTests.length) {
+                    currentTestId = 0;
+                } else {
+                    currentTestId = null;
+                }
             }
 
             yield* put(updateCurrentTestId({testId: currentTestId}));
 
-            const taskTests = yield* appSelect(selectTaskTests);
             const removedTest = taskTests[testIndex];
 
             const allTaskTests = yield* appSelect(state => state.task.taskTests);

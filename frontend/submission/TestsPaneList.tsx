@@ -9,7 +9,11 @@ import {
 } from './submission';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {useDispatch} from 'react-redux';
-import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_slice';
+import {
+    submissionChangeCurrentSubmissionId,
+    submissionChangeDisplayedError,
+    SubmissionErrorType
+} from './submission_slice';
 import {platformsList} from '../stepper/platforms';
 import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
@@ -31,7 +35,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
     subTasksOrdered.sort((a, b) => a.rank - b.rank);
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const canCreateOwnTests = context.supportsCustomTests() && !props.submission;
+    const canCreateOwnTests = context.supportsCustomTests();
 
     const dispatch = useDispatch();
     const showSubmissionError = (type: SubmissionErrorType) => {
@@ -39,6 +43,9 @@ export function TestsPaneList(props: SubmissionResultProps) {
     };
 
     const createNewTest = () => {
+        if (props.submission) {
+            dispatch(submissionChangeCurrentSubmissionId(null));
+        }
         dispatch(submissionCreateTest());
     };
 
