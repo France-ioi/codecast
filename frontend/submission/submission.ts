@@ -77,7 +77,7 @@ export default function (bundle: Bundle) {
             }
 
             let displayError = false;
-            if (null !== submission && null !== newTest && isServerSubmission(submission)) {
+            if (null !== submission && null !== newTest && isServerSubmission(submission) && submission.evaluated) {
                 const testResult = submission.result.tests.find(test => test.testId === newTest.id);
                 if (undefined !== testResult) {
                     let error = null;
@@ -102,11 +102,18 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(submissionChangeCurrentSubmissionId, function* ({payload}) {
+        yield* takeEvery(submissionChangeCurrentSubmissionId, function* () {
             const submissionId = yield* appSelect(state => state.submission.currentSubmissionId);
             if (null === submissionId) {
                 yield* call(quickAlgoLibraryResetAndReloadStateSaga);
                 yield* put(stepperClearError());
+            }
+
+
+            const taskTests = yield* appSelect(selectTaskTests);
+            const currentTestId = yield* appSelect(state => state.task.currentTestId);
+            if (currentTestId > taskTests.length - 1) {
+                yield* put(updateCurrentTestId({testId: taskTests.length ? 0 : null, record: false}));
             }
         });
 

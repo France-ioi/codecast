@@ -502,7 +502,7 @@ function* getTestContextState() {
     const newTest = taskTests[state.task.currentTestId];
 
     const submission = selectCurrentServerSubmission(state);
-    if (null !== submission && null !== newTest && isServerSubmission(submission)) {
+    if (null !== submission && null !== newTest && isServerSubmission(submission) && submission.evaluated) {
         const testResult = submission.result.tests.find(test => test.testId === newTest.id);
         const context = quickAlgoLibraries.getContext(null, 'main');
         if (undefined !== testResult && !testResult.noFeedback && context.getContextStateFromTestResult) {
