@@ -1,7 +1,6 @@
 import {AppStoreReplay} from "../../store";
 import {Bundle} from "../../linker";
 import {call, debounce, put, takeEvery} from "typed-redux-saga";
-import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {BlocksUsage} from "../task_types";
 import {taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
@@ -14,6 +13,7 @@ import {getNotionsBagFromIncludeBlocks} from './notions';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {Block, BlockType} from './block_types';
+import {bufferEdit, bufferEditPlain, bufferInit, bufferReset} from '../../buffers/buffers_slice';
 
 export interface DraggableBlockItem {
     block: Block,
@@ -236,14 +236,12 @@ function* checkSourceSaga() {
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
-        yield* debounce(500, BufferActionTypes.BufferEdit, checkSourceSaga);
-        yield* debounce(500, BufferActionTypes.BufferEditPlain, checkSourceSaga);
-        yield* debounce(500, BufferActionTypes.BufferReset, checkSourceSaga);
+        yield* debounce(500, bufferEdit, checkSourceSaga);
+        yield* debounce(500, bufferEditPlain, checkSourceSaga);
+        yield* debounce(500, bufferReset, checkSourceSaga);
 
-        yield* takeEvery(BufferActionTypes.BufferInit, function* (action) {
-            // @ts-ignore
-            const {buffer} = action;
-            if ('source' === buffer) {
+        yield* takeEvery(bufferInit, function* ({payload}) {
+            if ('source' === payload.buffer) {
                 yield* call(checkSourceSaga);
             }
         });

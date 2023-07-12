@@ -1,18 +1,23 @@
 import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
-import {Document, documentFromString, DocumentModel, ObjectDocument} from "./document";
+import {Document, TextBufferState} from './buffer_types';
 import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
 import log from 'loglevel';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {BlockType} from '../task/blocks/block_types';
+import {bufferClearBlocksToInsert, bufferClearDeltasToApply} from './buffers_slice';
+import {useDispatch} from 'react-redux';
+import {documentToString} from './document';
 
 const Range = window.ace.acequire('ace/range').Range;
 
 export interface EditorProps {
     name?: string,
+    state?: TextBufferState,
     readOnly?: boolean,
     shield?: boolean,
     theme?: string,
@@ -71,12 +76,16 @@ export function Editor(props: EditorProps) {
     const selection = useRef(null);
     const marker = useRef();
 
+    const dispatch = useDispatch();
+
     const context = quickAlgoLibraries.getContext(null, 'main');
     const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector({state, context}) : null);
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const contextStrings = useAppSelector(state => state.task.contextStrings);
 
     const refEditor = useRef();
+
+    console.log('re-render editor', props.state);
 
     const scrollOnLastLines = () => {
         const ace = editor.current;
@@ -115,6 +124,7 @@ export function Editor(props: EditorProps) {
     };
 
     const onTextChanged = (edit) => {
+        console.log('do edit', edit);
         if (mute.current || !props.onEdit) {
             return;
         }
@@ -154,9 +164,9 @@ export function Editor(props: EditorProps) {
 
     const reset = (value: Document, newSelection = null, firstVisibleRow = null) => {
         wrapModelToEditor(() => {
-            if (undefined !== props.content) {
-                value = documentFromString(String(null !== props.content ? props.content : ''));
-            }
+            // if (undefined !== props.content) {
+            //     value = documentFromString(String(null !== props.content ? props.content : ''));
+            // }
 
             editor.current.getSession().setValue(null === value ? '' : value.toString());
             editor.current.resize(true);
@@ -320,9 +330,6 @@ export function Editor(props: EditorProps) {
                 resize,
                 goToEnd,
                 insert,
-                getEmptyModel() {
-                    return new DocumentModel();
-                },
             };
             onInit(api);
         }
@@ -335,9 +342,9 @@ export function Editor(props: EditorProps) {
             session.on("change", onTextChanged);
         }
 
-        if (undefined !== props.content) {
-            reset(documentFromString(String(null !== props.content ? props.content : '')));
-        }
+        // if (undefined !== props.content) {
+        //     reset(documentFromString(String(null !== props.content ? props.content : '')));
+        // }
 
         // @ts-ignore
         editor.current.renderer.on("afterRender", onAfterRender);
@@ -452,6 +459,16 @@ export function Editor(props: EditorProps) {
     }, [availableBlocks, contextStrings]);
 
     useEffect(() => {
+        const deltasToApply = props.state?.actions?.deltasToApply;
+        if (!deltasToApply || !deltasToApply.length) {
+            return;
+        }
+
+        dispatch(bufferClearDeltasToApply({buffer: props.name}));
+        applyDeltas(JSON.parse(JSON.stringify(deltasToApply)));
+    }, [props.state?.actions?.blocksToInsert]);
+
+    useEffect(() => {
         if ('source' === props.name) {
             // Don't use content for source buffer (for now)
             return;
@@ -463,19 +480,85 @@ export function Editor(props: EditorProps) {
         }
 
         wrapModelToEditor(() => {
-            if (props.onEditPlain) {
-                props.onEditPlain(documentFromString(value));
-            }
+            // if (props.onEditPlain) {
+            //     props.onEditPlain(documentFromString(value));
+            // }
             editor.current.getSession().setValue(value);
             editor.current.resize(true);
         });
     }, [props.content]);
 
     useEffect(() => {
-        if (undefined !== props.errorHighlight) {
-            highlight(props.errorHighlight, 'error-highlight');
+        const blocksToInsert = props.state?.actions?.blocksToInsert;
+        if (!blocksToInsert || !blocksToInsert.length) {
+            return;
         }
-    }, [props.errorHighlight]);
+
+        dispatch(bufferClearBlocksToInsert({buffer: props.name}));
+        for (let {block, pos} of blocksToInsert) {
+            let insertNewLineBefore = false;
+            let insertNewLineAfter = false;
+            if ((BlockType.Function === block.type && block.category !== 'sensors') || BlockType.Directive === block.type) {
+                insertNewLineBefore = insertNewLineAfter = true;
+            }
+            if (BlockType.Token === block.type && block.snippet && -1 !== block.snippet.indexOf('${')) {
+                insertNewLineBefore = true;
+            }
+
+            if (block.snippet) {
+                insert(block.snippet, pos ? pos : null, true, insertNewLineBefore, insertNewLineAfter);
+            } else {
+                insert(block.code, pos ? pos : null, false, insertNewLineBefore, insertNewLineAfter);
+            }
+        }
+    }, [props.state?.actions?.blocksToInsert]);
+
+    useEffect(() => {
+        const newDocument = props.state?.document;
+        const value = documentToString(newDocument);
+        if (value === editor.current.getSession().getValue()) {
+            return;
+        }
+
+        console.log('[editor] document update', {value, oldValue: editor.current.getSession().getValue()});
+
+        wrapModelToEditor(() => {
+            editor.current.getSession().setValue(value);
+            editor.current.resize(true);
+        });
+    }, [props.state?.document]);
+
+    useEffect(() => {
+        const selection = props.state?.selection;
+        console.log('[editor] selection changed', selection);
+        doSetSelection(selection);
+    }, [props.state?.selection]);
+
+    useEffect(() => {
+        highlight(props.state?.highlight);
+    }, [props.state?.highlight]);
+
+    useEffect(() => {
+        highlight(props.state?.errorHighlight ?? props.errorHighlight, 'error-highlight');
+    }, [props.state?.errorHighlight ?? props.errorHighlight]);
+
+    useEffect(() => {
+        if (0 < props.state?.actions?.goToEnd) {
+            goToEnd();
+            return;
+        }
+    }, [props.state?.actions?.goToEnd]);
+
+    useEffect(() => {
+        if (0 < props.state?.actions?.resize) {
+            resize();
+            return;
+        }
+    }, [props.state?.actions?.resize]);
+
+    useEffect(() => {
+        scrollToLine(props.state?.firstVisibleRow);
+    }, [props.state?.firstVisibleRow]);
 
     const {width, height, shield} = props;
 

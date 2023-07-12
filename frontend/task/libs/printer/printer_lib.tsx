@@ -4,7 +4,14 @@ import {QuickAlgoLibrary} from "../quickalgo_library";
 import {apply, put, race, take, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../../../store";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
-import {taskInputEntered, taskInputNeeded,} from "../../task_slice";
+import {
+    selectCurrentTestData,
+    taskInputEntered,
+    taskInputNeeded,
+    updateCurrentTestId,
+    updateTaskTest,
+    updateTaskTests,
+} from "../../task_slice";
 import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
 import {createDraft} from "immer";
@@ -14,11 +21,12 @@ import {appSelect} from '../../../hooks';
 import {TestResultDiffLog} from '../../../submission/submission';
 import {getMessage} from '../../../lang';
 import {LibraryTestResult} from '../library_test_result';
-import {ActionTypes} from '../../../buffers/actionTypes';
 import {SubmissionTestErrorCode, TaskSubmissionServerTestResult,} from '../../../submission/submission_types';
 import {submissionUpdateCurrentTest} from '../../../submission/submission_actions';
 import {CodecastPlatform} from '../../../stepper/codecast_platform';
 import {App} from '../../../app_types';
+import {documentToString, getBufferHandler, TextBufferHandler} from '../../../buffers/document';
+import {bufferEdit, bufferResetDocument} from '../../../buffers/buffers_slice';
 
 export function getTerminalText(events) {
     return events
@@ -758,20 +766,39 @@ export class PrinterLib extends QuickAlgoLibrary {
         return null;
     }
 
+    *updateBufferFromTests() {
+        const currentTest = yield* appSelect(selectCurrentTestData);
+        const buffers = yield* appSelect(state => state.buffers);
+        const inputBufferContent = buffers[inputBufferLibTest] ? documentToString(buffers[inputBufferLibTest].document) : '';
+        if (currentTest?.input !== inputBufferContent) {
+            yield* put(bufferResetDocument({buffer: inputBufferLibTest, document: TextBufferHandler.documentFromString(currentTest?.input), goToEnd: true}));
+        }
+        const outputBufferContent = buffers[outputBufferLibTest] ? documentToString(buffers[outputBufferLibTest].document) : '';
+        if (currentTest?.output !== outputBufferContent) {
+            yield* put(bufferResetDocument({buffer: outputBufferLibTest, document: TextBufferHandler.documentFromString(currentTest?.output), goToEnd: true}));
+        }
+    }
+
     *getSaga(app: App) {
         const environment = yield* appSelect(state => state.environment);
+        const self = this;
         log.getLogger('printer_lib').debug('START PRINTER LIB SAGA', environment);
 
-        yield* takeEvery(ActionTypes.BufferEdit, function* (action) {
-            // @ts-ignore
-            const {buffer} = action;
+        yield* apply(this, this.updateBufferFromTests, []);
+
+        yield* takeEvery(bufferEdit, function* ({payload}) {
+            const {buffer} = payload;
             if (inputBufferLibTest === buffer) {
-                const inputValue = yield* appSelect(state => state.buffers[inputBufferLibTest].model.document.toString());
+                const inputValue = yield* appSelect(state => getBufferHandler(state.buffers[inputBufferLibTest]).documentToString());
                 yield* put(submissionUpdateCurrentTest({input: inputValue}));
             } else if (outputBufferLibTest === buffer) {
-                const outputValue = yield* appSelect(state => state.buffers[outputBufferLibTest].model.document.toString());
+                const outputValue = yield* appSelect(state => getBufferHandler(state.buffers[outputBufferLibTest]).documentToString());
                 yield* put(submissionUpdateCurrentTest({output: outputValue}));
             }
+        });
+
+        yield* takeEvery([updateCurrentTestId, updateTaskTest, updateTaskTests], function* () {
+            yield* apply(self, self.updateBufferFromTests, []);
         });
 
         if (!recordApiInit && 'main' === app.environment) {

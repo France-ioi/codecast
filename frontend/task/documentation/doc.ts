@@ -5,7 +5,7 @@ import {
     documentationConceptSelected,
     documentationConceptsLoaded,
     DocumentationLanguage,
-    documentationLanguageChanged, documentationSlice
+    documentationLanguageChanged,
 } from "./documentation_slice";
 import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
@@ -17,13 +17,13 @@ import {
 } from '../task_slice';
 import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
 import {createAction} from '@reduxjs/toolkit';
-import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {addAutoRecordingBehaviour} from '../../recorder/record';
-import {documentFromString} from '../../buffers/document';
+import {TextBufferHandler} from '../../buffers/document';
 import {QuickalgoTaskIncludeBlocks, Task} from '../task_types';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App} from '../../app_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {bufferEditPlain} from '../../buffers/buffers_slice';
 
 let openerChannel;
 
@@ -264,12 +264,9 @@ export default function (bundle: Bundle) {
     bundle.addSaga(function* (app: App) {
         yield* takeEvery(documentationUseCodeExample, function* (action) {
             const {code, language} = action.payload;
+            const document = TextBufferHandler.documentFromString(code);
+            yield* put(bufferEditPlain({buffer: 'source', document}));
 
-            yield* put({
-                type: BufferActionTypes.BufferEditPlain,
-                buffer: 'source',
-                document: documentFromString(code),
-            });
             const newPlatform = 'c' === language ? CodecastPlatform.Unix : language;
             const currentPlatform = yield* appSelect(state => state.options.platform);
             if (newPlatform !== currentPlatform) {

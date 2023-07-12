@@ -97,14 +97,13 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
 export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string, platform: string, userTests: TaskTest[]) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
-    const answerDecoded = JSON.parse(answer);
 
     const body = {
         token: taskToken,
         answerToken: answerToken,
         answer: {
             language: platform,
-            sourceCode: answerDecoded,
+            sourceCode: answer,
         },
         userTests: userTests.map(test => ({
             name: test.name,

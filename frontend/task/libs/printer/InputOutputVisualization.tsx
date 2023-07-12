@@ -21,7 +21,6 @@ export function InputOutputVisualization() {
     const currentTestData = currentTest?.data;
     const currentTestEditable = !currentTask || (currentTest && TaskTestGroupType.User === currentTest.groupType);
 
-
     const currentTestDataRef = useRef<any>();
     currentTestDataRef.current = currentTestData;
 
@@ -46,7 +45,6 @@ export function InputOutputVisualization() {
                                 buffer={inputBufferLibTest}
                                 mode='text'
                                 readOnly={!currentTestEditable}
-                                content={currentTestData ? currentTestData.input : ''}
                                 requiredWidth='100%'
                                 requiredHeight='150px'
                                 editorProps={!currentTestEditable ? {
@@ -69,7 +67,6 @@ export function InputOutputVisualization() {
                                     buffer={outputBufferLibTest}
                                     mode='text'
                                     readOnly={!currentTestEditable}
-                                    content={currentTestData ? currentTestData.output : ''}
                                     requiredWidth='100%'
                                     requiredHeight='150px'
                                     editorProps={!currentTestEditable ? {

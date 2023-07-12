@@ -2,9 +2,9 @@ import React, {useEffect} from "react";
 import {useDrag} from "react-dnd";
 import {getEmptyImage} from "react-dnd-html5-backend";
 import {useDispatch} from "react-redux";
-import {ActionTypes as BufferActionTypes} from '../../buffers/actionTypes';
 import {toHtml} from "../../utils/sanitize";
-import {Block, BlockType} from './block_types';
+import {Block} from './block_types';
+import {bufferInsertBlock} from '../../buffers/buffers_slice';
 
 export interface AvailableBlockProps {
     block: Block,
@@ -35,8 +35,8 @@ export function AvailableBlock(props: AvailableBlockProps) {
     const dispatch = useDispatch();
 
     const insertBlock = () => {
-        dispatch({type: BufferActionTypes.BufferInsertBlock, payload: {buffer: 'source', block}});
-    }
+        dispatch(bufferInsertBlock({buffer: 'source', block}));
+    };
 
     return (
         <div className="task-available-block" ref={drag} onClick={insertBlock}>

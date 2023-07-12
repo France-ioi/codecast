@@ -2,7 +2,6 @@ import {initialStateCompile} from "../stepper/compile";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
-import {ActionTypes as BufferActionTypes} from '../buffers/actionTypes';
 import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
 import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
@@ -11,11 +10,15 @@ import {Languages} from "../lang";
 import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
-import {hasBlockPlatform, platformsList} from '../stepper/platforms';
+import {platformsList} from '../stepper/platforms';
 import {IoMode} from '../stepper/io';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {taskLoad} from '../task/task_actions';
-import {BlockDocumentModel, DocumentModel} from '../buffers/document';
+import {
+    createEmptyBufferState,
+    getBufferTypeFromPlatform
+} from '../buffers/document';
+import {bufferReset} from '../buffers/buffers_slice';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -168,12 +171,10 @@ export default function(bundle: Bundle) {
                 yield* put({type: StepperActionTypes.StepperExit});
 
                 // Reset source if we change from a block platform to a non-block platform
-                const currentModel = yield* appSelect(state => state.buffers['source'].model);
-                if (
-                    (currentModel instanceof BlockDocumentModel && !hasBlockPlatform(newPlatform))
-                    || (currentModel instanceof DocumentModel && hasBlockPlatform(newPlatform))
-                ) {
-                    yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
+                const currentModel = yield* appSelect(state => state.buffers['source']);
+                if (currentModel.type !== getBufferTypeFromPlatform(newPlatform)) {
+                    const newModel = createEmptyBufferState(getBufferTypeFromPlatform(newPlatform));
+                    yield* put(bufferReset({buffer: 'source', state: newModel}));
                 }
 
                 const levels = yield* appSelect(state => state.platform.levels);

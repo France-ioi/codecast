@@ -8,6 +8,8 @@ import {isServerTask, Task} from './task_types';
 import {hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
+import {BlockBufferHandler, documentToString, TextBufferHandler} from '../buffers/document';
+import {BlockDocument, BufferType, Document} from '../buffers/buffer_types';
 
 export enum TaskPlatformMode {
     Source = 'source',
@@ -87,7 +89,7 @@ export function getAvailableModules(context) {
     }
 }
 
-export function checkCompilingCode(code, platform: CodecastPlatform, state: AppStore, disabledValidations: string[] = []) {
+export function checkCompilingCode(code: Document|null, platform: CodecastPlatform, state: AppStore, disabledValidations: string[] = []) {
     if (-1 === disabledValidations.indexOf('empty') && !code) {
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
@@ -97,32 +99,32 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context && state.task.currentTask) {
-        if (CodecastPlatform.Python === platform) {
-            checkPythonCode(code, context, state, disabledValidations);
+        if (CodecastPlatform.Python === platform && BufferType.Text === code.type) {
+            checkPythonCode(documentToString(code), context, state, disabledValidations);
         }
         if (hasBlockPlatform(platform)) {
-            checkBlocklyCode(code, context, state, disabledValidations);
+            checkBlocklyCode(code as BlockDocument, context, state, disabledValidations);
         }
     }
 }
 
-export function getBlocksUsage(answer, platform: CodecastPlatform) {
+export function getBlocksUsage(answer: Document|null, platform: CodecastPlatform) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     if (!context) {
         return null;
     }
 
     if (CodecastPlatform.Python === platform) {
-        return getPythonBlocksUsage(answer, context);
+        return getPythonBlocksUsage(documentToString(answer), context);
     }
     if (hasBlockPlatform(platform)) {
-        return getBlocklyBlocksUsage(answer, context);
+        return getBlocklyBlocksUsage(answer as BlockDocument, context);
     }
 
     return null;
 }
 
-export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask: Task) {
+export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask: Task): Document|null {
     const context = quickAlgoLibraries.getContext(null, environment);
     if (CodecastPlatform.Python === platform) {
         if (context && !isServerTask(currentTask)) {
@@ -131,17 +133,15 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
             for (let i = 0; i < availableModules.length; i++) {
                 content += 'from ' + availableModules[i] + ' import *\n';
             }
-            return content;
+            return TextBufferHandler.documentFromString(content);
         }
     } else if (hasBlockPlatform(platform)) {
         if (context) {
-            return {blockly: context.blocklyHelper.getDefaultContent()};
-        } else {
-            return null;
+            return BlockBufferHandler.documentFromObject({blockly: context.blocklyHelper.getDefaultContent()});
         }
     }
 
-    return '';
+    return null;
 }
 
 export function getCurrentImmerState(object) {

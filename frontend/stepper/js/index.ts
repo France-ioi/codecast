@@ -15,6 +15,7 @@ import {hasBlockPlatform} from '../platforms';
 import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
+import {BlockDocument} from '../../buffers/buffer_types';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
@@ -179,14 +180,14 @@ export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     };
 };
 
-export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
+export const checkBlocklyCode = function (answer: BlockDocument, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
     log.getLogger('blockly_runner').debug('check blockly code', answer, context.strings.code);
 
-    if (!answer || !answer.blockly) {
+    if (!answer || !answer.content?.blockly) {
         return;
     }
 
-    const blocks = getBlocksFromXml(answer.blockly);
+    const blocks = getBlocksFromXml(answer.content.blockly);
 
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
     const totalCount = blocklyCount(blocks, context);
@@ -258,8 +259,8 @@ const getBlockCount = function (block, context: QuickAlgoLibrary) {
     return 1;
 }
 
-export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary) {
-    if (!answer || !answer.blockly) {
+export const getBlocklyBlocksUsage = function (answer: BlockDocument, context: QuickAlgoLibrary) {
+    if (!answer || !answer.content?.blockly) {
         return {
             blocksCurrent: 0,
             limitations: [],
@@ -268,7 +269,7 @@ export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary
 
     log.getLogger('blockly_runner').debug('blocks usage', answer);
 
-    const blocks = getBlocksFromXml(answer.blockly);
+    const blocks = getBlocksFromXml(answer.content.blockly);
     const blocksUsed = blocklyCount(blocks, context);
     const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
 
@@ -341,7 +342,7 @@ export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {
         stepperApi.onInit(async function(stepperState: StepperState, state: AppStore, environment: string) {
             const {platform} = state.options;
-            const answer = selectAnswer(state);
+            const answer = selectAnswer(state) as BlockDocument;
             const context = quickAlgoLibraries.getContext(null, environment);
             const language = state.options.language.split('-')[0];
 
@@ -360,7 +361,7 @@ export default function(bundle: Bundle) {
                 const blocklyHelper = context.blocklyHelper;
                 log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);
                 log.getLogger('blockly_runner').debug('display', context.display);
-                const blocklyXmlCode = answer.blockly;
+                const blocklyXmlCode = answer.content.blockly;
                 if (!blocklyHelper.workspace) {
                     blocklyHelper.load(language, context.display, 1, {});
                 }

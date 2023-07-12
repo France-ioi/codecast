@@ -33,6 +33,7 @@ import {appSelect} from '../hooks';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {CodecastPlatform} from './codecast_platform';
 import {App, Codecast} from '../app_types';
+import {documentToString, TextBufferHandler} from '../buffers/document';
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -110,7 +111,7 @@ export default function(bundle: Bundle) {
                 });
             } else if (CodecastPlatform.Python === platform) {
                 try {
-                    yield* call(compilePythonCodeSaga, source);
+                    yield* call(compilePythonCodeSaga, documentToString(source));
                 } catch (ex) {
                     yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
                 }

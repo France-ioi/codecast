@@ -5,7 +5,6 @@ import {recordingEnabledChange} from "./task_slice";
 import {SettingsDialog} from "../common/SettingsDialog";
 import {EditRecordingDialog} from "../editor/EditRecordingDialog";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {Screen} from "../common/screens";
 import {getMessage} from "../lang";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
@@ -20,6 +19,7 @@ import {displayModal} from '../common/prompt_modal';
 import {ModalType} from '../common/modal_slice';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
+import {bufferDownload, bufferReload} from '../buffers/buffer_actions';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -82,11 +82,11 @@ export function MenuTask() {
     };
 
     const downloadAnswer = () => {
-        dispatch({type: BufferActionTypes.BufferDownload});
+        dispatch(bufferDownload());
     };
 
     const reloadAnswer = () => {
-        dispatch({type: BufferActionTypes.BufferReload});
+        dispatch(bufferReload());
     };
 
     const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();

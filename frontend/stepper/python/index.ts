@@ -17,6 +17,7 @@ import {LibraryTestResult} from '../../task/libs/library_test_result';
 import {CodecastPlatform} from '../codecast_platform';
 import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {documentToString} from '../../buffers/document';
 
 export function* compilePythonCodeSaga(source: string) {
     log.getLogger('python_runner').debug('compile python code', source);
@@ -91,7 +92,7 @@ export default function(bundle: Bundle) {
 
                 // Currently in replay we don't compile Python code.
                 // TODO: compile Python code so we don't need this
-                const source = selectAnswer(state);
+                const source = documentToString(selectAnswer(state));
                 const pythonSource = source + "\npass";
 
                 const blocksData = getContextBlocksDataSelector({state, context});

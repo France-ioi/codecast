@@ -46,6 +46,7 @@ import {LayoutView} from '../layout/layout_types';
 import {taskLoad} from '../task_actions';
 import {levelScoringData} from '../../submission/scoring';
 import {Codecast} from '../../app_types';
+import {Document} from '../../buffers/buffer_types';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -398,8 +399,10 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             //     answerToken = window.task_token.getAnswerToken(stringify(answer));
             // }
 
+            const answerObject = JSON.parse(answer);
+
             // Score is between 0 and 1
-            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer});
+            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer: answerObject});
             const scoreWithPlatformParameters = minScore + (maxScore - minScore) * score;
 
             yield* put(platformAnswerGraded({score, message}));
@@ -441,7 +444,7 @@ function getTopLevel(levels: TaskLevelName[]) {
 
 export interface PlatformTaskGradingParameters {
     level?: TaskLevelName,
-    answer?: any,
+    answer?: Document,
     scope?: SubmissionExecutionScope,
 }
 

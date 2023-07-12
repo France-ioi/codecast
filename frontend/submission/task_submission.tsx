@@ -40,6 +40,8 @@ import {
     TaskSubmissionServerResult
 } from './submission_types';
 import {Codecast} from '../app_types';
+import {Document} from '../buffers/buffer_types';
+import {documentToString} from '../buffers/document';
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
@@ -154,7 +156,7 @@ class TaskSubmissionExecutor {
         }
     }
 
-    *makeBackgroundExecution(level, testId, answer) {
+    *makeBackgroundExecution(level, testId, answer: Document) {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
         const tests = state.task.taskTests;
@@ -192,8 +194,9 @@ class TaskSubmissionExecutor {
         const state = yield* appSelect();
 
         const randomSeed = state.platform.taskRandomSeed;
+        const answerContent = documentToString(answer);
         const newTaskToken = getTaskTokenForLevel(level, randomSeed);
-        const answerToken = getAnswerTokenForLevel(stringify(answer), level, randomSeed);
+        const answerToken = getAnswerTokenForLevel(stringify(answerContent), level, randomSeed);
         const platform = state.options.platform;
         const userTests = SubmissionExecutionScope.MyTests === scope ? selectTaskTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
 
@@ -216,7 +219,7 @@ class TaskSubmissionExecutor {
         yield* put(submissionChangeCurrentSubmissionId(submissionIndex));
 
         try {
-            const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken, platform, userTests);
+            const submissionData = yield* makeServerSubmission(answerContent, newTaskToken, answerToken, platform, userTests);
             if (!submissionData.success) {
                 yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 

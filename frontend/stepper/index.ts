@@ -53,10 +53,9 @@ import {
     ActionTypes,
     stepperDisplayError, stepperExecutionEnd, stepperExecutionEndConditionReached,
     stepperExecutionError,
-    stepperExecutionSuccess, stepperRunBackground, stepperRunBackgroundFinished
+    stepperRunBackground, stepperRunBackgroundFinished
 } from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getCurrentStepperState, getStepper, getStepperControlsSelector, isStepperInterrupting} from "./selectors";
@@ -90,6 +89,7 @@ import {mainQuickAlgoLogger} from '../task/libs/quick_algo_logger';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode} from '../task/layout/layout_types';
+import {bufferHighlight} from '../buffers/buffers_slice';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -164,7 +164,7 @@ const initialStateStepperState = {
     },
     isFinished: false, // Only used for python
     contextState: {} as any,
-    currentBlockId: null, // Only used for Blockly
+    currentBlockId: null as string|null, // Only used for Blockly
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -1125,30 +1125,15 @@ export function* updateSourceHighlightSaga(state: AppStoreReplay) {
     }
 
     if (hasBlockPlatform(state.options.platform)) {
-        yield* put({
-            type: BufferActionTypes.BufferHighlight,
-            buffer: 'source',
-            range: stepperState.currentBlockId,
-        });
+        yield* put(bufferHighlight({buffer: 'source', highlight: stepperState.currentBlockId}));
     } else {
         const range = getNodeRange(stepperState);
-
-        yield* put({
-            type: BufferActionTypes.BufferHighlight,
-            buffer: 'source',
-            range
-        });
+        yield* put(bufferHighlight({buffer: 'source', highlight: range}));
     }
 }
 
 export function* clearSourceHighlightSaga() {
-    const state = yield* appSelect();
-
-    if (hasBlockPlatform(state.options.platform)) {
-        yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: null});
-    } else {
-        yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: null});
-    }
+    yield* put(bufferHighlight({buffer: 'source', highlight: null}));
 }
 
 function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {

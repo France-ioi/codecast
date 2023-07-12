@@ -119,6 +119,9 @@ export class SmartContractLib extends QuickAlgoLibrary {
     getErrorFromTestResult(testResult: TaskSubmissionServerTestResult): LibraryTestResult {
         try {
             const output = JSON.parse(testResult.output);
+            if (!output.error?.message) {
+                return null;
+            }
 
             return new LibraryTestResult(
                 output.error?.message
