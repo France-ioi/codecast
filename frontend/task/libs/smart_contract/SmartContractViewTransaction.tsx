@@ -1,14 +1,12 @@
-import React, {useState} from "react";
+import React from "react";
 import {SmartContractResultLogLine} from './smart_contract_lib';
 import {DateTime} from 'luxon';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faChevronDown} from '@fortawesome/free-solid-svg-icons/faChevronDown';
 import {faArrowRight} from '@fortawesome/free-solid-svg-icons/faArrowRight';
 import {capitalizeFirstLetter, nl2br} from '../../../common/utils';
 import {toHtml} from '../../../utils/sanitize';
 import {convertMichelsonStorageToCodecastFormat} from './smart_contract_utils';
 import {useAppSelector} from '../../../hooks';
-import {AnalysisFunctionLocals} from '../../../stepper/analysis/AnalysisFunctionLocals';
 import {AnalysisVariable} from '../../../stepper/analysis/AnalysisVariable';
 
 interface SmartContractViewTransactionProps {
@@ -23,12 +21,7 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
     };
 
     const log = props.log;
-    const [expanded, setExpanded] = useState(false);
-    const needsExpansion = undefined !== log.consumed_gas || undefined !== log.paid_storage_size_diff;
-
-    const seeMore = () => {
-        setExpanded(true);
-    };
+    const hasExpansion = undefined !== log.consumed_gas || undefined !== log.paid_storage_size_diff;
 
     let displayedStorage = undefined !== log.updated_storage ? log.updated_storage : log.storage;
     if (task.gridInfos.expectedStorage) {
@@ -82,14 +75,7 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                     </div>
                 </div>}
 
-                {!expanded && needsExpansion && <p className="smart-contract-log__see-more mt-2">
-                    <a onClick={seeMore}>
-                        <FontAwesomeIcon icon={faChevronDown} className="mr-1"/>
-                        <span>Voir plus</span>
-                    </a>
-                </p>}
-
-                {expanded && <div className="smart-contract-log__scalars smart-contract-log__costs">
+                {hasExpansion && <div className="smart-contract-log__scalars smart-contract-log__costs">
                     {undefined !== log.consumed_gas && <div className="smart-contract-scalar">
                         <div className="smart-contract-scalar__header">Consumed gas</div>
                         <div className="smart-contract-scalar__value">{log.consumed_gas}</div>
