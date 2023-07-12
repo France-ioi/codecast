@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import {SmartContractResultLogLine} from './smart_contract_lib';
 import {DateTime} from 'luxon';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -8,10 +8,14 @@ import {toHtml} from '../../../utils/sanitize';
 import {convertMichelsonStorageToCodecastFormat} from './smart_contract_utils';
 import {useAppSelector} from '../../../hooks';
 import {AnalysisVariable} from '../../../stepper/analysis/AnalysisVariable';
+import {faChevronDown} from '@fortawesome/free-solid-svg-icons/faChevronDown';
 
 interface SmartContractViewTransactionProps {
-    log: SmartContractResultLogLine
+    log: SmartContractResultLogLine,
+    failed?: boolean,
 }
+
+const maxFooterLength = 300;
 
 export function SmartContractViewTransaction(props: SmartContractViewTransactionProps) {
     const task = useAppSelector(state => state.task.currentTask);
@@ -22,6 +26,7 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
 
     const log = props.log;
     const hasExpansion = undefined !== log.consumed_gas || undefined !== log.paid_storage_size_diff;
+    const [footerExpanded, setFooterExpanded] = useState(log?.stderr?.length <= maxFooterLength);
 
     let displayedStorage = undefined !== log.updated_storage ? log.updated_storage : log.storage;
     if (task.gridInfos.expectedStorage) {
@@ -86,8 +91,17 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                     </div>}
                 </div>}
             </div>
-            {log.failed && <div className="smart-contract-log__footer">
-                <div dangerouslySetInnerHTML={toHtml(nl2br(log.stderr))}/>
+            {log.failed && <div className={`smart-contract-log__footer ${props.failed ? 'is-failed' : ''}`}>
+                <div>
+                    <div dangerouslySetInnerHTML={toHtml(nl2br(log.stderr.substring(0, footerExpanded ? log.stderr.length : maxFooterLength)))}/>
+
+                    {!footerExpanded && log?.stderr?.length > maxFooterLength && <p className="smart-contract-log__see-more mt-2">
+                        <a onClick={() => setFooterExpanded(true)}>
+                            <FontAwesomeIcon icon={faChevronDown} className="mr-1"/>
+                            <span>See more</span>
+                        </a>
+                    </p>}
+                </div>
             </div>}
         </div>
     );

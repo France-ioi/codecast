@@ -18,7 +18,7 @@ export function SmartContractView() {
 
     const resultLog: SmartContractResultLogLine[] = taskState.resultLog;
 
-    const hasFailed = 0 < resultLog.filter(log => log.failed).length;
+    const hasFailed = !taskState.success;
 
     return (
         <div className="smart-contract-visualization">
@@ -26,11 +26,16 @@ export function SmartContractView() {
                 <SmartContractViewTransaction
                     key={logIndex}
                     log={log}
+                    failed={logIndex === resultLog.length - 1 && !taskState.success}
                 />
             )}
 
             {!hasFailed && !!taskState.errorMessage && <Alert variant="danger" className="smart-contract-visualization-error">
                 {taskState.errorMessage}
+            </Alert>}
+
+            {!hasFailed && <Alert variant="success" className="smart-contract-visualization-success">
+                {getMessage('TASK_LEVEL_SUCCESS_FINISHED')}
             </Alert>}
         </div>
     );
