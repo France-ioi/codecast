@@ -104,12 +104,21 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
     border-top: solid 1px $smart-contract-border-color;
     font-weight: bold;
     font-size: .9em;
-    color: #b60000;
-    background: #fdd;
+    color: #107c00;
+    background: rgb(209, 231, 221);
+    &.is-failed {
+      color: #b60000;
+      background: #fdd;
+    }
   }
 }
 
 .smart-contract-visualization-error {
   margin-top: 10px;
   color: #b60000;
+}
+
+.smart-contract-visualization-success {
+  margin-top: 10px;
+  color: #107c00;
 }

@@ -19,6 +19,7 @@ import {
     smartContractPlatforms
 } from './smart_contract_blocks';
 import {LibraryTestResult} from '../library_test_result';
+import {SubmissionTestErrorCode} from '../../../submission/task_platform';
 
 export interface SmartContractResultLogLine {
     amount: number,
@@ -51,6 +52,7 @@ export const smartContractPlatformsList = {
 
 interface SmartContractLibState {
     resultLog?: SmartContractResultLogLine[],
+    success?: boolean,
     errorMessage?: string,
 }
 
@@ -132,6 +134,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
                 if (context) {
                     const innerState: SmartContractLibState = {
                         resultLog: log,
+                        success: payload.error.props.success,
                         errorMessage: payload.error.message,
                     };
 
@@ -151,6 +154,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
                 'task-submission-test-result-smart-contract',
                 {
                     log: output.log,
+                    success: SubmissionTestErrorCode.NoError === testResult.errorCode,
                 },
             );
         } catch (e) {
