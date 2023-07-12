@@ -164,7 +164,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         let hasShortOrLongInstructions = 0 < instructionsJQuery.find('.short').length || 0 < instructionsJQuery.find('.long').length;
         setHasShortOrLong(hasShortOrLongInstructions);
         if (props.changeDisplayShowMore) {
-            props.changeDisplayShowMore(hasShortOrLong);
+            props.changeDisplayShowMore(hasShortOrLongInstructions);
         }
     }, [contextId]);
 
