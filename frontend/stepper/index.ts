@@ -87,6 +87,7 @@ import {TaskSubmissionResultPayload} from '../submission/submission';
 import {CodecastPlatform} from './platforms';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
+import {shuffleArray} from '../utils/javascript';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -1159,6 +1160,9 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     if (context && context.infos.hiddenTests) {
         preExecutionTests = [...tests.keys()];
+        if (state.options.showRandomFailedTest) {
+            preExecutionTests = shuffleArray(preExecutionTests);
+        }
     }
 
     let lastBackgroundResult = null;
