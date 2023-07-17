@@ -46,6 +46,7 @@ export const buffersSlice = createSlice({
             state[action.payload.buffer].selection = action.payload.selection;
         },
         bufferReset(state, action: PayloadAction<{buffer: string, state: BufferState}>) {
+            initBufferIfNeeded(state, action.payload.buffer, action.payload.state.document.type);
             state[action.payload.buffer].document = action.payload.state.document;
             state[action.payload.buffer].selection = action.payload.state.selection;
             state[action.payload.buffer].firstVisibleRow = action.payload.state.firstVisibleRow;
