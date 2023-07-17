@@ -49,6 +49,7 @@ export interface TaskTest {
     name?: string,
     data: any,
     contextState: any,
+    contextStateResetDone?: boolean,
     level?: TaskLevelName,
 }
 

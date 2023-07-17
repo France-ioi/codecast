@@ -1036,12 +1036,12 @@ function* stepperStepSaga(app: App, action) {
                 if (!endConditionReached) {
                     yield* put(stepperExecutionEnd());
                 }
-            }
-
-            const newState = yield* appSelect();
-            const newStepper = getStepper(newState);
-            if (StepperStatus.Clear !== newStepper.status) {
-                yield* put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
+            } else {
+                const newState = yield* appSelect();
+                const newStepper = getStepper(newState);
+                if (StepperStatus.Clear !== newStepper.status) {
+                    yield* put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
+                }
             }
         }
     } finally {

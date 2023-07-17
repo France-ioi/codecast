@@ -453,7 +453,8 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
     // Save context state for the test we have just left
     if (context && !payload.recreateContext && null !== state.task.previousTestId) {
         const currentState = getCurrentImmerState(context.getInnerState());
-        yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
+        const taskResetDone = state.task.resetDone;
+        yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState, contextStateResetDone: taskResetDone}));
     }
 
     // Stop current execution if there is one
@@ -477,11 +478,15 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
         }
         context.iTestCase = state.task.currentTestId;
 
+        let newTaskResetDone = true;
         if (!payload.withoutContextState) {
-            const contextState = yield* call(getTestContextState);
+            const {contextState, contextStateResetDone} = yield* call(getTestContextState);
             if (null !== contextState) {
                 log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', contextState);
                 yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
+                if (false === contextStateResetDone) {
+                    newTaskResetDone = false;
+                }
             } else {
                 const currentTest = selectCurrentTestData(state);
                 log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
@@ -490,6 +495,10 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
 
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         }
+
+        if (newTaskResetDone !== state.task.resetDone) {
+            yield* put(taskResetDone(newTaskResetDone));
+        }
     }
 }
 
@@ -497,6 +506,7 @@ function* getTestContextState() {
     const state = yield* appSelect();
     const taskTests = selectTaskTests(state);
     const newTest = taskTests[state.task.currentTestId];
+    let resetDone = newTest.contextStateResetDone;
 
     const submission = selectCurrentServerSubmission(state);
     if (null !== submission && null !== newTest && isServerSubmission(submission) && submission.evaluated) {
@@ -505,12 +515,17 @@ function* getTestContextState() {
         if (undefined !== testResult && !testResult.noFeedback && context.getContextStateFromTestResult) {
             const contextState = context.getContextStateFromTestResult(testResult);
             if (contextState) {
+                resetDone = false;
+
                 return contextState;
             }
         }
     }
 
-    return newTest.contextState;
+    return {
+        contextState: newTest.contextState,
+        contextStateResetDone: resetDone,
+    };
 }
 
 function* getTaskAnswer () {

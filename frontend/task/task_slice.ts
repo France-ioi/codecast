@@ -143,8 +143,9 @@ export const taskSlice = createSlice({
                 ...action.payload.data,
             };
         },
-        updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any}>) {
+        updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any, contextStateResetDone: boolean}>) {
             state.taskTests[action.payload.testId].contextState = action.payload.contextState;
+            state.taskTests[action.payload.testId].contextStateResetDone = action.payload.contextStateResetDone;
         },
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
             state.inputNeeded = action.payload;
