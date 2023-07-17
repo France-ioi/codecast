@@ -23,8 +23,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
     const sourceMode = platformsList[platform].aceSourceMode;
-    const player = useAppSelector(state => getPlayerState(state));
-    const preventInput = player.isPlaying;
+    const preventInput = useAppSelector(state => getPlayerState(state).isPlaying);
 
     const dispatch = useDispatch();
 

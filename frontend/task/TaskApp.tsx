@@ -35,8 +35,8 @@ export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const playerEnabled = !!useAppSelector(state => state.options.audioUrl);
-    const player = useAppSelector(state => state.player);
-    const isPlayerReady = player.isReady;
+    const playerProgress = useAppSelector(state => state.player.progress);
+    const isPlayerReady = useAppSelector(state => state.player.isReady);
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
     const layoutPlayerMode = useAppSelector(state => state.layout.playerMode);
@@ -59,7 +59,7 @@ export function TaskApp() {
         progress = editor.audioLoadProgress;
         progressMessage = getMessage('PLAYER_LOADING_AUDIO');
     } else if (playerEnabled && !isPlayerReady) {
-        progress = player.progress;
+        progress = playerProgress;
         progressMessage = getMessage('PLAYER_PREPARING');
     }
 
