@@ -62,7 +62,7 @@ import {
     stepperExecutionError,
     stepperExecutionSuccess
 } from "../stepper/actionTypes";
-import {clearSourceHighlightSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
+import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {makeContext, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
@@ -743,7 +743,6 @@ export default function (bundle: Bundle) {
             if (Codecast.runner) {
                 Codecast.runner.stop();
             }
-            yield* call(clearSourceHighlightSaga);
             yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             log.getLogger('task').debug('put task reset done to true');
             yield* put(taskResetDone(true));

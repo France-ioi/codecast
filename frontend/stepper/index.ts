@@ -89,7 +89,6 @@ import {mainQuickAlgoLogger} from '../task/libs/quick_algo_logger';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode} from '../task/layout/layout_types';
-import {bufferHighlight} from '../buffers/buffers_slice';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -439,7 +438,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
     }
 }
 
-export function clearStepper(stepper: Stepper) {
+export function clearStepper(stepper: Stepper, withCurrentState = false) {
     stepper.status = StepperStatus.Clear;
     stepper.runningBackground = false;
     stepper.backgroundRunData = null;
@@ -447,7 +446,9 @@ export function clearStepper(stepper: Stepper) {
     stepper.redo = [];
     stepper.interrupting = false;
     stepper.initialStepperState = null;
-    stepper.currentStepperState = null;
+    if (withCurrentState) {
+        stepper.currentStepperState = null;
+    }
 }
 
 export function getNodeRange(stepperState?: StepperState) {
@@ -616,7 +617,7 @@ function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}):
 }
 
 export function stepperExitReducer(state: AppStoreReplay): void {
-    clearStepper(state.stepper);
+    clearStepper(state.stepper, true);
     state.task.inputNeeded = false;
 }
 
@@ -772,17 +773,13 @@ function* stepperEnabledSaga(app: App) {
     currentStepperTask = yield* fork(app.stepperApi.rootStepperSaga, app);
 }
 
-export function* stepperDisabledSaga(action, leaveContext = false, clearSourceHighlight = true) {
+export function* stepperDisabledSaga(action, leaveContext = false) {
     /* Cancel the stepper task if still running. */
     const oldTask = currentStepperTask;
-    log.getLogger('stepper').debug('try to disable stepper', oldTask, action, leaveContext, clearSourceHighlight, arguments);
+    log.getLogger('stepper').debug('try to disable stepper', oldTask, action, leaveContext, arguments);
 
     if (leaveContext) {
         yield* put(taskResetDone(false));
-    }
-
-    if (clearSourceHighlight) {
-        yield* call(clearSourceHighlightSaga);
     }
 
     if (oldTask) {
@@ -994,7 +991,7 @@ function* stepperStepSaga(app: App, action) {
                         yield* put({type: ActionTypes.StepperInterrupted});
                     }
                     if (ex.condition === 'error') {
-                        yield* put(stepperExecutionError(LibraryTestResult.fromString(ex.message), false));
+                        yield* put(stepperExecutionError(LibraryTestResult.fromString(ex.message)));
                     }
                 }
             }
@@ -1116,24 +1113,17 @@ function* stepperExitSaga() {
     yield* put({type: ActionTypes.CompileClear});
 }
 
-export function* updateSourceHighlightSaga(state: AppStoreReplay) {
-    log.getLogger('stepper').debug('update source hightlight');
+export function getSourceHighlightFromStateSelector(state: AppStore) {
     const stepperState = state.stepper.currentStepperState;
     if (!stepperState) {
-        yield* call(clearSourceHighlightSaga);
-        return;
+        return null;
     }
 
     if (hasBlockPlatform(state.options.platform)) {
-        yield* put(bufferHighlight({buffer: 'source', highlight: stepperState.currentBlockId}));
+        return stepperState.currentBlockId;
     } else {
-        const range = getNodeRange(stepperState);
-        yield* put(bufferHighlight({buffer: 'source', highlight: range}));
+        return getNodeRange(stepperState);
     }
-}
-
-export function* clearSourceHighlightSaga() {
-    yield* put(bufferHighlight({buffer: 'source', highlight: null}));
 }
 
 function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
@@ -1335,27 +1325,13 @@ function postLink(app: App) {
             StepperActionTypes.StepperExecutionEnd,
             StepperActionTypes.CompileFailed,
         // @ts-ignore
-        ], function*({payload}) {
+        ], function*() {
             let state = yield* appSelect();
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
                 yield* put({type: ActionTypes.StepperInterrupting, payload: {}});
             }
             // yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-            yield* call(stepperDisabledSaga, null, true, false !== payload?.clearHighlight);
-        });
-
-        /* Highlight the range of the current source fragment. */
-        yield* throttle(stepperThrottleDisplayDelay, [
-            ActionTypes.StepperProgress,
-            ActionTypes.StepperIdle,
-            ActionTypes.StepperRestart,
-            ActionTypes.StepperUndo,
-            ActionTypes.StepperRedo,
-            ActionTypes.StepperStackUp,
-            ActionTypes.StepperStackDown
-        ], function* () {
-            const state = yield* appSelect();
-            yield* call(updateSourceHighlightSaga, state);
+            yield* call(stepperDisabledSaga, null, true);
         });
     });
 }

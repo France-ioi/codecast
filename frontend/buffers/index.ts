@@ -44,12 +44,10 @@ import "ace-builds/src-min-noconflict/snippets/html";
 import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-min-noconflict/theme-github";
 
-import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
-import {updateSourceHighlightSaga} from "../stepper";
 import log from 'loglevel';
 import {stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
@@ -58,124 +56,28 @@ import {appSelect} from '../hooks';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
-import {BlockType} from '../task/blocks/block_types';
 import {BufferType, TextDocumentDelta, TextDocumentDeltaAction, Range} from './buffer_types';
 import {
     bufferEdit,
     bufferEditPlain, bufferModelEdit,
     bufferReset,
-    bufferResize,
     bufferScrollToLine,
     bufferSelect
 } from './buffers_slice';
 import {bufferDownload, bufferReload} from './buffer_actions';
 
-function initBufferIfNeeded(state: AppStore, buffer: string) {
-    if (!(buffer in state.buffers)) {
-        // state.buffers[buffer] = new BufferState();
-    }
-}
-
 export default function(bundle: Bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {options: {source, input}}}) => {
-        state.buffers = {};
-
-        // if (source) {
-        //     bufferResetReducer(state, {buffer: 'source', text: new DocumentModel(documentFromString(source || ''))});
-        // }
-        // if (input) {
-        //     bufferResetReducer(state, {buffer: inputBufferLibTest, text: new DocumentModel(documentFromString(input || ''))});
-        // }
-    });
-
-    // bundle.addReducer(ActionTypes.BufferInit, (state: AppStore, action) => {
-    //     const {buffer} = action;
-    //     initBufferIfNeeded(state, buffer);
-    // });
-
-    // bundle.defineAction(ActionTypes.BufferReset);
-    // bundle.addReducer(ActionTypes.BufferReset, bufferResetReducer);
-    //
-    // bundle.defineAction(ActionTypes.BufferEdit);
-    // bundle.addReducer(ActionTypes.BufferEdit, bufferEditReducer);
-    //
-    // bundle.defineAction(ActionTypes.BufferEditPlain);
-    // bundle.addReducer(ActionTypes.BufferEditPlain, bufferEditPlainReducer);
-    //
-    // bundle.defineAction(ActionTypes.BufferSelect);
-    // bundle.addReducer(ActionTypes.BufferSelect, bufferSelectReducer);
-    //
-    // bundle.defineAction(ActionTypes.BufferScroll);
-    // bundle.addReducer(ActionTypes.BufferScroll, bufferScrollReducer);
-
     bundle.addSaga(buffersSaga);
 
     bundle.defer(addRecordHooks);
     bundle.defer(addReplayHooks);
 };
 
-// function bufferResetReducer(state: AppStore, action): void {
-//     const {buffer, model} = action;
-//     initBufferIfNeeded(state, buffer);
-//     state.buffers[buffer].model = model;
-//     state.buffers[buffer].dirty = false;
-// }
-//
-// function bufferEditReducer(state: AppStore, action): void {
-//     const {buffer, delta} = action;
-//     initBufferIfNeeded(state, buffer);
-//     const oldDoc = state.buffers[buffer].model.document;
-//
-//     state.buffers[buffer].model.document = oldDoc.applyDelta(delta);
-// }
-//
-// function bufferEditPlainReducer(state: AppStore, action): void {
-//     const {buffer, document} = action;
-//     initBufferIfNeeded(state, buffer);
-//     state.buffers[buffer].model.document = document;
-//     state.buffers[buffer].dirty = true;
-// }
-//
-// function bufferSelectReducer(state: AppStore, action): void {
-//     const {buffer, selection} = action;
-//
-//     state.buffers[buffer].model.selection = selection;
-// }
-//
-// function bufferScrollReducer(state: AppStore, action): void {
-//     const {buffer, firstVisibleRow} = action;
-//
-//     state.buffers[buffer].model.firstVisibleRow = firstVisibleRow;
-// }
-
 export function getBufferEditor(state, buffer) {
     return buffer in state.buffers ? state.buffers[buffer].editor : null;
 }
 
 function* buffersSaga() {
-    // yield* takeEvery(ActionTypes.BufferInit, function* (action) {
-    //     const state = yield* appSelect();
-    //
-    //     // @ts-ignore
-    //     const {buffer, editor} = action;
-    //     if (editor) {
-    //         // const model = getBufferModel(state, buffer);
-    //
-    //         // resetEditor(editor, model);
-    //     }
-    // });
-    // yield* takeEvery(ActionTypes.BufferReset, function* (action) {
-    //     const state: AppStore = yield* appSelect();
-    //     // @ts-ignore
-    //     const {buffer, model, quiet, goToEnd} = action;
-    //     if (!quiet) {
-    //         const editor = getBufferEditor(state, buffer);
-    //         if (editor) {
-    //             // resetEditor(editor, model, !!goToEnd);
-    //         }
-    //     }
-    // });
-
     yield* takeEvery(bufferDownload, function* () {
         const state: AppStore = yield* appSelect();
         const platform = state.options.platform;
@@ -256,25 +158,8 @@ function pickFileAndGetContent(): Promise<string> {
         };
 
         input.click();
-    })
-
+    });
 }
-
-// function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {
-//     try {
-//         if (null === model) {
-//             editor.reset(null, null, null);
-//         } else {
-//             editor.reset(model.document, model.selection, model.firstVisibleRow);
-//             if (goToEnd && editor.goToEnd) {
-//                 editor.goToEnd();
-//             }
-//         }
-//
-//     } catch (error) {
-//         log.getLogger('editor').debug('failed to update editor view with model', error);
-//     }
-// }
 
 function addRecordHooks({recordApi}: App) {
     recordApi.onStart(function* (init) {
@@ -334,12 +219,15 @@ function addReplayHooks({replayApi}: App) {
         for (let bufferName of Object.keys(buffers)) {
             const content = buffers[bufferName].document;
             const document = uncompressIntoDocument(content);
-            const bufferState = createEmptyBufferState(document.type);
-            bufferState.document = document;
-            log.getLogger('editor').debug('Gotten document', document);
+            const bufferState = {
+                ...createEmptyBufferState(document.type),
+                ...(buffers[bufferName].selection ? {selection: expandRange(buffers[bufferName].selection)} : {}),
+                firstVisibleRow: buffers[bufferName].firstVisibleRow,
+                document,
+            };
+            log.getLogger('editor').debug('[buffer] replay api start', bufferState);
             yield* put(bufferReset({buffer: bufferName, state: bufferState}));
         }
-
     });
     replayApi.on('buffer.select', function* (replayContext: ReplayContext, event) {
         const buffer = event[2];
@@ -385,22 +273,13 @@ function addReplayHooks({replayApi}: App) {
         const firstVisibleRow = event[3];
 
         yield* put(bufferScrollToLine({buffer, firstVisibleRow}));
-
-        // replayContext.addSaga(function* () {
-        //     yield* put({type: ActionTypes.BufferModelScroll, buffer, firstVisibleRow});
-        // });
     });
     replayApi.onReset(function* ({state}: PlayerInstant, quick) {
         /* Reset all buffers. */
         log.getLogger('editor').debug('Editor Buffer Reset', state);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer];
-            // const dirty = state.buffers[buffer].dirty;
-            // yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick && !dirty && model instanceof DocumentModel});
-            // TODO: Implement quiet
             yield* put(bufferReset({buffer, state: model}))
         }
-
-        yield* call(updateSourceHighlightSaga, state);
     });
 }

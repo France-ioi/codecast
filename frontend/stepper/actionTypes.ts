@@ -50,11 +50,10 @@ export const stepperExecutionSuccess = (testResult: LibraryTestResult) => ({
     },
 });
 
-export const stepperExecutionError = (testResult: LibraryTestResult, clearHighlight = true) => ({
+export const stepperExecutionError = (testResult: LibraryTestResult) => ({
     type: ActionTypes.StepperExecutionError,
     payload: {
         testResult,
-        clearHighlight,
     },
 });
 

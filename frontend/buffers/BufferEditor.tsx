@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {Editor, EditorProps} from "./Editor";
 import {useDispatch} from "react-redux";
 import {withResizeDetector} from "react-resize-detector";
@@ -14,8 +14,17 @@ import {
     bufferScrollToLine,
     bufferSelect
 } from './buffers_slice';
-import {BufferType, Document, Range, TextBufferState, TextDocumentDelta, TextPosition} from './buffer_types';
+import {
+    BlockBufferState,
+    BufferType,
+    Document,
+    Range,
+    TextBufferState,
+    TextDocumentDelta,
+    TextPosition
+} from './buffer_types';
 import {useAppSelector} from '../hooks';
+import {getSourceHighlightFromStateSelector} from '../stepper';
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -43,6 +52,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     const dispatch = useDispatch();
 
     const bufferType = 'source' === buffer && hasBlockPlatform(platform) ? BufferType.Block : BufferType.Text;
+    const highlight = useAppSelector(getSourceHighlightFromStateSelector);
 
     useEffect(() => {
         if ((width !== prevWidth || height !== prevHeight) && width && height) {
@@ -52,32 +62,35 @@ const _BufferEditor = (props: BufferEditorProps) => {
         setPrevHeight(height);
     }, [props.width, props.height])
 
-    const onInit = () => {
+    const onInit = useCallback(() => {
         dispatch(bufferInit({buffer, type: bufferType}));
-    };
+    }, [buffer, bufferType]);
 
-    const onSelect = (selection: Range) => {
+    const onSelect = useCallback((selection: Range) => {
         dispatch(bufferSelect({buffer, selection}))
-    };
+    }, [buffer]);
 
-    const onEdit = (delta: TextDocumentDelta) => {
+    const onEdit = useCallback((delta: TextDocumentDelta) => {
         dispatch(bufferEdit({buffer, delta}));
-    };
+    }, [buffer]);
 
-    const onEditPlain = (document: Document) => {
+    const onEditPlain = useCallback((document: Document) => {
         dispatch(bufferEditPlain({buffer, document}))
-    };
+    }, [buffer]);
 
-    const onScroll = (firstVisibleRow: number) => {
+    const onScroll = useCallback((firstVisibleRow: number) => {
         dispatch(bufferScrollToLine({buffer, firstVisibleRow}));
-    };
+    }, [buffer]);
 
-    const onDropBlock = (block: Block, pos: TextPosition) => {
+    const onDropBlock = useCallback((block: Block, pos: TextPosition) => {
         dispatch(bufferInsertBlock({buffer, block, pos}));
-    };
+    }, [buffer]);
 
     if (BufferType.Block === bufferType) {
         return <BlocklyEditor
+            name={buffer}
+            state={bufferState as BlockBufferState}
+            highlight={highlight}
             onInit={onInit}
             onSelect={onSelect}
             onEditPlain={onEditPlain}
@@ -87,6 +100,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     return <Editor
         name={buffer}
         state={bufferState as TextBufferState}
+        highlight={highlight}
         onInit={onInit}
         onEdit={onEdit}
         onEditPlain={onEditPlain}

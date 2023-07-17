@@ -27,24 +27,18 @@ export interface TextBufferState extends BufferState {
     type: BufferType.Text,
     document: TextDocument,
     selection?: Range,
-    highlight?: Range,
-    errorHighlight?: Range,
 }
 
 export interface BlockBufferState extends BufferState {
     type: BufferType.Block,
     document: BlockDocument,
     selection?: string,
-    highlight?: string,
-    errorHighlight?: string,
 }
 
 export interface BufferState {
     type: BufferType,
-    document: any,
+    document: Document,
     selection?: any,
-    highlight?: any,
-    errorHighlight?: any,
     firstVisibleRow?: number,
     actions: {
         goToEnd?: number,

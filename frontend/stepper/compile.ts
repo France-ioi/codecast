@@ -279,5 +279,5 @@ function compileSucceededReducer(state: AppStore, action): void {
 
 export function compileFailedReducer(state: AppStoreReplay): void {
     state.compile.status = CompileStatus.Error;
-    clearStepper(state.stepper);
+    clearStepper(state.stepper, true);
 }

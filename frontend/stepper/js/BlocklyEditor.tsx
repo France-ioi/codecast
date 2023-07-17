@@ -9,6 +9,8 @@ import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {BlockBufferState, BlockDocument} from '../../buffers/buffer_types';
 
 export interface BlocklyEditorProps {
+    name?: string,
+    highlight?: string,
     state?: BlockBufferState,
     onInit: Function,
     onEditPlain: Function,
@@ -23,19 +25,21 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const previousValue = useRef(null);
+    const highlightedBlock = useRef(null);
     const loaded = useRef(false);
     const resetDisplayTimeout = useRef(null);
     const dispatch = useDispatch();
 
-    const reset = (document: BlockDocument, selection, firstVisibleRow, alreadyReset = false) => {
+    log.getLogger('editor').debug('[buffer] re-render editor', {state: props.state, highlight: props.highlight});
+
+    const reset = (document: BlockDocument, alreadyReset = false) => {
         if (!context?.blocklyHelper) {
             return;
         }
 
         log.getLogger('editor').debug('[blockly.editor] reset', document);
 
-        // if (null === value || null === documentGetContent(value)) {
-        if (null === document) {
+        if (!document || null === document.content) {
             let defaultBlockly = context.blocklyHelper.getDefaultContent();
             log.getLogger('editor').debug('get default', defaultBlockly);
             context.blocklyHelper.programs = [{javascript:"", blockly: defaultBlockly, blocklyJS: ""}];
@@ -55,7 +59,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         } catch (e) {
             console.error(e);
             if (!alreadyReset) {
-                reset(null, selection, firstVisibleRow, true);
+                reset(null, true);
                 dispatch(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE')));
             }
         }
@@ -71,8 +75,12 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             window.Blockly.selected = null;
         }
 
+        highlightedBlock.current = range;
+
         try {
+            console.log('blockly start highlight');
             context.blocklyHelper.highlightBlock(range);
+            console.log('end start highlight');
         } catch (e) {
             console.error(e);
         }
@@ -93,8 +101,12 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             eventType === window.Blockly.Events.Change) : true;
 
         if ('selected' === event.element) {
-            log.getLogger('editor').debug('is selected');
-            props.onSelect(event.newValue);
+            if (event.newValue !== highlightedBlock.current) {
+                log.getLogger('editor').debug('is selected');
+                highlightedBlock.current = event.newValue;
+                props.onSelect(event.newValue);
+            }
+            return;
         }
 
         if (isBlockEvent) {
@@ -160,7 +172,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             blocklyOptions.scrollbars = context.infos.scrollbars;
         }
 
-        log.getLogger('editor').debug('[blockly.editor] load blockly editor', blocklyHelper, blocklyHelper.load);
+        log.getLogger('editor').debug('[blockly.editor] load blockly editor', blocklyHelper, blocklyHelper.load, props.state?.document);
         blocklyHelper.load(language, true, 1, blocklyOptions);
 
         blocklyHelper.workspace.addChangeListener(onBlocklyEvent);
@@ -177,6 +189,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             treeRow.style.setProperty('--color', color);
         }
 
+        console.log('do reset document', props.state?.document)
+        reset(props.state?.document);
         loaded.current = true;
     }
 
@@ -193,17 +207,21 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     }, [currentTask, currentLevel, contextId]);
 
     useEffect(() => {
-        const newDocument = props.state?.document ?? null;
-        // if (value === editor.current.getSession().getValue()) {
-        //     return;
-        // }
+        const newDocument = props.state?.document ?? BlockBufferHandler.getEmptyDocument();
+        log.getLogger('editor').debug('[blockly.editor] load document', {newDocument, previousValue: previousValue.current});
 
-        reset(newDocument, props.state?.selection, props.state?.firstVisibleRow);
+        if (previousValue.current === newDocument?.content?.blockly) {
+            return;
+        }
+
+        reset(newDocument);
     }, [props.state?.document]);
 
     useEffect(() => {
-        highlight(props.state?.highlight);
-    }, [props.state?.highlight]);
+        const selection = props.highlight ? props.highlight : props.state?.selection;
+        log.getLogger('editor').debug('[blockly.editor] selection or highlight changed', selection, props);
+        highlight(selection);
+    }, [props.highlight, props.state?.selection]);
 
     useEffect(() => {
         if (0 < props.state?.actions?.resize) {

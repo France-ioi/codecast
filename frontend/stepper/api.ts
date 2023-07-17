@@ -15,11 +15,9 @@ import {
     Stepper,
     stepperMaxStepsBetweenInteractBefore,
     StepperState,
-    stepperThrottleDisplayDelay
 } from "./index";
 import {Bundle} from "../linker";
-import {getCurrentImmerState} from "../task/utils";
-import {ActionTypes as CompileActionTypes, stepperExecutionError} from "./actionTypes";
+import {ActionTypes as CompileActionTypes} from "./actionTypes";
 import log from "loglevel";
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 import {LibraryTestResult} from '../task/libs/library_test_result';

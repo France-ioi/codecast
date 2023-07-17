@@ -81,7 +81,7 @@ export default function(bundle: Bundle) {
 
                 context.onError = (diagnostics) => {
                     log.getLogger('python_runner').debug('context error', diagnostics);
-                    channel.put(stepperExecutionError(LibraryTestResult.fromString(diagnostics), false));
+                    channel.put(stepperExecutionError(LibraryTestResult.fromString(diagnostics)));
                 };
 
                 stepperState.directives = {

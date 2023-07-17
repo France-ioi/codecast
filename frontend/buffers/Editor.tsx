@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
-import {Document, TextBufferState} from './buffer_types';
+import {Range, TextBufferState} from './buffer_types';
 import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
@@ -11,9 +11,9 @@ import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {BlockType} from '../task/blocks/block_types';
 import {bufferClearBlocksToInsert, bufferClearDeltasToApply} from './buffers_slice';
 import {useDispatch} from 'react-redux';
-import {documentToString, TextBufferHandler} from './document';
+import {documentToString} from './document';
 
-const Range = window.ace.acequire('ace/range').Range;
+const AceRange = window.ace.acequire('ace/range').Range;
 
 export interface EditorProps {
     name?: string,
@@ -24,6 +24,7 @@ export interface EditorProps {
     mode?: string,
     width?: any,
     height?: any,
+    highlight?: Range|null,
     hasAutocompletion?: boolean,
     hasScrollMargin?: boolean,
     onInit?: Function,
@@ -33,7 +34,7 @@ export interface EditorProps {
     onScroll?: Function,
     onDropBlock?: Function,
     content?: string,
-    errorHighlight?: Range,
+    errorHighlight?: Range|null,
     hideGutter?: boolean,
     showPrintMargin?: boolean,
     highlightActiveLine?: boolean,
@@ -43,7 +44,7 @@ export interface EditorProps {
 }
 
 function toRange(selection) {
-    return new Range(
+    return new AceRange(
         selection.start.row, selection.start.column,
         selection.end.row, selection.end.column
     );
@@ -85,7 +86,7 @@ export function Editor(props: EditorProps) {
 
     const refEditor = useRef();
 
-    log.getLogger('buffer').debug('[buffer] re-render editor', props.state);
+    log.getLogger('editor').debug('[buffer] re-render editor', props.state);
 
     const scrollOnLastLines = () => {
         const ace = editor.current;
@@ -124,11 +125,11 @@ export function Editor(props: EditorProps) {
     };
 
     const onTextChanged = (edit) => {
-        log.getLogger('buffer').debug('do edit', edit);
         if (mute.current || !props.onEdit) {
             return;
         }
         // The callback must not trigger a rendering of the Editor.
+        log.getLogger('editor').debug('do edit', edit);
         props.onEdit(edit)
     };
 
@@ -138,7 +139,7 @@ export function Editor(props: EditorProps) {
         }
         const scrollTop_ = editor.current.getSession().getScrollTop();
         if (scrollTop.current !== scrollTop_) {
-            log.getLogger('buffer').debug('buffer after render', props.name, {scrollTop: scrollTop.current, scrollTop_});
+            log.getLogger('editor').debug('buffer after render', props.name, {scrollTop: scrollTop.current, scrollTop_});
             scrollTop.current = scrollTop_;
             const {onScroll} = props;
             if (typeof onScroll === 'function') {
@@ -187,7 +188,7 @@ export function Editor(props: EditorProps) {
     };
 
     const goToEnd = () => {
-        log.getLogger('buffer').debug('do go to end', props.name);
+        log.getLogger('editor').debug('do go to end', props.name);
         if (!editor.current) {
             return;
         }
@@ -203,7 +204,7 @@ export function Editor(props: EditorProps) {
         let cursorPosition = pos ? pos : editor.current.getCursorPosition();
         // const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
         const indentationCurrentLine = editor.current.session.doc.getLine(cursorPosition.row).search(/\S|$/);
-        const textBeforeOnLine = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, 0, cursorPosition.row, cursorPosition.column));
+        const textBeforeOnLine = editor.current.session.doc.getTextRange(new AceRange(cursorPosition.row, 0, cursorPosition.row, cursorPosition.column));
         const hasTextBeforeOnLine = textBeforeOnLine && textBeforeOnLine.trim().length;
 
         if (snippet) {
@@ -240,13 +241,13 @@ export function Editor(props: EditorProps) {
             if (selection_ && selection_.start && selection_.end) {
                 editor.current.selection.setRange(toRange(selection_));
             } else {
-                editor.current.selection.setRange(new Range(0, 0, 0, 0));
+                editor.current.selection.setRange(new AceRange(0, 0, 0, 0));
             }
         });
     };
 
     const highlight = (range, className = 'code-highlight') => {
-        log.getLogger('editor').debug('make highlight', range, className);
+        log.getLogger('editor').debug('[editor] make highlight', {name: props.name, range, className});
         wrapModelToEditor(() => {
             const session = editor.current.session;
             if (marker.current) {
@@ -361,12 +362,6 @@ export function Editor(props: EditorProps) {
         log.getLogger('editor').debug('create editor', editorObject);
         editor.current = editorObject;
         initEditor();
-
-        return () => {
-            if (typeof props.onInit === 'function') {
-                props.onInit(null);
-            }
-        }
     }, []);
 
     useEffect(() => {
@@ -426,16 +421,17 @@ export function Editor(props: EditorProps) {
 
     useEffect(() => {
         const deltasToApply = props.state?.actions?.deltasToApply;
+        log.getLogger('editor').debug('[editor] new deltas to apply', deltasToApply);
         if (!deltasToApply || !deltasToApply.length) {
             return;
         }
 
         dispatch(bufferClearDeltasToApply({buffer: props.name}));
         applyDeltas(JSON.parse(JSON.stringify(deltasToApply)));
-    }, [props.state?.actions?.blocksToInsert]);
+    }, [props.state?.actions?.deltasToApply]);
 
     useEffect(() => {
-        log.getLogger('buffer').debug('[buffer] update props content', {name: props.name, content: props.content});
+        log.getLogger('editor').debug('[buffer] update props content', {name: props.name, content: props.content});
 
         const newDocument = props.state?.document;
         let value = documentToString(newDocument);
@@ -446,7 +442,7 @@ export function Editor(props: EditorProps) {
             return;
         }
 
-        log.getLogger('buffer').debug('[buffer] document update', {value, oldValue: editor.current.getSession().getValue()});
+        log.getLogger('editor').debug('[buffer] document update', {value, oldValue: editor.current.getSession().getValue()});
 
         wrapModelToEditor(() => {
             // if (props.onEditPlain) {
@@ -458,13 +454,12 @@ export function Editor(props: EditorProps) {
             console.log('[scroll to line] reset', props.state?.firstVisibleRow ?? 0);
             editor.current.scrollToLine(props.state?.firstVisibleRow ?? 0);
             scrollTop.current = editor.current.getSession().getScrollTop();
-            log.getLogger('buffer').debug('[buffer] done reset', {name: props.name, firstVisibleRow: firstVisibleRow.current, scrollTop: editor.current.getSession().getScrollTop()})
+            log.getLogger('editor').debug('[buffer] done reset', {name: props.name, firstVisibleRow: firstVisibleRow.current, scrollTop: editor.current.getSession().getScrollTop()})
             // Clear a previously set marker, if any.
             if (marker.current) {
                 editor.current.session.removeMarker(marker.current);
                 marker.current = null;
             }
-
         });
     }, [props.content, props.state?.document]);
 
@@ -495,17 +490,18 @@ export function Editor(props: EditorProps) {
 
     useEffect(() => {
         const selection = props.state?.selection;
-        log.getLogger('buffer').debug('[buffer] selection changed', selection);
+        log.getLogger('editor').debug('[buffer] selection changed', selection);
         doSetSelection(selection);
     }, [props.state?.selection]);
 
     useEffect(() => {
-        highlight(props.state?.highlight);
-    }, [props.state?.highlight]);
+        console.log('[editor] state highlight has changed');
+        highlight(props.highlight);
+    }, [props.highlight]);
 
     useEffect(() => {
-        highlight(props.state?.errorHighlight ?? props.errorHighlight, 'error-highlight');
-    }, [props.state?.errorHighlight ?? props.errorHighlight]);
+        highlight(props.errorHighlight, 'error-highlight');
+    }, [props.errorHighlight]);
 
     useEffect(() => {
         if (0 < props.state?.actions?.goToEnd) {

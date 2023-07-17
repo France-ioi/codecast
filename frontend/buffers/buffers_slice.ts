@@ -1,7 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {BufferState, TextDocumentDelta, Document, Range, TextPosition, BufferType} from './buffer_types';
+import {BufferState, TextDocumentDelta, Document, Range, TextPosition, BufferType, TextDocument} from './buffer_types';
 import {Block} from '../task/blocks/block_types';
-import {createEmptyBufferState, TextBufferHandler} from './document';
+import {createEmptyBufferState, documentToString, TextBufferHandler} from './document';
 
 export interface BuffersState {
     [buffer: string]: BufferState,
@@ -24,7 +24,7 @@ export const buffersSlice = createSlice({
         },
         bufferEdit(state, action: PayloadAction<{buffer: string, delta: TextDocumentDelta}>) {
             // initBufferIfNeeded(state, buffer);
-            const oldDoc = state[action.payload.buffer].document;
+            const oldDoc = state[action.payload.buffer].document as TextDocument;
             state[action.payload.buffer].document = TextBufferHandler.applyDelta(oldDoc, action.payload.delta);
         },
         bufferModelEdit(state, action: PayloadAction<{buffer: string, delta: TextDocumentDelta}>) {
@@ -48,7 +48,6 @@ export const buffersSlice = createSlice({
         bufferReset(state, action: PayloadAction<{buffer: string, state: BufferState}>) {
             state[action.payload.buffer].document = action.payload.state.document;
             state[action.payload.buffer].selection = action.payload.state.selection;
-            state[action.payload.buffer].highlight = action.payload.state.highlight;
             state[action.payload.buffer].firstVisibleRow = action.payload.state.firstVisibleRow;
         },
         bufferResetDocument(state, action: PayloadAction<{buffer: string, document: Document, goToEnd?: boolean}>) {
@@ -84,10 +83,6 @@ export const buffersSlice = createSlice({
         bufferClearBlocksToInsert(state, action: PayloadAction<{buffer: string}>) {
             state[action.payload.buffer].actions.blocksToInsert = [];
         },
-        bufferHighlight(state, action: PayloadAction<{buffer: string, highlight: Range|string}>) {
-            // initBufferIfNeeded(state, buffer);
-            state[action.payload.buffer].highlight = action.payload.highlight;
-        },
     },
 });
 
@@ -104,7 +99,6 @@ export const {
     bufferResize,
     bufferInsertBlock,
     bufferClearBlocksToInsert,
-    bufferHighlight,
 } = buffersSlice.actions;
 
 export default buffersSlice;

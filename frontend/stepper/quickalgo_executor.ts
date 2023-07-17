@@ -111,7 +111,7 @@ class QuickalgoExecutor {
 
             Codecast.runner?.stop();
 
-            await this.stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(String(e)), false));
+            await this.stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(String(e))));
         }
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async library call', libraryCallResult);
