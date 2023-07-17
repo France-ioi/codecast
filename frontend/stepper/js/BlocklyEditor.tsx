@@ -166,20 +166,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         blocklyHelper.workspace.addChangeListener(onBlocklyEvent);
 
         if (typeof props.onInit === 'function') {
-            const api = {
-                reset,
-                // applyDeltas,
-                setSelection: highlight,
-                // focus,
-                // scrollToLine,
-                // getSelectionRange,
-                highlight,
-                resize,
-                // goToEnd,
-                // insert,
-                // insertSnippet,
-            };
-            props.onInit(api);
+            props.onInit();
         }
 
         const treeRows = document.getElementsByClassName('blocklyTreeRow');

@@ -11,7 +11,7 @@ import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {BlockType} from '../task/blocks/block_types';
 import {bufferClearBlocksToInsert, bufferClearDeltasToApply} from './buffers_slice';
 import {useDispatch} from 'react-redux';
-import {documentToString} from './document';
+import {documentToString, TextBufferHandler} from './document';
 
 const Range = window.ace.acequire('ace/range').Range;
 
@@ -67,14 +67,14 @@ function sameSelection(s1, s2) {
 }
 
 export function Editor(props: EditorProps) {
-    const [scrollTop, setScrollTop] = useState(0);
-    const [firstVisibleRow, setFirstVisibleRow] = useState(0);
     const [willUpdateSelection, setWillUpdateSelection] = useState(false);
 
     const editor = useRef(null);
     const mute = useRef(false);
     const selection = useRef(null);
     const marker = useRef();
+    const scrollTop = useRef(0);
+    const firstVisibleRow = useRef(0);
 
     const dispatch = useDispatch();
 
@@ -85,7 +85,7 @@ export function Editor(props: EditorProps) {
 
     const refEditor = useRef();
 
-    console.log('re-render editor', props.state);
+    log.getLogger('buffer').debug('[buffer] re-render editor', props.state);
 
     const scrollOnLastLines = () => {
         const ace = editor.current;
@@ -124,7 +124,7 @@ export function Editor(props: EditorProps) {
     };
 
     const onTextChanged = (edit) => {
-        console.log('do edit', edit);
+        log.getLogger('buffer').debug('do edit', edit);
         if (mute.current || !props.onEdit) {
             return;
         }
@@ -137,13 +137,15 @@ export function Editor(props: EditorProps) {
             return;
         }
         const scrollTop_ = editor.current.getSession().getScrollTop();
-        if (scrollTop !== scrollTop_) {
-            setScrollTop(scrollTop_);
+        if (scrollTop.current !== scrollTop_) {
+            log.getLogger('buffer').debug('buffer after render', props.name, {scrollTop: scrollTop.current, scrollTop_});
+            scrollTop.current = scrollTop_;
             const {onScroll} = props;
             if (typeof onScroll === 'function') {
                 const firstVisibleRow_ = editor.current.getFirstVisibleRow();
-                if (firstVisibleRow !== firstVisibleRow_) {
-                    setFirstVisibleRow(firstVisibleRow_);
+                if (firstVisibleRow.current !== firstVisibleRow_) {
+                    firstVisibleRow.current = firstVisibleRow_;
+                    console.log('change scroll value', props.name, firstVisibleRow.current);
                     onScroll(firstVisibleRow_);
                 }
             }
@@ -162,51 +164,30 @@ export function Editor(props: EditorProps) {
         }
     };
 
-    const reset = (value: Document, newSelection = null, firstVisibleRow = null) => {
-        wrapModelToEditor(() => {
-            // if (undefined !== props.content) {
-            //     value = documentFromString(String(null !== props.content ? props.content : ''));
-            // }
-
-            editor.current.getSession().setValue(null === value ? '' : value.toString());
-            editor.current.resize(true);
-            selection.current = null;
-            doSetSelection(newSelection);
-            setFirstVisibleRow(firstVisibleRow);
-            editor.current.scrollToLine(firstVisibleRow);
-            setScrollTop(editor.current.getSession().getScrollTop());
-            // Clear a previously set marker, if any.
-            if (marker.current) {
-                editor.current.session.removeMarker(marker.current);
-                marker.current = null;
-            }
-        });
-    };
-
     const applyDeltas = (deltas) => {
         wrapModelToEditor(() => {
             editor.current.session.doc.applyDeltas(deltas);
         });
     };
 
-    const focus = () => {
-        if (!editor.current) {
-            return;
-        }
-
-        editor.current.focus();
-    };
-
-    const scrollToLine = (firstVisibleRow) => {
+    const scrollToLine = (newFirstVisibleRow) => {
         wrapModelToEditor(() => {
+            console.log('new first visible row', newFirstVisibleRow);
+            if (newFirstVisibleRow === firstVisibleRow.current) {
+                return;
+            }
+
+            newFirstVisibleRow = newFirstVisibleRow ?? 0;
             editor.current.resize(true);
-            setFirstVisibleRow(firstVisibleRow);
-            editor.current.scrollToLine(firstVisibleRow);
-            setScrollTop(editor.current.getSession().getScrollTop());
+            firstVisibleRow.current = newFirstVisibleRow;
+            console.log('[buffer] scroll to line', newFirstVisibleRow);
+            editor.current.scrollToLine(newFirstVisibleRow);
+            scrollTop.current = editor.current.getSession().getScrollTop();
         });
     };
 
     const goToEnd = () => {
+        log.getLogger('buffer').debug('do go to end', props.name);
         if (!editor.current) {
             return;
         }
@@ -279,14 +260,11 @@ export function Editor(props: EditorProps) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
                        and scrolling is handled by individual events. */
+                    console.log('[scroll to line] highlight');
                     editor.current.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
                 }
             }
         });
-    };
-
-    const getSelectionRange = () => {
-        return editor.current && editor.current.getSelectionRange();
     };
 
     const initEditor = () => {
@@ -319,19 +297,7 @@ export function Editor(props: EditorProps) {
         const {onInit, onSelect, onEdit} = props;
 
         if (typeof onInit === 'function') {
-            const api = {
-                reset,
-                applyDeltas,
-                setSelection: doSetSelection,
-                focus,
-                scrollToLine,
-                getSelectionRange,
-                highlight,
-                resize,
-                goToEnd,
-                insert,
-            };
-            onInit(api);
+            onInit();
         }
 
         if (typeof onSelect === 'function') {
@@ -343,7 +309,7 @@ export function Editor(props: EditorProps) {
         }
 
         // if (undefined !== props.content) {
-        //     reset(documentFromString(String(null !== props.content ? props.content : '')));
+        //     reset(TextBufferHandler.documentFromString(String(null !== props.content ? props.content : '')));
         // }
 
         // @ts-ignore
@@ -469,24 +435,38 @@ export function Editor(props: EditorProps) {
     }, [props.state?.actions?.blocksToInsert]);
 
     useEffect(() => {
-        if ('source' === props.name) {
-            // Don't use content for source buffer (for now)
-            return;
-        }
+        log.getLogger('buffer').debug('[buffer] update props content', {name: props.name, content: props.content});
 
-        const value = props.content ? props.content : '';
+        const newDocument = props.state?.document;
+        let value = documentToString(newDocument);
+        if (undefined !== props.content) {
+            value = props.content;
+        }
         if (value === editor.current.getSession().getValue()) {
             return;
         }
 
+        log.getLogger('buffer').debug('[buffer] document update', {value, oldValue: editor.current.getSession().getValue()});
+
         wrapModelToEditor(() => {
             // if (props.onEditPlain) {
-            //     props.onEditPlain(documentFromString(value));
+            //     props.onEditPlain(TextBufferHandler.documentFromString(value));
             // }
             editor.current.getSession().setValue(value);
             editor.current.resize(true);
+            firstVisibleRow.current = props.state?.firstVisibleRow;
+            console.log('[scroll to line] reset', props.state?.firstVisibleRow ?? 0);
+            editor.current.scrollToLine(props.state?.firstVisibleRow ?? 0);
+            scrollTop.current = editor.current.getSession().getScrollTop();
+            log.getLogger('buffer').debug('[buffer] done reset', {name: props.name, firstVisibleRow: firstVisibleRow.current, scrollTop: editor.current.getSession().getScrollTop()})
+            // Clear a previously set marker, if any.
+            if (marker.current) {
+                editor.current.session.removeMarker(marker.current);
+                marker.current = null;
+            }
+
         });
-    }, [props.content]);
+    }, [props.content, props.state?.document]);
 
     useEffect(() => {
         const blocksToInsert = props.state?.actions?.blocksToInsert;
@@ -514,23 +494,8 @@ export function Editor(props: EditorProps) {
     }, [props.state?.actions?.blocksToInsert]);
 
     useEffect(() => {
-        const newDocument = props.state?.document;
-        const value = documentToString(newDocument);
-        if (value === editor.current.getSession().getValue()) {
-            return;
-        }
-
-        console.log('[editor] document update', {value, oldValue: editor.current.getSession().getValue()});
-
-        wrapModelToEditor(() => {
-            editor.current.getSession().setValue(value);
-            editor.current.resize(true);
-        });
-    }, [props.state?.document]);
-
-    useEffect(() => {
         const selection = props.state?.selection;
-        console.log('[editor] selection changed', selection);
+        log.getLogger('buffer').debug('[buffer] selection changed', selection);
         doSetSelection(selection);
     }, [props.state?.selection]);
 

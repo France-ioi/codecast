@@ -54,6 +54,7 @@ export const buffersSlice = createSlice({
         bufferResetDocument(state, action: PayloadAction<{buffer: string, document: Document, goToEnd?: boolean}>) {
             initBufferIfNeeded(state, action.payload.buffer, action.payload.document.type);
             state[action.payload.buffer].document = action.payload.document;
+            state[action.payload.buffer].firstVisibleRow = undefined;
             if (action.payload.goToEnd) {
                 if (!('goToEnd' in state[action.payload.buffer].actions)) {
                     state[action.payload.buffer].actions.goToEnd = 0;

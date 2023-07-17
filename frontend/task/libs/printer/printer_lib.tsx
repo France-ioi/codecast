@@ -771,11 +771,11 @@ export class PrinterLib extends QuickAlgoLibrary {
         const buffers = yield* appSelect(state => state.buffers);
         const inputBufferContent = buffers[inputBufferLibTest] ? documentToString(buffers[inputBufferLibTest].document) : '';
         if (currentTest?.input !== inputBufferContent) {
-            yield* put(bufferResetDocument({buffer: inputBufferLibTest, document: TextBufferHandler.documentFromString(currentTest?.input), goToEnd: true}));
+            yield* put(bufferResetDocument({buffer: inputBufferLibTest, document: TextBufferHandler.documentFromString(currentTest?.input)}));
         }
         const outputBufferContent = buffers[outputBufferLibTest] ? documentToString(buffers[outputBufferLibTest].document) : '';
         if (currentTest?.output !== outputBufferContent) {
-            yield* put(bufferResetDocument({buffer: outputBufferLibTest, document: TextBufferHandler.documentFromString(currentTest?.output), goToEnd: true}));
+            yield* put(bufferResetDocument({buffer: outputBufferLibTest, document: TextBufferHandler.documentFromString(currentTest?.output)}));
         }
     }
 
