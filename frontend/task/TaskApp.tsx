@@ -69,6 +69,10 @@ export function TaskApp() {
     };
 
     useEffect(() => {
+        document.documentElement.setAttribute('active-view', activeView);
+    }, [activeView]);
+
+    useEffect(() => {
         // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
         if (options.theme) {
             document.documentElement.setAttribute('data-theme', options.theme);
