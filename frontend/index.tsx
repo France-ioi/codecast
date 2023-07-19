@@ -38,6 +38,7 @@ import {CustomDragLayer} from "./task/CustomDragLayer";
 import AbstractRunner from "./stepper/abstract_runner";
 import {TralalereApp} from "./tralalere/TralalereApp";
 import {TaskLevelName} from "./task/platform/platform_slice";
+import {SmartContractConfigType} from './task/libs/smart_contract/smart_contract_lib';
 
 setAutoFreeze(true);
 
@@ -152,6 +153,7 @@ declare global {
         log: any,
         quickAlgoLanguageStrings: any,
         taskStrings?: any,
+        SmartContractConfig?: SmartContractConfigType,
     }
 }
 
