@@ -248,8 +248,8 @@ export function* createQuickalgoLibrary() {
     }
 
     let availablePlatforms = context.getSupportedPlatforms();
-    if (null !== currentTask && currentTask.supportedLanguages && currentTask.supportedLanguages.length) {
-        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
+    if (null !== currentTask && currentTask.supportedLanguages?.length && '*' !== currentTask.supportedLanguages) {
+        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.split(',').indexOf(platform));
     }
     if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
         yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: true}});
