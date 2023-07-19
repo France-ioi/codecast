@@ -5,11 +5,12 @@ import {appSelect} from '../hooks';
 import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission';
 import {submissionUpdateTaskSubmission} from './submission_slice';
 import {TaskHint} from '../task/hints/hints_slice';
+import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
 
 export interface TaskNormalized {
     id: string,
     textId: string,
-    supportedLanguages: string[],
+    supportedLanguages: string,
     author: string,
     showLimits: boolean,
     userTests: boolean,
@@ -136,7 +137,7 @@ export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> 
 
 export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
     // Use this for now to check if it's a Smart Contract task. Change this in the future
-    if (-1 !== task.supportedLanguages.indexOf('michelson')) {
+    if (smartContractPlatforms.find(platform => -1 !== task.supportedLanguages.indexOf(platform))) {
         return {
             ...task,
             gridInfos: {
