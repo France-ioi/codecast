@@ -55,6 +55,7 @@ log.getLogger('performance').setDefaultLevel('info');
 log.getLogger('platform').setDefaultLevel('info');
 log.getLogger('player').setDefaultLevel('info');
 log.getLogger('printer_lib').setDefaultLevel('info');
+log.getLogger('smart_contract_lib').setDefaultLevel('info');
 log.getLogger('prompt').setDefaultLevel('info');
 log.getLogger('python_runner').setDefaultLevel('info');
 log.getLogger('quickalgo_executor').setDefaultLevel('info');
