@@ -142,7 +142,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
             ...task,
             gridInfos: {
                 context: 'smart_contract',
-                importModules: [],
+                importModules: ['smart_contract_config'],
                 showLabels: true,
                 conceptViewer: true,
                 includeBlocks: {

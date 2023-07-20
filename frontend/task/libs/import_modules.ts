@@ -227,6 +227,7 @@ function importableModules(modulesPath) {
         'scanip-context': { src: modulesPath + "/pemFioi/network/scanip/context.js", id: "scanip-context" },
 
         'font-awesome': {type: "stylesheet", src: modulesPath + "/fonts/fontAwesome/css/all.css", id: "font-awesome" },
+        'smart_contract_config': {src: modulesPath+"/pemFioi/smartContractConfig.js", id: "smart_contract_config"},
     }
 }
 
