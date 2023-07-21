@@ -44,17 +44,18 @@ export const hintsSlice = createSlice({
     reducers: {
         hintsLoaded(state, action: PayloadAction<TaskHint[]>) {
             // Add id to hints
-            state.availableHints = action.payload;
             let currentId = 0;
             const hintsById: {[hintId: string]: TaskHint} = {};
-            for (let [hintIndex, hint] of state.availableHints.entries()) {
+            const newAvailableHints = [];
+            for (let hint of action.payload) {
                 const newHint = {...hint};
                 if (!newHint.id) {
                     newHint.id = `hint:${currentId++}`;
                 }
-                state.availableHints[hintIndex] = newHint;
+                newAvailableHints.push(newHint);
                 hintsById[newHint.id] = newHint;
             }
+
             // Add previous links to hints
             for (let [hintId, hint] of Object.entries(hintsById)) {
                 if (hint.yesHintId) {
@@ -82,6 +83,8 @@ export const hintsSlice = createSlice({
                     }
                 }
             }
+
+            state.availableHints = newAvailableHints;
         },
         hintUnlocked(state, action: PayloadAction<string>) {
             if (-1 === state.unlockedHintIds.indexOf(action.payload)) {
