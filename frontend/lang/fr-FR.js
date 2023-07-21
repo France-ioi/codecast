@@ -14,6 +14,8 @@ module.exports = {
     NONE: 'Aucun',
     CANCEL: 'Annuler',
     SELECT: 'Choisir',
+    YES: 'Oui',
+    NO: 'Non',
     FULLSCREEN: "plein écran",
     EXIT_FULLSCREEN: "sortie de plein-écran",
     SAVE_RECORDING: "Sauvegarder l'enregistrement",

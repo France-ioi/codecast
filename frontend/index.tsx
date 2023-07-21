@@ -49,6 +49,7 @@ setAutoFreeze(true);
 log.setDefaultLevel('trace');
 log.getLogger('blockly_runner').setDefaultLevel('info');
 log.getLogger('editor').setDefaultLevel('info');
+log.getLogger('hints').setDefaultLevel('info');
 log.getLogger('layout').setDefaultLevel('info');
 log.getLogger('libraries').setDefaultLevel('info');
 log.getLogger('performance').setDefaultLevel('info');
