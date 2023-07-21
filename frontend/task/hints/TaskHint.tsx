@@ -28,14 +28,17 @@ export function TaskHint(props: TaskHintProps) {
         props.goToHintId(hintId);
     }
 
+    const instructionsJQuery = formatTaskInstructions(hint.content, platform, taskLevel);
+
     if (hint.question) {
         return (
             <div
                 className="hint-carousel-item"
             >
-                <div className="hint-question">
-                    {hint.question}
-                </div>
+                <div
+                    className="hint-question"
+                    dangerouslySetInnerHTML={toHtml(instructionsJQuery.html())}
+                />
 
                 <div className="hint-buttons">
                     <div className={`hint-button ${props.askHintClassName}`} onClick={answerYes}>
@@ -50,14 +53,10 @@ export function TaskHint(props: TaskHintProps) {
         )
     }
 
-    const instructionsJQuery = formatTaskInstructions(hint.content, platform, taskLevel);
-
     return (
         <div
             className="hint-carousel-item"
             dangerouslySetInnerHTML={toHtml(instructionsJQuery.html())}
-        >
-
-        </div>
+        />
     );
 }

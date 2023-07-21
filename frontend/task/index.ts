@@ -194,7 +194,8 @@ function* taskLoadSaga(app: App, action) {
     // yield* put(hintsLoaded([
     //     {
     //         id: '1.a',
-    //         question: 'As-tu réussi à placer la première bouée ?',
+    //         content: 'As-tu réussi à placer la première bouée ?',
+    //         question: true,
     //         yesHintId: '2.a',
     //         noHintId: '1.a.no',
     //     },
@@ -205,7 +206,8 @@ function* taskLoadSaga(app: App, action) {
     //     },
     //     {
     //         id: '1.b',
-    //         question: 'Cette animation a-t-elle permis de te débloquer ?',
+    //         content: 'Cette animation a-t-elle permis de te débloquer ?',
+    //         question: true,
     //         yesHintId: '1.b.yes',
     //         noHintId: '1.b.no',
     //     },
@@ -222,7 +224,8 @@ function* taskLoadSaga(app: App, action) {
     //     },
     //     {
     //         id: '2.a',
-    //         question: 'As-tu bien fait revenir le grappin ?',
+    //         content: 'As-tu bien fait revenir le grappin ?',
+    //         question: true,
     //         yesHintId: '5.a',
     //         noHintId: '2.a.no',
     //         previousHintId: '1.a',
@@ -234,7 +237,8 @@ function* taskLoadSaga(app: App, action) {
     //     },
     //     {
     //         id: '2.b',
-    //         question: 'Est-ce que ça t\'a débloqué ?',
+    //         content: 'Est-ce que ça t\'a débloqué ?',
+    //         question: true,
     //         yesHintId: '2.b.yes',
     //         noHintId: '2.b.no',
     //     },

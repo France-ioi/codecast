@@ -8,10 +8,9 @@ export interface TaskHint {
     content?: string,
     minScore?: number, // Between 0 and 1
     id?: string,
-    locked?: boolean,
     previousHintId?: string,
     nextHintId?: string,
-    question?: string,
+    question?: boolean,
     yesHintId?: string,
     noHintId?: string,
     disableNext?: boolean,
