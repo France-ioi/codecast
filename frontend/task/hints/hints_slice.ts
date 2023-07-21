@@ -47,11 +47,13 @@ export const hintsSlice = createSlice({
             state.availableHints = action.payload;
             let currentId = 0;
             const hintsById: {[hintId: string]: TaskHint} = {};
-            for (let hint of state.availableHints) {
-                if (!hint.id) {
-                    hint.id = `hint:${currentId++}`;
+            for (let [hintIndex, hint] of state.availableHints.entries()) {
+                const newHint = {...hint};
+                if (!newHint.id) {
+                    newHint.id = `hint:${currentId++}`;
                 }
-                hintsById[hint.id] = hint;
+                state.availableHints[hintIndex] = newHint;
+                hintsById[newHint.id] = newHint;
             }
             // Add previous links to hints
             for (let [hintId, hint] of Object.entries(hintsById)) {
