@@ -77,7 +77,7 @@ export function* getTaskAnswerAggregated () {
 }
 
 export function getTaskMetadata() {
-    const metadata = window.json ? window.json : {
+    const metadata = window.json ?? window.PEMTaskMetaData ?? {
         fullFeedback: true,
         minWidth: "auto",
     };
