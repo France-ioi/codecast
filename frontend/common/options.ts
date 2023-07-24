@@ -172,7 +172,7 @@ export default function(bundle: Bundle) {
                 yield* put({type: StepperActionTypes.StepperExit});
 
                 // Reset source if we change from a block platform to a non-block platform
-                const currentModel = yield* appSelect(state => state.buffers['source'].model);
+                const currentModel = yield* appSelect(state => state.buffers['source']?.model);
                 if (
                     (currentModel instanceof BlockDocumentModel && !hasBlockPlatform(newPlatform))
                     || (currentModel instanceof DocumentModel && hasBlockPlatform(newPlatform))
