@@ -29,6 +29,7 @@ export interface SmartContractResultLogLine {
     as: string,
     command: string,
     date: string,
+    fail?: string,
     failed?: boolean,
     kind: string,
     source: string,
