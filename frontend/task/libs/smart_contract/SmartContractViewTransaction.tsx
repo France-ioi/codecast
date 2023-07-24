@@ -94,16 +94,7 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
             {log.failed && <div className={`smart-contract-log__footer ${props.failed ? 'is-failed' : ''}`}>
                 <div>
                     {log.fail && <div>Failed as expected, with error: {log.fail}</div>}
-                    {!log.fail && <React.Fragment>
-                        <div dangerouslySetInnerHTML={toHtml(nl2br(log.stderr.substring(0, footerExpanded ? log.stderr.length : maxFooterLength)))}/>
-
-                        {!footerExpanded && log?.stderr?.length > maxFooterLength && <p className="smart-contract-log__see-more mt-2">
-                            <a onClick={() => setFooterExpanded(true)}>
-                                <FontAwesomeIcon icon={faChevronDown} className="mr-1"/>
-                                <span>See more</span>
-                            </a>
-                        </p>}
-                    </React.Fragment>}
+                    {!log.fail && <div>Failed as expected</div>}
                 </div>
             </div>}
         </div>
