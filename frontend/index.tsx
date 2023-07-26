@@ -156,6 +156,7 @@ declare global {
         quickAlgoLanguageStrings: any,
         taskStrings?: any,
         SmartContractConfig?: SmartContractConfigType,
+        taskData?: any,
     }
 }
 

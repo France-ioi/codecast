@@ -136,6 +136,22 @@ export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> 
 }
 
 export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
+    // task.scriptAnimation = "\n       window.taskData = subTask = {};\n       subTask.gridInfos = {\n         context: 'smart_contract',\n         importModules: ['smart_contract_config'],\n         showLabels: true,\n         conceptViewer: true,\n         includeBlocks: {\n           groupByCategory: true,\n           standardBlocks: {\n             wholeCategories: ['smart_contract_main_blocks', 'smart_contract_types'],\n           },\n         },\n         expectedStorage: \"(string %names)\",\n         taskStrings: {\n           \"storageDescription\": {\n             \"names\": \"it should contain its initial value then the list of names of the callers, all separated with commas\",\n           },\n         },\n         // expectedStorage: \"(Pair (string %names) (nat %nb_calls))\",\n       };\n     ";
+    if (task.scriptAnimation) {
+        try {
+            eval(task.scriptAnimation);
+        } catch (ex) {
+            console.error("Couldn't execute script animation", ex);
+        }
+
+        if (window.taskData?.gridInfos) {
+            return {
+                ...task,
+                gridInfos: window.taskData.gridInfos,
+            };
+        }
+    }
+
     // Use this for now to check if it's a Smart Contract task. Change this in the future
     if (smartContractPlatforms.find(platform => -1 !== task.supportedLanguages.indexOf(platform))) {
         return {
