@@ -187,8 +187,79 @@ function* taskLoadSaga(app: App, action) {
     }
 
     // yield* put(hintsLoaded([
-    // {content: 'aazazaz', minScore: 0},
-    // {content: 'aazazazazazazz', minScore: 0.5},
+    //     {content: 'aazazaz', minScore: 0},
+    //     {content: 'aazazazazazazz', minScore: 0},
+    // ]));
+
+    // yield* put(hintsLoaded([
+    //     {
+    //         id: '1.a',
+    //         content: 'As-tu réussi à placer la première bouée ?',
+    //         question: true,
+    //         yesHintId: '2.a',
+    //         noHintId: '1.a.no',
+    //     },
+    //     {
+    //         id: '1.a.no',
+    //         content: 'Indice vidéo',
+    //         nextHintId: '1.b',
+    //     },
+    //     {
+    //         id: '1.b',
+    //         content: 'Cette animation a-t-elle permis de te débloquer ?',
+    //         question: true,
+    //         yesHintId: '1.b.yes',
+    //         noHintId: '1.b.no',
+    //     },
+    //     {
+    //         id: '1.b.yes',
+    //         content: 'Message de félicitations incitant à essayer de continuer.',
+    //         disablePrevious: true,
+    //         nextHintId: '2.a',
+    //     },
+    //     {
+    //         id: '1.b.no',
+    //         content: 'Message invitant à aller réviser sur la saison 1.',
+    //         disableNext: true,
+    //     },
+    //     {
+    //         id: '2.a',
+    //         content: 'As-tu bien fait revenir le grappin ?',
+    //         question: true,
+    //         yesHintId: '5.a',
+    //         noHintId: '2.a.no',
+    //         previousHintId: '1.a',
+    //     },
+    //     {
+    //         id: '2.a.no',
+    //         content: 'Indice vidéo',
+    //         nextHintId: '2.b',
+    //     },
+    //     {
+    //         id: '2.b',
+    //         content: 'Est-ce que ça t\'a débloqué ?',
+    //         question: true,
+    //         yesHintId: '2.b.yes',
+    //         noHintId: '2.b.no',
+    //     },
+    //     {
+    //         id: '2.b.yes',
+    //         content: 'Message de félicitations incitant à essayer de continuer.',
+    //         nextHintId: '5.a',
+    //         disablePrevious: true,
+    //     },
+    //     {
+    //         id: '2.b.no',
+    //         content: 'Message invitant à aller réviser sur la saison 1.',
+    //         disableNext: true,
+    //     },
+    //
+    //     {
+    //         id: '5.a',
+    //         content: 'Félicitations !',
+    //         disableNext: true,
+    //         previousHintId: '2.a',
+    //     },
     // ]));
 
     if (state.options.taskHints) {
