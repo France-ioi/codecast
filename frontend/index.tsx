@@ -128,6 +128,7 @@ declare global {
         task: any, // task object defined to receive data from platform
         platform: any, // platform object defined to send data to platform
         json: any, // object that contains the data of a task, defined in the index.html of such task
+        PEMTaskMetaData: any, // same usage, bue for task grader tasks
         task_token: any, // instance that can generate a task token
         options: any, // this is used to store default data about task
         Blockly: any,
@@ -156,6 +157,7 @@ declare global {
         quickAlgoLanguageStrings: any,
         taskStrings?: any,
         SmartContractConfig?: SmartContractConfigType,
+        taskData?: any,
     }
 }
 
