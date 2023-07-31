@@ -555,15 +555,15 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
         yield* call(createQuickalgoLibrary);
     } else if (context) {
         log.getLogger('task').debug('task update test', state.task.taskTests, state.task.currentTestId);
-        if (!(state.task.currentTestId in state.task.taskTests)) {
+        if (!(state.task.currentTestId in state.task.taskTests) && null !== state.task.currentTestId) {
             console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task);
             throw "Couldn't update test during replay, check if the replay is using the appropriate task";
         }
         context.iTestCase = state.task.currentTestId;
 
         if (!payload.withoutContextState) {
-            const contextState = state.task.taskTests[state.task.currentTestId].contextState;
-            if (null !== contextState) {
+            const contextState = state.task.taskTests[state.task.currentTestId]?.contextState;
+            if (null !== contextState && undefined !== contextState) {
                 const currentTest = selectCurrentTestData(state);
                 log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);
                 context.resetAndReloadState(currentTest, state, contextState);
