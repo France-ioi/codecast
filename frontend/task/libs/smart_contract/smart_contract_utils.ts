@@ -2,7 +2,7 @@ import {Expr, Parser, Prim} from '@taquito/michel-codec';
 import {CodecastAnalysisVariable} from '../../../stepper/analysis/analysis';
 
 export function convertMichelsonStorageToCodecastFormat(actualStorage: string, storageType?: string): CodecastAnalysisVariable[] {
-    if (!actualStorage) {
+    if (null === actualStorage || undefined === actualStorage) {
         return [];
     }
 
@@ -31,7 +31,6 @@ export function getStorageFormat(storageType: string) {
 
     walkStorageTypeAndExtractVariables(storageFormat, storageData);
 
-
     return storageData;
 }
 
@@ -45,34 +44,39 @@ function matchMichelsonStorageToObject(actualStorage: Expr, storageType: Prim, s
             const storageTypeArg = storageType.args[argIndex];
             if (isPrim(actualStorage) && isPrim(storageTypeArg)) {
                 let value = matchMichelsonStorageToObject(actualStorage.args[argIndex], storageTypeArg, storageData);
-                if (storageTypeArg.annots && storageTypeArg.annots.length) {
-                    const name = storageTypeArg.annots[0].substring(1);
-                    if ('string' === storageTypeArg.prim) {
-                        value = `"${value}"`;
-                    } else if ('mutez' === storageTypeArg.prim) {
-                        value = Math.round((value / 1000000) * 100) / 100;
-                    }
-
-                    storageData.push({
-                        name,
-                        type: storageTypeArg.prim,
-                        displayType: -1 !== ['int', 'nat', 'mutez'].indexOf(storageTypeArg.prim),
-                        value,
-                        path: name,
-                        previousValue: null,
-                        variables: null,
-                        variablesReference: storageData.length,
-                    });
-                }
+                addNewVariableToStorageData(storageTypeArg, value, storageData);
             }
         }
     }
 
     if ('Pair' !== storageType.prim) {
-        return Object.values(actualStorage)[0];
+        const value = Object.values(actualStorage)[0];
+        addNewVariableToStorageData(storageType, value, storageData);
     }
 
     return null;
+}
+
+function addNewVariableToStorageData(storageTypeArg: Prim, value: any, storageData: CodecastAnalysisVariable[]) {
+    if (storageTypeArg.annots && storageTypeArg.annots.length) {
+        const name = storageTypeArg.annots[0].substring(1);
+        if ('string' === storageTypeArg.prim) {
+            value = `"${value}"`;
+        } else if ('mutez' === storageTypeArg.prim) {
+            value = Math.round((value / 1000000) * 100) / 100;
+        }
+
+        storageData.push({
+            name,
+            type: storageTypeArg.prim,
+            displayType: -1 !== ['int', 'nat', 'mutez'].indexOf(storageTypeArg.prim),
+            value,
+            path: name,
+            previousValue: null,
+            variables: null,
+            variablesReference: storageData.length,
+        });
+    }
 }
 
 function walkStorageTypeAndExtractVariables(storageType: Prim, storageData: SmartContractStorageElement[]) {
