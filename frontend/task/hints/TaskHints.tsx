@@ -20,7 +20,7 @@ export function TaskHints(props: TaskHintProps) {
     const displayedHintIndex = null === displayedHintId ? unlockedHintIds.length : unlockedHintIds.indexOf(displayedHintId);
     const displayedHint = availableHints.find(hint => displayedHintId === hint.id);
     const nextAvailableHint = availableHints.find(hint => -1 === unlockedHintIds.indexOf(hint.id));
-    const canAskMoreHints = undefined !== nextAvailableHint && !displayedHint?.question && !displayedHint?.disableNext;
+    let canAskMoreHints = undefined !== nextAvailableHint && !displayedHint?.question && !displayedHint?.disableNext;
 
     const dispatch = useDispatch();
 
@@ -42,7 +42,11 @@ export function TaskHints(props: TaskHintProps) {
     if (displayedHint) {
         if (!displayedHint.disableNext && !displayedHint.question) {
             if (displayedHint.nextHintId) {
-                currentHintNextId = displayedHint.nextHintId;
+                if (availableHints.find(hint => displayedHint.nextHintId === hint.id)) {
+                    currentHintNextId = displayedHint.nextHintId;
+                } else {
+                    canAskMoreHints = false;
+                }
             }
         }
 
