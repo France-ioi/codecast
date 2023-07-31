@@ -26,7 +26,6 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
 
     const log = props.log;
     const hasExpansion = undefined !== log.consumed_gas || undefined !== log.paid_storage_size_diff;
-    const [footerExpanded, setFooterExpanded] = useState(log?.stderr?.length <= maxFooterLength);
 
     let displayedStorage = undefined !== log.updated_storage ? log.updated_storage : log.storage;
     if (task.gridInfos.expectedStorage) {
