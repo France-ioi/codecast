@@ -969,7 +969,7 @@ $tralalere-red: #FF3C11;
   .debug-lib-container {
     padding: .5rem;
     height: 200px;
-    overflow-y: scroll;
+    overflow-y: auto;
     color: $tralalere-green;
     font-weight: bold;
     font-family: monospace;
