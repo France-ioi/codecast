@@ -65,7 +65,12 @@ import {TermBuffer} from "./io/terminal";
 import {delay} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
-import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
+import {
+    mainQuickAlgoLogger,
+    quickAlgoLibraries,
+    QuickAlgoLibrariesActionType,
+    quickAlgoLibraryResetAndReloadStateSaga
+} from "../task/libs/quickalgo_libraries";
 import {selectCurrentTestData, taskResetDone, updateCurrentTestId} from "../task/task_slice";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
@@ -161,7 +166,6 @@ const initialStateStepperState = {
         stackSize: 4096
     },
     isFinished: false, // Only used for python
-    contextState: {} as any,
     currentBlockId: null, // Only used for Blockly
 };
 
@@ -574,7 +578,6 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     /**
      * TODO: stepperState comes from an action so it's not an immer draft.
      */
-    // log.getLogger('stepper').debug('previous state', stepperContext.state.contextState, 'and progress', progress);
     stepperContext.state = {...stepperContext.state};
 
     if (false !== progress) {
@@ -588,11 +591,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         enrichStepperState(stepperContext.state, 'Stepper.Progress', stepperContext);
     }
 
-    const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (context) {
-        state.task.state = getCurrentImmerState(context.getInnerState());
-    }
-
+    state.task.state = quickAlgoLibraries.getLibrariesInnerState(state.environment);
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
@@ -740,15 +739,10 @@ function* compileSucceededSaga(app: App) {
         Codecast.runner = yield* call(createRunnerSaga);
 
         /* Build the stepper state. This automatically runs into user source code. */
-        let state = yield* appSelect();
-
-        let stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
-        log.getLogger('stepper').debug('[stepper init] current state', state.task.state, 'context state', stepperState.contextState);
-        const newState = yield* appSelect();
-        log.getLogger('stepper').debug('[stepper init] new state', newState.task.state);
-
+        let stepperState = yield* call(app.stepperApi.buildState);
+        const state = yield* appSelect();
+        log.getLogger('stepper').debug('[stepper init] new state', state.task.state);
         // buildState may have triggered an error.
-        state = yield* appSelect();
         if (state.compile.status !== 'error') {
             /* Enable the stepper */
             yield* put({type: ActionTypes.StepperEnabled});
@@ -856,8 +850,6 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
     let state = yield* appSelect();
 
     if (!state.stepper.synchronizingAnalysis) {
-        // log.getLogger('stepper').debug('current stepper state', stepperContext.state.contextState);
-
         /* Emit a progress action so that an up-to-date state gets displayed. */
 
         yield* put({type: ActionTypes.StepperProgress, payload: {stepperContext, progress: arg.progress}});
@@ -871,8 +863,6 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
         completed = yield* call(saga, stepperContext);
     }
 
-    // log.getLogger('stepper').debug('current stepper state2', stepperContext.state.contextState);
-
     if (state.stepper.synchronizingAnalysis) {
         yield* call(resolve, completed);
         return;
@@ -882,8 +872,6 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
        the effects of user interaction. */
     state = yield* appSelect();
     stepperContext.state = {...getCurrentStepperState(state)};
-
-    // log.getLogger('stepper').debug('current stepper state3', stepperContext.state.contextState);
 
     /* Continue stepper execution, passing the saga's return value as the
        result of yielding the interact effect. */
@@ -1071,9 +1059,8 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
             taskContext.display = false;
         }
         stepperContext.taskDisplayNoneStatus = 'running';
-        taskContext.resetAndReloadState(selectCurrentTestData(state), state);
-        stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
-        log.getLogger('stepper').debug('current task state', taskContext.getInnerState());
+
+        yield* call(quickAlgoLibraryResetAndReloadStateSaga);
 
         if (!Codecast.runner) {
             Codecast.runner = yield* call(createRunnerSaga);

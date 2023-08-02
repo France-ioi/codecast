@@ -5,7 +5,11 @@ import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {ActionTypes, stepperRunBackgroundFinished} from './actionTypes';
 import {PlayerInstant} from '../player';
 import log from 'loglevel';
-import {mainQuickAlgoLogger, quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
+import {
+    mainQuickAlgoLogger,
+    quickAlgoLibraries,
+    quickAlgoLibraryResetAndReloadStateSaga
+} from '../task/libs/quickalgo_libraries';
 import {selectCurrentTestData} from '../task/task_slice';
 import {getCurrentStepperState, isStepperInterrupting} from './selectors';
 import {App, Codecast} from '../index';
@@ -43,11 +47,7 @@ export function addStepperRecordAndReplayHooks(app: App) {
         yield* put({type: ActionTypes.StepperExit});
         replayContext.addSaga(function* () {
             log.getLogger('stepper').debug('make reset saga');
-            const context = quickAlgoLibraries.getContext(null, 'main');
-            if (context) {
-                const state = yield* appSelect();
-                context.resetAndReloadState(selectCurrentTestData(state), state);
-            }
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga);
         })
     });
 
@@ -188,8 +188,7 @@ export function addStepperRecordAndReplayHooks(app: App) {
     });
 
     replayApi.on('stepper.restart', function* () {
-        const state = yield* appSelect();
-        const stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
+        const stepperState = yield* call(app.stepperApi.buildState);
 
         yield* put({type: ActionTypes.StepperEnabled});
         yield* put({type: ActionTypes.StepperRestart, payload: {stepperState}});

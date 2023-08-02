@@ -432,12 +432,9 @@ function* handleLibrariesEventListenerSaga(app: App) {
 
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 log.getLogger('task').debug('exec done, update task state');
-                const context = quickAlgoLibraries.getContext(null, state.environment);
-                if (context) {
-                    const contextState = getCurrentImmerState(context.getInnerState());
-                    log.getLogger('task').debug('get new state', contextState);
-                    app.dispatch(taskUpdateState(contextState));
-                }
+                const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
+                log.getLogger('task').debug('get new state', contextState);
+                app.dispatch(taskUpdateState(contextState));
             });
         });
     }
@@ -541,7 +538,7 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
 
     // Save context state for the test we have just left
     if (context && !payload.recreateContext && null !== state.task.previousTestId) {
-        const currentState = getCurrentImmerState(context.getInnerState());
+        const currentState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
         yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
     }
 
@@ -563,16 +560,8 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
 
         if (!payload.withoutContextState) {
             const contextState = state.task.taskTests[state.task.currentTestId]?.contextState;
-            if (null !== contextState && undefined !== contextState) {
-                const currentTest = selectCurrentTestData(state);
-                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);
-                context.resetAndReloadState(currentTest, state, contextState);
-            } else {
-                const currentTest = selectCurrentTestData(state);
-                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
-                context.resetAndReloadState(currentTest, state);
-            }
-
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
+            log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', contextState);
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         }
     }
@@ -822,7 +811,7 @@ export default function (bundle: Bundle) {
                 Codecast.runner.stop();
             }
             yield* call(clearSourceHighlightSaga);
-            yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             log.getLogger('task').debug('put task reset done to true');
             yield* put(taskResetDone(true));
         });
@@ -925,11 +914,7 @@ export default function (bundle: Bundle) {
         app.recordApi.onStart(function* (init) {
             const state = yield* appSelect();
             init.testId = state.task.currentTestId;
-            const context = quickAlgoLibraries.getContext(null, 'main');
-            if (context) {
-                const currentState = getCurrentImmerState(context.getInnerState());
-                init.contextState = currentState;
-            }
+            init.contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
         });
 
         app.replayApi.on('start', function*(replayContext: ReplayContext, event) {
@@ -938,7 +923,7 @@ export default function (bundle: Bundle) {
                 yield* put(updateCurrentTestId({testId, withoutContextState: !!contextState}));
             }
             if (contextState) {
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, contextState);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
             }
         });
 
@@ -999,7 +984,7 @@ export default function (bundle: Bundle) {
 
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && (!quick || (instant.event && -1 !== ['compile.success'].indexOf(instant.event[1])) || hasChangedLevel || hasChangedTest)) {
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, taskData && taskData.state ? taskData.state : null);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, taskData && taskData.state ? taskData.state : null);
                 log.getLogger('replay').debug('DO RESET DISPLAY');
                 yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
             }
@@ -1032,16 +1017,10 @@ export default function (bundle: Bundle) {
             })
         });
 
-        app.stepperApi.onInit(function* (stepperState: StepperState, state: AppStore) {
-            const currentTest = selectCurrentTestData(state);
-
-            log.getLogger('task').debug('stepper init, current test', currentTest, state.environment);
-
-            const context = quickAlgoLibraries.getContext(null, state.environment);
-            context.resetAndReloadState(currentTest, state);
+        app.stepperApi.onInit(function* () {
+            log.getLogger('task').debug('stepper init');
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-
-            stepperState.contextState = getCurrentImmerState(context.getInnerState());
         });
     });
 }

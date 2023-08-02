@@ -15,7 +15,7 @@ import {
 import {getMessage} from "../../../lang";
 
 export function TerminalView() {
-    const taskState = useAppSelector((state: AppStore) => state.task.state);
+    const taskState = useAppSelector((state: AppStore) => state.task.state?.printer);
     const input = taskState ? taskState.inputBuffer : '';
     const inputNeeded = useAppSelector((state: AppStore) => state.task.inputNeeded);
     const player = useAppSelector((state: AppStore) => getPlayerState(state));

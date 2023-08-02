@@ -8,7 +8,7 @@ import {PrinterLib, PrinterLibState} from './printer_lib';
 
 export function InputOutputView() {
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const taskState: PrinterLibState = useAppSelector(state => state.task.state);
+    const taskState: PrinterLibState = useAppSelector(state => state.task.state?.printer);
     const currentTestData = useAppSelector(state => state.task.taskTests[state.task.currentTestId]?.data);
     const libOutput = PrinterLib.getOutputTextFromEvents(taskState ? taskState.ioEvents : []);
 

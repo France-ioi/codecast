@@ -120,7 +120,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
                         errorMessage: payload.error.message,
                     };
 
-                    yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, innerState);
+                    yield* call(quickAlgoLibraryResetAndReloadStateSaga, {smart_contract: innerState});
                     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
                 }
             }
