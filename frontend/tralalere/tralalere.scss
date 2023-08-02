@@ -963,3 +963,21 @@ $tralalere-red: #FF3C11;
     margin-top: 20px;
   }
 }
+
+.tralalere-debug {
+  padding: .5rem;
+  .debug-lib-container {
+    padding: .5rem;
+    height: 200px;
+    overflow-y: scroll;
+    color: $tralalere-green;
+    font-weight: bold;
+    font-family: monospace;
+
+    .debug-lib-line {
+      svg {
+        margin-right: 8px;
+      }
+    }
+  }
+}

@@ -1,36 +1,29 @@
-import React from "react";
-import {Card} from 'react-bootstrap'
-import {Icon} from "@blueprintjs/core";
-import {getMessage} from "../../../lang";
+import React, {useEffect, useRef} from "react";
 import {useAppSelector} from '../../../hooks';
-import {Editor} from '../../../buffers/Editor';
 import {DebugLibState} from './debug_lib';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
 
 export function DebugLibView() {
     const taskState: DebugLibState = useAppSelector(state => state.task.state?.debug);
-    const libOutput = taskState ? taskState.linesLogged.join("\n") : '';
+    const containerRef = useRef<HTMLDivElement>();
+
+    useEffect(() => {
+        containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }, [taskState?.linesLogged]);
+
+    if (!taskState?.linesLogged?.length) {
+        return null;
+    }
 
     return (
-        <div>
-            <Card>
-                <Card.Header className="terminal-view-header">
-                    {getMessage("IOPANE_OUTPUT")}
-                    <Icon icon='lock'/>
-                </Card.Header>
-                <Card.Body>
-                    <Editor
-                        name="printer_output"
-                        content={libOutput}
-                        readOnly
-                        mode='text'
-                        width='100%'
-                        height='100px'
-                        hideCursor
-                        highlightActiveLine={false}
-                        dragEnabled={false}
-                    />
-                </Card.Body>
-            </Card>
+        <div className="debug-lib-container" ref={containerRef}>
+            {taskState?.linesLogged.map((line, lineIndex) =>
+                <div className="debug-lib-line" key={lineIndex}>
+                    <FontAwesomeIcon icon={faChevronRight}/>
+                    <span>{line}</span>
+                </div>
+            )}
         </div>
     );
 }
