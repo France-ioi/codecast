@@ -92,7 +92,7 @@
   &.is-ok {
     cursor: auto;
   }
-  &:hover {
+  &:hover:not(.is-ok):not(.is-active) {
     background: #dee6f1;
   }
 }

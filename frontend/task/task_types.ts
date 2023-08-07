@@ -19,7 +19,7 @@ export interface TaskState {
     success?: boolean,
     successMessage?: string,
     taskTests: TaskTest[],
-    currentTestId?: number,
+    currentTestId?: number|null,
     previousTestId?: number,
     inputNeeded?: boolean,
     inputs?: any[],

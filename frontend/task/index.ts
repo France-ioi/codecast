@@ -544,7 +544,7 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     } else if (context) {
         const taskTests = yield* appSelect(selectTaskTests);
         log.getLogger('task').debug('task update test', taskTests, state.task.currentTestId);
-        if (!(state.task.currentTestId in taskTests) && null !== state.task.currentTestId) {
+        if (!(state.task.currentTestId in taskTests)) {
             console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task);
             throw "Couldn't update test during replay, check if the replay is using the appropriate task";
         }
@@ -574,13 +574,13 @@ function* getTestContextState() {
     let resetDone = newTest.contextStateResetDone;
 
     const submission = selectCurrentServerSubmission(state);
-    if (null !== submission && null !== newTest && isServerSubmission(submission) && submission.evaluated) {
+    if (null !== submission && isServerSubmission(submission) && submission.evaluated) {
         const testResult = submission.result.tests.find(test => test.testId === newTest.id);
         const context = quickAlgoLibraries.getContext(null, state.environment);
         if (undefined !== testResult && !testResult.noFeedback && context.getContextStateFromTestResult) {
             const contextState = context.getContextStateFromTestResult(testResult);
             if (contextState) {
-                return {[quickAlgoLibraries.getMainContextName(state.environment)]: contextState};
+                return {contextState: {[quickAlgoLibraries.getMainContextName(state.environment)]: contextState}};
             }
         }
     }
