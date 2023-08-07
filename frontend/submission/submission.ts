@@ -15,7 +15,6 @@ import {updateCurrentTestId} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
 import {
     quickAlgoLibraries,
-    QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../task/libs/quickalgo_libraries';
 import {CodecastPlatform} from '../stepper/platforms';
@@ -172,7 +171,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(submissionChangeCurrentSubmissionId, function* ({payload}) {
             const submissionId = yield* appSelect(state => state.submission.currentSubmissionId);
             if (null === submissionId) {
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga);
                 yield* put(stepperClearError());
             }
         });

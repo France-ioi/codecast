@@ -53,10 +53,6 @@ class QuickalgoExecutor {
             context.infos.actionDelay = context.plannedNewDelay;
         }
 
-        if (this.stepperContext.state) {
-            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] stepper context before', this.stepperContext.state.contextState);
-        }
-
         if (this.stepperContext.quickAlgoCallsLogger) {
             const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
             this.stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall);
@@ -118,14 +114,6 @@ class QuickalgoExecutor {
 
         const newState = getCurrentImmerState(context.getInnerState());
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] NEW LIBRARY STATE', newState);
-
-        if (this.stepperContext.state) {
-            this.stepperContext.state = {
-                ...this.stepperContext.state,
-                contextState: newState,
-            };
-            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] stepper context after', this.stepperContext.state.contextState);
-        }
 
         if (context.callsToExecute.length) {
             const newCall = context.callsToExecute.pop();

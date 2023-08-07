@@ -7,7 +7,7 @@ import {Alert} from "react-bootstrap";
 import {getMessage} from '../../../lang';
 
 export function SmartContractView() {
-    const taskState = useAppSelector((state: AppStore) => state.task.state);
+    const taskState = useAppSelector((state: AppStore) => state.task.state?.smart_contract);
     if (!taskState || !taskState.resultLog) {
         return (
             <div className="smart-contract-visualization is-empty">

@@ -29,6 +29,7 @@ import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
 import {platformsList} from '../../stepper/platforms';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {taskApi} from '../platform/platform';
+import {DebugLib} from './debug/debug_lib';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -112,12 +113,35 @@ export class QuickAlgoLibraries {
         return listeners;
     }
 
-    getAllLibraries(environment: string = null) {
+    getAllLibraries(environment: string = null): QuickAlgoLibrary[] {
         if (environment) {
             return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...(environment in libs ? [libs[environment]] : [])], []);
         } else {
             return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...Object.values(libs)], []);
         }
+    }
+
+    getAllLibrariesByName(environment: string = null): {[name: string]: QuickAlgoLibrary} {
+        const libraries = {};
+        for (let name of Object.keys(this.libraries)) {
+            if (!(environment in this.libraries[name])) {
+                continue;
+            }
+            libraries[name] = this.libraries[name][environment];
+        }
+
+        return libraries;
+    }
+
+    getLibrariesInnerState(environment: string = null) {
+        const innerState = {};
+        for (let [name, library] of Object.entries(this.getAllLibrariesByName(environment))) {
+            if (library.implementsInnerState()) {
+                innerState[name] = getCurrentImmerState(library.getInnerState());
+            }
+        }
+
+        return innerState;
     }
 }
 
@@ -165,6 +189,9 @@ export function* createQuickalgoLibrary() {
     }
     yield* call(loadFonts, state.options.theme, currentTask);
 
+    // Reset fully local strings when creating a new context to avoid keeping strings from an other language
+    window.languageStrings = {};
+
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
@@ -206,6 +233,7 @@ export function* createQuickalgoLibrary() {
     // For QuickPi lib, with this option, the program is graded even when context.display = false
     // (which happens in particular in the case of a replay)
     contextLib.forceGradingWithoutDisplay = true;
+    yield* call(addCustomBlocksToQuickalgoLibrary, contextLib, display, levelGridInfos);
 
     if (contextLib.changeSoundEnabled) {
         contextLib.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
@@ -258,26 +286,58 @@ export function* createQuickalgoLibrary() {
     }
 
     yield* put(taskSetAvailablePlatforms(availablePlatforms));
-
-    context.resetAndReloadState(testData, state);
+    yield* call(quickAlgoLibraryResetAndReloadStateSaga);
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
 
     return true;
 }
 
-export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = null) {
+export function* addCustomBlocksToQuickalgoLibrary(context: QuickAlgoLibrary, display, gridInfos) {
+    const debugLib = new DebugLib(display, gridInfos);
+    yield* call(mergeQuickalgoLibrary, 'debug', context, debugLib);
+}
+
+export function* mergeQuickalgoLibrary(libName: string, parentContext: QuickAlgoLibrary, childContext: QuickAlgoLibrary) {
+    const environment = yield* appSelect(state => state.environment);
+    quickAlgoLibraries.addLibrary(childContext, libName, environment);
+
+    parentContext.childContexts.push(childContext);
+
+    parentContext.customBlocks = {
+        ...parentContext.customBlocks,
+        ...childContext.customBlocks,
+    };
+
+    parentContext.notionsList = {
+        ...parentContext.notionsList,
+        ...childContext.notionsList,
+    };
+
+    // Copy handlers
+    for (let generatorName in childContext.customBlocks) {
+        // Execute function in the context of the child
+        parentContext[generatorName] = {};
+        for (let [name, method] of Object.entries<Function>(childContext[generatorName])) {
+            parentContext[generatorName][name] = function () {
+                return method.apply(childContext, arguments);
+            };
+        }
+    }
+}
+
+export function* quickAlgoLibraryResetAndReloadStateSaga(innerState = null) {
     const state = yield* appSelect();
     const currentTest = selectCurrentTestData(state);
 
-    const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (context) {
-        log.getLogger('libraries').debug('quickalgo reset and reload state', state.environment, context, innerState, currentTest);
-        context.resetAndReloadState(currentTest, state, innerState);
-
-        const contextState = getCurrentImmerState(context.getInnerState());
-        log.getLogger('libraries').debug('get new state without instant', contextState);
-        yield* put(taskUpdateState(contextState));
+    for (let [name, library] of Object.entries(quickAlgoLibraries.getAllLibrariesByName(state.environment))) {
+        log.getLogger('libraries').debug('quickalgo reset and reload state', state.environment, library, innerState, currentTest);
+        const libraryInnerState = 'object' === typeof innerState && innerState && name in innerState ? innerState[name] : null;
+        library.resetAndReloadState(currentTest, state, libraryInnerState);
     }
+
+    const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
+    log.getLogger('libraries').debug('get new state without instant', contextState);
+    yield* put(taskUpdateState(contextState));
 }
 
 export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
@@ -292,7 +352,7 @@ export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
 }
 
 export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: QuickalgoLibraryCall[]) {
-    yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+    yield* call(quickAlgoLibraryResetAndReloadStateSaga);
 
     log.getLogger('libraries').debug('replay previous quickalgo calls', quickAlgoCalls);
     if (!Codecast.runner) {
@@ -409,20 +469,21 @@ export const mainQuickAlgoLogger = new MainQuickAlgoLogger();
 export default function(bundle: Bundle) {
     bundle.addSaga(function* (app: App) {
         // @ts-ignore
-        yield* takeEvery(QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay, function* ({payload}) {
+        yield* takeEvery(QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay, function* () {
             log.getLogger('libraries').debug('ici redraw display');
             const state = yield* appSelect();
             const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
                 context.needsRedrawDisplay = false;
-                const currentTest = selectCurrentTestData(state);
-                const contextState = getCurrentImmerState(context.getInnerState());
-                if ('main' === app.environment){
+                if ('main' === app.environment) {
                     context.display = true;
                 }
-                // For libs like barcode where we need to call context.reset to recreate context
-                context.resetAndReloadState(currentTest, state, contextState);
+            }
 
+            const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
+
+            if (context) {
                 // @ts-ignore
                 if (context.redrawDisplay) {
                     // @ts-ignore
