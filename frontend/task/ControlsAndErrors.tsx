@@ -36,7 +36,7 @@ export function ControlsAndErrors() {
     const stepperStatus = useAppSelector(state => state.stepper.status);
     const isEvaluating = lastSubmission && !lastSubmission.evaluated && !lastSubmission.crashed;
     const platform = useAppSelector(state => state.options.platform);
-    const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector(state, {enabled: true})).canRestart;
+    const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector({state, enabled: true})).canRestart;
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {

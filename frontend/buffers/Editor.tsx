@@ -86,7 +86,7 @@ export function Editor(props: EditorProps) {
 
     const refEditor = useRef();
 
-    log.getLogger('editor').debug('[buffer] re-render editor', props.state);
+    log.getLogger('editor').debug('[buffer] re-render editor', props.name, props.state);
 
     const scrollOnLastLines = () => {
         const ace = editor.current;

@@ -30,7 +30,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const resetDisplayTimeout = useRef(null);
     const dispatch = useDispatch();
 
-    log.getLogger('editor').debug('[buffer] re-render editor', {state: props.state, highlight: props.highlight});
+    log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlight: props.highlight});
 
     const reset = (document: BlockDocument, alreadyReset = false) => {
         if (!context?.blocklyHelper) {

@@ -1,8 +1,9 @@
 import {AppStore} from '../store';
 import {TaskTestGroupType} from '../task/task_types';
 import {TaskSubmissionMode} from './submission_types';
+import {memoize} from 'proxy-memoize';
 
-export function selectTaskTests(state: AppStore) {
+export const selectTaskTests = memoize((state: AppStore) => {
     const taskLevelsTests = getTaskLevelTests(state);
 
     if (null !== state.submission.currentSubmissionId) {
@@ -25,7 +26,7 @@ export function selectTaskTests(state: AppStore) {
     }
 
     return taskLevelsTests;
-}
+});
 
 function getTaskLevelTests(state: AppStore) {
     if (null === state.task.currentLevel) {

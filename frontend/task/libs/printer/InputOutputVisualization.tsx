@@ -12,6 +12,14 @@ import {inputBufferLibTest, outputBufferLibTest} from './printer_lib';
 import {selectCurrentTest} from '../../task_slice';
 import {TaskTestGroupType} from '../../task_types';
 
+// To avoid re-rendering because of new object
+const bufferNonEditableOptions = {
+    hideCursor: true,
+    highlightActiveLine: false,
+    dragEnabled: false,
+};
+const bufferEditableOptions = {};
+
 export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.options.ioMode);
     const hasStepper = useAppSelector(state => !!getCurrentStepperState(state) || !state.task.resetDone);
@@ -47,11 +55,7 @@ export function InputOutputVisualization() {
                                 readOnly={!currentTestEditable}
                                 requiredWidth='100%'
                                 requiredHeight='150px'
-                                editorProps={!currentTestEditable ? {
-                                    hideCursor: true,
-                                    highlightActiveLine: false,
-                                    dragEnabled: false,
-                                } : {}}
+                                editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
                             />
                         </Card.Body>
                     </Card>
@@ -69,11 +73,7 @@ export function InputOutputVisualization() {
                                     readOnly={!currentTestEditable}
                                     requiredWidth='100%'
                                     requiredHeight='150px'
-                                    editorProps={!currentTestEditable ? {
-                                        hideCursor: true,
-                                        highlightActiveLine: false,
-                                        dragEnabled: false,
-                                    } : {}}
+                                    editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
                                 />
                             </Card.Body>
                         </Card>

@@ -28,7 +28,7 @@ interface StepperControlsProps {
 
 export function TralalereControls(props: StepperControlsProps) {
     const stepperControlsState = useAppSelector(state => {
-        return getStepperControlsSelector(state, props);
+        return getStepperControlsSelector({state, enabled: props.enabled});
     });
     const {showControls, showCompile, compileOrExecuteMessage, controlsType, canInterrupt, showStepper} = stepperControlsState;
     const layoutType = useAppSelector(state => state.layout.type);

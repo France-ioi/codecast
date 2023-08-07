@@ -92,6 +92,7 @@ import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode} from '../task/layout/layout_types';
 import {shuffleArray} from '../utils/javascript';
+import {memoize} from 'proxy-memoize';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -1098,7 +1099,7 @@ function* stepperExitSaga() {
     yield* put({type: ActionTypes.CompileClear});
 }
 
-export function getSourceHighlightFromStateSelector(state: AppStore) {
+export const getSourceHighlightFromStateSelector = memoize((state: AppStore) => {
     const stepperState = state.stepper.currentStepperState;
     if (!stepperState) {
         return null;
@@ -1109,7 +1110,7 @@ export function getSourceHighlightFromStateSelector(state: AppStore) {
     } else {
         return getNodeRange(stepperState);
     }
-}
+});
 
 function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     const state = yield* appSelect();
@@ -1202,7 +1203,7 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
         yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
     }
 
-    const stepperControlsState = getStepperControlsSelector(state, {enabled: true});
+    const stepperControlsState = getStepperControlsSelector({state, enabled: true});
     const stepper = getStepper(state);
     const mustCompile = StepperStatus.Clear === stepper.status;
 
