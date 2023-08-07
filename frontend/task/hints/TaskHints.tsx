@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from "react";
+import React, {useCallback, useRef, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {Carousel} from 'react-bootstrap';
@@ -20,13 +20,14 @@ export function TaskHints(props: TaskHintProps) {
     const displayedHintIndex = null === displayedHintId ? unlockedHintIds.length : unlockedHintIds.indexOf(displayedHintId);
     const displayedHint = availableHints.find(hint => displayedHintId === hint.id);
     const nextAvailableHint = availableHints.find(hint => -1 === unlockedHintIds.indexOf(hint.id));
+    const nextHintToUnlockId = useRef(nextAvailableHint ? nextAvailableHint.id : null);
     let canAskMoreHints = undefined !== nextAvailableHint && !displayedHint?.question && !displayedHint?.disableNext;
 
     const dispatch = useDispatch();
 
     const unlockNextHint = () => {
-        dispatch(hintUnlocked(nextAvailableHint.id));
-        setDisplayedHintId(nextAvailableHint.id);
+        dispatch(hintUnlocked(nextHintToUnlockId.current));
+        setDisplayedHintId(nextHintToUnlockId.current);
     };
 
     const goToHintId = useCallback((hintId: string) => {
@@ -40,10 +41,21 @@ export function TaskHints(props: TaskHintProps) {
     let currentHintPreviousId = null;
     let currentHintNextId = null;
     if (displayedHint) {
+        nextHintToUnlockId.current = nextAvailableHint ? nextAvailableHint.id : null;
         if (!displayedHint.disableNext && !displayedHint.question) {
             if (displayedHint.nextHintId) {
                 if (availableHints.find(hint => displayedHint.nextHintId === hint.id)) {
-                    currentHintNextId = displayedHint.nextHintId;
+                    // If we are on a question, redirect directly to next hint
+                    // If we are not on a question, redirect to next hint if it's unlocked, otherwise redirect to new hint screen
+                    if (displayedHint.question) {
+                        currentHintNextId = displayedHint.nextHintId;
+                    } else {
+                        if (-1 !== unlockedHintIds.indexOf(displayedHint.nextHintId) || availableHints.find(hint => displayedHint.nextHintId === hint.id).immediate) {
+                            currentHintNextId = displayedHint.nextHintId;
+                        } else {
+                            nextHintToUnlockId.current = displayedHint.nextHintId;
+                        }
+                    }
                 } else {
                     canAskMoreHints = false;
                 }
