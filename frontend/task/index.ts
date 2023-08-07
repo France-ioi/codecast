@@ -513,7 +513,7 @@ function* taskLevelLoadedSaga() {
     }
 }
 
-function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
+function* taskUpdateCurrentTestIdSaga({payload}) {
     const state = yield* appSelect();
     const context = quickAlgoLibraries.getContext(null, state.environment);
     log.getLogger('task').debug('update current test', context);
@@ -526,7 +526,7 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
     }
 
     // Stop current execution if there is one
-    if (state.stepper && state.stepper.status !== StepperStatus.Clear) {
+    if ((state.stepper && state.stepper.status !== StepperStatus.Clear) || !state.task.resetDone) {
         yield* put({type: StepperActionTypes.StepperExit, payload: {record: false}});
     }
 
@@ -708,9 +708,9 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery([bufferEdit, bufferEditPlain], function* (action) {
-            // @ts-ignore
-            const {buffer} = action;
+        yield* takeEvery([bufferEdit, bufferEditPlain], function* ({payload}) {
+            const {buffer} = payload;
+            console.log('on buffer edit', buffer);
             if (buffer === 'source') {
                 yield* call(onEditSource);
             }
@@ -848,7 +848,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskChangeLevel, taskChangeLevelSaga);
 
         // @ts-ignore
-        yield* takeEvery(updateCurrentTestId, taskUpdateCurrentTestIdSaga, app);
+        yield* takeEvery(updateCurrentTestId, taskUpdateCurrentTestIdSaga);
 
         yield* takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution, app);
 
