@@ -112,9 +112,6 @@ class QuickalgoExecutor {
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async library call', libraryCallResult);
 
-        const newState = getCurrentImmerState(context.getInnerState());
-        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] NEW LIBRARY STATE', newState);
-
         if (context.callsToExecute.length) {
             const newCall = context.callsToExecute.pop();
             libraryCallResult = await this.execute(module, newCall.action, newCall.args, newCall.callback);

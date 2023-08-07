@@ -1012,7 +1012,7 @@ function* stepperStepSaga(app: App, action) {
                         taskContext.infos.checkEndCondition(taskContext, true);
                     } catch (executionResult: unknown) {
                         // Update test context state with latest data from checkEndCondition
-                        const contextState = getCurrentImmerState(taskContext.getInnerState());
+                        const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
                         yield* put(taskUpdateState(contextState));
 
                         endConditionReached = true;
