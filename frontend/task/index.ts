@@ -286,14 +286,18 @@ function* taskLoadSaga(app: App, action) {
     let tests: TaskTest[] = [];
     if (action.payload && action.payload.tests) {
         tests = action.payload.tests;
-    } else if (currentTask && extractTests) {
-        tests = extractTestsFromTask(currentTask);
+    } else if (currentTask) {
+        if (extractTests) {
+            tests = extractTestsFromTask(currentTask);
+        } else {
+            tests = state.task.taskTests;
+        }
     }
     log.getLogger('task').debug('[task.load] update task tests', {tests, extractTests});
     yield* put(updateTaskTests(tests));
 
     const testId = action.payload && action.payload.testId ? action.payload.testId : (tests.length ? 0 : null);
-    log.getLogger('task').debug('[task.load] update current test id', testId);
+    log.getLogger('task').debug('[task.load] update current test id', testId, tests);
     yield* put(updateCurrentTestId({testId, record: false}));
 
     if (currentTask) {
