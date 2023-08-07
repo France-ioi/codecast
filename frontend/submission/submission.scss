@@ -92,6 +92,9 @@
   &.is-ok {
     cursor: auto;
   }
+  &:hover {
+    background: #dee6f1;
+  }
 }
 
 .submission-result-test-title {

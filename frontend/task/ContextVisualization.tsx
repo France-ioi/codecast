@@ -116,7 +116,7 @@ export function ContextVisualization() {
                 {innerVisualization}
             </div>
 
-            {testsSelectorEnabled && <TaskTestsSelector/>}
+            {testsSelectorEnabled && <div><TaskTestsSelector/></div>}
         </div>
     );
 }
