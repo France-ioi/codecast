@@ -120,14 +120,14 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                     previousValue.current = answer.blockly;
                     log.getLogger('editor').debug('new value', answer);
                     props.onEditPlain(document);
-                    log.getLogger('editor').debug('timeout before removing highlight');
-                    if (resetDisplayTimeout.current) {
-                        clearTimeout(resetDisplayTimeout.current);
-                        resetDisplayTimeout.current = null;
-                    }
-                    resetDisplayTimeout.current = setTimeout(() => {
-                        blocklyHelper.onChangeResetDisplayFct();
-                    }, 500);
+                    // log.getLogger('editor').debug('timeout before removing highlight');
+                    // if (resetDisplayTimeout.current) {
+                    //     clearTimeout(resetDisplayTimeout.current);
+                    //     resetDisplayTimeout.current = null;
+                    // }
+                    // resetDisplayTimeout.current = setTimeout(() => {
+                    //     blocklyHelper.onChangeResetDisplayFct();
+                    // }, 2000);
                 }
             }
         }
@@ -218,10 +218,24 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     }, [props.state?.document]);
 
     useEffect(() => {
-        const selection = props.highlight ? props.highlight : props.state?.selection;
-        log.getLogger('editor').debug('[blockly.editor] selection or highlight changed', selection, props);
+        const selection = props.highlight;
+        log.getLogger('editor').debug('[blockly.editor] highlight changed', selection, props, highlightedBlock.current);
+        if (selection === highlightedBlock.current) {
+            return;
+        }
+
         highlight(selection);
-    }, [props.highlight, props.state?.selection]);
+    }, [props.highlight]);
+
+    useEffect(() => {
+        const selection = props.state?.selection;
+        log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, highlightedBlock.current);
+        if (selection === highlightedBlock.current) {
+            return;
+        }
+
+        highlight(selection);
+    }, [props.state?.selection]);
 
     useEffect(() => {
         if (0 < props.state?.actions?.resize) {

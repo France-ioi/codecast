@@ -710,7 +710,6 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery([bufferEdit, bufferEditPlain], function* ({payload}) {
             const {buffer} = payload;
-            console.log('on buffer edit', buffer);
             if (buffer === 'source') {
                 yield* call(onEditSource);
             }
