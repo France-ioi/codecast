@@ -11,6 +11,7 @@ import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
 import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from './quick_algo_libraries_model';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
+import {DebugLib} from './debug/debug_lib';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -24,15 +25,15 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(innerState = null) {
     const state = yield* appSelect();
     const currentTest = selectCurrentTestData(state);
 
-    const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (context) {
-        log.getLogger('libraries').debug('quickalgo reset and reload state', state.environment, context, innerState, currentTest);
-        context.resetAndReloadState(currentTest, state, innerState);
-
-        const contextState = getCurrentImmerState(context.getInnerState());
-        log.getLogger('libraries').debug('get new state without instant', contextState);
-        yield* put(taskUpdateState(contextState));
+    for (let [name, library] of Object.entries(quickAlgoLibraries.getAllLibrariesByName(state.environment))) {
+        log.getLogger('libraries').debug('quickalgo reset and reload state', state.environment, library, innerState, currentTest);
+        const libraryInnerState = 'object' === typeof innerState && innerState && name in innerState ? innerState[name] : null;
+        library.resetAndReloadState(currentTest, state, libraryInnerState);
     }
+
+    const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
+    log.getLogger('libraries').debug('get new state without instant', contextState);
+    yield* put(taskUpdateState(contextState));
 }
 
 export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
@@ -93,19 +94,21 @@ export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: Q
 export default function(bundle: Bundle) {
     bundle.addSaga(function* (app: App) {
         // @ts-ignore
-        yield* takeEvery(QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay, function* ({payload}) {
+        yield* takeEvery(QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay, function* () {
             log.getLogger('libraries').debug('ici redraw display');
             const state = yield* appSelect();
             const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
                 context.needsRedrawDisplay = false;
-                const contextState = getCurrentImmerState(context.getInnerState());
-                if ('main' === app.environment){
+                if ('main' === app.environment) {
                     context.display = true;
                 }
-                // For libs like barcode where we need to call context.reset to recreate context
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
+            }
 
+            const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
+
+            if (context) {
                 // @ts-ignore
                 if (context.redrawDisplay) {
                     // @ts-ignore

@@ -14,6 +14,8 @@ module.exports = {
     NONE: 'Aucun',
     CANCEL: 'Annuler',
     SELECT: 'Choisir',
+    YES: 'Oui',
+    NO: 'Non',
     CONFIRM: 'Confirmer',
     FULLSCREEN: "plein écran",
     EXIT_FULLSCREEN: "sortie de plein-écran",

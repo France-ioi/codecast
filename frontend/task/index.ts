@@ -174,8 +174,79 @@ function* taskLoadSaga(app: App, action) {
     }
 
     // yield* put(hintsLoaded([
-    // {content: 'aazazaz', minScore: 0},
-    // {content: 'aazazazazazazz', minScore: 0.5},
+    //     {content: 'aazazaz', minScore: 0},
+    //     {content: 'aazazazazazazz', minScore: 0},
+    // ]));
+
+    // yield* put(hintsLoaded([
+    //     {
+    //         id: '1.a',
+    //         content: 'As-tu réussi à placer la première bouée ?',
+    //         question: true,
+    //         yesHintId: '2.a',
+    //         noHintId: '1.a.no',
+    //     },
+    //     {
+    //         id: '1.a.no',
+    //         content: 'Indice vidéo',
+    //         nextHintId: '1.b',
+    //     },
+    //     {
+    //         id: '1.b',
+    //         content: 'Cette animation a-t-elle permis de te débloquer ?',
+    //         question: true,
+    //         yesHintId: '1.b.yes',
+    //         noHintId: '1.b.no',
+    //     },
+    //     {
+    //         id: '1.b.yes',
+    //         content: 'Message de félicitations incitant à essayer de continuer.',
+    //         disablePrevious: true,
+    //         nextHintId: '2.a',
+    //     },
+    //     {
+    //         id: '1.b.no',
+    //         content: 'Message invitant à aller réviser sur la saison 1.',
+    //         disableNext: true,
+    //     },
+    //     {
+    //         id: '2.a',
+    //         content: 'As-tu bien fait revenir le grappin ?',
+    //         question: true,
+    //         yesHintId: '5.a',
+    //         noHintId: '2.a.no',
+    //         previousHintId: '1.a',
+    //     },
+    //     {
+    //         id: '2.a.no',
+    //         content: 'Indice vidéo',
+    //         nextHintId: '2.b',
+    //     },
+    //     {
+    //         id: '2.b',
+    //         content: 'Est-ce que ça t\'a débloqué ?',
+    //         question: true,
+    //         yesHintId: '2.b.yes',
+    //         noHintId: '2.b.no',
+    //     },
+    //     {
+    //         id: '2.b.yes',
+    //         content: 'Message de félicitations incitant à essayer de continuer.',
+    //         nextHintId: '5.a',
+    //         disablePrevious: true,
+    //     },
+    //     {
+    //         id: '2.b.no',
+    //         content: 'Message invitant à aller réviser sur la saison 1.',
+    //         disableNext: true,
+    //     },
+    //
+    //     {
+    //         id: '5.a',
+    //         content: 'Félicitations !',
+    //         disableNext: true,
+    //         previousHintId: '2.a',
+    //     },
     // ]));
 
     if (state.options.taskHints) {
@@ -347,12 +418,9 @@ function* handleLibrariesEventListenerSaga(app: App) {
 
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 log.getLogger('task').debug('exec done, update task state');
-                const context = quickAlgoLibraries.getContext(null, state.environment);
-                if (context) {
-                    const contextState = getCurrentImmerState(context.getInnerState());
-                    log.getLogger('task').debug('get new state', contextState);
-                    app.dispatch(taskUpdateState(contextState));
-                }
+                const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
+                log.getLogger('task').debug('get new state', contextState);
+                app.dispatch(taskUpdateState(contextState));
             });
         });
     }
@@ -452,7 +520,7 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
 
     // Save context state for the test we have just left
     if (context && !payload.recreateContext && null !== state.task.previousTestId) {
-        const currentState = getCurrentImmerState(context.getInnerState());
+        const currentState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
         const taskResetDone = state.task.resetDone;
         yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState, contextStateResetDone: taskResetDone}));
     }
@@ -472,7 +540,7 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
     } else if (context) {
         const taskTests = yield* appSelect(selectTaskTests);
         log.getLogger('task').debug('task update test', taskTests, state.task.currentTestId);
-        if (!(state.task.currentTestId in taskTests)) {
+        if (!(state.task.currentTestId in taskTests) && null !== state.task.currentTestId) {
             console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task);
             throw "Couldn't update test during replay, check if the replay is using the appropriate task";
         }
@@ -481,18 +549,11 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
         let newTaskResetDone = true;
         if (!payload.withoutContextState) {
             const {contextState, contextStateResetDone} = yield* call(getTestContextState);
-            if (null !== contextState) {
-                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', contextState);
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
-                if (false === contextStateResetDone) {
-                    newTaskResetDone = false;
-                }
-            } else {
-                const currentTest = selectCurrentTestData(state);
-                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga);
+            if (false === contextStateResetDone) {
+                newTaskResetDone = false;
             }
-
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
+            log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', contextState);
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         }
 
@@ -511,13 +572,11 @@ function* getTestContextState() {
     const submission = selectCurrentServerSubmission(state);
     if (null !== submission && null !== newTest && isServerSubmission(submission) && submission.evaluated) {
         const testResult = submission.result.tests.find(test => test.testId === newTest.id);
-        const context = quickAlgoLibraries.getContext(null, 'main');
+        const context = quickAlgoLibraries.getContext(null, state.environment);
         if (undefined !== testResult && !testResult.noFeedback && context.getContextStateFromTestResult) {
             const contextState = context.getContextStateFromTestResult(testResult);
             if (contextState) {
-                resetDone = false;
-
-                return contextState;
+                return {[quickAlgoLibraries.getMainContextName(state.environment)]: contextState};
             }
         }
     }
@@ -860,11 +919,7 @@ export default function (bundle: Bundle) {
         app.recordApi.onStart(function* (init) {
             const state = yield* appSelect();
             init.testId = state.task.currentTestId;
-            const context = quickAlgoLibraries.getContext(null, 'main');
-            if (context) {
-                const currentState = getCurrentImmerState(context.getInnerState());
-                init.contextState = currentState;
-            }
+            init.contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
         });
 
         app.replayApi.on('start', function*(replayContext: ReplayContext, event) {
@@ -966,16 +1021,10 @@ export default function (bundle: Bundle) {
             });
         });
 
-        app.stepperApi.onInit(function* (stepperState: StepperState, state: AppStore) {
-            const currentTest = selectCurrentTestData(state);
-
-            log.getLogger('task').debug('stepper init, current test', currentTest, state.environment);
-
-            const context = quickAlgoLibraries.getContext(null, state.environment);
-            context.resetAndReloadState(currentTest, state);
+        app.stepperApi.onInit(function* () {
+            log.getLogger('task').debug('stepper init');
+            yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-
-            stepperState.contextState = getCurrentImmerState(context.getInnerState());
         });
     });
 }

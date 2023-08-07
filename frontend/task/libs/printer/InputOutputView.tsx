@@ -9,7 +9,7 @@ import {selectCurrentTest} from '../../task_slice';
 
 export function InputOutputView() {
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const taskState: PrinterLibState = useAppSelector(state => state.task.state);
+    const taskState: PrinterLibState = useAppSelector(state => state.task.state?.printer);
     const libOutput = PrinterLib.getOutputTextFromEvents(taskState ? taskState.ioEvents : []);
     const libExpectedOutput = taskState ? taskState.expectedOutput : '';
 

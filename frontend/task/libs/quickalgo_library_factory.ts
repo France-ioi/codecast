@@ -23,6 +23,8 @@ import {ActionTypes as IOActionTypes} from '../../stepper/io/actionTypes';
 import {IoMode} from '../../stepper/io';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {QuickAlgoLibrariesActionType, quickAlgoLibraryResetAndReloadStateSaga} from './quickalgo_libraries';
+import {QuickAlgoLibrary} from './quickalgo_library';
+import {DebugLib} from './debug/debug_lib';
 
 export function* createQuickalgoLibrary() {
     let state = yield* appSelect();
@@ -60,6 +62,9 @@ export function* createQuickalgoLibrary() {
         }
     }
     yield* call(loadFonts, state.options.theme, currentTask);
+
+    // Reset fully local strings when creating a new context to avoid keeping strings from an other language
+    window.languageStrings = {};
 
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
@@ -102,6 +107,7 @@ export function* createQuickalgoLibrary() {
     // For QuickPi lib, with this option, the program is graded even when context.display = false
     // (which happens in particular in the case of a replay)
     contextLib.forceGradingWithoutDisplay = true;
+    yield* call(addCustomBlocksToQuickalgoLibrary, contextLib, display, levelGridInfos);
 
     if (contextLib.changeSoundEnabled) {
         contextLib.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
@@ -144,8 +150,8 @@ export function* createQuickalgoLibrary() {
     }
 
     let availablePlatforms = context.getSupportedPlatforms();
-    if (null !== currentTask && currentTask.supportedLanguages && currentTask.supportedLanguages.length) {
-        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
+    if (null !== currentTask && currentTask.supportedLanguages?.length && '*' !== currentTask.supportedLanguages) {
+        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.split(',').indexOf(platform));
     }
     if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
         yield* put({
@@ -161,4 +167,37 @@ export function* createQuickalgoLibrary() {
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
 
     return true;
+}
+
+export function* addCustomBlocksToQuickalgoLibrary(context: QuickAlgoLibrary, display, gridInfos) {
+    const debugLib = new DebugLib(display, gridInfos);
+    yield* call(mergeQuickalgoLibrary, 'debug', context, debugLib);
+}
+
+export function* mergeQuickalgoLibrary(libName: string, parentContext: QuickAlgoLibrary, childContext: QuickAlgoLibrary) {
+    const environment = yield* appSelect(state => state.environment);
+    quickAlgoLibraries.addLibrary(childContext, libName, environment);
+
+    parentContext.childContexts.push(childContext);
+
+    parentContext.customBlocks = {
+        ...parentContext.customBlocks,
+        ...childContext.customBlocks,
+    };
+
+    parentContext.notionsList = {
+        ...parentContext.notionsList,
+        ...childContext.notionsList,
+    };
+
+    // Copy handlers
+    for (let generatorName in childContext.customBlocks) {
+        // Execute function in the context of the child
+        parentContext[generatorName] = {};
+        for (let [name, method] of Object.entries<Function>(childContext[generatorName])) {
+            parentContext[generatorName][name] = function () {
+                return method.apply(childContext, arguments);
+            };
+        }
+    }
 }

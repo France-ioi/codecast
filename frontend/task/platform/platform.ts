@@ -80,7 +80,7 @@ export function* getTaskAnswerAggregated () {
 }
 
 export function getTaskMetadata() {
-    const metadata = window.json ? window.json : {
+    const metadata = window.json ?? window.PEMTaskMetaData ?? {
         fullFeedback: true,
         minWidth: "auto",
     };
@@ -212,7 +212,7 @@ function* taskGetAnswerEventSaga (action: ReturnType<typeof taskGetAnswerEvent>)
 function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: ReturnType<typeof taskReloadAnswerEvent>) {
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
-        if (taskLevels && answer) {
+        if (taskLevels && Object.keys(taskLevels).length && answer) {
             const currentLevel = yield getTaskLevel();
             const answerObject = JSON.parse(answer);
             for (let {level} of Object.values(taskLevels)) {

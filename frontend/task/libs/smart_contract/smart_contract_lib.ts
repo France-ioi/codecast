@@ -7,12 +7,16 @@ import {
 } from './smart_contract_blocks';
 import {LibraryTestResult} from '../library_test_result';
 import {SubmissionTestErrorCode, TaskSubmissionServerTestResult} from '../../../submission/submission_types';
+import {NotionArborescence} from '../../blocks/notions';
+import {DocumentationConcept} from '../../documentation/documentation_slice';
+import {Block} from '../../blocks/block_types';
 
 export interface SmartContractResultLogLine {
     amount: number,
     as: string,
     command: string,
     date: string,
+    fail?: string,
     failed?: boolean,
     kind: string,
     source: string,
@@ -43,16 +47,12 @@ interface SmartContractLibState {
     errorMessage?: string,
 }
 
-const localLanguageStrings = {
-    fr: {
-        categories: {
-            'smart_contract_main_blocks': "Main blocks",
-            'smart_contract_types': "Types",
-        },
-        description: {
-        },
-    },
-};
+export interface SmartContractConfigType {
+    localLanguageStrings: {[lang: string]: any},
+    notionsList: NotionArborescence,
+    conceptsList: DocumentationConcept[],
+    smartContractsBlocksList: {[platform: string]: {[notion: string]: Block[]}},
+}
 
 export class SmartContractLib extends QuickAlgoLibrary {
     innerState: SmartContractLibState;
@@ -60,29 +60,11 @@ export class SmartContractLib extends QuickAlgoLibrary {
     constructor (display, infos) {
         super(display, infos);
 
-        this.setLocalLanguageStrings(localLanguageStrings);
+        this.setLocalLanguageStrings(window.SmartContractConfig.localLanguageStrings);
 
-        const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
-            + 'static4.castor-informatique.fr/help/smart_contracts.html';
+        this.notionsList = window.SmartContractConfig.notionsList;
 
-        this.notionsList = {
-            // category: [list of notion names]
-            "smart_contract_main_blocks": ["smart_contract", "entry_point"],
-            "smart_contract_types": ["pairs"],
-        };
-
-        this.conceptList = [
-            {
-                id: 'smart_contract', // Must be the name of the notion
-                name: 'Lorem',
-                url: conceptBaseUrl + '#smart_contracts_lorem', // Must be the value of data-id in the documentation
-            },
-            {
-                id: 'entry_point',
-                name: 'Ipsum',
-                url: conceptBaseUrl + '#smart_contracts_ipsum',
-            },
-        ];
+        this.conceptList = window.SmartContractConfig.conceptsList;
 
         this.innerState = {};
     }

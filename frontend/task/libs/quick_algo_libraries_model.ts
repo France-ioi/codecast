@@ -1,9 +1,7 @@
 import {QuickAlgoLibrary} from './quickalgo_library';
 import {AppStore} from '../../store';
 import {App} from '../../app_types';
-
-//TODO: Handle multiples libraries at once.
-// For now, we only use 1 library
+import {getCurrentImmerState} from '../utils';
 
 export class QuickAlgoLibraries {
     libraries: { [name: string]: { [environment: string]: QuickAlgoLibrary } } = {};
@@ -21,6 +19,10 @@ export class QuickAlgoLibraries {
         }
 
         return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]][environment] : null;
+    }
+
+    getMainContextName(environment: string): string|null {
+        return Object.keys(this.libraries).length ? Object.keys(this.libraries)[0] : null;
     }
 
     unloadContext(environment: string): void {
@@ -81,12 +83,35 @@ export class QuickAlgoLibraries {
         return listeners;
     }
 
-    getAllLibraries(environment: string = null) {
+    getAllLibraries(environment: string = null): QuickAlgoLibrary[] {
         if (environment) {
             return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...(environment in libs ? [libs[environment]] : [])], []);
         } else {
             return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...Object.values(libs)], []);
         }
+    }
+
+    getAllLibrariesByName(environment: string = null): {[name: string]: QuickAlgoLibrary} {
+        const libraries = {};
+        for (let name of Object.keys(this.libraries)) {
+            if (!(environment in this.libraries[name])) {
+                continue;
+            }
+            libraries[name] = this.libraries[name][environment];
+        }
+
+        return libraries;
+    }
+
+    getLibrariesInnerState(environment: string = null) {
+        const innerState = {};
+        for (let [name, library] of Object.entries(this.getAllLibrariesByName(environment))) {
+            if (library.implementsInnerState()) {
+                innerState[name] = getCurrentImmerState(library.getInnerState());
+            }
+        }
+
+        return innerState;
     }
 }
 

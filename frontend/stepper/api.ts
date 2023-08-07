@@ -22,6 +22,7 @@ import log from "loglevel";
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {createQuickAlgoLibraryExecutor} from './quickalgo_executor';
+import {appSelect} from '../hooks';
 import {CodecastPlatform} from './codecast_platform';
 import {Codecast} from '../app_types';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
@@ -83,7 +84,7 @@ export interface StepperApi {
     addSaga?: Function,
     onEffect?: Function,
     addBuiltin?: Function,
-    buildState?: (state: AppStoreReplay, environment: string) => Generator<any, StepperState>,
+    buildState?: () => Generator<any, StepperState>,
     rootStepperSaga?: any,
     executeEffects?: Function,
 }
@@ -134,7 +135,9 @@ export default function(bundle: Bundle) {
 
 
     /* Build a stepper state from the given init data. */
-    function* buildState(state: AppStoreReplay, environment: string): Generator<any, StepperState> {
+    function* buildState(): Generator<any, StepperState> {
+        const state = yield* appSelect();
+        const environment = state.environment;
         const {platform} = state.options;
 
         log.getLogger('stepper').debug('do build state', state, environment);

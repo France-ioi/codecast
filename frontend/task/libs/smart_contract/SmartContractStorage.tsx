@@ -22,7 +22,7 @@ export function SmartContractStorage() {
             </p>
             <ul>
                 {storageVariables.map(({name, type}) =>
-                    <li key={name}><code>{name}</code> should be a {type}{window?.taskStrings?.storageDescription[name] ? ': ' + window?.taskStrings?.storageDescription[name] : ''}</li>
+                    <li key={name}><code>{name}</code> should be a {type}{task.gridInfos.taskStrings?.storageDescription[name] ? ': ' + task.gridInfos.taskStrings?.storageDescription[name] : ''}</li>
                 )}
             </ul>
         </div>

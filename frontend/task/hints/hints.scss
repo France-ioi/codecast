@@ -15,6 +15,30 @@
     line-height: 20px;
   }
 
+  .hint-question {
+    font-weight: bold;
+  }
+
+  .hint-buttons {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-top: 1rem;
+
+    .hint-button {
+      font-size: 0.85em;
+      height: 40px;
+    }
+  }
+
+  .hints-content.has-no-previous .carousel-control-prev {
+    display: none;
+  }
+
+  .hints-content.has-no-next .carousel-control-next {
+    display: none;
+  }
+
   // Carousel
   .carousel-container {
     position: relative;

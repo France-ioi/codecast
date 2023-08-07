@@ -28,6 +28,7 @@ import {selectAvailableHints} from '../task/hints/hints_selectors';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {taskChangeLevel, taskLoad} from '../task/task_actions';
 import {LayoutMobileMode, LayoutType} from '../task/layout/layout_types';
+import {DebugLibView} from '../task/libs/debug/DebugLibView';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -67,6 +68,7 @@ export function TralalereApp() {
     }
 
     const [nextLevelOpen, setNextLevelOpen] = useState(false);
+    const displayDebug = useAppSelector(state => 0 < state.task.state?.debug?.linesLogged?.length);
 
     const increaseLevel = () => {
         dispatch(taskChangeLevel(taskLevelsList[taskLevelsList.indexOf(currentLevel) + 1]));
@@ -190,12 +192,18 @@ export function TralalereApp() {
                         </div>}
 
                         {!isMobile &&
-                          <div className={taskSuccess ? 'visibility-hidden' : ''}>
-                              <TralalereInstructions
-                                  onExpand={expandInstructions}
-                              />
-                              {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
-                          </div>
+                            <React.Fragment>
+                                {displayDebug ? <div className="tralalere-debug">
+                                    <div className="tralalere-box">
+                                        <DebugLibView/>
+                                    </div>
+                                </div> : <div className={taskSuccess ? 'visibility-hidden' : ''}>
+                                    <TralalereInstructions
+                                        onExpand={expandInstructions}
+                                    />
+                                    {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
+                                </div>}
+                            </React.Fragment>
                         }
 
                         <ContextVisualization/>

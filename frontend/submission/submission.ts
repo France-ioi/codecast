@@ -5,9 +5,10 @@ import {platformApi} from "../task/platform/platform";
 import {appSelect} from '../hooks';
 import {addNewTaskTest, removeTaskTest, updateCurrentTestId, updateTaskTest} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
-import {quickAlgoLibraryResetAndReloadStateSaga} from '../task/libs/quickalgo_libraries';
 import {
-    submissionAddNewTaskSubmission,
+    quickAlgoLibraryResetAndReloadStateSaga
+} from '../task/libs/quickalgo_libraries';
+import {
     submissionChangeCurrentSubmissionId,
     submissionChangeDisplayedError,
     SubmissionErrorType,
@@ -32,7 +33,6 @@ import {
 } from './submission_actions';
 import {App} from '../app_types';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
-import {askConfirmation} from '../alert';
 
 export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
     return TaskSubmissionEvaluateOn.Server === object.type;

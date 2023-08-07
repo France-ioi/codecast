@@ -116,6 +116,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('allowExecutionOverBlocksLimit' in query) {
         options.allowExecutionOverBlocksLimit = true;
     }
+    if ('randomFailedTest' in query) {
+        options.showRandomFailedTest = true;
+    }
     if ('ioMode' in query && 'split' === query.ioMode) {
         options.ioMode = IoMode.Split;
     }
@@ -137,6 +140,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     if ('tralalere' === state.options.app) {
         state.options.logAttempts = true;
         state.options.allowExecutionOverBlocksLimit = true;
+        state.options.showRandomFailedTest = true;
     }
 
     loadOptionsFromQuery(options, query);
@@ -172,7 +176,7 @@ export default function(bundle: Bundle) {
 
                 // Reset source if we change from a block platform to a non-block platform
                 const currentModel = yield* appSelect(state => state.buffers['source']);
-                if (currentModel.type !== getBufferTypeFromPlatform(newPlatform)) {
+                if (currentModel?.type !== getBufferTypeFromPlatform(newPlatform)) {
                     const newModel = createEmptyBufferState(getBufferTypeFromPlatform(newPlatform));
                     yield* put(bufferReset({buffer: 'source', state: newModel}));
                 }

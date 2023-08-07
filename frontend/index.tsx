@@ -34,6 +34,7 @@ import {DndProvider} from "react-dnd";
 import {CustomDragLayer} from "./task/CustomDragLayer";
 import {TralalereApp} from "./tralalere/TralalereApp";
 import {TaskLevelName} from "./task/platform/platform_slice";
+import {SmartContractConfigType} from './task/libs/smart_contract/smart_contract_lib';
 import {App, CodecastType} from './app_types';
 
 setAutoFreeze(true);
@@ -45,12 +46,14 @@ setAutoFreeze(true);
 log.setDefaultLevel('trace');
 log.getLogger('blockly_runner').setDefaultLevel('info');
 log.getLogger('editor').setDefaultLevel('info');
+log.getLogger('hints').setDefaultLevel('info');
 log.getLogger('layout').setDefaultLevel('info');
 log.getLogger('libraries').setDefaultLevel('info');
 log.getLogger('performance').setDefaultLevel('info');
 log.getLogger('platform').setDefaultLevel('info');
 log.getLogger('player').setDefaultLevel('info');
 log.getLogger('printer_lib').setDefaultLevel('info');
+log.getLogger('smart_contract_lib').setDefaultLevel('info');
 log.getLogger('prompt').setDefaultLevel('info');
 log.getLogger('python_runner').setDefaultLevel('info');
 log.getLogger('quickalgo_executor').setDefaultLevel('info');
@@ -93,6 +96,7 @@ declare global {
         task: any, // task object defined to receive data from platform
         platform: any, // platform object defined to send data to platform
         json: any, // object that contains the data of a task, defined in the index.html of such task
+        PEMTaskMetaData: any, // same usage, bue for task grader tasks
         task_token: any, // instance that can generate a task token
         options: any, // this is used to store default data about task
         Blockly: any,
@@ -120,6 +124,8 @@ declare global {
         log: any,
         quickAlgoLanguageStrings: any,
         taskStrings?: any,
+        SmartContractConfig?: SmartContractConfigType,
+        taskData?: any,
     }
 }
 

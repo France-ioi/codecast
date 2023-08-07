@@ -278,7 +278,8 @@ class TaskSubmissionExecutor {
         const state = yield* appSelect();
         const environment = state.environment;
         let lastMessage = null;
-        const tests = yield* appSelect(selectTaskTests);
+        const currentTask = state.task.currentTask;
+        const tests = currentTask ? yield* appSelect(selectTaskTests) : state.task.taskTests;
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,
