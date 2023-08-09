@@ -27,6 +27,7 @@ import {CodecastPlatform} from '../../../stepper/codecast_platform';
 import {App} from '../../../app_types';
 import {documentToString, getBufferHandler, TextBufferHandler} from '../../../buffers/document';
 import {bufferEdit, bufferResetDocument} from '../../../buffers/buffers_slice';
+import {TaskTest} from '../../task_types';
 
 export function getTerminalText(events) {
     return events
@@ -292,6 +293,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         this.innerState.inputBuffer = '';
         this.innerState.inputPosition = createDraft({event: 0, pos: 0});
         this.innerState.errorHighlight = null;
+        this.innerState.unknownInput = false;
 
         if (taskInfos) {
             this.taskInfos = taskInfos;
@@ -731,7 +733,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     }
 
-    getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult): PrinterLibState|null {
+    getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): PrinterLibState|null {
         if (testResult.log) {
             const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
             const errorHighlightRange = {
@@ -745,14 +747,16 @@ export class PrinterLib extends QuickAlgoLibrary {
                 },
             };
 
+            console.log('the test', test);
+
             let unknownInput = true;
             let initial = '';
             if (undefined !== log.remainingInput) {
                 unknownInput = false;
                 initial = log.remainingInput;
-            }else if (undefined !== testResult?.test?.input) {
+            } else if (undefined !== test?.data?.input && null !== test?.data?.input) {
                 unknownInput = false;
-                initial = testResult?.test?.input;
+                initial = test.data.input;
             }
 
             return {
@@ -767,13 +771,18 @@ export class PrinterLib extends QuickAlgoLibrary {
                 errorHighlight: errorHighlightRange,
             };
         } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
-            const initTest = testResult.test;
+            let unknownInput = true;
+            let initial = '';
+            if (undefined !== test?.data?.input && null !== test?.data?.input) {
+                unknownInput = false;
+                initial = test.data.input;
+            }
 
             return {
-                initial: '',
-                unknownInput: true,
+                initial,
+                unknownInput,
                 ioEvents: [
-                    {type: PrinterLineEventType.output, content: initTest ? initTest.output : testResult.output},
+                    {type: PrinterLineEventType.output, content: test ? test.data.output : testResult.output},
                 ],
                 inputBuffer: '',
                 inputPosition: {event: 0, pos: 0},

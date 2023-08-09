@@ -196,6 +196,8 @@ module.exports = {
     TASK_VISUALIZATION_NOT_PUBLIC: "The content of this test is unavailable by design.",
     TASK_VISUALIZATION_NO_FEEDBACK: "This test results are hidden.",
     TASK_VISUALIZATION_EMPTY: "Zone to display submission result",
+    TASK_VISUALIZATION_NOT_EVALUATED_USER: "This test has not been evaluated during this evaluation. To evaluate your own tests, change Browser to Server and use the button My tests.",
+    TASK_VISUALIZATION_NOT_EVALUATED_EVALUATION: "This test has not been evaluated during this evaluation.",
     TASK_LEVEL: 'Version',
     TASK_LEVEL_VERSION: "{count} stars",
     TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Go to next version",

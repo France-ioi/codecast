@@ -4,7 +4,7 @@ import merge from 'lodash.merge';
 import {getCurrentImmerState} from "../utils";
 import {stepperMaxSpeed} from "../../stepper";
 import log from 'loglevel';
-import {QuickalgoLibraryInfos} from '../task_types';
+import {QuickalgoLibraryInfos, TaskTest} from '../task_types';
 import {defaultNotions, NotionArborescence} from '../blocks/notions';
 import {LibraryTestResult} from './library_test_result';
 import {TaskSubmissionServerTestResult} from '../../submission/submission_types';
@@ -311,7 +311,7 @@ export abstract class QuickAlgoLibrary {
 
     getErrorFromTestResult?(testResult: TaskSubmissionServerTestResult): LibraryTestResult;
 
-    getContextStateFromTestResult?(testResult: TaskSubmissionServerTestResult): any|null;
+    getContextStateFromTestResult?(testResult: TaskSubmissionServerTestResult, test: TaskTest): any|null;
 
     getSupportedPlatforms(): string[] {
         return [

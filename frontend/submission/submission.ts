@@ -13,14 +13,14 @@ import {
     submissionChangeDisplayedError,
     SubmissionErrorType,
     SubmissionExecutionScope,
-    submissionSlice
+    submissionSlice,
+    submissionUpdateTaskSubmission,
 } from './submission_slice';
 import {getMessage} from '../lang';
 import {addAutoRecordingBehaviour} from '../recorder/record';
 import {selectTaskTests} from './submission_selectors';
 import {taskSubmissionExecutor} from './task_submission';
 import {selectAnswer} from '../task/selectors';
-import stringify from 'json-stable-stringify-without-jsonify';
 import {TaskTest, TaskTestGroupType} from '../task/task_types';
 import {getRandomId} from '../utils/app';
 import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission_types';
@@ -117,6 +117,12 @@ export default function (bundle: Bundle) {
             } else if (!withoutTestChange) {
                 yield* put(updateCurrentTestId({testId: currentTestId, record: false}));
             }
+        });
+
+        yield* takeEvery(submissionUpdateTaskSubmission, function* () {
+            // Refresh test visualization
+            const currentTestId = yield* appSelect(state => state.task.currentTestId);
+            yield* put(updateCurrentTestId({testId: currentTestId, record: false}));
         });
 
         yield* takeEvery(submissionChangeDisplayedError, function* ({payload}) {

@@ -4,7 +4,7 @@ import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
 import {useDispatch} from "react-redux";
-import {isTestPublic} from './task_types';
+import {isTestPublic, TaskTestGroupType} from './task_types';
 import {getMessage} from '../lang';
 import {
     isServerSubmission
@@ -66,7 +66,8 @@ export function ContextVisualization() {
             <Alert.Heading>{getMessage('SUBMISSION_VIEW_ALERT_HEADER')}</Alert.Heading>
             <div className="error-content">{content}</div>
         </Alert></div>
-    }
+    };
+
     let innerVisualization;
     if (submission && SubmissionErrorType.CompilationError === submissionDisplayedError && submission.result && submission.result.compilationError) {
         innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(submission.result.compilationMessage)}></div>);
@@ -90,6 +91,16 @@ export function ContextVisualization() {
                 </p>
             </div>
         </div>;
+    } else if (submission && submission.result && isServerSubmission(submission) && null !== currentTestId && !currentTestResult) {
+        if (TaskTestGroupType.User === taskTests[currentTestId].groupType) {
+            innerVisualization = <div className="task-visualization-not-public">
+                {getMessage('TASK_VISUALIZATION_NOT_EVALUATED_USER')}
+            </div>;
+        } else {
+            innerVisualization = <div className="task-visualization-not-public">
+                {getMessage('TASK_VISUALIZATION_NOT_EVALUATED_EVALUATION')}
+            </div>;
+        }
     } else if (currentTestResult && currentTestResult.noFeedback) {
         innerVisualization = <div className="task-visualization-not-public">
             {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}

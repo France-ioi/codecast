@@ -10,6 +10,7 @@ import {SubmissionTestErrorCode, TaskSubmissionServerTestResult} from '../../../
 import {NotionArborescence} from '../../blocks/notions';
 import {DocumentationConcept} from '../../documentation/documentation_slice';
 import {Block} from '../../blocks/block_types';
+import {TaskTest} from '../../task_types';
 
 export interface SmartContractResultLogLine {
     amount: number,
@@ -89,7 +90,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
         return this.display ? SmartContractView : null;
     }
 
-    getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult): SmartContractLibState {
+    getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): SmartContractLibState {
         const output = JSON.parse(testResult.output);
         const log = output.log;
 

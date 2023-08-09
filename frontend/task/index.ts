@@ -578,7 +578,7 @@ function* getTestContextState() {
         const testResult = submission.result.tests.find(test => test.testId === newTest.id);
         const context = quickAlgoLibraries.getContext(null, state.environment);
         if (undefined !== testResult && !testResult.noFeedback && context.getContextStateFromTestResult) {
-            const contextState = context.getContextStateFromTestResult(testResult);
+            const contextState = context.getContextStateFromTestResult(testResult, newTest);
             if (contextState) {
                 return {contextState: {[quickAlgoLibraries.getMainContextName(state.environment)]: contextState}};
             }

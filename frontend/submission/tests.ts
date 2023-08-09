@@ -39,20 +39,22 @@ function getTestsFromTask(task: Task): TaskTest[] {
         const testsOrdered = [...task.tests.filter(a => a.active)];
         testsOrdered.sort((a, b) => getTestRank(a) - getTestRank(b));
 
-        return testsOrdered.map(test => {
-            return {
-                ...test,
-                data: {
-                    input: test.input,
-                    output: test.output,
-                },
-                contextState: null,
-                groupType: test.groupType,
-            };
-        });
+        return testsOrdered.map(mapServerTestToTaskTest);
     }
 
     return [];
+}
+
+export function mapServerTestToTaskTest(test: TaskTestServer) {
+    return {
+        ...test,
+        data: {
+            input: test.input,
+            output: test.output,
+        },
+        contextState: null,
+        groupType: test.groupType,
+    };
 }
 
 function nameTaskTests(taskTests: TaskTest[], task: Task): void {

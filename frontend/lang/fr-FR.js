@@ -198,6 +198,8 @@ module.exports = {
     TASK_VISUALIZATION: "Visualisation {number}",
     TASK_VISUALIZATION_NOT_PUBLIC: "Le contenu de ce test est volontairement indisponible.",
     TASK_VISUALIZATION_NO_FEEDBACK: "Les résultats de ce test sont cachés.",
+    TASK_VISUALIZATION_NOT_EVALUATED_USER: "Ce test n'a pas été évalué lors de cette soumission. Pour évaluer vos tests personnels, passez de Navigateur à Serveur puis utilisez le bouton Mes tests.",
+    TASK_VISUALIZATION_NOT_EVALUATED_EVALUATION: "Ce test n'a pas été évalué lors de cette soumission.",
     TASK_VISUALIZATION_EMPTY: "Zone d'affichage du résultat de l'exécution",
     TASK_LEVEL: 'Version',
     TASK_LEVEL_VERSION: "{count} étoiles",
