@@ -10,17 +10,14 @@ import {
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {useDispatch} from 'react-redux';
 import {
-    submissionChangeCurrentSubmissionId,
     submissionChangeDisplayedError,
     SubmissionErrorType
 } from './submission_slice';
 import {platformsList} from '../stepper/platforms';
 import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
-import {faPlus} from "@fortawesome/free-solid-svg-icons/faPlus";
 import {selectTaskTests} from './submission_selectors';
 import {TaskSubmission, TaskSubmissionMode, TaskSubmissionServer} from './submission_types';
-import {submissionCreateTest} from './submission_actions';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {TestsPaneListUserTests} from './TestsPaneListUserTests';
 import {TaskTestGroupType} from '../task/task_types';

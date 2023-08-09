@@ -61,10 +61,10 @@ export function TestsPane() {
         if (null === submission) {
             e.preventDefault();
             e.stopPropagation();
-            dispatch(submissionChangeCurrentSubmissionId(null));
+            dispatch(submissionChangeCurrentSubmissionId({submissionId: null}));
         } else {
             const submissionIndex = submissionResults.findIndex(otherSubmission => otherSubmission === submission);
-            dispatch(submissionChangeCurrentSubmissionId(submissionIndex));
+            dispatch(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
         }
     };
 
@@ -82,7 +82,7 @@ export function TestsPane() {
                             {getSubmissionLabel(currentSubmission)}
                             <div className="submission-results__close submission-toggle__close" onClick={(e) => setCurrentSubmission(null, e)}>
                             </div>
-                        </div> : getMessage('SELECT')}
+                        </div> : getMessage('SUBMISSION_RESULTS_SELECT')}
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu>

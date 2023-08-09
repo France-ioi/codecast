@@ -83,12 +83,13 @@ class TaskSubmissionExecutor {
             }));
 
             currentSubmissionId = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
-            yield* put(submissionChangeCurrentSubmissionId(currentSubmissionId));
+            yield* put(submissionChangeCurrentSubmissionId({submissionId: currentSubmissionId, withoutTestChange: true}));
 
             if (hasCompilationError) {
                 yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
             }
         }
+
         yield* put(submissionSetTestResult({submissionId: currentSubmissionId, testId: result.testId, result}));
         log.getLogger('submission').log('[submission] Set first test result');
 
@@ -216,7 +217,7 @@ class TaskSubmissionExecutor {
             yield* put(submissionChangePaneOpen(true));
         }
 
-        yield* put(submissionChangeCurrentSubmissionId(submissionIndex));
+        yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
 
         try {
             const submissionData = yield* makeServerSubmission(answerContent, newTaskToken, answerToken, platform, userTests);

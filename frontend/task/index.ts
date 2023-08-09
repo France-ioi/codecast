@@ -472,7 +472,7 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
 
     const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
     if (null !== currentSubmissionId) {
-        yield* put(submissionChangeCurrentSubmissionId(null));
+        yield* put(submissionChangeCurrentSubmissionId({submissionId: null}));
     }
     yield* put(taskSuccessClear({record: false}));
 
@@ -859,7 +859,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(StepperActionTypes.Compile, function*({payload}) {
             log.getLogger('task').debug('stepper restart, create new submission');
             if (!payload.keepSubmission) {
-                yield* put(submissionChangeCurrentSubmissionId(null));
+                yield* put(submissionChangeCurrentSubmissionId({submissionId: null}));
             }
         });
 

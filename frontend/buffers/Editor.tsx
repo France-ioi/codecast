@@ -74,7 +74,7 @@ export function Editor(props: EditorProps) {
     const editor = useRef(null);
     const mute = useRef(false);
     const selection = useRef(null);
-    const marker = useRef();
+    const markers = useRef({});
     const scrollTop = useRef(0);
     const firstVisibleRow = useRef(0);
 
@@ -147,7 +147,6 @@ export function Editor(props: EditorProps) {
                 const firstVisibleRow_ = editor.current.getFirstVisibleRow();
                 if (firstVisibleRow.current !== firstVisibleRow_) {
                     firstVisibleRow.current = firstVisibleRow_;
-                    console.log('change scroll value', props.name, firstVisibleRow.current);
                     onScroll(firstVisibleRow_);
                 }
             }
@@ -174,7 +173,6 @@ export function Editor(props: EditorProps) {
 
     const scrollToLine = (newFirstVisibleRow) => {
         wrapModelToEditor(() => {
-            console.log('new first visible row', newFirstVisibleRow);
             if (newFirstVisibleRow === firstVisibleRow.current) {
                 return;
             }
@@ -182,7 +180,6 @@ export function Editor(props: EditorProps) {
             newFirstVisibleRow = newFirstVisibleRow ?? 0;
             editor.current.resize(true);
             firstVisibleRow.current = newFirstVisibleRow;
-            console.log('[buffer] scroll to line', newFirstVisibleRow);
             editor.current.scrollToLine(newFirstVisibleRow);
             scrollTop.current = editor.current.getSession().getScrollTop();
         });
@@ -247,22 +244,21 @@ export function Editor(props: EditorProps) {
         });
     };
 
-    const highlight = (range, className = 'code-highlight') => {
+    const highlight = (range: Range|null, className = 'code-highlight') => {
         log.getLogger('editor').debug('[editor] make highlight', {name: props.name, range, className});
         wrapModelToEditor(() => {
             const session = editor.current.session;
-            if (marker.current) {
-                session.removeMarker(marker.current);
-                marker.current = null;
+            if (markers.current && className in markers.current) {
+                session.removeMarker(markers.current[className]);
+                delete markers.current[className];
             }
             if (range && range.start && range.end) {
                 // Add (and save) the marker.
-                marker.current = session.addMarker(toRange(range), className, 'text');
+                markers.current[className] = session.addMarker(toRange(range), className, 'text');
                 if (!props.shield) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
                        and scrolling is handled by individual events. */
-                    console.log('[scroll to line] highlight');
                     editor.current.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
                 }
             }
@@ -452,14 +448,15 @@ export function Editor(props: EditorProps) {
             editor.current.getSession().setValue(value);
             editor.current.resize(true);
             firstVisibleRow.current = props.state?.firstVisibleRow;
-            console.log('[scroll to line] reset', props.state?.firstVisibleRow ?? 0);
             editor.current.scrollToLine(props.state?.firstVisibleRow ?? 0);
             scrollTop.current = editor.current.getSession().getScrollTop();
             log.getLogger('editor').debug('[buffer] done reset', {name: props.name, firstVisibleRow: firstVisibleRow.current, scrollTop: editor.current.getSession().getScrollTop()})
             // Clear a previously set marker, if any.
-            if (marker.current) {
-                editor.current.session.removeMarker(marker.current);
-                marker.current = null;
+            if (markers.current && Object.keys(markers.current).length) {
+                for (let [className, marker] of Object.entries<any>(markers.current)) {
+                    editor.current.session.removeMarker(marker);
+                    delete(markers.current[className]);
+                }
             }
         });
     }, [props.content, props.state?.document]);
@@ -496,7 +493,6 @@ export function Editor(props: EditorProps) {
     }, [props.state?.selection]);
 
     useEffect(() => {
-        console.log('[editor] state highlight has changed');
         highlight(props.highlight);
     }, [props.highlight]);
 

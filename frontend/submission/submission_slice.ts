@@ -72,8 +72,8 @@ export const submissionSlice = createSlice({
         submissionChangePaneOpen(state, action: PayloadAction<boolean>) {
             state.submissionsPaneOpen = action.payload;
         },
-        submissionChangeCurrentSubmissionId(state, action: PayloadAction<number>) {
-            state.currentSubmissionId = action.payload;
+        submissionChangeCurrentSubmissionId(state, action: PayloadAction<{submissionId: number, withoutTestChange?: boolean}>) {
+            state.currentSubmissionId = action.payload.submissionId;
         },
         submissionChangeDisplayedError(state, action: PayloadAction<SubmissionErrorType>) {
             state.submissionDisplayedError = action.payload;

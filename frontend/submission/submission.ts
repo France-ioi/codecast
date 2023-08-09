@@ -103,7 +103,7 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(submissionChangeCurrentSubmissionId, function* () {
+        yield* takeEvery(submissionChangeCurrentSubmissionId, function* ({payload: {withoutTestChange}}) {
             const submissionId = yield* appSelect(state => state.submission.currentSubmissionId);
             if (null === submissionId) {
                 yield* call(quickAlgoLibraryResetAndReloadStateSaga);
@@ -114,7 +114,7 @@ export default function (bundle: Bundle) {
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
             if (currentTestId > taskTests.length - 1) {
                 yield* put(updateCurrentTestId({testId: taskTests.length ? 0 : null, record: false}));
-            } else {
+            } else if (!withoutTestChange) {
                 yield* put(updateCurrentTestId({testId: currentTestId, record: false}));
             }
         });

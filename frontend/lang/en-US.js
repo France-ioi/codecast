@@ -285,6 +285,7 @@ module.exports = {
     SUBMISSION_RESULTS_TESTS_TITLE: 'Tests list',
     SUBMISSION_RESULTS_TITLE: 'Tests results',
     SUBMISSION_RESULTS_EVALUATING: 'Evaluating submission...',
+    SUBMISSION_RESULTS_SELECT: 'Previous evaluations',
     SUBMISSION_RESULTS_CRASHED: "An error has occured during submission evaluation.",
     SUBMISSION_RESULTS_CRASHED_NETWORK: "You are currently offline.",
     SUBMISSION_RESULTS_LABEL: 'Submission in {platform}',

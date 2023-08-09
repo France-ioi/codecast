@@ -745,9 +745,19 @@ export class PrinterLib extends QuickAlgoLibrary {
                 },
             };
 
+            let unknownInput = true;
+            let initial = '';
+            if (undefined !== log.remainingInput) {
+                unknownInput = false;
+                initial = log.remainingInput;
+            }else if (undefined !== testResult?.test?.input) {
+                unknownInput = false;
+                initial = testResult?.test?.input;
+            }
+
             return {
-                initial: log.remainingInput ? log.remainingInput : '',
-                unknownInput: undefined === log.remainingInput,
+                initial,
+                unknownInput,
                 ioEvents: [
                     {type: PrinterLineEventType.output, content: log.displayedSolutionOutput},
                 ],

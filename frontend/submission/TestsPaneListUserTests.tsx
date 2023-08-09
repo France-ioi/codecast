@@ -51,7 +51,7 @@ export function TestsPaneListUserTests(props: SubmissionResultSubTaskProps) {
 
     const createNewTest = () => {
         if (props.submission) {
-            dispatch(submissionChangeCurrentSubmissionId(null));
+            dispatch(submissionChangeCurrentSubmissionId({submissionId: null}));
         }
         dispatch(submissionCreateTest());
     };

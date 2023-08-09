@@ -78,9 +78,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         highlightedBlock.current = range;
 
         try {
-            console.log('blockly start highlight');
             context.blocklyHelper.highlightBlock(range);
-            console.log('end start highlight');
         } catch (e) {
             console.error(e);
         }
@@ -189,7 +187,6 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             treeRow.style.setProperty('--color', color);
         }
 
-        console.log('do reset document', props.state?.document)
         reset(props.state?.document);
         loaded.current = true;
     }
