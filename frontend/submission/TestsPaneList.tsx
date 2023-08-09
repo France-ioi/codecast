@@ -22,6 +22,8 @@ import {selectTaskTests} from './submission_selectors';
 import {TaskSubmission, TaskSubmissionMode, TaskSubmissionServer} from './submission_types';
 import {submissionCreateTest} from './submission_actions';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {TestsPaneListUserTests} from './TestsPaneListUserTests';
+import {TaskTestGroupType} from '../task/task_types';
 
 export interface SubmissionResultProps {
     submission?: TaskSubmission,
@@ -40,13 +42,6 @@ export function TestsPaneList(props: SubmissionResultProps) {
     const dispatch = useDispatch();
     const showSubmissionError = (type: SubmissionErrorType) => {
         dispatch(submissionChangeDisplayedError(type));
-    };
-
-    const createNewTest = () => {
-        if (props.submission) {
-            dispatch(submissionChangeCurrentSubmissionId(null));
-        }
-        dispatch(submissionCreateTest());
     };
 
     const createCompilationStatusBlock = (submissionErrorType: SubmissionErrorType, text: string, color: string) => {
@@ -105,7 +100,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             />
                         )}
                     </div>}
-                    {testsOrdered.filter(test => !test.subtaskId).map((test, testIndex) =>
+                    {testsOrdered.filter(test => !test.subtaskId && test.groupType !== TaskTestGroupType.User).map((test, testIndex) =>
                         <TestsPaneListTest
                             key={testIndex}
                             index={testIndex}
@@ -113,13 +108,10 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             submission={submission}
                         />
                     )}
-                    {canCreateOwnTests && <div className={`submission-result-test submission-result-create-test`} onClick={createNewTest}>
-                        <div className="submission-result-test-icon">
-                            <FontAwesomeIcon icon={faPlus}/>
-                        </div>
-                        <span className="submission-result-test-title">
-                            {getMessage('SUBMISSION_CREATE_TEST')}
-                        </span>
+                    {canCreateOwnTests && <div className="submission-result-subtasks">
+                        <TestsPaneListUserTests
+                            submission={submission as TaskSubmissionServer}
+                        />
                     </div>}
                 </React.Fragment>
             </React.Fragment>
