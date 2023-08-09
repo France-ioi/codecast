@@ -255,6 +255,7 @@ export class PrinterLib extends QuickAlgoLibrary {
             inputBuffer: '',
             inputPosition: createDraft({event: 0, pos: 0}),
             errorHighlight: null,
+            unknownInput: false,
         };
 
         this.customBlocks = {
@@ -591,6 +592,13 @@ export class PrinterLib extends QuickAlgoLibrary {
     static getOutputTextFromEvents(ioEvents: PrinterLineEvent[],) {
         return ioEvents
             .filter(event => PrinterLineEventType.output === event.type)
+            .map(event => event.content)
+            .join("");
+    }
+
+    static getInputTextFromEvents(ioEvents: PrinterLineEvent[],) {
+        return ioEvents
+            .filter(event => PrinterLineEventType.input === event.type)
             .map(event => event.content)
             .join("");
     }

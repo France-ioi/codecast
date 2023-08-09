@@ -79,8 +79,9 @@
 .submission-result-test, .submission-result-compilation-status {
   display: flex;
   align-items: center;
-  padding: 8px 15px 8px 12px;
+  padding: 8px 10px 8px 8px;
   cursor: pointer;
+  border-left: solid 4px transparent;
   &:not(:first-child) {
     border-top: solid 1px #cecece;
   }
@@ -191,7 +192,7 @@
 
 .submission-result-subtask {
   .submission-result-test {
-    padding-left: 25px;
+    padding-left: 18px;
     &:last-child {
       border-bottom: solid 1px #cecece;
     }

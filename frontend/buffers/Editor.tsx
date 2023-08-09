@@ -35,6 +35,7 @@ export interface EditorProps {
     onDropBlock?: Function,
     content?: string,
     errorHighlight?: Range|null,
+    infoHighlight?: Range|null,
     hideGutter?: boolean,
     showPrintMargin?: boolean,
     highlightActiveLine?: boolean,
@@ -502,6 +503,10 @@ export function Editor(props: EditorProps) {
     useEffect(() => {
         highlight(props.errorHighlight, 'error-highlight');
     }, [props.errorHighlight]);
+
+    useEffect(() => {
+        highlight(props.infoHighlight, 'info-highlight');
+    }, [props.infoHighlight]);
 
     useEffect(() => {
         if (0 < props.state?.actions?.goToEnd) {

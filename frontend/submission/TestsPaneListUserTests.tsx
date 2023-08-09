@@ -20,8 +20,6 @@ export interface SubmissionResultSubTaskProps {
 
 export function TestsPaneListUserTests(props: SubmissionResultSubTaskProps) {
     const taskTests = useAppSelector(selectTaskTests);
-    // const subTask = props.subTask;
-    // const subTaskResult = props.submission && props.submission.result.subTasks ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
     const [open, setOpen] = useState(false);
     const dispatch = useDispatch();
 
@@ -58,20 +56,9 @@ export function TestsPaneListUserTests(props: SubmissionResultSubTaskProps) {
         dispatch(submissionCreateTest());
     };
 
-    // let scoreClass = '';
-    // if (subTaskResult && subTaskResult.score >= subTask.pointsMax && (0 < subTask.pointsMax || testsByIcon[SubmissionTestErrorCode.NoError] === testsOrdered.length)) {
-    //     scoreClass = 'is-success';
-    // } else if (subTaskResult && subTaskResult.score > 0) {
-    //     scoreClass = 'is-partial';
-    // }
-
     return (
         <div className={`submission-result-subtask ${open ? 'is-open' : ''}`}>
             <div className="submission-result-subtask-header" onClick={() => setOpen(!open)}>
-                {/*{subTaskResult && subTaskResult.success ?*/}
-                {/*    <span className="glyphicon glyphicon-ok image_succeed_subtask"></span>*/}
-                {/*    : <span className="glyphicon glyphicon-remove image_failure_subtask"></span>*/}
-                {/*}*/}
                 <div className="subtask-header-name">{getMessage('SUBMISSION_OWN_TESTS_LABEL')}</div>
                 {!open && testsByIconValues && <div className="subtask-header-summary">
                     {testsByIconValues.map((testsByIconValue, testIndex) =>

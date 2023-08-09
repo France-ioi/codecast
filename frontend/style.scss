@@ -195,6 +195,20 @@ body#app, #app h1, #app h2, #app h3 {
     margin-left: 5px;
   }
 }
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 100px;
+  .empty-state-icon {
+    svg {
+      width: 40px;
+      height: 40px;
+      color: var(--primary-color);
+    }
+  }
+}
 
 #vumeter {
   position: fixed;
@@ -317,6 +331,13 @@ span + .value-previous {
   position: absolute;
   background-color: rgba(255, 18, 18, 0.5);
   z-index: 20;
+}
+
+.info-highlight {
+  position: absolute;
+  background-color: rgba(201, 201, 201, 0.5);
+  z-index: 20;
+  //border-radius: 4px;
 }
 
 .mainView-lg {

@@ -110,11 +110,12 @@ export default function (bundle: Bundle) {
                 yield* put(stepperClearError());
             }
 
-
             const taskTests = yield* appSelect(selectTaskTests);
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
             if (currentTestId > taskTests.length - 1) {
                 yield* put(updateCurrentTestId({testId: taskTests.length ? 0 : null, record: false}));
+            } else {
+                yield* put(updateCurrentTestId({testId: currentTestId, record: false}));
             }
         });
 
@@ -134,7 +135,7 @@ export default function (bundle: Bundle) {
 
             yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer],{
                 level,
-                answer: stringify(answer),
+                answer,
                 scope: SubmissionExecutionScope.MyTests,
             });
         });
