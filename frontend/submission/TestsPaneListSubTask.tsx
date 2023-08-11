@@ -27,7 +27,7 @@ export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
     if (props.submission) {
         for (let test of testsOrdered) {
             const testResult = props.submission.result.tests.find(submissionTest => submissionTest.testId === test.id);
-            if (testResult) {
+            if (testResult && null !== testResult.errorCode && undefined !== testResult.errorCode) {
                 if (!(testResult.errorCode in testsByIcon)) {
                     testsByIcon[testResult.errorCode] = 0;
                 }
