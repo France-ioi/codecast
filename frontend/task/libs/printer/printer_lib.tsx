@@ -747,8 +747,6 @@ export class PrinterLib extends QuickAlgoLibrary {
                 },
             };
 
-            console.log('the test', test);
-
             let unknownInput = true;
             let initial = '';
             if (undefined !== log.remainingInput) {

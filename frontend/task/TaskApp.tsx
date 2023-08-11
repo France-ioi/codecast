@@ -136,7 +136,10 @@ export function TaskApp() {
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform}`}>
             <div className="layout-general">
                 <div className={`task-section`}>
-                    {submissionsPaneOpen && <TestsPane/>}
+                    <TestsPane
+                        open={submissionsPaneOpen}
+                    />
+
                     <div className="task-section-container">
                         <div className="task-header">
                             <span className="task-header__quick">QUICK</span>

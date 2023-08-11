@@ -83,7 +83,7 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
 export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const test = props.test;
     const currentTestId = useAppSelector(state => state.task.currentTestId);
-    const testResult = props.submission ? props.submission.result.tests.find(otherTest => otherTest.testId === test.id) : null;
+    const testResult = props.submission && props.submission.result ? props.submission.result.tests.find(otherTest => otherTest.testId === test.id) : null;
     const testIndex = useAppSelector(state => selectTaskTests(state).findIndex(otherTest => otherTest.id === test.id));
 
     const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;

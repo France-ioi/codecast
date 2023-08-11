@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {Collapse} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -27,7 +27,7 @@ export function TestsPaneListUserTests(props: SubmissionResultSubTaskProps) {
 
     const testsByIcon: {[key: number]: number} = {};
     let testsByIconValues: {errorCodeData: ErrorCodeData, count: number}[];
-    if (props.submission) {
+    if (props.submission && props.submission.result) {
         for (let test of testsOrdered) {
             const testResult = props.submission.result.tests.find(submissionTest => submissionTest.testId === test.id);
             if (testResult && null !== testResult.errorCode && undefined !== testResult.errorCode) {

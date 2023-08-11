@@ -17,7 +17,11 @@ import {faClock} from '@fortawesome/free-solid-svg-icons';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission_types';
 
-export function TestsPane() {
+export interface TestsPaneProps {
+    open: boolean,
+}
+
+export function TestsPane(props: TestsPaneProps) {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
     const dispatch = useDispatch();
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
@@ -69,7 +73,7 @@ export function TestsPane() {
     };
 
     return (
-        <div className="submission-results">
+        <div className="submission-results" style={{display: props.open ? 'block' : 'none'}}>
             <div className="submission-results__header">
                 <div className="submission-results__title">{getMessage(currentSubmission ? 'SUBMISSION_RESULTS_TITLE' : 'SUBMISSION_RESULTS_TESTS_TITLE')}</div>
                 <div className="submission-results__close" onClick={closePane}>
@@ -94,25 +98,24 @@ export function TestsPane() {
                     </Dropdown.Menu>
                 </Dropdown>
             </div>}
-            {null !== currentSubmission && <div className="submission-results__submission">
-                {currentSubmission.evaluated ?
+
+            <div className="submission-results__submission">
+                <div style={{display: !currentSubmission || currentSubmission.evaluated ? 'block' : 'none'}}>
                     <TestsPaneList
                         submission={currentSubmission}
                     />
-                    :
-                    (currentSubmission.crashed ? <div className="submission-results__submission-crashed">
+                </div>
+
+                {(currentSubmission && !currentSubmission.evaluated) && (
+                    currentSubmission.crashed ? <div className="submission-results__submission-crashed">
                         {getMessage('SUBMISSION_RESULTS_CRASHED')}
                     </div>
                         : <div className="submission-results__submission-loader">
                             <FontAwesomeIcon icon={faSpinner} className="fa-spin mr-2"/>
                             {getMessage('SUBMISSION_RESULTS_EVALUATING')}
-                        </div>)
-                }
-            </div>}
-            {null === currentSubmission && <div className="submission-results__submission">
-                <TestsPaneList
-                />
-            </div>}
+                        </div>
+                )}
+            </div>
         </div>
     )
 }
