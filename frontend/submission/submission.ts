@@ -119,7 +119,11 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(submissionUpdateTaskSubmission, function* () {
+        yield* takeEvery(submissionUpdateTaskSubmission, function* ({payload: {withoutTestChange}}) {
+            if (withoutTestChange) {
+                return;
+            }
+
             // Refresh test visualization
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
             yield* put(updateCurrentTestId({testId: currentTestId, record: false}));

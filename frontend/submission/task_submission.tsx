@@ -96,7 +96,7 @@ class TaskSubmissionExecutor {
         if (!result.result) {
             // We execute other tests only if the current one has succeeded
             const currentSubmission = yield* appSelect(state => state.submission.taskSubmissions[currentSubmissionId]);
-            yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}}));
+            yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}, withoutTestChange: true}));
 
             return;
         }
@@ -135,7 +135,7 @@ class TaskSubmissionExecutor {
             worstRate = Math.min(worstRate, testResult.score);
         }
 
-        yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}}));
+        yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}, withoutTestChange: true}));
 
         const finalScore = worstRate;
         if (finalScore > 0) {

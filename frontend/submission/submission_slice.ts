@@ -54,7 +54,7 @@ export const submissionSlice = createSlice({
         submissionAddNewTaskSubmission(state, action: PayloadAction<TaskSubmission>) {
             state.taskSubmissions.push(action.payload);
         },
-        submissionUpdateTaskSubmission(state, action: PayloadAction<{id: number, submission: TaskSubmission}>) {
+        submissionUpdateTaskSubmission(state, action: PayloadAction<{id: number, submission: TaskSubmission, withoutTestChange?: boolean}>) {
             state.taskSubmissions[action.payload.id] = action.payload.submission;
         },
         submissionStartExecutingTest(state, action: PayloadAction<{submissionId: number, testId: number}>) {
