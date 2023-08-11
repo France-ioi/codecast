@@ -12,6 +12,7 @@ import {BlocksUsage} from "../blocks/BlocksUsage";
 import {platformsList} from '../../stepper/platforms';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {LayoutType} from './layout_types';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -24,6 +25,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
     const sourceMode = platformsList[platform].aceSourceMode;
     const preventInput = useAppSelector(state => getPlayerState(state).isPlaying);
+    const layoutType = useAppSelector(state => state.layout.type);
 
     const dispatch = useDispatch();
 
@@ -34,7 +36,14 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector({state, context}) : []);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
-    const displayBlocks = !!(context && blocks.length && platformsList[platform].displayBlocks && 'tralalere' !== options.app);
+    const displayBlocks = !!(
+        context
+        && blocks.length
+        && platformsList[platform].displayBlocks
+        && 'tralalere' !== options.app
+        && LayoutType.MobileHorizontal !== layoutType
+        && LayoutType.MobileVertical !== layoutType
+    );
 
     return (
         <div className="layout-editor" style={props.style}>
