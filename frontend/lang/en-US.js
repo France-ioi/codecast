@@ -63,7 +63,7 @@ module.exports = {
     IOPANE_MODE: "Input/output mechanism:",
     IOPANE_MODE_SPLIT: "Split input/output",
     IOPANE_MODE_INTERACTIVE: "Interactive terminal",
-    IOPANE_INITIAL_INPUT: "Initial input",
+    IOPANE_INITIAL_INPUT: "Input",
     IOPANE_INITIAL_OUTPUT: "Expected output",
     IOPANE_SELECT_TERMINAL_TITLE: "Input/Output/Terminal",
     IOPANE_FORCED_TERMINAL_TITLE: "Terminal",
