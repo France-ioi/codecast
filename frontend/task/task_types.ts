@@ -47,6 +47,7 @@ export interface TaskTest {
     groupType?: TaskTestGroupType,
     active?: boolean,
     name?: string,
+    shortName?: string,
     data: any,
     contextState: any,
     contextStateResetDone?: boolean,

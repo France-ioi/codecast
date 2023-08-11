@@ -131,7 +131,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
             {testResult && errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
                 <FontAwesomeIcon icon={errorCodeData.icon}/>
             </div>}
-            <span className="submission-result-test-title">{test.name}</span>
+            <span className="submission-result-test-title">{test.shortName ?? test.name}</span>
             {testResult && <span className="submission-result-test-result">{message}</span>}
             {TaskTestGroupType.User === test.groupType && !props.submission && <span className="submission-result-test-delete" onClick={deleteTest}>
                 <FontAwesomeIcon icon={faTrash}/>

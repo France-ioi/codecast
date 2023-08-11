@@ -87,6 +87,7 @@ function nameTaskTests(taskTests: TaskTest[], task: Task): void {
         taskTests[index] = {
             ...taskTests[index],
             name: totalTestName,
+            shortName: testName,
         };
     }
 }
