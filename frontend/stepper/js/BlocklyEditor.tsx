@@ -86,6 +86,10 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const resize = () => {
         log.getLogger('editor').debug('[blockly.editor] resize');
+        if (context && context.blocklyHelper) {
+            context.blocklyHelper.unloadLevel();
+        }
+        onLoad();
     };
 
     const onBlocklyEvent = (event) => {
