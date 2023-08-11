@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {TestsPaneList} from './TestsPaneList';
@@ -26,6 +26,7 @@ export function TestsPane(props: TestsPaneProps) {
     const dispatch = useDispatch();
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
     const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const getSubmissionLabel = (submissionResult: TaskSubmissionServer) => {
         const dateTime = DateTime.fromISO(submissionResult.date);
@@ -65,6 +66,7 @@ export function TestsPane(props: TestsPaneProps) {
         if (null === submission) {
             e.preventDefault();
             e.stopPropagation();
+            setDropdownOpen(false);
             dispatch(submissionChangeCurrentSubmissionId({submissionId: null}));
         } else {
             const submissionIndex = submissionResults.findIndex(otherSubmission => otherSubmission === submission);
@@ -80,7 +82,10 @@ export function TestsPane(props: TestsPaneProps) {
                 </div>
             </div>
             {serverSubmissionResults.length > 0 && <div className="submission-results__selector">
-                <Dropdown>
+                <Dropdown
+                    onToggle={(nextShow) => setDropdownOpen(nextShow)}
+                    show={dropdownOpen}
+                >
                     <Dropdown.Toggle>
                         {null !== currentSubmission && isServerSubmission(currentSubmission) ? <div className="submission-toggle">
                             {getSubmissionLabel(currentSubmission)}
