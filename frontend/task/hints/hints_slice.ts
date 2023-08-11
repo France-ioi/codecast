@@ -11,6 +11,7 @@ export interface TaskHint {
     noHintId?: string,
     disableNext?: boolean,
     disablePrevious?: boolean,
+    immediate?: boolean,
 }
 
 export interface HintsState {

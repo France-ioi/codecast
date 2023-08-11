@@ -28,9 +28,9 @@ import {DebugLib} from './debug/debug_lib';
 
 export function* createQuickalgoLibrary() {
     let state = yield* appSelect();
-    let context = quickAlgoLibraries.getContext(null, state.environment);
-    log.getLogger('libraries').debug('Create a context', context, state.environment);
-    if (context) {
+    let oldContext = quickAlgoLibraries.getContext(null, state.environment);
+    log.getLogger('libraries').debug('Create a context', state.environment);
+    if (oldContext) {
         log.getLogger('libraries').debug('Unload initial context first');
         quickAlgoLibraries.unloadContext(state.environment);
     }
@@ -101,24 +101,42 @@ export function* createQuickalgoLibrary() {
         }
     }
 
-    log.getLogger('libraries').debug('created context', contextLib);
-    contextLib.iTestCase = state.task.currentTestId;
-    contextLib.environment = state.environment;
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+
+    let availablePlatforms = context.getSupportedPlatforms();
+    if (null !== currentTask && currentTask.supportedLanguages?.length && '*' !== currentTask.supportedLanguages) {
+        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.split(',').indexOf(platform));
+    }
+    if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
+        yield* put({
+            type: CommonActionTypes.PlatformChanged,
+            payload: {platform: availablePlatforms[0], reloadTask: true}
+        });
+
+        return false;
+    }
+
+
+    yield* put(taskSetAvailablePlatforms(availablePlatforms));
+
+    log.getLogger('libraries').debug('created context', context);
+    context.iTestCase = state.task.currentTestId;
+    context.environment = state.environment;
     // For QuickPi lib, with this option, the program is graded even when context.display = false
     // (which happens in particular in the case of a replay)
-    contextLib.forceGradingWithoutDisplay = true;
-    yield* call(addCustomBlocksToQuickalgoLibrary, contextLib, display, levelGridInfos);
+    context.forceGradingWithoutDisplay = true;
+    yield* call(addCustomBlocksToQuickalgoLibrary, context, display, levelGridInfos);
 
-    if (contextLib.changeSoundEnabled) {
-        contextLib.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
+    if (context.changeSoundEnabled) {
+        context.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
     }
 
     yield* call(createDisplayHelper);
     if (hasBlockPlatform(state.options.platform) && currentTask) {
-        yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
+        yield* call(loadBlocklyHelperSaga, context, currentLevel);
     } else {
         // Create a fake blockly helper to make other libs like Turtle work
-        contextLib.blocklyHelper = {
+        context.blocklyHelper = {
             updateSize() {
 
             },
@@ -126,9 +144,7 @@ export function* createQuickalgoLibrary() {
     }
 
     const testData = selectCurrentTestData(state);
-    log.getLogger('libraries').debug('Create context with', {currentTask, currentLevel, testData});
-    context = quickAlgoLibraries.getContext(null, state.environment);
-    log.getLogger('libraries').debug('Created context', context);
+    log.getLogger('libraries').debug('Created context with', {currentTask, currentLevel, testData, context});
     taskApi.displayedSubTask = {
         context,
     };
@@ -149,20 +165,6 @@ export function* createQuickalgoLibrary() {
         yield* put(taskSetBlocksPanelCollapsed({collapsed: false, manual: true}));
     }
 
-    let availablePlatforms = context.getSupportedPlatforms();
-    if (null !== currentTask && currentTask.supportedLanguages?.length && '*' !== currentTask.supportedLanguages) {
-        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.split(',').indexOf(platform));
-    }
-    if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
-        yield* put({
-            type: CommonActionTypes.PlatformChanged,
-            payload: {platform: availablePlatforms[0], reloadTask: true}
-        });
-
-        return false;
-    }
-
-    yield* put(taskSetAvailablePlatforms(availablePlatforms));
     yield* call(quickAlgoLibraryResetAndReloadStateSaga);
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
 

@@ -47,6 +47,7 @@ export abstract class QuickAlgoLibrary {
     callsToExecute: {action: string, args: any[], callback?: Function}[] = [];
     plannedNewDelay: number = null;
     childContexts: QuickAlgoLibrary[] = [];
+    forceGradingWithoutDisplay?: boolean;
 
     constructor(display: boolean, infos: any) {
         this.display = display;

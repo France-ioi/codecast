@@ -195,6 +195,7 @@ function* taskLoadSaga(app: App, action) {
     //         id: '1.b',
     //         content: 'Cette animation a-t-elle permis de te débloquer ?',
     //         question: true,
+    //         immediate: true,
     //         yesHintId: '1.b.yes',
     //         noHintId: '1.b.no',
     //     },
@@ -226,6 +227,7 @@ function* taskLoadSaga(app: App, action) {
     //         id: '2.b',
     //         content: 'Est-ce que ça t\'a débloqué ?',
     //         question: true,
+    //         immediate: true,
     //         yesHintId: '2.b.yes',
     //         noHintId: '2.b.no',
     //     },
@@ -240,10 +242,10 @@ function* taskLoadSaga(app: App, action) {
     //         content: 'Message invitant à aller réviser sur la saison 1.',
     //         disableNext: true,
     //     },
-    //
     //     {
     //         id: '5.a',
     //         content: 'Félicitations !',
+    //         immediate: true,
     //         disableNext: true,
     //         previousHintId: '2.a',
     //     },
