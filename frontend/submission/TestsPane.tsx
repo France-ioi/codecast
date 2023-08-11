@@ -75,7 +75,7 @@ export function TestsPane(props: TestsPaneProps) {
     };
 
     return (
-        <div className="submission-results" style={{display: props.open ? 'block' : 'none'}}>
+        <div className="submission-results" style={{display: props.open ? 'flex' : 'none'}}>
             <div className="submission-results__header">
                 <div className="submission-results__title">{getMessage(currentSubmission ? 'SUBMISSION_RESULTS_TITLE' : 'SUBMISSION_RESULTS_TESTS_TITLE')}</div>
                 <div className="submission-results__close" onClick={closePane}>

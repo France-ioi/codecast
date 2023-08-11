@@ -74,8 +74,8 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
     },
     [SubmissionTestErrorCode.TimeLimitExceeded]: {
         icon: faHourglassHalf,
-        color: '#f5a523',
-        colorLight: '#f1e2cc',
+        color: '#0050ab',
+        colorLight: '#c0d1e7',
         message: 'SUBMISSION_RESULT_TIMEOUT',
     },
 }
