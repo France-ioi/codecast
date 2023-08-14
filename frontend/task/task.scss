@@ -85,14 +85,15 @@ html:not([active-view="task"]) {
     height: 100%;
     min-height: 0;
   }
-  #choose-view {
-    margin-top: 0 !important;
-    > * {
-      margin: 3px 0;
-    }
-  }
   body {
     overflow: hidden;
+  }
+}
+
+#choose-view {
+  margin-top: 0 !important;
+  > * {
+    margin: 3px 0;
   }
 }
 

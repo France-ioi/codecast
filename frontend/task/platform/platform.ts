@@ -80,6 +80,7 @@ export function getTaskMetadata() {
     const metadata = window.json ?? window.PEMTaskMetaData ?? {
         fullFeedback: true,
         minWidth: "auto",
+        // showViews: true,
     };
     metadata.autoHeight = true;
     metadata.disablePlatformProgress = true;
