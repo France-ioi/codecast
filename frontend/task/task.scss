@@ -92,8 +92,12 @@ html:not([active-view="task"]) {
 
 #choose-view {
   margin-top: 0 !important;
+  position: sticky;
+  z-index: 50;
+  background: white;
+  top: 0;
   > * {
-    margin: 3px 0;
+    margin: 3px 3px;
   }
 }
 
