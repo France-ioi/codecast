@@ -15,8 +15,6 @@ interface SmartContractViewTransactionProps {
     failed?: boolean,
 }
 
-const maxFooterLength = 300;
-
 export function SmartContractViewTransaction(props: SmartContractViewTransactionProps) {
     const task = useAppSelector(state => state.task.currentTask);
 
@@ -92,8 +90,11 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
             </div>
             {log.failed && <div className={`smart-contract-log__footer ${props.failed ? 'is-failed' : ''}`}>
                 <div>
-                    {log.fail && <div>Failed as expected, with error: {log.fail}</div>}
-                    {!log.fail && <div>Failed as expected</div>}
+                    {props.failed ?
+                        <div>Failed, with error: {log.fail}</div>
+                        :
+                        (log.fail ? <div>Failed as expected, with error: {log.fail}</div> : <div>Failed as expected</div>)
+                    }
                 </div>
             </div>}
         </div>
