@@ -1,6 +1,5 @@
 import {
     checkCompilingCode,
-    getCurrentImmerState,
     getDefaultSourceCode,
     getTaskPlatformMode,
     recordingProgressSteps,
@@ -56,6 +55,7 @@ import PlatformBundle, {
     taskGradeAnswerEventSaga
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
+import {ActionTypes as LangActionTypes} from "../lang/actionTypes";
 import {LayoutMobileMode, LayoutType, ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {PlayerInstant} from "../player";
 import {
@@ -100,7 +100,7 @@ import {TaskSubmissionResultPayload} from "../submission/submission";
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
-import {getMessage} from '../lang';
+import {getMessage, Languages} from '../lang';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask, callback}: {
     testId?: number,
@@ -271,6 +271,16 @@ function* taskLoadSaga(app: App, action) {
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
     if (currentTask) {
+        const language = yield* appSelect(state => state.options.language.split('-')[0]);
+        if (
+            currentTask?.strings?.length
+            && -1 === currentTask.strings.map(string => string.language).indexOf(language)
+            && Object.keys(Languages).find(lang => -1 !== currentTask.strings.map(string => string.language).indexOf(lang.split('-')[0]))
+        ) {
+            const newLanguage = Object.keys(Languages).find(lang => -1 !== currentTask.strings.map(string => string.language).indexOf(lang.split('-')[0]));
+            yield* put({type: LangActionTypes.LanguageSet, payload: {language: newLanguage, withoutTaskReload: true}});
+        }
+
         let currentLevel = yield* appSelect(state => state.task.currentLevel);
 
         if (action.payload.level && action.payload.level in currentTask.data) {
