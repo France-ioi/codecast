@@ -63,6 +63,7 @@ export default function(bundle: Bundle) {
             langOptions: [
                 {value: 'fr-FR', label: "Français", countryCode: 'fr'},
                 {value: 'en-US', label: "English", countryCode: 'us'},
+                {value: 'nl-NL', label: "Nederlands", countryCode: 'nl'},
             ],
             editing: false,
             paneEnabled: false,
