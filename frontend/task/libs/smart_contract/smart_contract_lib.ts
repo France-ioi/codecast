@@ -100,7 +100,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
 
     getComponent() {
         return this.display ? SmartContractView : null;
-    }
+    };
 
     *getSaga(app: App) {
         log.getLogger('smart_contract_lib').debug('Start Smart Contract Lib Saga');
@@ -142,5 +142,9 @@ export class SmartContractLib extends QuickAlgoLibrary {
         } catch (e) {
             return LibraryTestResult.fromString(testResult.log);
         }
+    }
+
+    showViews() {
+        return true;
     }
 }

@@ -581,6 +581,10 @@ export class PrinterLib extends QuickAlgoLibrary {
         return PrinterLib.getOutputTextFromEvents(this.innerState.ioEvents);
     };
 
+    showViews() {
+        return true;
+    }
+
     static getOutputTextFromEvents(ioEvents: PrinterLineEvent[],) {
         return ioEvents
             .filter(event => PrinterLineEventType.output === event.type)
