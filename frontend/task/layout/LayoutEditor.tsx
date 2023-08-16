@@ -12,7 +12,7 @@ import {BlocksUsage} from "../blocks/BlocksUsage";
 import {platformsList} from '../../stepper/platforms';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
-import {LayoutType} from './layout_types';
+import {LayoutMobileMode, LayoutType} from './layout_types';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -26,6 +26,8 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const sourceMode = platformsList[platform].aceSourceMode;
     const preventInput = useAppSelector(state => getPlayerState(state).isPlaying);
     const layoutType = useAppSelector(state => state.layout.type);
+    const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
+    const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     const dispatch = useDispatch();
 
@@ -41,8 +43,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
         && blocks.length
         && platformsList[platform].displayBlocks
         && 'tralalere' !== options.app
-        && LayoutType.MobileHorizontal !== layoutType
-        && LayoutType.MobileVertical !== layoutType
+        && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
     );
 
     return (
@@ -55,7 +56,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
                 <BufferEditor
                     platform={platform}
                     buffer="source"
-                    readOnly={false}
+                    readOnly={isMobile && LayoutMobileMode.Editor !== layoutMobileMode}
                     shield={preventInput}
                     mode={sourceMode}
                     requiredWidth="100%"
