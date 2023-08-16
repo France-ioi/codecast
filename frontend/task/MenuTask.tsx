@@ -17,6 +17,7 @@ import {faUpload} from '@fortawesome/free-solid-svg-icons/faUpload';
 import {PrinterLib} from './libs/printer/printer_lib';
 import {displayModal} from '../common/prompt_modal';
 import {ModalType} from '../common/modal_slice';
+import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {bufferDownload, bufferReload} from '../buffers/buffer_actions';
@@ -29,6 +30,10 @@ export function MenuTask() {
     const platform = useAppSelector(state => state.options.platform);
     const canRecord = useAppSelector(state => state.options.canRecord);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
+
+    const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
+    const layoutType = useAppSelector(state => state.layout.type);
+    const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -93,12 +98,15 @@ export function MenuTask() {
 
     return (
         <div ref={wrapperRef} className={`menu-container ${menuOpen ? 'is-open' : ''}`}>
-            {screen !== Screen.DocumentationSmall && screen !== Screen.DocumentationBig && <div className="menu-icons">
-                <MenuIconsTask
-                    toggleMenu={() => setMenuOpen(!menuOpen)}
-                    toggleDocumentation={toggleDocumentation}
-                />
-            </div>}
+            {screen !== Screen.DocumentationSmall
+                && screen !== Screen.DocumentationBig
+                && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
+                && <div className="menu-icons">
+                    <MenuIconsTask
+                        toggleMenu={() => setMenuOpen(!menuOpen)}
+                        toggleDocumentation={toggleDocumentation}
+                    />
+                </div>}
             <div className={`task-menu`}>
                 <div className="menu-item" onClick={() => setSettingsOpen(!settingsOpen)}>
                     <Icon icon="cog"/>
