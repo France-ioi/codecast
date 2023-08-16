@@ -1,39 +1,38 @@
-import {call, fork, put, take, takeEvery} from 'typed-redux-saga';
+import {call, fork, put, select, take, takeEvery} from 'typed-redux-saga';
 import stringify from 'json-stable-stringify-without-jsonify';
 import {getHeight, windowHeightMonitorSaga} from "./window_height_monitor";
-import {getTaskTokenForLevel} from "./task_token";
+import {generateTokenUrl, getTaskTokenForLevel} from "./task_token";
 import jwt from "jsonwebtoken";
 import {Bundle} from "../../linker";
 import makeTaskChannel from './task_channel';
 import makePlatformAdapter from './platform_adapter';
 import {
+    platformAnswerGraded,
+    platformAnswerLoaded,
+    platformTaskLink,
+    platformTaskRefresh,
     taskGetAnswerEvent,
     taskGetHeightEvent,
-    taskGetStateEvent,
     taskGetMetadataEvent,
+    taskGetResourcesPost,
+    taskGetStateEvent,
     taskGetViewsEvent,
     taskGradeAnswerEvent,
+    taskLoadEvent,
     taskReloadAnswerEvent,
     taskReloadStateEvent,
     taskShowViewsEvent,
-    taskUpdateTokenEvent,
-    taskLoadEvent,
     taskUnloadEvent,
-    platformAnswerGraded,
-    platformTaskRefresh,
-    platformAnswerLoaded,
-    taskGetResourcesPost,
-    platformTaskLink,
+    taskUpdateTokenEvent,
 } from './actionTypes';
 import {Action, ActionCreator} from "redux";
 import {
-    platformTokenUpdated,
     platformSaveAnswer,
     platformSaveScore,
     platformTaskRandomSeedUpdated,
+    platformTokenUpdated,
     TaskLevelName,
 } from "./platform_slice";
-import {generateTokenUrl} from "./task_token";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
@@ -47,6 +46,7 @@ import {taskLoad} from '../task_actions';
 import {levelScoringData} from '../../submission/scoring';
 import {Codecast} from '../../app_types';
 import {Document} from '../../buffers/buffer_types';
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -156,15 +156,35 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
     return nextVersion;
 }
 
+function* showDifferentViews() {
+    const {supportsTabs} = yield* call(platformApi.getTaskParams);
+    if (!supportsTabs) {
+        return false;
+    }
+
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    const currentTask = yield* select(state => state.task.currentTask);
+    if (currentTask && 'showViews' in currentTask?.gridInfos) {
+        return currentTask.gridInfos.showViews;
+    }
+    if (context.showViews) {
+        return context.showViews();
+    }
+
+    return false;
+}
+
 function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGetViewsEvent>) {
     const views = yield* call(getSupportedViews);
-    yield* call(success, views);
+    const showViews = yield* call(showDifferentViews);
+
+    yield* call(success, views, showViews);
 }
 
 function* getSupportedViews() {
-    const {supportsTabs} = yield* call(platformApi.getTaskParams);
+    const showViews = yield* call(showDifferentViews);
 
-    if (supportsTabs) {
+    if (showViews) {
         return {
             [LayoutView.Task]: {},
             [LayoutView.Editor]: {},

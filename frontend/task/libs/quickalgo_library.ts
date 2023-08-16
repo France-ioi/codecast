@@ -326,6 +326,10 @@ export abstract class QuickAlgoLibrary {
         Codecast.environments['main'].store.dispatch(event);
     }
 
+    showViews() {
+        return false;
+    }
+
     supportsCustomTests(): boolean {
         return false;
     }

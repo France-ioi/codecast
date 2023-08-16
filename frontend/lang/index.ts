@@ -38,7 +38,12 @@ export default function(bundle: Bundle) {
 
     bundle.addSaga(function* () {
         // Quit stepper and reload task (and current context) after each language selection
-        yield* takeEvery(ActionTypes.LanguageSet, function* () {
+        yield* takeEvery(ActionTypes.LanguageSet, function* (payload) {
+            // @ts-ignore
+            if (payload.withoutTaskReload) {
+                return;
+            }
+
             yield* delay(0);
             yield* put({type: StepperActionTypes.StepperExit});
             yield* put(taskLoad({reloadContext: true}));

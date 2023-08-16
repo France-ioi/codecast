@@ -88,7 +88,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
 
     getComponent() {
         return this.display ? SmartContractView : null;
-    }
+    };
 
     getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): SmartContractLibState {
         const output = JSON.parse(testResult.output);
@@ -114,5 +114,9 @@ export class SmartContractLib extends QuickAlgoLibrary {
         } catch (e) {
             return LibraryTestResult.fromString(testResult.log);
         }
+    }
+
+    showViews() {
+        return true;
     }
 }

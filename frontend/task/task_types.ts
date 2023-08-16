@@ -117,6 +117,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     initActionDelay?: number,
     hints?: TaskHint[],
     taskStrings?: any,
+    showViews?: boolean,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
