@@ -13,7 +13,7 @@ import {delay} from "../player/sagas";
 export const Languages = {
     'en-US': require('./en-US.js'),
     'fr-FR': require('./fr-FR.js'),
-    'nl-NL': require('./nl-NL.js'),
+    'nl-BE': require('./nl-BE.js'),
 };
 
 export default function(bundle: Bundle) {
