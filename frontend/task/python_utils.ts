@@ -406,9 +406,11 @@ export const checkPythonCode = function (code: string, context: QuickAlgoLibrary
     while (match = re.exec(code)) {
         definedFunctions.push(match[1]);
     }
+
+    let codeWithoutTextsBetweenQuotes = code.replace(/"[^"]+"/g, '').replace(/'[^']+'/g, '');
     for (let j = 0; j < definedFunctions.length; j++) {
         re = new RegExp('\\W' + definedFunctions[j] + '([^A-Za-z0-9_( ]| +[^ (]|$)');
-        if (re.exec(code)) {
+        if (re.exec(codeWithoutTextsBetweenQuotes)) {
             throw getMessage('CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS').format({funcName: definedFunctions[j]});
         }
     }
