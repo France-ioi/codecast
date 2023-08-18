@@ -49,6 +49,7 @@
     align-items: center;
     color: #7c7c7c;
     font-weight: bold;
+    line-height: 36px;
 
     &.is-selectable {
       cursor: pointer;
@@ -118,15 +119,6 @@
     padding-right: 15px;
     cursor: pointer;
     color: var(--primary-color);
-  }
-}
-
-@media /* Tablets and desktop */
-screen and (min-width: 768px) and (max-width: 1024.9px) and (orientation: portrait),
-screen and (min-width: 855px) and (min-height: 450px) and (orientation: landscape),
-screen and (min-width: 1025px) and (min-height: 450px) {
-  .tests-selector  .tests-selector-tab {
-    line-height: 36px;
   }
 }
 

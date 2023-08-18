@@ -333,14 +333,14 @@ export function Editor(props: EditorProps) {
                 editor.current.execCommand("startAutocomplete");
                 // @ts-ignore
                 completer = editor.current.completer;
-                completer.detach();
+                completer?.detach();
             }
             if (completer && completer.popup) {
                 completer.popup.container.style.width = "22%";
             }
 
             // removal of return for autocomplete
-            if (completer.keyboardHandler.commandKeyBinding.return)
+            if (completer && completer.keyboardHandler.commandKeyBinding.return)
                 delete completer.keyboardHandler.commandKeyBinding.return;
         }
 
