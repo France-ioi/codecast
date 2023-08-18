@@ -31,7 +31,6 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const dispatch = useDispatch();
 
     log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlight: props.highlight});
-    console.log('read only', props.readOnly);
 
     const reset = (document: BlockDocument, alreadyReset = false) => {
         if (!context?.blocklyHelper) {

@@ -33,6 +33,8 @@ import {
 } from './submission_actions';
 import {App} from '../app_types';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {testErrorCodeData} from './TestsPaneListTest';
+import {LibraryTestResult} from '../task/libs/library_test_result';
 
 export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
     return TaskSubmissionEvaluateOn.Server === object.type;
@@ -82,8 +84,12 @@ export default function (bundle: Bundle) {
                 const testResult = submission.result.tests.find(test => test.testId === newTest.id);
                 if (undefined !== testResult) {
                     let error = null;
+                    if (testResult && null !== testResult.errorCode && undefined !== testResult.errorCode) {
+                        const errorCodeData = testErrorCodeData[testResult.errorCode];
+                        error = LibraryTestResult.fromString(getMessage(errorCodeData.message));
+                    }
                     const context = quickAlgoLibraries.getContext(null, 'main');
-                    if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
+                    if (null === error && !testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
                         error = context.getErrorFromTestResult(testResult);
                     }
                     if (null === error && testResult.errorMessage) {

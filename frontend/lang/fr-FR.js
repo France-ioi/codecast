@@ -74,6 +74,8 @@ module.exports = {
     IOPANE_OUTPUT: "Sortie de votre programme",
     IOPANE_ERROR: "La sortie de votre programme est fausse, à la ligne {line}.",
     IOPANE_UNKNOWN_INPUT: "L'entrée de ce programme est cachée.",
+    IOPANE_UNKNOWN_OUTPUT: "La sortie attendue de ce programme est cachée.",
+    IOPANE_ERROR_PREVENTING_OUTPUT: "La sortie de votre programme n'est pas disponible car son exécution ne s'est pas terminée.",
     MEMORY_SHIFT_VIEW_LEFT: "défiler la vue vers la gauche",
     MEMORY_SHIFT_VIEW_RIGHT: "défiler la vue vers la droite",
     CONTROL_RUN: "exécuter",

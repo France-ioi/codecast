@@ -7,6 +7,9 @@ import {Editor} from '../../../buffers/Editor';
 import {PrinterLib, PrinterLibState} from './printer_lib';
 import {InputEmptyState} from './InputEmptyState';
 import {Range} from '../../../buffers/buffer_types';
+import {faEyeSlash} from '@fortawesome/free-solid-svg-icons/faEyeSlash';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 
 export function InputOutputView() {
     const currentTask = useAppSelector(state => state.task.currentTask);
@@ -55,17 +58,23 @@ export function InputOutputView() {
                     <Icon icon='lock'/>
                 </Card.Header>
                 <Card.Body>
-                    <Editor
-                        name="test_output"
-                        content={libExpectedOutput ? libExpectedOutput : ''}
-                        readOnly
-                        mode='text'
-                        width='100%'
-                        height='100px'
-                        hideCursor
-                        highlightActiveLine={false}
-                        dragEnabled={false}
-                    />
+                    {taskState && !taskState.unknownOutput ?
+                        <Editor
+                            name="test_output"
+                            content={libExpectedOutput ? libExpectedOutput : ''}
+                            readOnly
+                            mode='text'
+                            width='100%'
+                            height='100px'
+                            hideCursor
+                            highlightActiveLine={false}
+                            dragEnabled={false}
+                        />
+                        :
+                        <InputEmptyState
+                            text={getMessage("IOPANE_UNKNOWN_OUTPUT")}
+                        />
+                    }
                 </Card.Body>
             </Card>}
             <Card>
@@ -74,18 +83,25 @@ export function InputOutputView() {
                     <Icon icon='lock'/>
                 </Card.Header>
                 <Card.Body>
-                    <Editor
-                        name="printer_output"
-                        content={libOutput}
-                        readOnly
-                        mode='text'
-                        width='100%'
-                        height='100px'
-                        errorHighlight={taskState && taskState.errorHighlight ? taskState.errorHighlight : null}
-                        hideCursor
-                        highlightActiveLine={false}
-                        dragEnabled={false}
-                    />
+                    {taskState && !taskState.errorPreventingOutput ?
+                        <Editor
+                            name="printer_output"
+                            content={libOutput}
+                            readOnly
+                            mode='text'
+                            width='100%'
+                            height='100px'
+                            errorHighlight={taskState && taskState.errorHighlight ? taskState.errorHighlight : null}
+                            hideCursor
+                            highlightActiveLine={false}
+                            dragEnabled={false}
+                        />
+                        :
+                        <InputEmptyState
+                            icon={<FontAwesomeIcon icon={faTimes}/>}
+                            text={getMessage("IOPANE_ERROR_PREVENTING_OUTPUT")}
+                        />
+                    }
                 </Card.Body>
             </Card>
         </div>

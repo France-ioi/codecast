@@ -73,6 +73,8 @@ module.exports = {
     IOPANE_OUTPUT: "Output of your program",
     IOPANE_ERROR: "The output of your program is incorrect, at line {line}.",
     IOPANE_UNKNOWN_INPUT: "This terminal input is masked.",
+    IOPANE_UNKNOWN_OUTPUT: "This terminal expected output is masked.",
+    IOPANE_ERROR_PREVENTING_OUTPUT: "The output of your program is not available because an error occured during its evaluation.",
     MEMORY_SHIFT_VIEW_LEFT: "shift view to the left",
     MEMORY_SHIFT_VIEW_RIGHT: "shift view to the right",
     CONTROL_RUN: "run",

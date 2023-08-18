@@ -181,10 +181,12 @@ export interface PrinterLibState {
     ioEvents: PrinterLineEvent[],
     initial: string,
     unknownInput?: boolean,
+    unknownOutput?: boolean,
     expectedOutput: string,
     inputBuffer: string,
     inputPosition: PrinterLibInputPosition,
     errorHighlight?: any,
+    errorPreventingOutput?: boolean,
 }
 
 let printerLibInstance = 0;
@@ -249,15 +251,9 @@ export class PrinterLib extends QuickAlgoLibrary {
             inputEnter: this.inputEnter,
         };
 
-        this.innerState = {
-            ioEvents: [] as PrinterLineEvent[],
-            initial: '',
-            expectedOutput: '',
-            inputBuffer: '',
-            inputPosition: createDraft({event: 0, pos: 0}),
-            errorHighlight: null,
-            unknownInput: false,
-        };
+        // @ts-ignore
+        this.innerState = {};
+        this.initState();
 
         this.customBlocks = {
             printer: {
@@ -286,14 +282,22 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     }
 
-    reset(taskInfos, appState: AppStore = null) {
-        this.success = false;
-
+    initState() {
+        this.innerState.initial = '';
+        this.innerState.expectedOutput = '';
         this.innerState.ioEvents = [];
         this.innerState.inputBuffer = '';
         this.innerState.inputPosition = createDraft({event: 0, pos: 0});
         this.innerState.errorHighlight = null;
         this.innerState.unknownInput = false;
+        this.innerState.unknownOutput = false;
+        this.innerState.errorPreventingOutput = false;
+    }
+
+    reset(taskInfos, appState: AppStore = null) {
+        this.success = false;
+
+        this.initState();
 
         if (taskInfos) {
             this.taskInfos = taskInfos;
@@ -738,6 +742,19 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): PrinterLibState|null {
+        let unknownInput = true;
+        let unknownOutput = true;
+        let initial = '';
+        let expectedOutput = '';
+        if (undefined !== test?.data?.input && null !== test?.data?.input) {
+            unknownInput = false;
+            initial = test.data.input;
+        }
+        if (undefined !== test?.data?.output && null !== test?.data?.output) {
+            unknownOutput = false;
+            expectedOutput = test.data.output;
+        }
+
         if (testResult.log) {
             const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
             const errorHighlightRange = {
@@ -751,48 +768,53 @@ export class PrinterLib extends QuickAlgoLibrary {
                 },
             };
 
-            let unknownInput = true;
-            let initial = '';
             if (undefined !== log.remainingInput) {
                 unknownInput = false;
                 initial = log.remainingInput;
-            } else if (undefined !== test?.data?.input && null !== test?.data?.input) {
-                unknownInput = false;
-                initial = test.data.input;
+            }
+            if (undefined !== log.displayedExpectedOutput) {
+                unknownOutput = false;
+                expectedOutput = log.displayedExpectedOutput;
             }
 
             return {
                 initial,
                 unknownInput,
+                unknownOutput,
                 ioEvents: [
                     {type: PrinterLineEventType.output, content: log.displayedSolutionOutput},
                 ],
                 inputBuffer: '',
                 inputPosition: {event: 0, pos: 0},
-                expectedOutput: log.displayedExpectedOutput,
+                expectedOutput,
                 errorHighlight: errorHighlightRange,
             };
         } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
-            let unknownInput = true;
-            let initial = '';
-            if (undefined !== test?.data?.input && null !== test?.data?.input) {
-                unknownInput = false;
-                initial = test.data.input;
-            }
-
             return {
                 initial,
                 unknownInput,
+                unknownOutput,
                 ioEvents: [
                     {type: PrinterLineEventType.output, content: test ? test.data.output : testResult.output},
                 ],
                 inputBuffer: '',
                 inputPosition: {event: 0, pos: 0},
-                expectedOutput: testResult.expectedOutput,
+                expectedOutput,
+            };
+        } else {
+            return {
+                initial,
+                unknownInput,
+                unknownOutput,
+                ioEvents: [
+                    {type: PrinterLineEventType.output, content: ''},
+                ],
+                inputBuffer: '',
+                inputPosition: {event: 0, pos: 0},
+                expectedOutput,
+                errorPreventingOutput: true,
             };
         }
-
-        return null;
     }
 
     *updateBufferFromTests() {

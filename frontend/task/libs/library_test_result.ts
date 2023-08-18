@@ -32,7 +32,7 @@ export class LibraryTestResult {
         return new this(data.message, data.type, data.props, data.successRate);
     }
 
-    public static fromString(message: string) {
-        return new this(message);
+    public static fromString(message: string|{s: string}) {
+        return new this('object' === typeof message && 's' in message ? message.s : message);
     }
 }
