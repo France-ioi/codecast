@@ -94,6 +94,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
             onInit={onInit}
             onSelect={onSelect}
             onEditPlain={onEditPlain}
+            readOnly={props.readOnly}
         />
     }
 

@@ -15,6 +15,7 @@ export interface BlocklyEditorProps {
     onInit: Function,
     onEditPlain: Function,
     onSelect: Function,
+    readOnly?: boolean,
 }
 
 export const BlocklyEditor = (props: BlocklyEditorProps) => {
@@ -27,10 +28,10 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const previousValue = useRef(null);
     const highlightedBlock = useRef(null);
     const loaded = useRef(false);
-    const resetDisplayTimeout = useRef(null);
     const dispatch = useDispatch();
 
     log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlight: props.highlight});
+    console.log('read only', props.readOnly);
 
     const reset = (document: BlockDocument, alreadyReset = false) => {
         if (!context?.blocklyHelper) {
@@ -152,6 +153,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             placeholderBlocks: !!(context.placeholderBlocks || context.infos.placeholderBlocks),
             zoom: null,
             scrollbars: false,
+            readOnly: props.readOnly,
         };
 
         // Handle zoom options
@@ -205,7 +207,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                 context.blocklyHelper.unloadLevel();
             }
         };
-    }, [currentTask, currentLevel, contextId]);
+    }, [currentTask, currentLevel, contextId, props.readOnly]);
 
     useEffect(() => {
         const newDocument = props.state?.document ?? BlockBufferHandler.getEmptyDocument();
