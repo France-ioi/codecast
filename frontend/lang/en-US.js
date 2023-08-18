@@ -315,6 +315,7 @@ module.exports = {
     SUBMISSION_RESULT_VALIDATED: "Validated in {time}s",
     SUBMISSION_RESULT_INCORRECT: "Incorrect result in {time}s",
     SUBMISSION_RESULT_PARTIAL: "{score}% successful in {time}s",
+    SUBMISSION_RESULT_NOT_EVALUATED: 'Not evaluated',
     SUBMISSION_RESULT_OUTPUT_PROGRAM: "Your program displayed:",
     SUBMISSION_RESULT_OUTPUT_EXPECTED: "While the expected answer was:",
     SUBMISSION_RESULT_OUTPUT_HELP: "To help you, the first differing character is highlighted in red.<br><br>Check that you display exactly what is required and nothing else; check newlines as well. Output comparison may ignore punctuation and case.",

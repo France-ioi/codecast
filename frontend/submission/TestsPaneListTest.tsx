@@ -92,17 +92,21 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const errorCodeData = testResult? testErrorCodeData[testResult.errorCode] : null;
 
     let message;
-    if (testResult && isServerSubmission(props.submission)) {
-        message = errorCodeData.message;
-        const time = Math.floor((testResult as TaskSubmissionServerTestResult).timeMs/10)/100;
-        if (hasRelativeScore) {
-            message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
-        } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
-            message = getMessage('SUBMISSION_RESULT_VALIDATED').format({time});
-        } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
-            message = getMessage('SUBMISSION_RESULT_INCORRECT').format({time});
-        } else if (message) {
-            message = getMessage(message);
+    if (props.submission && isServerSubmission(props.submission)) {
+        if (testResult) {
+            message = errorCodeData.message;
+            const time = Math.floor((testResult as TaskSubmissionServerTestResult).timeMs/10)/100;
+            if (hasRelativeScore) {
+                message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
+            } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
+                message = getMessage('SUBMISSION_RESULT_VALIDATED').format({time});
+            } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
+                message = getMessage('SUBMISSION_RESULT_INCORRECT').format({time});
+            } else if (message) {
+                message = getMessage(message);
+            }
+        } else {
+            message = getMessage('SUBMISSION_RESULT_NOT_EVALUATED');
         }
     }
 
@@ -132,7 +136,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
                 <FontAwesomeIcon icon={errorCodeData.icon}/>
             </div>}
             <span className="submission-result-test-title">{test.shortName ?? test.name}</span>
-            {testResult && <span className="submission-result-test-result">{message}</span>}
+            {!!(props.submission && props.submission.result) && <span className="submission-result-test-result">{message}</span>}
             {TaskTestGroupType.User === test.groupType && !props.submission && <span className="submission-result-test-delete" onClick={deleteTest}>
                 <FontAwesomeIcon icon={faTrash}/>
             </span>}

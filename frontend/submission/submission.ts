@@ -23,7 +23,12 @@ import {taskSubmissionExecutor} from './task_submission';
 import {selectAnswer} from '../task/selectors';
 import {TaskTest, TaskTestGroupType} from '../task/task_types';
 import {getRandomId} from '../utils/app';
-import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission_types';
+import {
+    SubmissionTestErrorCode,
+    TaskSubmission,
+    TaskSubmissionEvaluateOn,
+    TaskSubmissionServer
+} from './submission_types';
 import {
     callPlatformValidate,
     submissionCreateTest,
@@ -84,12 +89,14 @@ export default function (bundle: Bundle) {
                 const testResult = submission.result.tests.find(test => test.testId === newTest.id);
                 if (undefined !== testResult) {
                     let error = null;
-                    if (testResult && null !== testResult.errorCode && undefined !== testResult.errorCode) {
+                    if (testResult && null !== testResult.errorCode && undefined !== testResult.errorCode && SubmissionTestErrorCode.NoError !== testResult.errorCode) {
                         const errorCodeData = testErrorCodeData[testResult.errorCode];
-                        error = LibraryTestResult.fromString(getMessage(errorCodeData.message));
+                        if (errorCodeData.message) {
+                            error = LibraryTestResult.fromString(getMessage(errorCodeData.message));
+                        }
                     }
                     const context = quickAlgoLibraries.getContext(null, 'main');
-                    if (null === error && !testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
+                    if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
                         error = context.getErrorFromTestResult(testResult);
                     }
                     if (null === error && testResult.errorMessage) {

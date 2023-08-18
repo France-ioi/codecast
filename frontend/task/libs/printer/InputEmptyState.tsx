@@ -1,9 +1,9 @@
-import React from "react";
+import React, {ReactElement} from "react";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faEyeSlash} from '@fortawesome/free-solid-svg-icons/faEyeSlash';
 
 export interface InputEmptyStateProps {
-    icon: React.Component,
+    icon?: ReactElement,
     text: string,
 }
 
