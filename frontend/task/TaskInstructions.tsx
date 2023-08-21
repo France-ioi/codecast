@@ -165,6 +165,14 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         if (props.changeDisplayShowMore) {
             props.changeDisplayShowMore(hasShortOrLongInstructions);
         }
+
+        setTimeout(() => {
+            if (window.instructionsPostProcessing?.length) {
+                for (let postProcessingCallback of window.instructionsPostProcessing) {
+                    postProcessingCallback();
+                }
+            }
+        });
     }, [contextId]);
 
     if (!instructionsHtml && !isBackend) {
