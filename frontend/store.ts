@@ -86,7 +86,7 @@ export interface CodecastOptions {
     viewTestDetails?: boolean,
     logAttempts?: boolean,
     allowExecutionOverBlocksLimit?: boolean,
-    showRandomFailedTest?: boolean,
+    randomizeTestsOrder?: boolean,
     ioMode: IoMode,
 }
 

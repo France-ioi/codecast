@@ -1147,11 +1147,12 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     if (context && context.infos.hiddenTests) {
         preExecutionTests = [...tests.keys()];
-        if (state.options.showRandomFailedTest) {
+        if (state.options.randomizeTestsOrder) {
             preExecutionTests = shuffleArray(preExecutionTests);
         }
     }
 
+    let firstBackgroundResult = null;
     let lastBackgroundResult = null;
     for (let preExecutionTestId of preExecutionTests) {
         const {success, exit} = yield* race({
@@ -1162,6 +1163,9 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
         if (success) {
             log.getLogger('stepper').debug('run background result', success);
             lastBackgroundResult = success;
+            if (null === firstBackgroundResult) {
+                firstBackgroundResult = success;
+            }
             // @ts-ignore
             if (!success.result) {
                 break;
@@ -1174,7 +1178,9 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     }
 
     log.getLogger('stepper').debug('return result');
-    callback(lastBackgroundResult);
+
+    // If we succeed everything, return the first test, otherwise return the first failed test
+    callback(lastBackgroundResult && lastBackgroundResult.result ? firstBackgroundResult : lastBackgroundResult);
 }
 
 function* stepperCompileFromControlsSaga(app: App) {
@@ -1194,7 +1200,7 @@ function* stepperCompileFromControlsSaga(app: App) {
         if (null !== backgroundRunData) {
             const context = quickAlgoLibraries.getContext(null, 'main');
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
-            if (context && context.infos.hiddenTests && !backgroundRunData.result && backgroundRunData.testId !== currentTestId) {
+            if (context && context.infos.hiddenTests && backgroundRunData.testId !== currentTestId) {
                 log.getLogger('stepper').debug('change test', backgroundRunData.testId);
                 yield* put(updateCurrentTestId({testId: backgroundRunData.testId}));
             }
