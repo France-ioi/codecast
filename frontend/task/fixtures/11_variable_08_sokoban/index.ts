@@ -37,6 +37,7 @@ export default {
         zoom: {
             wheel: true,
         },
+        // hiddenTests: true,
         includeBlocks: {
             groupByCategory: {
                 easy: false,

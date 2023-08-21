@@ -116,8 +116,8 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('allowExecutionOverBlocksLimit' in query) {
         options.allowExecutionOverBlocksLimit = true;
     }
-    if ('randomFailedTest' in query) {
-        options.showRandomFailedTest = true;
+    if ('randomizeTestsOrder' in query) {
+        options.randomizeTestsOrder = true;
     }
     if ('ioMode' in query && 'split' === query.ioMode) {
         options.ioMode = IoMode.Split;
@@ -140,7 +140,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     if ('tralalere' === state.options.app) {
         state.options.logAttempts = true;
         state.options.allowExecutionOverBlocksLimit = true;
-        state.options.showRandomFailedTest = true;
+        state.options.randomizeTestsOrder = true;
     }
 
     loadOptionsFromQuery(options, query);
