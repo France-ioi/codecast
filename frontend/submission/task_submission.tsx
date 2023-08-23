@@ -251,7 +251,7 @@ class TaskSubmissionExecutor {
             const submissionResult = outcome.result;
             if (submissionResult.compilationError) {
                 yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
-            } else if (!submissionsPaneEnabled) {
+            } else {
                 const tests = submissionResult.tests;
                 if (tests.length) {
                     yield* put(updateCurrentTestId({testId: 0}));
