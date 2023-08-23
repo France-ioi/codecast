@@ -58,11 +58,18 @@ export function TralalereApp() {
     const levels = useAppSelector(state => state.platform.levels);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     let hasNextLevel = false;
+    let nextLevel = null;
     if (currentLevel && currentLevel in levels) {
         const currentLevelFinished = (levels[currentLevel].score >= 1);
         if (currentLevelFinished) {
             const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
-            hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
+            for (let level = currentLevelIndex + 1; level < taskLevelsList.length; level++) {
+                if (taskLevelsList[level] in levels) {
+                    hasNextLevel = true;
+                    nextLevel = level;
+                    break;
+                }
+            }
         }
     }
 
@@ -70,7 +77,7 @@ export function TralalereApp() {
     const displayDebug = useAppSelector(state => 0 < state.task.state?.debug?.linesLogged?.length);
 
     const increaseLevel = () => {
-        dispatch(taskChangeLevel(taskLevelsList[taskLevelsList.indexOf(currentLevel) + 1]));
+        dispatch(taskChangeLevel(taskLevelsList[nextLevel]));
     };
 
     useEffect(() => {

@@ -64,17 +64,25 @@ export const platformSlice = createSlice({
                 state.levels[action.payload.level].score = action.payload.score;
 
                 if (action.payload.score >= 1) {
-                    const levelNumber = taskLevelsList.indexOf(action.payload.level)
-                    if (levelNumber + 1 <= taskLevelsList.length - 1) {
-                        const nextLevel = taskLevelsList[levelNumber + 1];
-                        if (nextLevel in state.levels && state.levels[nextLevel].locked) {
-                            state.levels[nextLevel].locked = false;
+                    const levelNumber = taskLevelsList.indexOf(action.payload.level);
+                    for (let level = levelNumber + 1; level < taskLevelsList.length; level++) {
+                        if (taskLevelsList[level] in state.levels) {
+                            if (state.levels[taskLevelsList[level]].locked) {
+                                state.levels[taskLevelsList[level]].locked = false;
+                            }
+                            break;
                         }
                     }
                 }
             }
 
             return newState;
+        },
+        platformUnlockLevel(state: PlatformState, action: PayloadAction<TaskLevelName>) {
+            if (!(action.payload in state.levels)) {
+                return;
+            }
+            state.levels[action.payload].locked = false;
         },
         platformSaveAnswer(state: PlatformState, action: PayloadAction<{level: TaskLevelName, answer: any}>) {
             if (!(action.payload.level in state.levels)) {
@@ -92,6 +100,7 @@ export const {
     platformSetTaskLevels,
     platformSaveScore,
     platformSaveAnswer,
+    platformUnlockLevel,
 } = platformSlice.actions;
 
 export default platformSlice;
