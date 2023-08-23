@@ -93,6 +93,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('viewTestDetails' in query) {
         options.viewTestDetails = true;
     }
+    if ('defaultLevel' in query) {
+        options.defaultLevel = query.defaultLevel;
+    }
     options.canDownload = !('noDownload' in query);
 
     if (query.recording) {

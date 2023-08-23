@@ -37,6 +37,7 @@ export enum CodecastOptionsMode {
 export interface CodecastOptions {
     language: keyof typeof Languages,
     levels: TaskLevelName[],
+    defaultLevel: TaskLevelName,
     controls: {},
     platform: CodecastPlatform,
     baseUrl: string,

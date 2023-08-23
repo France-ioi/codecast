@@ -304,7 +304,9 @@ function* taskLoadSaga(app: App, action) {
         } else if (Object.keys(levels).length && (null === currentLevel || !(currentLevel in levels))) {
             // Select default level
             let defaultLevel = null;
-            if (currentTask.gridInfos?.defaultLevel && currentTask.gridInfos?.defaultLevel in levels) {
+            if (state.options.defaultLevel && state.options.defaultLevel in levels) {
+                defaultLevel = state.options.defaultLevel;
+            } else if (currentTask.gridInfos?.defaultLevel && currentTask.gridInfos?.defaultLevel in levels) {
                 defaultLevel = currentTask.gridInfos.defaultLevel;
             } else if ('easy' in levels) {
                 defaultLevel = 'easy';
