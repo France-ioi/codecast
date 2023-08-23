@@ -817,7 +817,7 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
 
             newDelay = computeDelayForCurrentStep(delayReference, currentStep, stepsCount);
 
-            // log.getLogger('stepper').debug('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, newDelay})
+            log.getLogger('stepper').debug('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, newDelay, delayReference})
         }
         stepperContext.delayToWait = Math.round(newDelay);
     }
