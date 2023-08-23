@@ -37,50 +37,50 @@ export function InputOutputVisualization() {
     if (IoMode.Terminal === ioMode) {
         visualization = <TerminalView/>;
     } else if (IoMode.Split === ioMode) {
-        if (hasStepper || (taskState && taskState.ioEvents.length)) {
-            visualization = <InputOutputView/>;
-        } else {
-            visualization = (
-                <div>
-                    <Card>
-                        <Card.Header className="terminal-view-header">
-                            {getMessage("IOPANE_INITIAL_INPUT")}
-                            {!currentTestEditable && <Icon icon='lock'/>}
-                        </Card.Header>
-                        <Card.Body>
-                            {/*Use a buffer to allow recording cursor moves here*/}
-                            <BufferEditor
-                                buffer={inputBufferLibTest}
-                                mode='text'
-                                readOnly={!currentTestEditable}
-                                requiredWidth='100%'
-                                requiredHeight='150px'
-                                editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
-                            />
-                        </Card.Body>
-                    </Card>
-
-                    {currentTask &&
-                        <Card>
-                            <Card.Header className="terminal-view-header">
-                                {getMessage("IOPANE_INITIAL_OUTPUT")}
-                                {!currentTestEditable && <Icon icon='lock'/>}
-                            </Card.Header>
-                            <Card.Body>
-                                <BufferEditor
-                                    buffer={outputBufferLibTest}
-                                    mode='text'
-                                    readOnly={!currentTestEditable}
-                                    requiredWidth='100%'
-                                    requiredHeight='150px'
-                                    editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
-                                />
-                            </Card.Body>
-                        </Card>
-                    }
-                </div>
-            );
-        }
+        // if (hasStepper || (taskState && taskState.ioEvents.length)) {
+        visualization = <InputOutputView/>;
+        // } else {
+        //     visualization = (
+        //         <div>
+        //             <Card>
+        //                 <Card.Header className="terminal-view-header">
+        //                     {getMessage("IOPANE_INITIAL_INPUT")}
+        //                     {!currentTestEditable && <Icon icon='lock'/>}
+        //                 </Card.Header>
+        //                 <Card.Body>
+        //                     {/*Use a buffer to allow recording cursor moves here*/}
+        //                     <BufferEditor
+        //                         buffer={inputBufferLibTest}
+        //                         mode='text'
+        //                         readOnly={!currentTestEditable}
+        //                         requiredWidth='100%'
+        //                         requiredHeight='150px'
+        //                         editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
+        //                     />
+        //                 </Card.Body>
+        //             </Card>
+        //
+        //             {currentTask &&
+        //                 <Card>
+        //                     <Card.Header className="terminal-view-header">
+        //                         {getMessage("IOPANE_INITIAL_OUTPUT")}
+        //                         {!currentTestEditable && <Icon icon='lock'/>}
+        //                     </Card.Header>
+        //                     <Card.Body>
+        //                         <BufferEditor
+        //                             buffer={outputBufferLibTest}
+        //                             mode='text'
+        //                             readOnly={!currentTestEditable}
+        //                             requiredWidth='100%'
+        //                             requiredHeight='150px'
+        //                             editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
+        //                         />
+        //                     </Card.Body>
+        //                 </Card>
+        //             }
+        //         </div>
+        //     );
+        // }
     } else {
         visualization = <p>{getMessage('IOPANE_TERMINAL_PROGRAM_STOPPED')}</p>;
     }

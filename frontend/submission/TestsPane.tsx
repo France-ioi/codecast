@@ -5,7 +5,7 @@ import {TestsPaneList} from './TestsPaneList';
 import {Dropdown} from 'react-bootstrap';
 import {
     submissionChangeCurrentSubmissionId,
-    submissionChangePaneOpen,
+    submissionChangePaneOpen, SubmissionExecutionScope,
 } from './submission_slice';
 import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
@@ -16,6 +16,7 @@ import {DateTime} from 'luxon';
 import {faClock} from '@fortawesome/free-solid-svg-icons';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission_types';
+import {Button} from '@blueprintjs/core';
 
 export interface TestsPaneProps {
     open: boolean,
@@ -25,7 +26,7 @@ export function TestsPane(props: TestsPaneProps) {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
     const dispatch = useDispatch();
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
-    const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type);
+    const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type && SubmissionExecutionScope.MyTests !== submission.scope);
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const getSubmissionLabel = (submissionResult: TaskSubmissionServer) => {
@@ -87,10 +88,8 @@ export function TestsPane(props: TestsPaneProps) {
                     show={dropdownOpen}
                 >
                     <Dropdown.Toggle>
-                        {null !== currentSubmission && isServerSubmission(currentSubmission) ? <div className="submission-toggle">
+                        {null !== currentSubmission && isServerSubmission(currentSubmission) && SubmissionExecutionScope.MyTests !== currentSubmission.scope ? <div className="submission-toggle">
                             {getSubmissionLabel(currentSubmission)}
-                            <div className="submission-results__close submission-toggle__close" onClick={(e) => setCurrentSubmission(null, e)}>
-                            </div>
                         </div> : getMessage('SUBMISSION_RESULTS_SELECT')}
                     </Dropdown.Toggle>
 
@@ -102,6 +101,15 @@ export function TestsPane(props: TestsPaneProps) {
                         )}
                     </Dropdown.Menu>
                 </Dropdown>
+            </div>}
+
+            {!!currentSubmission && <div className="submission-results__cancel">
+                <Button
+                    className="quickalgo-button"
+                    onClick={(e) => setCurrentSubmission(null, e)}
+                >
+                    Fermer l'évaluation
+                </Button>
             </div>}
 
             <div className="submission-results__submission">

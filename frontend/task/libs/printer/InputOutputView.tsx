@@ -4,15 +4,30 @@ import {Icon} from "@blueprintjs/core";
 import {getMessage} from "../../../lang";
 import {useAppSelector} from '../../../hooks';
 import {Editor} from '../../../buffers/Editor';
-import {PrinterLib, PrinterLibState} from './printer_lib';
-import {InputEmptyState} from './InputEmptyState';
+import {inputBufferLibTest, outputBufferLibTest, PrinterLib, PrinterLibState} from './printer_lib';
 import {Range} from '../../../buffers/buffer_types';
-import {faEyeSlash} from '@fortawesome/free-solid-svg-icons/faEyeSlash';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
+import {InputEmptyState} from './InputEmptyState';
+import {BufferEditor} from '../../../buffers/BufferEditor';
+import {selectCurrentTest} from '../../task_slice';
+import {TaskTestGroupType} from '../../task_types';
+
+// To avoid re-rendering because of new object
+const bufferNonEditableOptions = {
+    hideCursor: true,
+    highlightActiveLine: false,
+    dragEnabled: false,
+};
+const bufferEditableOptions = {};
 
 export function InputOutputView() {
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const currentTest = useAppSelector(selectCurrentTest);
+    const currentTestEditable = !currentTask || (currentTest && TaskTestGroupType.User === currentTest.groupType);
+
+    console.log('current test', {currentTest})
+
     const taskState: PrinterLibState = useAppSelector(state => state.task.state?.printer);
     const libOutput = PrinterLib.getOutputTextFromEvents(taskState ? taskState.ioEvents : []);
     const libExpectedOutput = taskState ? taskState.expectedOutput : '';
@@ -29,9 +44,19 @@ export function InputOutputView() {
             <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INPUT")}
-                    <Icon icon='lock'/>
+                    {!currentTestEditable && <Icon icon='lock'/>}
                 </Card.Header>
                 <Card.Body>
+                    {/*Use a buffer to allow recording cursor moves here*/}
+                    <BufferEditor
+                        buffer={inputBufferLibTest}
+                        mode='text'
+                        readOnly={!currentTestEditable}
+                        requiredWidth='100%'
+                        requiredHeight='150px'
+                        editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
+                    />
+
                     {taskState && !taskState.unknownInput ?
                         <Editor
                             name="printer_input"
@@ -55,9 +80,18 @@ export function InputOutputView() {
             {currentTask && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INITIAL_OUTPUT")}
-                    <Icon icon='lock'/>
+                    {!currentTestEditable && <Icon icon='lock'/>}
                 </Card.Header>
                 <Card.Body>
+                    <BufferEditor
+                        buffer={outputBufferLibTest}
+                        mode='text'
+                        readOnly={!currentTestEditable}
+                        requiredWidth='100%'
+                        requiredHeight='150px'
+                        editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
+                    />
+
                     {taskState && !taskState.unknownOutput ?
                         <Editor
                             name="test_output"

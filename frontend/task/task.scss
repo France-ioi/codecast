@@ -96,6 +96,7 @@ html:not([active-view="task"]) {
   z-index: 50;
   background: white;
   top: 0;
+  box-shadow: inset 0px -1px 1px 0px #ccc;
   > * {
     margin: 3px 3px;
   }

@@ -29,6 +29,11 @@
   }
 }
 
+.submission-results__cancel {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
 .submission-results__close {
   position: absolute;
   top: 22px;
@@ -107,6 +112,7 @@
 .submission-result-test-result {
   font-size: 0.8em;
   margin-left: 12px;
+  text-align: right;
 }
 
 .submission-result-test-delete {

@@ -198,7 +198,7 @@ module.exports = {
     TASK_DOCUMENTATION_LOAD_ERROR: "Le contenu ne peut pas être affiché car la connexion au sujet a été coupée. Fermez cet onglet et réouvrez la documentation depuis le sujet.",
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
-    TASK_VISUALIZATION_NOT_PUBLIC: "Le contenu de ce test est volontairement indisponible.",
+    TASK_VISUALIZATION_NOT_PUBLIC: "Le contenu de ce test est indisponible.",
     TASK_VISUALIZATION_NO_FEEDBACK: "Les résultats de ce test sont cachés.",
     TASK_VISUALIZATION_NOT_EVALUATED_USER: "Ce test n'a pas été évalué lors de cette soumission. Pour évaluer vos tests personnels, passez de Navigateur à Serveur puis utilisez le bouton Mes tests.",
     TASK_VISUALIZATION_NOT_EVALUATED_EVALUATION: "Ce test n'a pas été évalué lors de cette soumission.",

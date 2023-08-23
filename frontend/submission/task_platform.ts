@@ -125,6 +125,7 @@ export function* makeServerSubmission(answer: string, taskToken: string, answerT
             name: test.name,
             input: test.data?.input ? test.data?.input : '',
             output: test.data?.output ? test.data?.output : '',
+            clientId: test.id,
         })),
         sLocale: state.options.language.split('-')[0],
         platform: state.submission.platformName,
