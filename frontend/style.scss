@@ -26,6 +26,7 @@ $alert-padding-x: 10px !default;
 @import "./player/style.scss";
 @import "./editor/style.scss";
 @import "./task/task.scss";
+@import "./task/instructions/instructions.scss";
 @import "python";
 @import "subtitles";
 @import "controls";

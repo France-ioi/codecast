@@ -981,3 +981,26 @@ $tralalere-red: #FF3C11;
     }
   }
 }
+
+.tralalere .task-instructions-tabs {
+  .task-instructions-tabs-selector {
+    .task-instructions-tabs-selector-tab {
+      border-color: $tralalere-dark-blue;
+      color: $tralalere-dark-blue;
+      &.is-active {
+        color: white;
+        background: $tralalere-dark-blue;
+        border-color: #28458C;
+      }
+    }
+  }
+  .task-instructions-tabs-content {
+    border-color: $tralalere-dark-blue;
+    box-shadow: -5px 5px 0px 0px #1D1E47;
+  }
+  .task-instructions-tabs-arrow-button {
+    @include tralalere-button;
+    @include tralalere-button-small;
+    border-radius: 5px;
+  }
+}

@@ -11,13 +11,8 @@ import {useDispatch} from 'react-redux';
 import {documentationConceptSelected} from './documentation/documentation_slice';
 import {faMinus} from '@fortawesome/free-solid-svg-icons/faMinus';
 import {quickAlgoLibraries} from './libs/quickalgo_libraries';
-import {PlatformSelection} from '../common/PlatformSelection';
-import convertHtmlToReact, {processNodes} from '@hedgedoc/html-to-react';
-import {Editor} from '../buffers/Editor';
-import {CodecastPlatform, platformsList} from '../stepper/platforms';
-import {generatePropsFromAttributes} from '@hedgedoc/html-to-react/dist/utils/generatePropsFromAttributes';
-import {VOID_ELEMENTS} from '@hedgedoc/html-to-react/dist/dom/elements/VoidElements';
-import {SmartContractStorage} from './libs/smart_contract/SmartContractStorage';
+import {TaskInstructionsTabs} from './instructions/TaskInstructionsTabs';
+import {convertHtmlInstructionsToReact} from './instructions/instructions';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -53,58 +48,56 @@ const defaultInstructionsHtml = `
       Aide : <a class="aide" onclick="conceptViewer.showConcept('blockly_controls_repeat')">
       <span data-lang="blockly scratch">Boucle de répétition</span>
       <span data-lang="python">Boucle for</span></a>
-   </p>
+    </p>
     <p class="long">
         Plus de détails sur la mission
     </p>
+    
+    <div class="instructions-tabs">
+      <div class="instructions-tab" data-title="Règle du jeu">
+        <div>
+        C’est à ton tour de jouer. Lance le dé et déplace ton pion d’autant de cases que la valeur obtenue sur le dé. Retourne la case d’arrivée de ton pion.
+        </div>
+      </div>
+      
+      <div class="instructions-tab" data-title="Votre mission">
+        <div class="instructions-page">
+          <p>Page 1</p>
+          <p>Page 1</p>
+          <p>Page 1</p>
+          <p>Page 1</p>
+          <p>Page 1</p>
+        </div>
+         <div class="instructions-page">
+          <p>Page 2</p>
+          <p>Page 2</p>
+          <p>Page 2</p>
+          <p>Page 2</p>
+          <p>Page 2</p>
+        </div>
+         <div class="instructions-page">
+          <p>Page 3</p>
+          <p>Page 3</p>
+          <p>Page 3</p>
+          <p>Page 3</p>
+          <p>Page 3</p>
+          <p>Page 3</p>
+        </div>
+      </div>
+      
+      <div class="instructions-tab" data-title="Conseil">
+        <div class="instructions-page">
+          <p>Page 1</p>
+        </div>
+         <div class="instructions-page">
+          <p>Page 2</p>
+        </div>
+         <div class="instructions-page">
+          <p>Page 3</p>
+        </div>
+      </div>
+    </div>
 `;
-
-function transformNode(node, index: string|number, context: {platform: CodecastPlatform}) {
-    if (node.attribs && 'select-lang-selector' in node.attribs) {
-        return <PlatformSelection key="platform-selection" withoutLabel/>;
-    } else if (node.attribs && 'smart-contract-storage' in node.attribs) {
-        return <SmartContractStorage/>;
-    } else if (node.attribs && 'data-show-source' in node.attribs) {
-        const code = node.attribs['data-code'];
-        const lang = node.attribs['data-lang'];
-
-        if ('all' !== lang && context.platform !== lang) {
-            return null;
-        }
-
-        const sourceMode = platformsList[context.platform].aceSourceMode;
-
-        return <Editor
-            content={code.trim()}
-            readOnly
-            mode={sourceMode}
-            width="100%"
-            hideGutter
-            hideCursor
-            printMarginColumn={false}
-            highlightActiveLine={false}
-            dragEnabled={false}
-            maxLines={Infinity}
-        />
-    } else if (node.attribs && 'onclick' in node.attribs) {
-        const tagName = node.tagName;
-        const props = generatePropsFromAttributes(node.attribs, index);
-        // @ts-ignore
-        props['onClick'] = () => {
-            eval(node.attribs.onclick);
-        }
-
-        // If the node is not a void element and has children then process them
-        let children = null;
-        if (VOID_ELEMENTS.indexOf(tagName) === -1) {
-            children = processNodes(node.children, (node, index) => transformNode(node, index, context));
-        }
-
-        return React.createElement(tagName, props, children)
-    }
-
-    return undefined;
-}
 
 export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
@@ -116,6 +109,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const taskInstructionsHtmlFromOptions = useAppSelector(state => state.options.taskInstructions);
     const [instructionsTitle, setInstructionsTitle] = useState(null);
     const [instructionsHtml, setInstructionsHtml] = useState(null);
+    const [instructionsTabs, setInstructionsTabs] = useState(null);
     const instructionsRef = useRef<HTMLDivElement>();
     const screen = useAppSelector(state => state.screen);
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
@@ -157,6 +151,20 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         }
 
         const instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel);
+
+        if (0 < instructionsJQuery.find('.instructions-tabs').length) {
+            const tabsContainer = instructionsJQuery.find('.instructions-tabs');
+            const tabs = tabsContainer.find('.instructions-tab').toArray().map((tabDiv: HTMLDivElement) => {
+                return {
+                    title: tabDiv.getAttribute('data-title'),
+                    element: tabDiv,
+                };
+            })
+            setInstructionsTabs(tabs);
+        } else {
+            setInstructionsTabs(null);
+        }
+
         setInstructionsTitle(newInstructionsTitle);
         setInstructionsHtml(instructionsJQuery.html());
 
@@ -185,8 +193,13 @@ export function TaskInstructions(props: TaskInstructionsProps) {
 
             {!props.withoutTitle && <h1>{instructionsTitle ? instructionsTitle : getMessage('TASK_INSTRUCTIONS')}</h1>}
 
-            <div>{convertHtmlToReact(instructionsHtml, {transform: (node, index) => transformNode(node, index, {platform})})}</div>
-            {/*<div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>*/}
+            {instructionsTabs ?
+                <TaskInstructionsTabs
+                    tabs={instructionsTabs}
+                />
+                :
+                <div>{convertHtmlInstructionsToReact(instructionsHtml, platform)}</div>
+            }
 
             {!props.hideShowMoreButton && !props.expanded && hasShortOrLong && <Button
                 className="quickalgo-button mt-2"
