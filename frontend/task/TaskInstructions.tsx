@@ -52,52 +52,53 @@ const defaultInstructionsHtml = `
     <p class="long">
         Plus de détails sur la mission
     </p>
-    
-    <div class="instructions-tabs">
-      <div class="instructions-tab" data-title="Règle du jeu">
-        <div>
-        C’est à ton tour de jouer. Lance le dé et déplace ton pion d’autant de cases que la valeur obtenue sur le dé. Retourne la case d’arrivée de ton pion.
-        </div>
-      </div>
-      
-      <div class="instructions-tab" data-title="Votre mission">
-        <div class="instructions-page">
-          <p>Page 1</p>
-          <p>Page 1</p>
-          <p>Page 1</p>
-          <p>Page 1</p>
-          <p>Page 1</p>
-        </div>
-         <div class="instructions-page">
-          <p>Page 2</p>
-          <p>Page 2</p>
-          <p>Page 2</p>
-          <p>Page 2</p>
-          <p>Page 2</p>
-        </div>
-         <div class="instructions-page">
-          <p>Page 3</p>
-          <p>Page 3</p>
-          <p>Page 3</p>
-          <p>Page 3</p>
-          <p>Page 3</p>
-          <p>Page 3</p>
-        </div>
-      </div>
-      
-      <div class="instructions-tab" data-title="Conseil">
-        <div class="instructions-page">
-          <p>Page 1</p>
-        </div>
-         <div class="instructions-page">
-          <p>Page 2</p>
-        </div>
-         <div class="instructions-page">
-          <p>Page 3</p>
-        </div>
-      </div>
-    </div>
 `;
+
+// <div className="instructions-tabs">
+//     <div className="instructions-tab" data-title="Règle du jeu">
+//         <div>
+//             C’est à ton tour de jouer. Lance le dé et déplace ton pion d’autant de cases que la valeur obtenue sur le dé. Retourne la case d’arrivée de ton pion.
+//         </div>
+//     </div>
+//
+//     <div className="instructions-tab" data-title="Votre mission">
+//         <div className="instructions-page">
+//             <p>Page 1</p>
+//             <p>Page 1</p>
+//             <p>Page 1</p>
+//             <p>Page 1</p>
+//             <p>Page 1</p>
+//         </div>
+//         <div className="instructions-page">
+//             <p>Page 2</p>
+//             <p>Page 2</p>
+//             <p>Page 2</p>
+//             <p>Page 2</p>
+//             <p>Page 2</p>
+//         </div>
+//         <div className="instructions-page">
+//             <p>Page 3</p>
+//             <p>Page 3</p>
+//             <p>Page 3</p>
+//             <p>Page 3</p>
+//             <p>Page 3</p>
+//             <p>Page 3</p>
+//         </div>
+//     </div>
+//
+//     <div className="instructions-tab" data-title="Conseil">
+//         <div className="instructions-page">
+//             <p>Page 1</p>
+//         </div>
+//         <div className="instructions-page">
+//             <p>Page 2</p>
+//         </div>
+//         <div className="instructions-page">
+//             <p>Page 3</p>
+//         </div>
+//     </div>
+// </div>
+
 
 export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
