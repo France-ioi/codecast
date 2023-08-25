@@ -9,7 +9,7 @@ import {
     sendCodeExampleToOpener
 } from "./doc";
 import {useAppSelector} from "../../hooks";
-import {documentationConceptSelected} from "./documentation_slice";
+import {DocumentationConcept, documentationConceptSelected} from "./documentation_slice";
 import {Screen} from "../../common/screens";
 import {call, select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -17,6 +17,8 @@ import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {getMessage} from "../../lang";
 import {TaskInstructions} from '../TaskInstructions';
 import {DocumentationLanguageSelector} from './DocumentationLanguageSelector';
+import {DocumentationMenuConcept} from './DocumentationMenuConcept';
+import {DocumentationMenuCategoryConcept} from './DocumentationMenuCategoryConcept';
 
 interface DocumentationProps {
     standalone: boolean,
@@ -32,9 +34,23 @@ export function Documentation(props: DocumentationProps) {
     const selectedConcept = selectedConceptId ? concepts.find(concept => selectedConceptId === concept.id) : null;
     const documentationLanguage = useAppSelector(state => state.documentation.language);
     const screen = useAppSelector(state => state.screen);
-    const firstConcepts = concepts.slice(0, 3);
+    const firstConcepts = concepts.filter(concept => !concept.isCategory).slice(0, 3);
     const isTralalere = useAppSelector(state => 'tralalere' === state.options.app);
     const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
+
+    const conceptsByCategory: {[conceptId: string]: {category: DocumentationConcept, subConcepts: DocumentationConcept[]}} = {};
+    for (let concept of concepts.filter(concept => concept.isCategory)) {
+        conceptsByCategory[concept.id] = {
+            category: concept,
+            subConcepts: [],
+        };
+    }
+    for (let concept of concepts.filter(concept => !concept.isCategory && undefined !== concept.categoryId && null !== concept.categoryId)) {
+        if (!(concept.categoryId in conceptsByCategory)) {
+            throw "This category id does not exist: " + concept.categoryId;
+        }
+        conceptsByCategory[concept.categoryId].subConcepts.push(concept);
+    }
 
     const [iframeRef, setIframeRef] = useState(null);
 
@@ -184,21 +200,21 @@ export function Documentation(props: DocumentationProps) {
             </div>
             <div className="documentation-body">
                 <div className="documentation-menu">
-                    {concepts.map(concept =>
-                        <React.Fragment key={concept.id}>
-                            {selectedConceptId === concept.id ? <div className={`documentation-tab-left is-active`}>
-                                <div className="documentation-tab-title">
-                                    <Icon icon="dot"/>
-                                    <span>{concept.name}</span>
-                                </div>
-                            </div> : <a className={`documentation-tab-left`} onClick={() => selectConcept(concept)}>
-                                <div className="documentation-tab-title">
-                                    <Icon icon="dot"/>
-                                    <span>{concept.name}</span>
-                                </div>
-                            </a>}
-                        </React.Fragment>
-                    )}
+                    <div>
+                        {Object.values(conceptsByCategory).map(({category, subConcepts}) =>
+                            <DocumentationMenuCategoryConcept
+                                key={category.id}
+                                category={category}
+                                subConcepts={subConcepts}
+                            />
+                        )}
+                        {concepts.filter(concept => !concept.categoryId && !concept.isCategory).map(concept =>
+                            <DocumentationMenuConcept
+                                key={concept.id}
+                                concept={concept}
+                            />
+                        )}
+                    </div>
                 </div>
                 {selectedConcept &&
                     <div className="documentation-aside">

@@ -493,6 +493,27 @@ $tralalere-red: #FF3C11;
       background: $tralalere-green;
       color: $tralalere-dark-blue;
     }
+
+    .documentation-tab-left {
+      border: none !important;
+      margin: 5px 10px !important;
+    }
+  }
+
+  .documentation-concepts-category-title {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: solid 2px #28458C;
+    display: flex;
+    align-items: center;
+    .documentation-concepts-category-title-name {
+      flex: 1 0;
+    }
+    .category-fold-button {
+      cursor: pointer;
+      @include tralalere-button;
+      @include tralalere-button-small;
+    }
   }
 
   .documentation-category-title {
