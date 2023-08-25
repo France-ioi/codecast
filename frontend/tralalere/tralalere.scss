@@ -374,6 +374,7 @@ $tralalere-red: #FF3C11;
   position: relative;
 
   .tralalere-box-header {
+    min-height: 0;
     background: $tralalere-green-blue;
     border-radius: 7px;
     display: flex;
@@ -464,6 +465,10 @@ $tralalere-red: #FF3C11;
     display: none;
   }
 
+  .documentation-body {
+    min-height: 0;
+  }
+
   .documentation-menu {
     border-right: 4px solid $tralalere-green-blue !important;
     border-bottom: 4px solid $tralalere-green-blue !important;
@@ -471,6 +476,7 @@ $tralalere-red: #FF3C11;
     border-bottom-left-radius: 15px;
     border-bottom-right-radius: 15px;
     margin-top: 4px;
+    overflow-y: auto;
   }
 
   .documentation-tab-left {
@@ -484,6 +490,7 @@ $tralalere-red: #FF3C11;
     text-decoration: none;
     font-weight: 900;
     margin: 15px 15px;
+    user-select: none;
 
     .bp3-icon-dot {
       display: none;
@@ -501,19 +508,21 @@ $tralalere-red: #FF3C11;
   }
 
   .documentation-concepts-category-title {
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: solid 2px #28458C;
     display: flex;
     align-items: center;
+    cursor: pointer;
     .documentation-concepts-category-title-name {
       flex: 1 0;
     }
     .category-fold-button {
-      cursor: pointer;
       @include tralalere-button;
       @include tralalere-button-small;
     }
+  }
+
+  .documentation-concepts-category-subconcepts {
+    margin-top: 10px;
+    border-top: solid 2px #28458C;
   }
 
   .documentation-category-title {
