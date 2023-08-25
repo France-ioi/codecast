@@ -198,6 +198,7 @@ export function TralalereApp() {
                                     </div>
                                 </div> : <div className={taskSuccess ? 'visibility-hidden' : ''}>
                                     <TralalereInstructions
+                                        style={instructionsExpanded ? {visibility: 'hidden'} : {}}
                                         onExpand={expandInstructions}
                                     />
                                     {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}

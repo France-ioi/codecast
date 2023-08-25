@@ -150,17 +150,23 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             }
         }
 
-        const instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel);
-
+        let instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel);
+        let hasTabs = false;
         if (0 < instructionsJQuery.find('.instructions-tabs').length) {
-            const tabsContainer = instructionsJQuery.find('.instructions-tabs');
-            const tabs = tabsContainer.find('.instructions-tab').toArray().map((tabDiv: HTMLDivElement) => {
-                return {
-                    title: tabDiv.getAttribute('data-title'),
-                    element: tabDiv,
-                };
-            })
-            setInstructionsTabs(tabs);
+            hasTabs = true;
+            if (props.expanded) {
+                const tabsContainer = instructionsJQuery.find('.instructions-tabs');
+                const tabs = tabsContainer.find('.instructions-tab').toArray().map((tabDiv: HTMLDivElement) => {
+                    return {
+                        title: tabDiv.getAttribute('data-title'),
+                        element: tabDiv,
+                    };
+                })
+                setInstructionsTabs(tabs);
+            } else {
+                instructionsJQuery = instructionsJQuery.find('.main-instructions');
+                setInstructionsTabs(null);
+            }
         } else {
             setInstructionsTabs(null);
         }
@@ -171,7 +177,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         let hasShortOrLongInstructions = 0 < instructionsJQuery.find('.short').length || 0 < instructionsJQuery.find('.long').length;
         setHasShortOrLong(hasShortOrLongInstructions);
         if (props.changeDisplayShowMore) {
-            props.changeDisplayShowMore(hasShortOrLongInstructions);
+            props.changeDisplayShowMore(hasShortOrLongInstructions || hasTabs);
         }
 
         setTimeout(() => {

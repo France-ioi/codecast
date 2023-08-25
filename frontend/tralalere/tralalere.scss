@@ -75,7 +75,6 @@ $tralalere-red: #FF3C11;
       .task-mission {
         color: white;
         padding-top: 12px;
-        margin-right: 20px;
         line-height: 22px;
 
         h1 {
@@ -144,6 +143,10 @@ $tralalere-red: #FF3C11;
       width: 134px;
       height: 95px;
       display: block;
+    }
+
+    &.show-more .task-instructions-tabs {
+      margin-right: 70px;
     }
   }
 
@@ -815,6 +818,8 @@ $tralalere-red: #FF3C11;
     position: absolute;
     bottom: 55px;
     z-index: 20;
+    left: 0;
+    right: 0;
 
     .advice {
       margin-left: 0 !important;
@@ -923,6 +928,19 @@ $tralalere-red: #FF3C11;
   .tralalere-success {
     font-size: 25px;
   }
+
+  .task-instructions-tabs-selector {
+    flex-direction: column;
+    gap: 0 !important;
+  }
+
+  .task-instructions-tabs {
+    margin-right: 0 !important;
+  }
+
+  .task-instructions-tabs-selector-tab {
+    width: 100%;
+  }
 }
 
 .tralalere-doc.is-mobile {
@@ -997,6 +1015,11 @@ $tralalere-red: #FF3C11;
   .task-instructions-tabs-content {
     border-color: $tralalere-dark-blue;
     box-shadow: -5px 5px 0px 0px #1D1E47;
+    &.is-dark {
+      background: $tralalere-dark-blue;
+      border-color: $tralalere-green-blue;
+      box-shadow: -5px 5px 0px 0px #1D1E47;
+    }
   }
   .task-instructions-tabs-arrow-button {
     @include tralalere-button;

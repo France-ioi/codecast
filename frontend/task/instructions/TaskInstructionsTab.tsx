@@ -25,7 +25,7 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
             <div className="task-instructions-tabs-content">
                 <div>{convertHtmlInstructionsToReact(tab.innerHTML, platform)}</div>
             </div>
-        )
+        );
     }
 
     return (
@@ -35,7 +35,9 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
                     <FontAwesomeIcon icon={faChevronLeft}/>
                 </div>
             </div>}
-            <div className="task-instructions-tabs-content">{convertHtmlInstructionsToReact(activePage.innerHTML, platform)}</div>
+            <div className={`task-instructions-tabs-content ${activePage.classList.contains('is-dark') ? 'is-dark' : ''}`}>
+                {convertHtmlInstructionsToReact(activePage.innerHTML, platform)}
+            </div>
             {activePageIndex < pages.length - 1 && <div className="task-instructions-tabs-pages-arrow">
                 <div className="task-instructions-tabs-arrow-button" onClick={() => setActivePageIndex(activePageIndex + 1)}>
                     <FontAwesomeIcon icon={faChevronRight}/>
