@@ -28,6 +28,7 @@ import {platformTaskLink} from '../task/platform/actionTypes';
 import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
 import {selectAvailableHints} from '../task/hints/hints_slice';
 import {DebugLibView} from '../task/libs/debug/DebugLibView';
+import {toHtml} from '../utils/sanitize';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -47,12 +48,13 @@ export function TralalereApp() {
         layoutMobileMode = LayoutMobileMode.EditorPlayer;
     }
     const taskLoaded = useAppSelector(state => state.task.loaded);
+    const taskSuccessMessage = useAppSelector(state => state.options.taskSuccessMessage);
 
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(selectAvailableHints);
     const answer = useAppSelector(state => selectAnswer(state));
     const compileStatus = useAppSelector(state => state.compile.status);
-    const taskSuccess = useAppSelector(state => state.task.success);
+    const taskSuccess = true;//useAppSelector(state => state.task.success);
     const currentTask = useAppSelector(state => state.task.currentTask);
 
     const levels = useAppSelector(state => state.platform.levels);
@@ -195,6 +197,11 @@ export function TralalereApp() {
                             <img className="tralalere-success-left"
                                 src={window.modulesPath + 'img/algorea/crane/task-success.png'}/>
                             <div>{getMessage('TRALALERE_TASK_SUCCESS')}</div>
+                            <div
+                                className="tralalere-success-message"
+                                dangerouslySetInnerHTML={toHtml(taskSuccessMessage)}
+                            >
+                            </div>
                         </div>}
 
                         {!isMobile &&

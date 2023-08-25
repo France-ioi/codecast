@@ -76,6 +76,7 @@ export interface CodecastOptions {
     task?: QuickalgoTask,
     taskInstructions?: string,
     taskHints?: TaskHint[],
+    taskSuccessMessage?: string,
     theme?: string,
     app?: string,
     backend?: boolean,

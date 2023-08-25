@@ -712,9 +712,19 @@ $tralalere-red: #FF3C11;
     top: -8px;
     left: -12px;
   }
+  .tralalere-success-message {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 88px;
+    right: 2px;
+    padding: 10px 26px;
+    border-radius: 15px;
+    background: $tralalere-dark-blue;
+    box-shadow: -5px 5px 0px 0px #1D1E47;
+    color: white;
+    font-size: 1rem;
+  }
 }
-
-
 
 .tralalere:not(.layout-mobile-horizontal):not(.layout-mobile-vertical) {
   @media screen and (max-width: 1050px) {
