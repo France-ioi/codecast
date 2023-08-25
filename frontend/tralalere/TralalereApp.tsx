@@ -54,7 +54,7 @@ export function TralalereApp() {
     const availableHints = useAppSelector(selectAvailableHints);
     const answer = useAppSelector(state => selectAnswer(state));
     const compileStatus = useAppSelector(state => state.compile.status);
-    const taskSuccess = true;//useAppSelector(state => state.task.success);
+    const taskSuccess = useAppSelector(state => state.task.success);
     const currentTask = useAppSelector(state => state.task.currentTask);
 
     const levels = useAppSelector(state => state.platform.levels);
