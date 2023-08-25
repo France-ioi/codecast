@@ -29,7 +29,6 @@
 
   .task-instructions-tabs-pages-container {
     display: flex;
-    align-items: center;
     justify-content: center;
     gap: 15px;
     .task-instructions-tabs-pages-arrow {
@@ -37,6 +36,9 @@
     }
     .task-instructions-tabs-content {
       flex: 1 0;
+    }
+    .task-instructions-tabs-arrow-button {
+      margin-top: 5px;
     }
   }
 }
