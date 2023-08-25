@@ -148,6 +148,10 @@ $tralalere-red: #FF3C11;
     &.show-more .task-instructions-tabs {
       margin-right: 70px;
     }
+
+    &.show-more:not(.is-expanded) .task-instructions-tabs-content-inside {
+      overflow: hidden;
+    }
   }
 
   .tralalere-section {

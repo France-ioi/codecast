@@ -1,15 +1,23 @@
 import React, {useState} from 'react';
 import {TaskInstructionsTab} from './TaskInstructionsTab';
+import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
+import {useDispatch} from 'react-redux';
+import {useAppSelector} from '../../hooks';
 
 export interface TaskInstructionsTabsProps {
     tabs: {title: string, element: HTMLDivElement}[],
+    expanded: boolean,
 }
 
 export function TaskInstructionsTabs(props: TaskInstructionsTabsProps) {
     const tabs = props.tabs;
-    const [activeTabIndex, setActiveTabIndex] = useState(0);
+    const activeTabIndex = useAppSelector(state => state.layout.instructions.tabIndex);
+    const activeTab = tabs[activeTabIndex];
+    const dispatch = useDispatch();
 
-    const activeTab = tabs[activeTabIndex]
+    const setActiveTabIndex = (tabIndex: number) => {
+        dispatch({type: LayoutActionTypes.LayoutInstructionsIndexChanged, payload: {tabIndex, pageIndex: 0}});
+    };
 
     return (
         <div className="task-instructions-tabs">
@@ -26,7 +34,9 @@ export function TaskInstructionsTabs(props: TaskInstructionsTabsProps) {
             </div>
 
             <TaskInstructionsTab
+                tabIndex={activeTabIndex}
                 tab={activeTab.element}
+                expanded={props.expanded}
             />
         </div>
     );

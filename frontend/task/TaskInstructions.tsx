@@ -154,19 +154,15 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         let hasTabs = false;
         if (0 < instructionsJQuery.find('.instructions-tabs').length) {
             hasTabs = true;
-            if (props.expanded) {
-                const tabsContainer = instructionsJQuery.find('.instructions-tabs');
-                const tabs = tabsContainer.find('.instructions-tab').toArray().map((tabDiv: HTMLDivElement) => {
-                    return {
-                        title: tabDiv.getAttribute('data-title'),
-                        element: tabDiv,
-                    };
-                })
-                setInstructionsTabs(tabs);
-            } else {
-                instructionsJQuery = instructionsJQuery.find('.main-instructions');
-                setInstructionsTabs(null);
-            }
+
+            const tabsContainer = instructionsJQuery.find('.instructions-tabs');
+            const tabs = tabsContainer.find('.instructions-tab').toArray().map((tabDiv: HTMLDivElement) => {
+                return {
+                    title: tabDiv.getAttribute('data-title'),
+                    element: tabDiv,
+                };
+            })
+            setInstructionsTabs(tabs);
         } else {
             setInstructionsTabs(null);
         }
@@ -202,6 +198,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             {instructionsTabs ?
                 <TaskInstructionsTabs
                     tabs={instructionsTabs}
+                    expanded={props.expanded}
                 />
                 :
                 <div>{convertHtmlInstructionsToReact(instructionsHtml, platform)}</div>
