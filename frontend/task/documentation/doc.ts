@@ -177,14 +177,14 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task
 
     let context = quickAlgoLibraries.getContext(null, 'main');
     if (context?.infos.conceptViewer) {
+        const conceptViewer = context.infos.conceptViewer;
         let concepts = [], allConcepts = [];
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
-            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList());
+            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList(!Array.isArray(conceptViewer)));
         }
 
-        const conceptViewer = context.infos.conceptViewer;
         if (Array.isArray(conceptViewer)) {
             concepts = concepts.concat(conceptViewer);
         } else {

@@ -117,9 +117,9 @@ export abstract class QuickAlgoLibrary {
         return this.conceptList || [];
     };
 
-    getNotionsList(): NotionArborescence {
+    getNotionsList(keepDefault = true): NotionArborescence {
         return {
-            ...defaultNotions,
+            ...(keepDefault && defaultNotions || {}),
             ...(this.notionsList || {}),
         }
     };
