@@ -1,0 +1,44 @@
+.task-instructions-tabs {
+  .task-instructions-tabs-selector {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    .task-instructions-tabs-selector-tab {
+      border: solid 3px var(--primary-color);
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      border-bottom: none;
+      color: var(--primary-color);
+      font-weight: 900;
+      padding: 6px 15px;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      &.is-active {
+        color: white;
+        background: var(--primary-color);
+      }
+    }
+  }
+  .task-instructions-tabs-content {
+    border-radius: 15px;
+    border: 3px solid var(--primary-color);
+    padding: 10px 15px;
+  }
+
+  .task-instructions-tabs-pages-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    .task-instructions-tabs-pages-arrow {
+      user-select: none;
+    }
+    .task-instructions-tabs-content {
+      flex: 1 0;
+    }
+    .task-instructions-tabs-arrow-button {
+      margin-top: 5px;
+    }
+  }
+}

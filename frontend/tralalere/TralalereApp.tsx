@@ -75,6 +75,7 @@ export function TralalereApp() {
 
     const [nextLevelOpen, setNextLevelOpen] = useState(false);
     const displayDebug = useAppSelector(state => 0 < state.task.state?.debug?.linesLogged?.length);
+    const tabIndexPageIndex = useAppSelector(state => state.layout.instructions.tabIndex + '-' + state.layout.instructions.pageIndex);
 
     const increaseLevel = () => {
         dispatch(taskChangeLevel(taskLevelsList[nextLevel]));
@@ -107,6 +108,10 @@ export function TralalereApp() {
             setInstructionsExpanded(false);
         }
     }, [isMobile]);
+
+    useEffect(() => {
+        setInstructionsExpanded(true);
+    }, [tabIndexPageIndex]);
 
     useEffect(() => {
         if (taskLoaded) {
@@ -205,6 +210,7 @@ export function TralalereApp() {
                                     </div>
                                 </div> : <div className={taskSuccess ? 'visibility-hidden' : ''}>
                                     <TralalereInstructions
+                                        style={instructionsExpanded ? {visibility: 'hidden'} : {}}
                                         onExpand={expandInstructions}
                                     />
                                     {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
