@@ -93,6 +93,7 @@ import {CodecastPlatform} from './platforms';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 import {shuffleArray} from '../utils/javascript';
+import {computeDelayForCurrentStep} from './speed';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -806,25 +807,17 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
             const maxSpeed = context && context.infos && 'initActionDelay' in context.infos ? context.infos.initActionDelay : stepperMaxSpeed;
             newDelay = maxSpeed - stepperContext.speed;
         }
-        // log.getLogger('stepper').debug('stepper interact before background run data', stepperContext.backgroundRunData);
+        // log.getLogger('stepper').debug('stepper interact before background run data', stepperContext.backgroundRunData, stepperContext.initStepMarker);
         if (stepperContext.backgroundRunData && stepperContext.backgroundRunData.steps) {
             const runData = stepperContext.backgroundRunData;
-            // if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
-            //     newDelay = newDelay / 4;
-            // }
-            const t = Codecast.runner._steps / (runData.steps - 1);
-            const y0 = newDelay;
-            const y1 = newDelay / 40;
-            const y2 = newDelay / 40;
-            const y3 = newDelay;
+            const delayReference = newDelay;
 
-            // We create a cubic Bézier curve with 4 control points
-            // to create an acceleration from y0 to y1 at the beginning of the execution
-            // and a deceleration from y2 to y3 at the end of the execution
-            // See https://en.wikipedia.org/wiki/B%C3%A9zier_curve for the formula
+            const currentStep = Codecast.runner._steps - stepperContext.initStepMarker;
+            const stepsCount = runData.steps - stepperContext.initStepMarker - 1;
 
-            newDelay = (1-t)*((1-t)*((1-t)*y0+t*y1)+t*((1-t)*y1+t*y2))+t*((1-t)*((1-t)*y1+t*y2)+t*((1-t)*y2+t*y3));
-            // log.getLogger('stepper').debug('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, t, newDelay})
+            newDelay = computeDelayForCurrentStep(delayReference, currentStep, stepsCount);
+
+            log.getLogger('stepper').debug('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, newDelay, delayReference})
         }
         stepperContext.delayToWait = Math.round(newDelay);
     }
@@ -955,6 +948,7 @@ function* stepperStepSaga(app: App, action) {
                 environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
                 executeEffects: app.stepperApi.executeEffects,
+                initStepMarker: Codecast.runner._steps,
             });
             log.getLogger('stepper').debug('execution stepper context', stepperContext);
 

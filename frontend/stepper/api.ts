@@ -62,6 +62,7 @@ export interface StepperContext {
     noInteractiveSteps?: number,
     backgroundRunData?: TaskSubmissionResultPayload,
     waitPreviousAnimations?: boolean,
+    initStepMarker?: number,
 }
 
 export interface StepperContextParameters {
@@ -77,6 +78,7 @@ export interface StepperContextParameters {
     speed?: number,
     executeEffects?: Function,
     waitPreviousAnimations?: boolean,
+    initStepMarker?: number,
 }
 
 export const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
