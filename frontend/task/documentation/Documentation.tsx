@@ -201,7 +201,7 @@ export function Documentation(props: DocumentationProps) {
             <div className="documentation-body">
                 <div className="documentation-menu">
                     <div>
-                        {Object.values(conceptsByCategory).map(({category, subConcepts}) =>
+                        {Object.values(conceptsByCategory).filter(({subConcepts}) => 0 < subConcepts.length).map(({category, subConcepts}) =>
                             <DocumentationMenuCategoryConcept
                                 key={category.id}
                                 category={category}
