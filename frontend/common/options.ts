@@ -82,7 +82,7 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
         options.input = query.input || '';
     }
     if ('level' in query) {
-        options.level = query.level || null;
+        options.levels = query.level.split(',') || null;
     }
     if ('theme' in query) {
         options.theme = query.theme || null;
@@ -92,6 +92,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     }
     if ('viewTestDetails' in query) {
         options.viewTestDetails = true;
+    }
+    if ('defaultLevel' in query) {
+        options.defaultLevel = query.defaultLevel;
     }
     options.canDownload = !('noDownload' in query);
 
