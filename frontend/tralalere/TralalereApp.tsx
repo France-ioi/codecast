@@ -116,6 +116,13 @@ export function TralalereApp() {
     }, [tabIndexPageIndex]);
 
     useEffect(() => {
+        // use timeout as the answer will change too and we want to trigger in the correct order
+        setTimeout(() => {
+            setInstructionsExpanded(true);
+        }, 100);
+    }, [currentLevel]);
+
+    useEffect(() => {
         if (taskLoaded) {
             setInstructionsExpanded(false);
             if (taskSuccess) {
