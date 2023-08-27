@@ -16,6 +16,7 @@ export interface TaskHint {
     disableNext?: boolean,
     disablePrevious?: boolean,
     immediate?: boolean,
+    levels?: string[],
 }
 
 export interface HintsState {
@@ -34,7 +35,8 @@ export function selectAvailableHints(state: AppStore): TaskHint[] {
     const currentLevelScore = currentLevel && currentLevel in levels ? levels[currentLevel].score : 0;
 
     return state.hints.availableHints.filter(hint => {
-        return undefined === hint.minScore || currentLevelScore >= hint.minScore;
+        return ((undefined === hint.minScore || currentLevelScore >= hint.minScore)
+            && (!hint.levels || hint.levels.includes(currentLevel)));
     });
 }
 
