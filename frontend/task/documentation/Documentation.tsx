@@ -35,7 +35,6 @@ export function Documentation(props: DocumentationProps) {
     const documentationLanguage = useAppSelector(state => state.documentation.language);
     const screen = useAppSelector(state => state.screen);
     const firstConcepts = concepts.filter(concept => !concept.isCategory).slice(0, 3);
-    const isTralalere = useAppSelector(state => 'tralalere' === state.options.app);
     const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
 
     const conceptsByCategory: {[conceptId: string]: {category: DocumentationConcept, subConcepts: DocumentationConcept[]}} = {};
@@ -61,10 +60,6 @@ export function Documentation(props: DocumentationProps) {
             urlSplit[urlSplit.length - 1] = documentationLanguage + '-' + urlSplit[urlSplit.length - 1];
         } else {
             urlSplit[1] = documentationLanguage;
-        }
-        if (isTralalere) {
-            urlSplit[0] = urlSplit[0].replace(/index\.html/g, 'index_tralalere.html');
-            urlSplit[0] = urlSplit[0].replace(/index_en\.html/g, 'index_tralalere_en.html');
         }
         conceptUrl = urlSplit.join('#');
         if (-1 !== conceptUrl.indexOf('http://') && 'https:' === window.location.protocol) {

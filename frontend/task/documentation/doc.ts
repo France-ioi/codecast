@@ -164,7 +164,7 @@ function findConceptByFunction(filteredConcepts, functionName) {
     return false;
 }
 
-function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task|null, language: DocumentationLanguage) {
+function* getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task|null, language: DocumentationLanguage) {
     let documentationConcepts: DocumentationConcept[] = [];
     if (hasTaskInstructions && currentTask) {
         const taskConcept = {
@@ -179,9 +179,24 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task
     if (context?.infos.conceptViewer) {
         const conceptViewer = context.infos.conceptViewer;
         let concepts = [], allConcepts = [];
+
+        const isTralalere = yield* appSelect(state => 'tralalere' == state.options.app);
+        const knownBaseConceptUrls = {
+            'tralalere': 'https://static4.castor-informatique.fr/help/index_tralalere.html',
+            'tralalere_en': 'https://static4.castor-informatique.fr/help/index_tralalere_en.html',
+            'tralalere_v2': 'https://static4.castor-informatique.fr/help/index_tralalere_v2.html',
+        };
+        let baseConceptUrl = context.infos.conceptViewerBaseUrl;
+        if (baseConceptUrl === undefined) {
+            baseConceptUrl = isTralalere ? 'tralalere' : null;
+        }
+        if (baseConceptUrl) {
+            baseConceptUrl = knownBaseConceptUrls[baseConceptUrl + '_' + window.stringsLanguage] || knownBaseConceptUrls[baseConceptUrl] || baseConceptUrl;
+        }
+
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
-            allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
+            allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts(baseConceptUrl));
             concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList(!Array.isArray(conceptViewer)));
         }
 
@@ -234,7 +249,7 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
     } else {
         const language = yield* appSelect(state => state.documentation.language);
         const currentTask = yield* appSelect(state => state.task.currentTask);
-        const concepts = getConceptsFromLanguage(hasTaskInstructions, currentTask, language);
+        const concepts = yield* getConceptsFromLanguage(hasTaskInstructions, currentTask, language);
         if (null !== concepts) {
             yield* call(loadDocumentationConcepts, concepts);
         }
@@ -328,17 +343,18 @@ export default function (bundle: Bundle) {
             const hasTaskInstructions = action.payload.hasTaskInstructions;
             const canChangePlatform = state.options.canChangePlatform;
 
-            channel.bind('getConceptViewerConfigs', (): ConceptViewerConfigs => {
-                const concepts = getConceptsFromLanguage(hasTaskInstructions, currentTask, language);
-
-                return {
-                    concepts,
-                    selectedConceptId,
-                    language,
-                    availablePlatforms,
-                    canChangePlatform,
-                    screen,
-                };
+            channel.bind('getConceptViewerConfigs', (trans) => {
+                trans.delayReturn(true);
+                getConceptsFromLanguage(hasTaskInstructions, currentTask, language).next((concepts: DocumentationConcept[]) => {
+                    trans.complete({
+                        concepts,
+                        selectedConceptId,
+                        language,
+                        availablePlatforms,
+                        canChangePlatform,
+                        screen,
+                    });
+                });
             });
 
             channel.bind('useCodeExample', (instance, {code, language}) => {
