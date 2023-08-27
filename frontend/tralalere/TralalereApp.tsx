@@ -211,7 +211,7 @@ export function TralalereApp() {
                             <img className="tralalere-success-left"
                                 src={window.modulesPath + 'img/algorea/crane/task-success.png'}/>
                             <div>{getMessage('TRALALERE_TASK_SUCCESS')}</div>
-                            {null !== taskSuccessMessage && <div
+                            {null !== taskSuccessMessage && currentLevel != 'easy' && <div
                                 className="tralalere-success-message"
                                 dangerouslySetInnerHTML={toHtml(taskSuccessMessage)}
                             >
