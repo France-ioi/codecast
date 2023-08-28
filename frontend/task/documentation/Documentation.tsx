@@ -196,19 +196,22 @@ export function Documentation(props: DocumentationProps) {
             <div className="documentation-body">
                 <div className="documentation-menu">
                     <div>
-                        {Object.values(conceptsByCategory).filter(({subConcepts}) => 0 < subConcepts.length).map(({category, subConcepts}) =>
-                            <DocumentationMenuCategoryConcept
-                                key={category.id}
-                                category={category}
-                                subConcepts={subConcepts}
-                            />
-                        )}
-                        {concepts.filter(concept => !concept.categoryId && !concept.isCategory).map(concept =>
-                            <DocumentationMenuConcept
-                                key={concept.id}
-                                concept={concept}
-                            />
-                        )}
+                        {concepts.map(concept => {
+                            if (concept.isCategory) {
+                                return <DocumentationMenuCategoryConcept
+                                    key={concept.id}
+                                    category={concept}
+                                    subConcepts={concepts.filter(subConcept => subConcept.categoryId === concept.id)}
+                                />
+                            } else if (!concept.categoryId) {
+                                return <DocumentationMenuConcept
+                                    key={concept.id}
+                                    concept={concept}
+                                />
+                            } else {
+                                return null;
+                            }
+                        })}
                     </div>
                 </div>
                 {selectedConcept &&
