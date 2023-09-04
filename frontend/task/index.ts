@@ -508,6 +508,8 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     }
     yield* put(taskCurrentLevelChange({level: newLevel}));
 
+    yield* put({type: LayoutActionTypes.LayoutInstructionsIndexChanged, payload: {tabIndex: 0, pageIndex: 0}});
+
     const randomSeed = yield* appSelect(state => state.platform.taskRandomSeed);
     const taskToken = getTaskTokenForLevel(newLevel, randomSeed);
     yield* put(platformTokenUpdated(taskToken));

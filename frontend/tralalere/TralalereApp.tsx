@@ -117,7 +117,6 @@ export function TralalereApp() {
     }, [tabIndexPageIndex]);
 
     useEffect(() => {
-        dispatch({type: LayoutActionTypes.LayoutInstructionsIndexChanged, payload: {tabIndex: 0, pageIndex: 0}});
         // use timeout as the answer will change too and we want to trigger in the correct order
         setTimeout(() => {
             setInstructionsExpanded(true);
