@@ -249,6 +249,7 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             yield* call(success);
         }
     } catch (ex: any) {
+        console.error(ex);
         yield* call(error, `bad answer: ${ex.message}`);
     }
 }
