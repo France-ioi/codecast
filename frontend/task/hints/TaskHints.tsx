@@ -16,7 +16,7 @@ export interface TaskHintProps {
 export function TaskHints(props: TaskHintProps) {
     const availableHints = useAppSelector(selectAvailableHints);
     const unlockedHintIds = useAppSelector(state => state.hints.unlockedHintIds);
-    const [displayedHintId, setDisplayedHintId] = useState(unlockedHintIds.length ? unlockedHintIds[0] : null);
+    const [displayedHintId, setDisplayedHintId] = useState(unlockedHintIds.length ? unlockedHintIds[unlockedHintIds.length - 1] : null);
     const displayedHintIndex = null === displayedHintId ? unlockedHintIds.length : unlockedHintIds.indexOf(displayedHintId);
     const displayedHint = availableHints.find(hint => displayedHintId === hint.id);
     const nextAvailableHint = availableHints.find(hint => -1 === unlockedHintIds.indexOf(hint.id));
