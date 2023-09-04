@@ -27,6 +27,7 @@ import {documentModelFromString} from '../../buffers';
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {addAutoRecordingBehaviour} from '../../recorder/record';
 import {documentFromString} from '../../buffers/document';
+import {AppStore} from '../../store';
 
 let openerChannel;
 
@@ -164,7 +165,10 @@ function findConceptByFunction(filteredConcepts, functionName) {
     return false;
 }
 
-function* getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task|null, language: DocumentationLanguage) {
+function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) {
+    const language = state.documentation.language;
+    const currentTask = state.task.currentTask;
+
     let documentationConcepts: DocumentationConcept[] = [];
     if (hasTaskInstructions && currentTask) {
         const taskConcept = {
@@ -180,7 +184,7 @@ function* getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Tas
         const conceptViewer = context.infos.conceptViewer;
         let concepts = [], allConcepts = [];
 
-        const isTralalere = yield* appSelect(state => 'tralalere' == state.options.app);
+        const isTralalere = 'tralalere' == state.options.app;
         const knownBaseConceptUrls = {
             'tralalere': 'https://static4.castor-informatique.fr/help/index_tralalere.html',
             'tralalere_en': 'https://static4.castor-informatique.fr/help/index_tralalere_en.html',
@@ -244,12 +248,12 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
 
             yield* call(loadDocumentationConcepts, concepts, firstLoad ? selectedConceptId : currentSelectedConceptId);
         } catch (e: any) {
+            console.error(e);
             yield* put({type: CommonActionTypes.Error, payload: {error: getMessage('TASK_DOCUMENTATION_LOAD_ERROR'), closable: false}});
         }
     } else {
-        const language = yield* appSelect(state => state.documentation.language);
-        const currentTask = yield* appSelect(state => state.task.currentTask);
-        const concepts = yield* getConceptsFromLanguage(hasTaskInstructions, currentTask, language);
+        const state = yield* appSelect();
+        const concepts = getConceptsFromLanguage(hasTaskInstructions, state);
         if (null !== concepts) {
             yield* call(loadDocumentationConcepts, concepts);
         }
@@ -336,25 +340,23 @@ export default function (bundle: Bundle) {
 
             const state = yield* appSelect();
             const language = state.documentation.language;
-            const currentTask = state.task.currentTask;
             const screen = state.screen;
             const availablePlatforms = state.task.availablePlatforms;
             const selectedConceptId = state.documentation.selectedConceptId;
             const hasTaskInstructions = action.payload.hasTaskInstructions;
             const canChangePlatform = state.options.canChangePlatform;
 
-            channel.bind('getConceptViewerConfigs', (trans) => {
-                trans.delayReturn(true);
-                getConceptsFromLanguage(hasTaskInstructions, currentTask, language).next((concepts: DocumentationConcept[]) => {
-                    trans.complete({
-                        concepts,
-                        selectedConceptId,
-                        language,
-                        availablePlatforms,
-                        canChangePlatform,
-                        screen,
-                    });
-                });
+            channel.bind('getConceptViewerConfigs', () => {
+                const concepts = getConceptsFromLanguage(hasTaskInstructions, state);
+
+                return {
+                    concepts,
+                    selectedConceptId,
+                    language,
+                    availablePlatforms,
+                    canChangePlatform,
+                    screen,
+                };
             });
 
             channel.bind('useCodeExample', (instance, {code, language}) => {
