@@ -26,40 +26,40 @@ export default function () {
 function makeTask (emit) {
     return {
         showViews: function (views, success, error) {
-            emit(taskShowViewsEvent(views, success, error));
+            emit(taskShowViewsEvent(views, success ?? (() => {}), error ?? (() => {})));
         },
         getViews: function (success, error) {
-            emit(taskGetViewsEvent(success, error));
+            emit(taskGetViewsEvent(success ?? (() => {}), error ?? (() => {})));
         },
         updateToken: function (token, success, error) {
-            emit(taskUpdateTokenEvent(token, success, error));
+            emit(taskUpdateTokenEvent(token, success ?? (() => {}), error ?? (() => {})));
         },
         getHeight: function (success, error) {
-            emit(taskGetHeightEvent(success, error));
+            emit(taskGetHeightEvent(success ?? (() => {}), error ?? (() => {})));
         },
         unload: function (success, error) {
-            emit(taskUnloadEvent(success, error));
+            emit(taskUnloadEvent(success ?? (() => {}), error ?? (() => {})));
         },
         getState: function (success, error) {
-            emit(taskGetStateEvent(success, error));
+            emit(taskGetStateEvent(success ?? (() => {}), error ?? (() => {})));
         },
         getMetaData: function (success, error) {
-            emit(taskGetMetadataEvent(success, error));
+            emit(taskGetMetadataEvent(success ?? (() => {}), error ?? (() => {})));
         },
         reloadAnswer: function (answer, success, error) {
-            emit(taskReloadAnswerEvent(answer, success, error));
+            emit(taskReloadAnswerEvent(answer, success ?? (() => {}), error ?? (() => {})));
         },
         reloadState: function (state, success, error) {
-            emit(taskReloadStateEvent(state, success, error));
+            emit(taskReloadStateEvent(state, success ?? (() => {}), error ?? (() => {})));
         },
         getAnswer: function (success, error) {
-            emit(taskGetAnswerEvent(success, error));
+            emit(taskGetAnswerEvent(success ?? (() => {}), error ?? (() => {})));
         },
         load: function (views, success, error) {
-            emit(taskLoadEvent(views, success, error));
+            emit(taskLoadEvent(views, success ?? (() => {}), error ?? (() => {})));
         },
         gradeAnswer: function (answer, answerToken, success, error, silent = false) {
-            emit(taskGradeAnswerEvent(answer, answerToken, success, error, silent));
+            emit(taskGradeAnswerEvent(answer, answerToken, success ?? (() => {}), error ?? (() => {}), silent));
         },
     };
 }
