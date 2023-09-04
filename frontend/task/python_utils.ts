@@ -82,6 +82,8 @@ const pythonCountPatterns = [
     {pattern: /^[\s\(\),:]+/, block: false}
 ];
 
+const hiddenWords = ['__getitem__', '__setitem__', 'list', 'set'];
+
 function pythonCount(text) {
     if (null === text) {
         return 0;
@@ -493,7 +495,7 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
                 snippet: name in specialSnippets ? specialSnippets[name].snippet : code,
                 code,
                 category: tokenCategories[token],
-                showInBlocks: (name in specialSnippets && false === specialSnippets[name].showInBlocks) || -1 !== Object.values(bracketsWords).indexOf(token) ? false : undefined,
+                showInBlocks: (name in specialSnippets && false === specialSnippets[name].showInBlocks) || -1 !== Object.values(bracketsWords).indexOf(token) || -1 !== hiddenWords.indexOf(name) ? false : undefined,
             });
         }
 
