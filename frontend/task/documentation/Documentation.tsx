@@ -37,20 +37,6 @@ export function Documentation(props: DocumentationProps) {
     const firstConcepts = concepts.filter(concept => !concept.isCategory).slice(0, 3);
     const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
 
-    const conceptsByCategory: {[conceptId: string]: {category: DocumentationConcept, subConcepts: DocumentationConcept[]}} = {};
-    for (let concept of concepts.filter(concept => concept.isCategory)) {
-        conceptsByCategory[concept.id] = {
-            category: concept,
-            subConcepts: [],
-        };
-    }
-    for (let concept of concepts.filter(concept => !concept.isCategory && undefined !== concept.categoryId && null !== concept.categoryId)) {
-        if (!(concept.categoryId in conceptsByCategory)) {
-            throw "This category id does not exist: " + concept.categoryId;
-        }
-        conceptsByCategory[concept.categoryId].subConcepts.push(concept);
-    }
-
     const [iframeRef, setIframeRef] = useState(null);
 
     let conceptUrl = null;
@@ -197,7 +183,7 @@ export function Documentation(props: DocumentationProps) {
                 <div className="documentation-menu">
                     <div>
                         {concepts.map(concept => {
-                            if (concept.isCategory) {
+                            if (concept.isCategory && 0 < concepts.filter(subConcept => subConcept.categoryId === concept.id).length) {
                                 return <DocumentationMenuCategoryConcept
                                     key={concept.id}
                                     category={concept}
