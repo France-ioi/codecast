@@ -198,8 +198,15 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
         }
 
         if (DocumentationLanguage.C !== language) {
-            allConcepts = context.getConceptList();
-            allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts(baseConceptUrl));
+            allConcepts = window.getConceptViewerBaseConcepts(baseConceptUrl);
+            console.log('base concepts', allConcepts);
+            for (let concept of context.getConceptList()) {
+                if (concept.id && -1 !== allConcepts.findIndex(otherConcept => otherConcept.id === concept.id)) {
+                    allConcepts.splice(allConcepts.findIndex(otherConcept => otherConcept.id === concept.id), 1);
+                }
+                allConcepts.push(concept);
+            }
+
             concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList());
             const disabledConcepts = context.conceptDisabledList ? context.conceptDisabledList : [];
             concepts = concepts.filter(concept => -1 === disabledConcepts.indexOf(concept.id));
