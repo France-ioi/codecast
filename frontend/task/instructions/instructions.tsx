@@ -57,6 +57,11 @@ const defaultInstructionsHtml = `
     </div>
 </div>
 <div class="easy">
+    <div class="hints">
+        <div class="hint">
+            Hint 1
+        </div>
+    </div>
     <div class="success-message">
         <p>Test</p>
         <p>Success easy</p>
