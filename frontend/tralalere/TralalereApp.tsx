@@ -25,12 +25,12 @@ import {taskSuccessClear} from "../task/task_slice";
 import {hasBlockPlatform} from "../stepper/js";
 import {getMessage} from '../lang';
 import {platformTaskLink} from '../task/platform/actionTypes';
-import {ActionTypes as LayoutActionTypes} from '../task/layout/actionTypes';
 import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
 import {selectAvailableHints} from '../task/hints/hints_slice';
 import {DebugLibView} from '../task/libs/debug/DebugLibView';
 import {toHtml} from '../utils/sanitize';
 import {getTaskSuccessMessageSelector} from '../task/instructions/instructions';
+import {InstructionsContext} from '../contexts';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -225,10 +225,12 @@ export function TralalereApp() {
                                         <DebugLibView/>
                                     </div>
                                 </div> : <div className={taskSuccess ? 'visibility-hidden' : ''}>
-                                    <TralalereInstructions
-                                        style={{visibility: 'hidden'}}
-                                        onExpand={expandInstructions}
-                                    />
+                                    <InstructionsContext.Provider value={{visible: false}}>
+                                        <TralalereInstructions
+                                            style={{visibility: 'hidden'}}
+                                            onExpand={expandInstructions}
+                                        />
+                                    </InstructionsContext.Provider>
 
                                     {instructionsExpanded ?
                                         <TralalereInstructions

@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useContext, useEffect, useRef} from 'react';
 import {convertHtmlInstructionsToReact} from './instructions';
 import {useAppSelector} from '../../hooks';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -6,6 +6,7 @@ import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
 import {faChevronRight} from '@fortawesome/free-solid-svg-icons';
 import {useDispatch} from 'react-redux';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
+import {InstructionsContext} from '../../contexts';
 
 export interface TaskInstructionsTabProps {
     tabIndex: number
@@ -17,7 +18,8 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
     const platform = useAppSelector(state => state.options.platform);
     const tab = props.tab;
     const pages = tab.querySelectorAll('.instructions-page');
-    const activePageIndex = useAppSelector(state => state.layout.instructions.pageIndex);
+    const {visible} = useContext(InstructionsContext);
+    const activePageIndex = useAppSelector(state => !visible ? 0 : state.layout.instructions.pageIndex);
     const maxHeight = useAppSelector(state => state.layout.instructions.maxHeight);
     const activePage = pages[activePageIndex];
     const dispatch = useDispatch();
@@ -28,7 +30,7 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
     };
 
     useEffect(() => {
-        if (0 === props.tabIndex && 0 === activePageIndex && !props.expanded) {
+        if (0 === props.tabIndex && 0 === activePageIndex && !visible) {
             setTimeout(() => {
                 const container = mainRef.current.querySelectorAll('.task-instructions-tabs-content-inside');
                 if (container.length) {
@@ -39,7 +41,7 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
         }
     }, [props.tabIndex, activePageIndex]);
 
-    const style = !props.expanded && maxHeight ? {height: maxHeight + 'px', overflow: 'hidden'} : {};
+    const style = !props.expanded && maxHeight ? {maxHeight: maxHeight + 'px', overflow: 'hidden'} : {};
 
     if (0 === pages.length) {
         return (
