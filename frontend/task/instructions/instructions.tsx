@@ -182,7 +182,7 @@ export function getTaskHintsSelector(state: AppStore) {
         }
     }
 
-    return hints;
+    return hints.length ? hints : null;
 }
 
 function transformNode(node, index: string | number, context: { platform: CodecastPlatform }) {
