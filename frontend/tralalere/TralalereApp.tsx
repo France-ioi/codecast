@@ -226,10 +226,22 @@ export function TralalereApp() {
                                     </div>
                                 </div> : <div className={taskSuccess ? 'visibility-hidden' : ''}>
                                     <TralalereInstructions
-                                        style={instructionsExpanded ? {visibility: 'hidden'} : {}}
+                                        style={{visibility: 'hidden'}}
                                         onExpand={expandInstructions}
                                     />
-                                    {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
+
+                                    {instructionsExpanded ?
+                                        <TralalereInstructions
+                                            expanded
+                                            absolute
+                                            onExpand={expandInstructions}
+                                        />
+                                        :
+                                        <TralalereInstructions
+                                            absolute
+                                            onExpand={expandInstructions}
+                                        />
+                                    }
                                 </div>}
                             </React.Fragment>
                         }
