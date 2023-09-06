@@ -28,7 +28,7 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
     };
 
     useEffect(() => {
-        if (0 === props.tabIndex && 0 === activePageIndex) {
+        if (0 === props.tabIndex && 0 === activePageIndex && !props.expanded) {
             setTimeout(() => {
                 const container = mainRef.current.querySelectorAll('.task-instructions-tabs-content-inside');
                 if (container.length) {
@@ -39,7 +39,7 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
         }
     }, [props.tabIndex, activePageIndex]);
 
-    const style = !props.expanded && maxHeight ? {height: maxHeight + 'px', overflow: 'hidden'} : {};
+    const style = !props.expanded && maxHeight ? {maxHeight: maxHeight + 'px', overflow: 'hidden'} : {};
 
     if (0 === pages.length) {
         return (
