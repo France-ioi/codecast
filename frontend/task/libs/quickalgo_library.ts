@@ -24,6 +24,7 @@ export abstract class QuickAlgoLibrary {
     customBlocks: any;
     customConstants: any;
     conceptList: any[];
+    conceptDisabledList?: string[];
     notionsList: NotionArborescence;
     runner: any;
     curNode: any;

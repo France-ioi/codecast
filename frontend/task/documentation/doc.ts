@@ -202,6 +202,8 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts(baseConceptUrl));
             concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList(!Array.isArray(conceptViewer)));
+            const disabledConcepts = context.conceptDisabledList ? context.conceptDisabledList : [];
+            concepts = concepts.filter(concept => -1 !== disabledConcepts.indexOf(concept.id));
         }
 
         if (Array.isArray(conceptViewer)) {
