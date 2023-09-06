@@ -181,7 +181,6 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
 
     let context = quickAlgoLibraries.getContext(null, 'main');
     if (context?.infos.conceptViewer) {
-        const conceptViewer = context.infos.conceptViewer;
         let concepts = [], allConcepts = [];
 
         const isTralalere = 'tralalere' == state.options.app;
@@ -201,11 +200,12 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts(baseConceptUrl));
-            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList(!Array.isArray(conceptViewer)));
+            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList());
             const disabledConcepts = context.conceptDisabledList ? context.conceptDisabledList : [];
             concepts = concepts.filter(concept => -1 === disabledConcepts.indexOf(concept.id));
         }
 
+        const conceptViewer = context.infos.conceptViewer;
         if (Array.isArray(conceptViewer)) {
             concepts = concepts.concat(conceptViewer);
         } else {
