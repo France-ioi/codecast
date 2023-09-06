@@ -174,7 +174,7 @@ export function getTaskHintsSelector(state: AppStore) {
                     disablePrevious: elm.hasAttribute('data-disable-previous'),
                     disableNext: elm.hasAttribute('data-disable-next'),
                     immediate: elm.hasAttribute('data-immediate'),
-                    levels: elm.hasAttribute('data-levels') ? elm.getAttribute('data-levels').split() : undefined,
+                    levels: [level],
                 };
             });
 
