@@ -39,7 +39,7 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
         }
     }, [props.tabIndex, activePageIndex]);
 
-    const style = !props.expanded && maxHeight ? {maxHeight: maxHeight + 'px', overflow: 'hidden'} : {};
+    const style = !props.expanded && maxHeight ? {height: maxHeight + 'px', overflow: 'hidden'} : {};
 
     if (0 === pages.length) {
         return (
