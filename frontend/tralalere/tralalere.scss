@@ -491,17 +491,14 @@ $tralalere-red: #FF3C11;
   }
 
   .documentation-tab-left {
-    display: block;
     background: $tralalere-dark-blue;
     border: 2px solid $tralalere-green;
     color: $tralalere-green;
     border-radius: 6px;
     padding: 10px 10px;
-    height: initial;
     text-decoration: none;
     font-weight: 900;
     margin: 15px 15px;
-    user-select: none;
 
     .bp3-icon-dot {
       display: none;
