@@ -15,6 +15,7 @@ import {
     convertHtmlInstructionsToReact,
     getInstructionsForLevelSelector
 } from './instructions/instructions';
+import {memoize} from 'proxy-memoize';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -41,7 +42,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const {
         html: newInstructionsHtml,
         title: newInstructionsTitle
-    } = useAppSelector(getInstructionsForLevelSelector);
+    } = useAppSelector(memoize(getInstructionsForLevelSelector));
 
     const toggleTaskInstructions = () => {
         if (documentationOpen) {
