@@ -160,7 +160,20 @@ export abstract class QuickAlgoLibrary {
                 callback(value);
             }, computedDelay);
         }
-    };
+    }
+
+    waitUntilCallback(callback, value = null) {
+        if (this.runner) {
+            this.delaysStartedCount++;
+            this.runner.noDelay(callback, value);
+        } else {
+            callback(value);
+        }
+    }
+
+    signalExecutionIsOver() {
+        this.delayOver();
+    }
 
     callCallback (callback, value) {
         // Call the callback with value directly
