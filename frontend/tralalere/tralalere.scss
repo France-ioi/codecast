@@ -444,6 +444,10 @@ $tralalere-red: #FF3C11;
       color: #ddd;
       opacity: 1;
     }
+
+    .carousel-indicators button {
+      background-color: $tralalere-green-blue;
+    }
   }
 }
 
@@ -515,12 +519,6 @@ $tralalere-red: #FF3C11;
   }
 
   .documentation-concepts-category-title {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    .documentation-concepts-category-title-name {
-      flex: 1 0;
-    }
     .category-fold-button {
       @include tralalere-button;
       @include tralalere-button-small;

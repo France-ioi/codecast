@@ -37,7 +37,6 @@ export function TaskHints(props: TaskHintProps) {
         setDisplayedHintId(hintId);
     }, []);
 
-
     let currentHintPreviousId = null;
     let currentHintNextId = null;
     if (displayedHint) {
@@ -59,6 +58,11 @@ export function TaskHints(props: TaskHintProps) {
                 } else {
                     canAskMoreHints = false;
                 }
+            } else {
+                const nextHintIndex = displayedHintIndex + 1;
+                if (unlockedHintIds[nextHintIndex]) {
+                    currentHintNextId = unlockedHintIds[nextHintIndex];
+                }
             }
         }
 
@@ -74,7 +78,9 @@ export function TaskHints(props: TaskHintProps) {
         }
     }
 
-    const handleSelect = (selectedIndex) => {
+    const handleSelect = (selectedIndex: number) => {
+        const nextHintId = unlockedHintIds[selectedIndex];
+
         if (selectedIndex === displayedHintIndex - 1) {
             // Back
             if (currentHintPreviousId) {
@@ -87,9 +93,10 @@ export function TaskHints(props: TaskHintProps) {
             } else if (canAskMoreHints) {
                 setDisplayedHintId(null);
             }
+        } else if (nextHintId) {
+            goToHintId(nextHintId);
         }
     };
-
 
     const carouselElements = unlockedHintIds.map(unlockedHintId => {
         return <TaskHint
@@ -110,7 +117,9 @@ export function TaskHints(props: TaskHintProps) {
         );
     }
 
-    log.getLogger('hints').debug('current hint id', {displayedHint, displayedHintId, displayedHintIndex, unlockedHintIds, currentHintPreviousId, currentHintNextId, canAskMoreHints})
+    const displayIndicators = !!(displayedHint && (!displayedHint.question && !displayedHint.nextHintId && !displayedHint.previousHintId));
+
+    log.getLogger('hints').debug('current hint id', {displayedHint, displayedHintId, displayedHintIndex, unlockedHintIds, currentHintPreviousId, currentHintNextId, canAskMoreHints, displayIndicators});
 
     return (
         <div className="hints-container">
@@ -120,6 +129,7 @@ export function TaskHints(props: TaskHintProps) {
                     onSelect={handleSelect}
                     interval={null}
                     wrap={false}
+                    indicators={displayIndicators}
                     prevIcon={<FontAwesomeIcon icon={faChevronLeft} size="lg"/>}
                     nextIcon={<FontAwesomeIcon icon={faChevronRight} size="lg"/>}
                 >

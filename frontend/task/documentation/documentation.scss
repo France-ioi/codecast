@@ -96,6 +96,15 @@
     }
   }
 
+  .documentation-concepts-category-title {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    .documentation-concepts-category-title-name {
+      flex: 1 0;
+    }
+  }
+
   .documentation-tabs-menu {
     padding: 0 1.5rem;
     color: var(--primary-color);

@@ -20,6 +20,7 @@
     "start": "NODE_ENV=production nodemon --mode production --watch backend --exec yarn babel-node -- backend/server.js",
     "build": "webpack --mode=production --progress --color",
     "build-lib": "BUILD=lib webpack --mode=production --progress --color",
+    "watch-lib": "BUILD=lib webpack --mode=production --progress --color --watch",
     "pack-offline": "rm -rf build && yarn run build-lib && zip -r offline.zip build assets",
     "lint": "./node_modules/.bin/eslint frontend/ --ext .tsx,.ts"
   },
