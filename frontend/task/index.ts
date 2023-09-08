@@ -101,6 +101,7 @@ import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {getMessage, Languages} from '../lang';
+import {getTaskHintsSelector} from './instructions/instructions';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask, callback}: {
     testId?: number,
@@ -264,10 +265,7 @@ function* taskLoadSaga(app: App, action) {
     //     },
     // ]));
 
-    if (state.options.taskHints) {
-        log.getLogger('task').debug('load hints', state.options.taskHints);
-        yield* put(hintsLoaded(state.options.taskHints));
-    }
+
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
     if (currentTask) {
@@ -321,6 +319,15 @@ function* taskLoadSaga(app: App, action) {
 
             yield* put(taskCurrentLevelChange({level: defaultLevel, record: false}));
         }
+    }
+
+    const taskHints = yield* appSelect(getTaskHintsSelector);
+    if (null !== taskHints) {
+        log.getLogger('task').debug('load hints from HTML', taskHints);
+        yield* put(hintsLoaded(taskHints));
+    } else if (state.options.taskHints) {
+        log.getLogger('task').debug('load hints from task options', state.options.taskHints);
+        yield* put(hintsLoaded(state.options.taskHints));
     }
 
     const currentLevel = yield* appSelect(state => state.task.currentLevel);
@@ -507,6 +514,8 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
         yield* put(platformUnlockLevel(newLevel));
     }
     yield* put(taskCurrentLevelChange({level: newLevel}));
+
+    yield* put({type: LayoutActionTypes.LayoutInstructionsIndexChanged, payload: {tabIndex: 0, pageIndex: 0}});
 
     const randomSeed = yield* appSelect(state => state.platform.taskRandomSeed);
     const taskToken = getTaskTokenForLevel(newLevel, randomSeed);

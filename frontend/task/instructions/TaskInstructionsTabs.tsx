@@ -1,8 +1,9 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {TaskInstructionsTab} from './TaskInstructionsTab';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {useDispatch} from 'react-redux';
 import {useAppSelector} from '../../hooks';
+import {InstructionsContext} from '../../contexts';
 
 export interface TaskInstructionsTabsProps {
     tabs: {title: string, element: HTMLDivElement}[],
@@ -11,7 +12,8 @@ export interface TaskInstructionsTabsProps {
 
 export function TaskInstructionsTabs(props: TaskInstructionsTabsProps) {
     const tabs = props.tabs;
-    const activeTabIndex = useAppSelector(state => state.layout.instructions.tabIndex);
+    const {visible} = useContext(InstructionsContext);
+    const activeTabIndex = useAppSelector(state => !visible ? 0 : state.layout.instructions.tabIndex);
     const activeTab = tabs[activeTabIndex];
     const dispatch = useDispatch();
 

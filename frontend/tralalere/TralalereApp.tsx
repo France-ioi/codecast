@@ -29,6 +29,8 @@ import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
 import {selectAvailableHints} from '../task/hints/hints_slice';
 import {DebugLibView} from '../task/libs/debug/DebugLibView';
 import {toHtml} from '../utils/sanitize';
+import {getTaskSuccessMessageSelector} from '../task/instructions/instructions';
+import {InstructionsContext} from '../contexts';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -48,7 +50,7 @@ export function TralalereApp() {
         layoutMobileMode = LayoutMobileMode.EditorPlayer;
     }
     const taskLoaded = useAppSelector(state => state.task.loaded);
-    const taskSuccessMessage = useAppSelector(state => state.options.taskSuccessMessage);
+    const taskSuccessMessage = useAppSelector(getTaskSuccessMessageSelector);
 
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(selectAvailableHints);
@@ -114,6 +116,13 @@ export function TralalereApp() {
     useEffect(() => {
         setInstructionsExpanded(true);
     }, [tabIndexPageIndex]);
+
+    useEffect(() => {
+        // use timeout as the answer will change too and we want to trigger in the correct order
+        setTimeout(() => {
+            setInstructionsExpanded(true);
+        }, 100);
+    }, [currentLevel]);
 
     useEffect(() => {
         if (taskLoaded) {
@@ -216,11 +225,25 @@ export function TralalereApp() {
                                         <DebugLibView/>
                                     </div>
                                 </div> : <div className={taskSuccess ? 'visibility-hidden' : ''}>
-                                    <TralalereInstructions
-                                        style={instructionsExpanded ? {visibility: 'hidden'} : {}}
-                                        onExpand={expandInstructions}
-                                    />
-                                    {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
+                                    <InstructionsContext.Provider value={{visible: false}}>
+                                        <TralalereInstructions
+                                            style={{visibility: 'hidden'}}
+                                            onExpand={expandInstructions}
+                                        />
+                                    </InstructionsContext.Provider>
+
+                                    {instructionsExpanded ?
+                                        <TralalereInstructions
+                                            expanded
+                                            absolute
+                                            onExpand={expandInstructions}
+                                        />
+                                        :
+                                        <TralalereInstructions
+                                            absolute
+                                            onExpand={expandInstructions}
+                                        />
+                                    }
                                 </div>}
                             </React.Fragment>
                         }

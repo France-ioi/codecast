@@ -527,6 +527,10 @@ html:not([active-view="task"]) {
 .task-mission {
   color: #7c7c7c;
 
+  .success-message, .hints {
+    display: none;
+  }
+
   .short, .long {
     display: none !important;
   }
@@ -897,3 +901,4 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     text-align: center;
   }
 }
+

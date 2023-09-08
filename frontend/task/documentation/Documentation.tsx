@@ -35,22 +35,7 @@ export function Documentation(props: DocumentationProps) {
     const documentationLanguage = useAppSelector(state => state.documentation.language);
     const screen = useAppSelector(state => state.screen);
     const firstConcepts = concepts.filter(concept => !concept.isCategory).slice(0, 3);
-    const isTralalere = useAppSelector(state => 'tralalere' === state.options.app);
     const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
-
-    const conceptsByCategory: {[conceptId: string]: {category: DocumentationConcept, subConcepts: DocumentationConcept[]}} = {};
-    for (let concept of concepts.filter(concept => concept.isCategory)) {
-        conceptsByCategory[concept.id] = {
-            category: concept,
-            subConcepts: [],
-        };
-    }
-    for (let concept of concepts.filter(concept => !concept.isCategory && undefined !== concept.categoryId && null !== concept.categoryId)) {
-        if (!(concept.categoryId in conceptsByCategory)) {
-            throw "This category id does not exist: " + concept.categoryId;
-        }
-        conceptsByCategory[concept.categoryId].subConcepts.push(concept);
-    }
 
     const [iframeRef, setIframeRef] = useState(null);
 
@@ -61,10 +46,6 @@ export function Documentation(props: DocumentationProps) {
             urlSplit[urlSplit.length - 1] = documentationLanguage + '-' + urlSplit[urlSplit.length - 1];
         } else {
             urlSplit[1] = documentationLanguage;
-        }
-        if (isTralalere) {
-            urlSplit[0] = urlSplit[0].replace(/index\.html/g, 'index_tralalere.html');
-            urlSplit[0] = urlSplit[0].replace(/index_en\.html/g, 'index_tralalere_en.html');
         }
         conceptUrl = urlSplit.join('#');
         if (-1 !== conceptUrl.indexOf('http://') && 'https:' === window.location.protocol) {
@@ -201,19 +182,22 @@ export function Documentation(props: DocumentationProps) {
             <div className="documentation-body">
                 <div className="documentation-menu">
                     <div>
-                        {Object.values(conceptsByCategory).filter(({subConcepts}) => 0 < subConcepts.length).map(({category, subConcepts}) =>
-                            <DocumentationMenuCategoryConcept
-                                key={category.id}
-                                category={category}
-                                subConcepts={subConcepts}
-                            />
-                        )}
-                        {concepts.filter(concept => !concept.categoryId && !concept.isCategory).map(concept =>
-                            <DocumentationMenuConcept
-                                key={concept.id}
-                                concept={concept}
-                            />
-                        )}
+                        {concepts.map(concept => {
+                            if (concept.isCategory && 0 < concepts.filter(subConcept => subConcept.categoryId === concept.id).length) {
+                                return <DocumentationMenuCategoryConcept
+                                    key={concept.id}
+                                    category={concept}
+                                    subConcepts={concepts.filter(subConcept => subConcept.categoryId === concept.id)}
+                                />
+                            } else if (!concept.categoryId) {
+                                return <DocumentationMenuConcept
+                                    key={concept.id}
+                                    concept={concept}
+                                />
+                            } else {
+                                return null;
+                            }
+                        })}
                     </div>
                 </div>
                 {selectedConcept &&

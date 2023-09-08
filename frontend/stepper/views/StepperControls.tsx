@@ -30,7 +30,7 @@ interface StepperControlsProps {
 export function StepperControls(props: StepperControlsProps) {
     const [speedDisplayedState, setSpeedDisplayedState] = useState(false);
     const stepperControlsState = useAppSelector(state => {
-        return getStepperControlsSelector(state, props);
+        return getStepperControlsSelector({state, enabled: props.enabled});
     });
     const {showControls, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt, showStepper, layoutType} = stepperControlsState;
     const dispatch = useDispatch();

@@ -55,7 +55,7 @@ $tralalere-red: #FF3C11;
 
 .tralalere {
   .tralalere-instructions {
-    &.is-expanded {
+    &.is-absolute {
       position: absolute;
       top: 0;
       left: 0;
@@ -444,6 +444,10 @@ $tralalere-red: #FF3C11;
       color: #ddd;
       opacity: 1;
     }
+
+    .carousel-indicators button {
+      background-color: $tralalere-green-blue;
+    }
   }
 }
 
@@ -515,12 +519,6 @@ $tralalere-red: #FF3C11;
   }
 
   .documentation-concepts-category-title {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    .documentation-concepts-category-title-name {
-      flex: 1 0;
-    }
     .category-fold-button {
       @include tralalere-button;
       @include tralalere-button-small;
@@ -760,6 +758,10 @@ $tralalere-red: #FF3C11;
     box-shadow: -5px 5px 0px 0px #1D1E47;
     color: white;
     font-size: 1rem;
+
+    *:last-child {
+      margin-bottom: 0 !important;
+    }
   }
 }
 
