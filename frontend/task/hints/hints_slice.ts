@@ -3,6 +3,7 @@ import {AppStore} from '../../store';
 import {useAppSelector} from '../../hooks';
 import {useDispatch} from 'react-redux';
 import {taskLevelsList} from '../platform/platform_slice';
+import {memoize} from 'proxy-memoize';
 
 export interface TaskHint {
     content?: string,
@@ -29,7 +30,7 @@ export const hintsInitialState = {
     unlockedHintIds: [],
 } as HintsState;
 
-export function selectAvailableHints(state: AppStore): TaskHint[] {
+export const selectAvailableHints = memoize((state: AppStore): TaskHint[] => {
     const levels = state.platform.levels;
     const currentLevel = state.task.currentLevel;
     const currentLevelScore = currentLevel && currentLevel in levels ? levels[currentLevel].score : 0;
@@ -38,7 +39,7 @@ export function selectAvailableHints(state: AppStore): TaskHint[] {
         return ((undefined === hint.minScore || currentLevelScore >= hint.minScore)
             && (!hint.levels || hint.levels.includes(currentLevel)));
     });
-}
+});
 
 export const hintsSlice = createSlice({
     name: 'hints',

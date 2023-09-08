@@ -10,6 +10,7 @@ import {quickAlgoLibraries} from '../libs/quickalgo_libraries';
 import {AppStore} from '../../store';
 import {formatTaskInstructions} from '../utils';
 import {TaskLevelName} from '../platform/platform_slice';
+import {memoize} from 'proxy-memoize';
 
 function findStringForLanguage(taskStrings: any[], languages: string[]) {
     for (let language of languages) {
@@ -115,7 +116,7 @@ const defaultInstructionsHtml = `
 <!--    </div>-->
 `;
 
-export function getInstructionsForLevelSelector(state: AppStore) {
+export const getInstructionsForLevelSelector = memoize((state: AppStore) => {
     const taskInstructionsHtmlFromOptions = state.options.taskInstructions;
     const language = state.options.language.split('-')[0];
     const currentTask = state.task.currentTask;
@@ -147,18 +148,18 @@ export function getInstructionsForLevelSelector(state: AppStore) {
         html: newInstructionsHtml,
         title: newInstructionsTitle
     };
-}
+});
 
-export function getTaskSuccessMessageSelector(state: AppStore) {
+export const getTaskSuccessMessageSelector = memoize((state: AppStore) => {
     const html = getInstructionsForLevelSelector(state).html;
     const platform = state.options.platform;
     const taskLevel = state.task.currentLevel;
     const instructionsJQuery = formatTaskInstructions(html, platform, taskLevel);
 
     return instructionsJQuery.find('.success-message').length ? instructionsJQuery.find('.success-message').html() : null;
-}
+});
 
-export function getTaskHintsSelector(state: AppStore) {
+export const getTaskHintsSelector = memoize((state: AppStore) => {
     const html = getInstructionsForLevelSelector(state).html;
     const platform = state.options.platform;
 
@@ -188,7 +189,7 @@ export function getTaskHintsSelector(state: AppStore) {
     }
 
     return hints.length ? hints : null;
-}
+});
 
 function transformNode(node, index: string | number, context: { platform: CodecastPlatform }) {
     if (node.attribs && 'select-lang-selector' in node.attribs) {
