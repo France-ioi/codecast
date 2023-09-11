@@ -136,6 +136,7 @@ export function TralalereApp() {
     useEffect(() => {
         // Set timeout to give time to Blockly editor to load before
         setTimeout(() => {
+            window.Blockly.Procedures.flyoutOptions.inlineArgs = true;
             const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
             const flyout = document.getElementsByClassName('blocklyFlyout');
             if (flyoutToolbox.length && (flyoutToolbox[0] as HTMLElement).clientWidth) {
