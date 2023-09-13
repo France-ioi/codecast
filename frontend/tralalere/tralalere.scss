@@ -649,9 +649,9 @@ $tralalere-red: #FF3C11;
         }
       }
       &.blocklyTreeSelected {
-        margin-right: -20px;
         z-index: 1;
         position: relative;
+        box-shadow: 40px 0 0 $tralalere-green;
       }
       &:after {
         content: '';
@@ -663,6 +663,9 @@ $tralalere-red: #FF3C11;
         border-radius: 0px;
         border-top: 25px solid transparent;
         border-right: 8px solid $tralalere-dark-blue;
+      }
+      &.blocklyTreeSelected:after {
+        display: none;
       }
     }
     .blocklyTreeLabel {
@@ -907,7 +910,6 @@ $tralalere-red: #FF3C11;
       }
 
       &.blocklyTreeSelected {
-        margin-right: initial !important;
         z-index: 1;
         position: relative;
       }

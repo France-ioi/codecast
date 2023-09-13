@@ -142,7 +142,7 @@ export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
         const toolboxWidth = this.targetWorkspace_ && this.targetWorkspace_.toolbox_ ? this.targetWorkspace_.toolbox_.getWidth() : 0;
         let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
-        let computedHeight = isMobile ? window.innerHeight - 120 : Math.min(500, height);
+        let computedHeight = isMobile ? window.innerHeight - 120 : Math.min(window.innerHeight - 90, Math.max(400, height));
         let computedWidth = isMobile ? window.innerWidth - toolboxWidth - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
         log.getLogger('blockly_runner').debug('background draw', {isMobile, toolboxWidth, width, computedWidth, windowWidth: window.innerWidth, workspace: this.targetWorkspace_});
         // Decide whether to start on the left or right.
