@@ -57,6 +57,7 @@ module.exports = {
     UPLOADING_UPDATE_SUBTITLES: 'Mise à jour des sous-titres en cours...',
     UPLOADING_UPLOAD_SUBTITLES: 'Envoi des sous-titres en cours...',
     PLAYBACK_LINK: "Lien pour la lecture :",
+    LTI_LINK: "Lien LTI :",
     EDITOR_LINK: "Lien pour l'édition :",
     PLAYER_PREPARING: "Chargement de l'enregistrement en cours",
     PLAYER_LOADING_AUDIO: "Chargement de l'audio en cours",
