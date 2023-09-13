@@ -122,6 +122,15 @@ export function Documentation(props: DocumentationProps) {
         }
     };
 
+    let displayedConcepts: DocumentationConcept[];
+    if (conceptIndex === 0) {
+        displayedConcepts = conceptsWithoutCategory.slice(0, 3);
+    } else if (conceptIndex === conceptsWithoutCategory.length - 1) {
+        displayedConcepts = conceptsWithoutCategory.slice(conceptsWithoutCategory.length - 3);
+    } else {
+        displayedConcepts = conceptsWithoutCategory.slice(conceptIndex - 1, conceptIndex + 2);
+    }
+
     return (
         <div className={`documentation ${Screen.DocumentationBig === screen ? 'is-big' : 'is-small'} ${props.standalone ? 'is-standalone' : ''}`}>
             {props.header ? props.header : <div className="documentation-header">
@@ -177,7 +186,7 @@ export function Documentation(props: DocumentationProps) {
                         <Icon icon="properties"/>
                     </a>
                 </div>
-                {conceptsWithoutCategory.slice(Math.max(0, conceptIndex - 1), conceptIndex + 2).map(concept =>
+                {displayedConcepts.map(concept =>
                     <React.Fragment key={concept.id}>
                         {selectedConceptId === concept.id ? <div className={`documentation-tab is-active`}>
                             <div className="documentation-tab-title">{concept.name}</div>
