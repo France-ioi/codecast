@@ -115,7 +115,7 @@
   }
 
   .documentation-tabs-end {
-    width: 1rem;
+    width: .5rem;
   }
 
   .documentation-header-icon {
@@ -160,6 +160,27 @@
       height: 100%;
       border: none;
       outline: none;
+    }
+  }
+
+  .documentation-tabs-arrow {
+    flex: 0 1;
+    padding-left: 15px;
+    padding-right: 15px;
+    cursor: pointer;
+    color: var(--primary-color);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+
+    &.is-disabled {
+      cursor: not-allowed;
+      svg {
+        opacity: 0.3;
+      }
     }
   }
 
