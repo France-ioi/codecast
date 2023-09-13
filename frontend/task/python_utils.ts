@@ -21,7 +21,7 @@ const pythonNotionsToBlocks = {
     'dict_get_literal': ['dict_brackets'],
     'dict_set_literal': ['dict_brackets'],
     'dict_keys': ['dict_brackets'],
-    'controls_if': ['if', 'else', 'elif'],
+    'controls_if': ['if'],
     'controls_if_else': ['if', 'else', 'elif'],
     'logic_negate': ['not'],
     'logic_operation': ['and', 'or'],
