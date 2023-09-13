@@ -26,9 +26,12 @@ import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
 
 import {selectAvailableHints} from '../task/hints/hints_selectors';
 import {hasBlockPlatform} from '../stepper/platforms';
-import {taskChangeLevel, taskLoad} from '../task/task_actions';
+import {taskChangeLevel} from '../task/task_actions';
 import {LayoutMobileMode, LayoutType} from '../task/layout/layout_types';
 import {DebugLibView} from '../task/libs/debug/DebugLibView';
+import {toHtml} from '../utils/sanitize';
+import {getTaskSuccessMessageSelector} from '../task/instructions/instructions';
+import {InstructionsContext} from '../contexts';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -48,6 +51,7 @@ export function TralalereApp() {
         layoutMobileMode = LayoutMobileMode.EditorPlayer;
     }
     const taskLoaded = useAppSelector(state => state.task.loaded);
+    const taskSuccessMessage = useAppSelector(getTaskSuccessMessageSelector);
 
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(selectAvailableHints);
@@ -59,19 +63,27 @@ export function TralalereApp() {
     const levels = useAppSelector(state => state.platform.levels);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     let hasNextLevel = false;
+    let nextLevel = null;
     if (currentLevel && currentLevel in levels) {
         const currentLevelFinished = (levels[currentLevel].score >= 1);
         if (currentLevelFinished) {
             const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
-            hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
+            for (let level = currentLevelIndex + 1; level < taskLevelsList.length; level++) {
+                if (taskLevelsList[level] in levels) {
+                    hasNextLevel = true;
+                    nextLevel = level;
+                    break;
+                }
+            }
         }
     }
 
     const [nextLevelOpen, setNextLevelOpen] = useState(false);
     const displayDebug = useAppSelector(state => 0 < state.task.state?.debug?.linesLogged?.length);
+    const tabIndexPageIndex = useAppSelector(state => state.layout.instructions.tabIndex + '-' + state.layout.instructions.pageIndex);
 
     const increaseLevel = () => {
-        dispatch(taskChangeLevel(taskLevelsList[taskLevelsList.indexOf(currentLevel) + 1]));
+        dispatch(taskChangeLevel(taskLevelsList[nextLevel]));
     };
 
     useEffect(() => {
@@ -103,6 +115,17 @@ export function TralalereApp() {
     }, [isMobile]);
 
     useEffect(() => {
+        setInstructionsExpanded(true);
+    }, [tabIndexPageIndex]);
+
+    useEffect(() => {
+        // use timeout as the answer will change too and we want to trigger in the correct order
+        setTimeout(() => {
+            setInstructionsExpanded(true);
+        }, 100);
+    }, [currentLevel]);
+
+    useEffect(() => {
         if (taskLoaded) {
             setInstructionsExpanded(false);
             if (taskSuccess) {
@@ -114,6 +137,9 @@ export function TralalereApp() {
     useEffect(() => {
         // Set timeout to give time to Blockly editor to load before
         setTimeout(() => {
+            if (window.Blockly) {
+                window.Blockly.Procedures.flyoutOptions.inlineArgs = true;
+            }
             const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
             const flyout = document.getElementsByClassName('blocklyFlyout');
             if (flyoutToolbox.length && (flyoutToolbox[0] as HTMLElement).clientWidth) {
@@ -189,6 +215,11 @@ export function TralalereApp() {
                             <img className="tralalere-success-left"
                                 src={window.modulesPath + 'img/algorea/crane/task-success.png'}/>
                             <div>{getMessage('TRALALERE_TASK_SUCCESS')}</div>
+                            {null !== taskSuccessMessage && <div
+                                className="tralalere-success-message"
+                                dangerouslySetInnerHTML={toHtml(taskSuccessMessage)}
+                            >
+                            </div>}
                         </div>}
 
                         {!isMobile &&
@@ -198,10 +229,25 @@ export function TralalereApp() {
                                         <DebugLibView/>
                                     </div>
                                 </div> : <div className={taskSuccess ? 'visibility-hidden' : ''}>
-                                    <TralalereInstructions
-                                        onExpand={expandInstructions}
-                                    />
-                                    {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
+                                    <InstructionsContext.Provider value={{visible: false}}>
+                                        <TralalereInstructions
+                                            style={{visibility: 'hidden'}}
+                                            onExpand={expandInstructions}
+                                        />
+                                    </InstructionsContext.Provider>
+
+                                    {instructionsExpanded ?
+                                        <TralalereInstructions
+                                            expanded
+                                            absolute
+                                            onExpand={expandInstructions}
+                                        />
+                                        :
+                                        <TralalereInstructions
+                                            absolute
+                                            onExpand={expandInstructions}
+                                        />
+                                    }
                                 </div>}
                             </React.Fragment>
                         }

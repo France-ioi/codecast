@@ -2,8 +2,6 @@ import {getMessage} from "../lang";
 
 import {Block, BlockType} from '../task/blocks/block_types';
 
-const hiddenWords = ['__getitem__', '__setitem__'];
-
 export const addAutocompletion = function (blocks: Block[], strings: any) {
     let langTools = window.ace.acequire("ace/ext/language_tools");
 
@@ -13,6 +11,10 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
     let keywordi18n = getMessage('KEYWORD').s;
 
     for (let block of blocks) {
+        if (false === block.showInBlocks) {
+            continue;
+        }
+
         switch (block.type) {
             case BlockType.Function:
                 completions.push({
@@ -34,9 +36,6 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
                 });
                 break;
             case BlockType.Token:
-                if (-1 !== hiddenWords.indexOf(block.name)) {
-                    continue;
-                }
                 completions.push({
                     caption: block.caption,
                     snippet: block.snippet ? block.snippet : block.code,

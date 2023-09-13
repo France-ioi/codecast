@@ -55,7 +55,7 @@ $tralalere-red: #FF3C11;
 
 .tralalere {
   .tralalere-instructions {
-    &.is-expanded {
+    &.is-absolute {
       position: absolute;
       top: 0;
       left: 0;
@@ -75,7 +75,6 @@ $tralalere-red: #FF3C11;
       .task-mission {
         color: white;
         padding-top: 12px;
-        margin-right: 20px;
         line-height: 22px;
 
         h1 {
@@ -144,6 +143,14 @@ $tralalere-red: #FF3C11;
       width: 134px;
       height: 95px;
       display: block;
+    }
+
+    &.show-more .task-instructions-tabs {
+      margin-right: 70px;
+    }
+
+    &.show-more:not(.is-expanded) .task-instructions-tabs-content-inside {
+      overflow: hidden;
     }
   }
 
@@ -374,6 +381,7 @@ $tralalere-red: #FF3C11;
   position: relative;
 
   .tralalere-box-header {
+    min-height: 0;
     background: $tralalere-green-blue;
     border-radius: 7px;
     display: flex;
@@ -436,6 +444,10 @@ $tralalere-red: #FF3C11;
       color: #ddd;
       opacity: 1;
     }
+
+    .carousel-indicators button {
+      background-color: $tralalere-green-blue;
+    }
   }
 }
 
@@ -464,6 +476,10 @@ $tralalere-red: #FF3C11;
     display: none;
   }
 
+  .documentation-body {
+    min-height: 0;
+  }
+
   .documentation-menu {
     border-right: 4px solid $tralalere-green-blue !important;
     border-bottom: 4px solid $tralalere-green-blue !important;
@@ -471,16 +487,15 @@ $tralalere-red: #FF3C11;
     border-bottom-left-radius: 15px;
     border-bottom-right-radius: 15px;
     margin-top: 4px;
+    padding-bottom: 0 !important;
   }
 
   .documentation-tab-left {
-    display: block;
     background: $tralalere-dark-blue;
     border: 2px solid $tralalere-green;
     color: $tralalere-green;
     border-radius: 6px;
     padding: 10px 10px;
-    height: initial;
     text-decoration: none;
     font-weight: 900;
     margin: 15px 15px;
@@ -493,6 +508,23 @@ $tralalere-red: #FF3C11;
       background: $tralalere-green;
       color: $tralalere-dark-blue;
     }
+
+    .documentation-tab-left {
+      border: none !important;
+      margin: 5px 10px !important;
+    }
+  }
+
+  .documentation-concepts-category-title {
+    .category-fold-button {
+      @include tralalere-button;
+      @include tralalere-button-small;
+    }
+  }
+
+  .documentation-concepts-category-subconcepts {
+    margin-top: 10px;
+    border-top: solid 2px #28458C;
   }
 
   .documentation-category-title {
@@ -617,9 +649,9 @@ $tralalere-red: #FF3C11;
         }
       }
       &.blocklyTreeSelected {
-        margin-right: -20px;
         z-index: 1;
         position: relative;
+        box-shadow: 40px 0 0 $tralalere-green;
       }
       &:after {
         content: '';
@@ -631,6 +663,9 @@ $tralalere-red: #FF3C11;
         border-radius: 0px;
         border-top: 25px solid transparent;
         border-right: 8px solid $tralalere-dark-blue;
+      }
+      &.blocklyTreeSelected:after {
+        display: none;
       }
     }
     .blocklyTreeLabel {
@@ -712,9 +747,23 @@ $tralalere-red: #FF3C11;
     top: -8px;
     left: -12px;
   }
+  .tralalere-success-message {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 88px;
+    right: 2px;
+    padding: 10px 26px;
+    border-radius: 15px;
+    background: $tralalere-dark-blue;
+    box-shadow: -5px 5px 0px 0px #1D1E47;
+    color: white;
+    font-size: 1rem;
+
+    *:last-child {
+      margin-bottom: 0 !important;
+    }
+  }
 }
-
-
 
 .tralalere:not(.layout-mobile-horizontal):not(.layout-mobile-vertical) {
   @media screen and (max-width: 1050px) {
@@ -815,6 +864,8 @@ $tralalere-red: #FF3C11;
     position: absolute;
     bottom: 55px;
     z-index: 20;
+    left: 0;
+    right: 0;
 
     .advice {
       margin-left: 0 !important;
@@ -859,7 +910,6 @@ $tralalere-red: #FF3C11;
       }
 
       &.blocklyTreeSelected {
-        margin-right: initial !important;
         z-index: 1;
         position: relative;
       }
@@ -923,6 +973,19 @@ $tralalere-red: #FF3C11;
   .tralalere-success {
     font-size: 25px;
   }
+
+  .task-instructions-tabs-selector {
+    flex-direction: column;
+    gap: 0 !important;
+  }
+
+  .task-instructions-tabs {
+    margin-right: 0 !important;
+  }
+
+  .task-instructions-tabs-selector-tab {
+    width: 100%;
+  }
 }
 
 .tralalere-doc.is-mobile {
@@ -979,5 +1042,33 @@ $tralalere-red: #FF3C11;
         margin-right: 8px;
       }
     }
+  }
+}
+
+.tralalere .task-instructions-tabs {
+  .task-instructions-tabs-selector {
+    .task-instructions-tabs-selector-tab {
+      border-color: $tralalere-dark-blue;
+      color: $tralalere-dark-blue;
+      &.is-active {
+        color: white;
+        background: $tralalere-dark-blue;
+        border-color: #28458C;
+      }
+    }
+  }
+  .task-instructions-tabs-content {
+    border-color: $tralalere-dark-blue;
+    box-shadow: -5px 5px 0px 0px #1D1E47;
+    &.is-dark {
+      background: $tralalere-dark-blue;
+      border-color: $tralalere-green-blue;
+      box-shadow: -5px 5px 0px 0px #1D1E47;
+    }
+  }
+  .task-instructions-tabs-arrow-button {
+    @include tralalere-button;
+    @include tralalere-button-small;
+    border-radius: 5px;
   }
 }

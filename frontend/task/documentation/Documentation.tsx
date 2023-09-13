@@ -9,7 +9,7 @@ import {
     sendCodeExampleToOpener
 } from "./doc";
 import {useAppSelector} from "../../hooks";
-import {documentationConceptSelected} from "./documentation_slice";
+import {DocumentationConcept, documentationConceptSelected} from "./documentation_slice";
 import {Screen} from "../../common/screens";
 import {call, select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -17,6 +17,10 @@ import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {getMessage} from "../../lang";
 import {TaskInstructions} from '../TaskInstructions';
 import {DocumentationLanguageSelector} from './DocumentationLanguageSelector';
+import {DocumentationMenuConcept} from './DocumentationMenuConcept';
+import {DocumentationMenuCategoryConcept} from './DocumentationMenuCategoryConcept';
+import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
+import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
 
 interface DocumentationProps {
     standalone: boolean,
@@ -32,10 +36,9 @@ export function Documentation(props: DocumentationProps) {
     const selectedConcept = selectedConceptId ? concepts.find(concept => selectedConceptId === concept.id) : null;
     const documentationLanguage = useAppSelector(state => state.documentation.language);
     const screen = useAppSelector(state => state.screen);
-    const firstConcepts = concepts.slice(0, 3);
-    const isTralalere = useAppSelector(state => 'tralalere' === state.options.app);
     const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
-
+    const conceptsWithoutCategory = concepts.filter(concept => !concept.isCategory);
+    const conceptIndex = null !== selectedConcept ? conceptsWithoutCategory.findIndex(concept => selectedConceptId === concept.id) : 0;
     const [iframeRef, setIframeRef] = useState(null);
 
     let conceptUrl = null;
@@ -45,10 +48,6 @@ export function Documentation(props: DocumentationProps) {
             urlSplit[urlSplit.length - 1] = documentationLanguage + '-' + urlSplit[urlSplit.length - 1];
         } else {
             urlSplit[1] = documentationLanguage;
-        }
-        if (isTralalere) {
-            urlSplit[0] = urlSplit[0].replace(/index\.html/g, 'index_tralalere.html');
-            urlSplit[0] = urlSplit[0].replace(/index_en\.html/g, 'index_tralalere_en.html');
         }
         conceptUrl = urlSplit.join('#');
         if (-1 !== conceptUrl.indexOf('http://') && 'https:' === window.location.protocol) {
@@ -114,6 +113,22 @@ export function Documentation(props: DocumentationProps) {
         const selectedConceptId = event.target.value;
         const selectedConcept = concepts.find(concept => selectedConceptId === concept.id);
         selectConcept(selectedConcept);
+    };
+
+    const incrementConcept = (increment: number) => {
+        const newConcept = conceptsWithoutCategory[conceptIndex + increment];
+        if (newConcept) {
+            selectConcept(newConcept);
+        }
+    };
+
+    let displayedConcepts: DocumentationConcept[];
+    if (conceptIndex === 0) {
+        displayedConcepts = conceptsWithoutCategory.slice(0, 3);
+    } else if (conceptIndex === conceptsWithoutCategory.length - 1) {
+        displayedConcepts = conceptsWithoutCategory.slice(conceptsWithoutCategory.length - 3);
+    } else {
+        displayedConcepts = conceptsWithoutCategory.slice(conceptIndex - 1, conceptIndex + 2);
     }
 
     return (
@@ -157,7 +172,7 @@ export function Documentation(props: DocumentationProps) {
                     <label className='bp3-label documentation-select'>
                         <div className='bp3-select'>
                             <select onChange={chooseConceptFromDropdown} value={selectedConcept ? selectedConcept.id : undefined}>
-                                {firstConcepts.map(concept =>
+                                {conceptsWithoutCategory.map(concept =>
                                     <option value={concept.id} key={concept.id}>{concept.name}</option>
                                 )}
                             </select>
@@ -171,7 +186,7 @@ export function Documentation(props: DocumentationProps) {
                         <Icon icon="properties"/>
                     </a>
                 </div>
-                {firstConcepts.map(concept =>
+                {displayedConcepts.map(concept =>
                     <React.Fragment key={concept.id}>
                         {selectedConceptId === concept.id ? <div className={`documentation-tab is-active`}>
                             <div className="documentation-tab-title">{concept.name}</div>
@@ -180,25 +195,42 @@ export function Documentation(props: DocumentationProps) {
                         </a>}
                     </React.Fragment>
                 )}
+                <div
+                    className={`documentation-tabs-arrow ${conceptIndex <= 0 ? 'is-disabled' : ''}`}
+                    onClick={() => incrementConcept(-1)}>
+                    <span>
+                        <FontAwesomeIcon icon={faChevronLeft}/>
+                    </span>
+                </div>
+                <div
+                    className={`documentation-tabs-arrow ${conceptIndex >= conceptsWithoutCategory.length - 1 ? 'is-disabled' : ''}`}
+                    onClick={() => incrementConcept(1)}>
+                    <span>
+                        <FontAwesomeIcon icon={faChevronRight}/>
+                    </span>
+                </div>
                 <div className="documentation-tabs-end"/>
             </div>
             <div className="documentation-body">
                 <div className="documentation-menu">
-                    {concepts.map(concept =>
-                        <React.Fragment key={concept.id}>
-                            {selectedConceptId === concept.id ? <div className={`documentation-tab-left is-active`}>
-                                <div className="documentation-tab-title">
-                                    <Icon icon="dot"/>
-                                    <span>{concept.name}</span>
-                                </div>
-                            </div> : <a className={`documentation-tab-left`} onClick={() => selectConcept(concept)}>
-                                <div className="documentation-tab-title">
-                                    <Icon icon="dot"/>
-                                    <span>{concept.name}</span>
-                                </div>
-                            </a>}
-                        </React.Fragment>
-                    )}
+                    <div>
+                        {concepts.map(concept => {
+                            if (concept.isCategory && 0 < concepts.filter(subConcept => subConcept.categoryId === concept.id).length) {
+                                return <DocumentationMenuCategoryConcept
+                                    key={concept.id}
+                                    category={concept}
+                                    subConcepts={concepts.filter(subConcept => subConcept.categoryId === concept.id)}
+                                />
+                            } else if (!concept.isCategory && !concept.categoryId) {
+                                return <DocumentationMenuConcept
+                                    key={concept.id}
+                                    concept={concept}
+                                />
+                            } else {
+                                return null;
+                            }
+                        })}
+                    </div>
                 </div>
                 {selectedConcept &&
                     <div className="documentation-aside">

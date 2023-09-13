@@ -57,6 +57,7 @@ module.exports = {
     UPLOADING_UPDATE_SUBTITLES: 'Updating subtitles...',
     UPLOADING_UPLOAD_SUBTITLES: 'Uploading subtitles...',
     PLAYBACK_LINK: "Playback link:",
+    LTI_LINK: "LTI link:",
     EDITOR_LINK: "Editing link:",
     PLAYER_LOADING_AUDIO: "Loading audio",
     PLAYER_PREPARING: "Preparing playback",

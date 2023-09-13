@@ -3,10 +3,10 @@ import {Stepper, StepperControlsType, StepperState} from "./index";
 import {getMessage} from "../lang";
 import {CompileStatus} from "./compile";
 import * as C from '@france-ioi/persistent-c';
-import {hasBlockPlatform, platformsList} from './platforms';
-import {CodecastPlatform} from './codecast_platform';
-import {LayoutType} from '../task/layout/layout_types';
 import {memoize} from 'proxy-memoize';
+import {hasBlockPlatform, platformsList} from './platforms';
+import {LayoutType} from '../task/layout/layout_types';
+import {CodecastPlatform} from './codecast_platform';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;

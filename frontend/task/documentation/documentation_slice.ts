@@ -7,6 +7,8 @@ export interface DocumentationConcept {
     isBase?: boolean,
     order?: number,
     python?: boolean,
+    isCategory?: boolean,
+    categoryId?: string,
 }
 
 export enum DocumentationLanguage {

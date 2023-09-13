@@ -746,6 +746,13 @@ function layoutViewsChangedReducer(state: AppStore, {payload: {views}}) {
     state.layout.views = views;
 }
 
+function layoutInstructionsIndexChangedReducer(state: AppStore, {payload}) {
+    state.layout.instructions = {
+        ...state.layout.instructions,
+        ...payload,
+    };
+}
+
 export function selectActiveView(state: AppStore): LayoutView|null {
     const activeViews = Object.entries(state.layout.views).find(([view, active]) => !!active);
 
@@ -782,6 +789,7 @@ export interface LayoutState {
     playerMode: LayoutPlayerMode,
     playerModeResumeImmediately?: boolean,
     views: {[view: string]: boolean},
+    instructions: {tabIndex: number, pageIndex: number, maxHeight: number},
 }
 
 function* layoutSaga({replayApi}: App) {
@@ -855,6 +863,7 @@ export default function (bundle: Bundle) {
             zoomLevel: 1,
             playerMode: LayoutPlayerMode.Execution,
             views: {},
+            instructions: {tabIndex: 0, pageIndex: 0, maxHeight: null},
         };
     });
 
@@ -875,6 +884,9 @@ export default function (bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.LayoutViewsChanged);
     bundle.addReducer(ActionTypes.LayoutViewsChanged, layoutViewsChangedReducer);
+
+    bundle.defineAction(ActionTypes.LayoutInstructionsIndexChanged);
+    bundle.addReducer(ActionTypes.LayoutInstructionsIndexChanged, layoutInstructionsIndexChangedReducer);
 
     bundle.addSaga(layoutSaga);
 

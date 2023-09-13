@@ -72,12 +72,12 @@
     &:first-child {
       margin-top: .75rem;
     }
-    display: flex;
-    align-items: center;
-    padding: 0 2rem;
-    height: 50px;
+    display: block;
+    padding: .5rem 2rem;
     position: relative;
     color: #7c7c7c;
+    user-select: none;
+    text-decoration: underline;
     &.is-active {
       background-color: var(--primary-color);
       color: white;
@@ -96,6 +96,15 @@
     }
   }
 
+  .documentation-concepts-category-title {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    .documentation-concepts-category-title-name {
+      flex: 1 0;
+    }
+  }
+
   .documentation-tabs-menu {
     padding: 0 1.5rem;
     color: var(--primary-color);
@@ -106,7 +115,7 @@
   }
 
   .documentation-tabs-end {
-    width: 1rem;
+    width: .5rem;
   }
 
   .documentation-header-icon {
@@ -154,6 +163,27 @@
     }
   }
 
+  .documentation-tabs-arrow {
+    flex: 0 1;
+    padding-left: 15px;
+    padding-right: 15px;
+    cursor: pointer;
+    color: var(--primary-color);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+
+    &.is-disabled {
+      cursor: not-allowed;
+      svg {
+        opacity: 0.3;
+      }
+    }
+  }
+
   .documentation-close-container {
     position: relative;
     width: 40px;
@@ -190,10 +220,13 @@
     display: flex;
     width: 100%;
     height: 100%;
+    min-height: 0;
     .documentation-menu {
       flex-basis: 33%;
       max-width: 400px;
       border-right: solid 1px #e7e7e7;
+      overflow-y: auto;
+      padding-bottom: 10px;
       @include mobile {
         display: none;
       }

@@ -12,6 +12,7 @@ import {Bundle} from "../linker";
 import {Screen} from "../common/screens";
 import {isLocalStorageEnabled} from "../common/utils";
 import {appSelect} from '../hooks';
+import log from 'loglevel';
 import {App} from '../app_types';
 
 export type CodecastRecord = {
@@ -167,6 +168,8 @@ function* encodingSaga() {
         events,
         subtitles,
     } as CodecastRecord;
+
+    log.getLogger('recorder').debug('data to serialize', data);
     const eventsBlob = new Blob([JSON.stringify(data)], {type: "application/json;charset=UTF-8"});
     const eventsUrl = URL.createObjectURL(eventsBlob);
 

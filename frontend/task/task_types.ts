@@ -90,6 +90,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     images?: {id?: string, path: {default: string}}[],
     importModules?: string[],
     conceptViewer?: boolean|string[],
+    conceptViewerBaseUrl?: string|null,
     backgroundColor?: string,
     backgroundSrc?: string,
     borderColor?: string,

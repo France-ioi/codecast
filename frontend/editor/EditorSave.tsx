@@ -31,6 +31,7 @@ export function EditorSave() {
     const {version, name, events} = editor.data;
     const playerUrl = editor.playerUrl;
     const editorUrl = editor.editorUrl;
+    const ltiUrl = `https://lti.algorea.org/?taskUrl=${encodeURIComponent(playerUrl)}`;
     const canSave = editor.canSave;
     const save = editor.save;
     const duration = editor.duration;
@@ -161,6 +162,18 @@ export function EditorSave() {
                         value={editorUrl}
                         readOnly
                         rightElement={<AnchorButton href={editorUrl} icon={IconNames.EDIT} minimal target='_blank' rel="noreferrer"/>}
+                    />
+                </FormGroup>
+            }
+
+            {playerUrl &&
+                <FormGroup labelFor='ltiUrlInput' label={getMessage('LTI_LINK')} className="mt-4">
+                    <InputGroup
+                        leftIcon={IconNames.LINK}
+                        type='text'
+                        value={ltiUrl}
+                        readOnly
+                        rightElement={<AnchorButton href={ltiUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
             }

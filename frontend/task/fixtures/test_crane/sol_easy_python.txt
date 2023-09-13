@@ -1,0 +1,6 @@
+from robot import *
+droite()
+prendre()
+droite()
+droite()
+poser()

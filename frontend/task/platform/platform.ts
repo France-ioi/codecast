@@ -167,7 +167,7 @@ function* showDifferentViews() {
     if (currentTask && 'showViews' in currentTask?.gridInfos) {
         return currentTask.gridInfos.showViews;
     }
-    if (context.showViews) {
+    if (context?.showViews) {
         return context.showViews();
     }
 
@@ -252,6 +252,7 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             yield* call(success);
         }
     } catch (ex: any) {
+        console.error(ex);
         yield* call(error, `bad answer: ${ex.message}`);
     }
 }

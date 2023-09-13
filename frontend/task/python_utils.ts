@@ -22,7 +22,7 @@ const pythonNotionsToBlocks = {
     'dict_get_literal': ['dict_brackets'],
     'dict_set_literal': ['dict_brackets'],
     'dict_keys': ['dict_brackets'],
-    'controls_if': ['if', 'else', 'elif'],
+    'controls_if': ['if'],
     'controls_if_else': ['if', 'else', 'elif'],
     'logic_negate': ['not'],
     'logic_operation': ['and', 'or'],
@@ -82,6 +82,8 @@ const pythonCountPatterns = [
     // Separators
     {pattern: /^[\s\(\),:]+/, block: false}
 ];
+
+const hiddenWords = ['__getitem__', '__setitem__', 'list', 'set'];
 
 function pythonCount(text) {
     if (null === text) {
@@ -494,7 +496,7 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
                 snippet: name in specialSnippets ? specialSnippets[name].snippet : code,
                 code,
                 category: tokenCategories[token],
-                showInBlocks: (name in specialSnippets && false === specialSnippets[name].showInBlocks) || -1 !== Object.values(bracketsWords).indexOf(token) ? false : undefined,
+                showInBlocks: (name in specialSnippets && false === specialSnippets[name].showInBlocks) || -1 !== Object.values(bracketsWords).indexOf(token) || -1 !== hiddenWords.indexOf(name) ? false : undefined,
             });
         }
 
