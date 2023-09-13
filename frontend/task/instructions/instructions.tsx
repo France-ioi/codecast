@@ -116,7 +116,7 @@ const defaultInstructionsHtml = `
 <!--    </div>-->
 `;
 
-export const getInstructionsForLevelSelector = memoize((state: AppStore) => {
+export const getInstructionsForLevelSelector = (state: AppStore) => {
     const taskInstructionsHtmlFromOptions = state.options.taskInstructions;
     const language = state.options.language.split('-')[0];
     const currentTask = state.task.currentTask;
@@ -148,7 +148,7 @@ export const getInstructionsForLevelSelector = memoize((state: AppStore) => {
         html: newInstructionsHtml,
         title: newInstructionsTitle
     };
-});
+};
 
 export const getTaskSuccessMessageSelector = memoize((state: AppStore) => {
     const html = getInstructionsForLevelSelector(state).html;
