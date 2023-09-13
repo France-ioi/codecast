@@ -189,7 +189,7 @@ export function Documentation(props: DocumentationProps) {
                                     category={concept}
                                     subConcepts={concepts.filter(subConcept => subConcept.categoryId === concept.id)}
                                 />
-                            } else if (!concept.categoryId) {
+                            } else if (!concept.isCategory && !concept.categoryId) {
                                 return <DocumentationMenuConcept
                                     key={concept.id}
                                     concept={concept}
