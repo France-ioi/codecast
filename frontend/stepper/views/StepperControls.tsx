@@ -34,6 +34,7 @@ export function StepperControls(props: StepperControlsProps) {
     });
     const {showControls, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt, showStepper, layoutType} = stepperControlsState;
     const dispatch = useDispatch();
+    const speedDisabled = stepperControlsState.controls && 'speed' in stepperControlsState.controls && (false === stepperControlsState.controls['speed'] || '_' === stepperControlsState.controls['speed']);
 
     const _button = (key: string, onClick: any, title: string, icon: IconName|JSX.Element, text?: string, classNames?: string): ReactElement => {
         const {controls} = stepperControlsState;
@@ -90,10 +91,10 @@ export function StepperControls(props: StepperControlsProps) {
 
         if (controls) {
             const mod = controls[key];
-            if (mod === '_') {
+            if (mod === '_' || false === mod) {
                 return null;
             }
-            if (mod === '-') {
+            if (mod === '-' || 'disabled' === mod) {
                 disabled = true;
             }
             if (mod) {
@@ -188,10 +189,10 @@ export function StepperControls(props: StepperControlsProps) {
                         {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
                     </React.Fragment>
                 }
-                {controlsType === StepperControlsType.Normal && LayoutType.MobileVertical === layoutType &&
+                {!speedDisabled && controlsType === StepperControlsType.Normal && LayoutType.MobileVertical === layoutType &&
                     _button('speed', onToggleSpeed, getMessage('CONTROL_SPEED'), <FontAwesomeIcon icon={faTachometerAlt}/>, null, 'is-big')
                 }
-                {speedDisplayed && controlsType === StepperControlsType.Normal && <div className="speed-slider is-extended">
+                {!speedDisabled && speedDisplayed && controlsType === StepperControlsType.Normal && <div className="speed-slider is-extended">
                     <div className="player-slider-container">
                         <FontAwesomeIcon icon={faWalking} className="extremity extremity-left"/>
                         <Slider
