@@ -149,10 +149,7 @@
   }
 
   .documentation-content {
-    padding: 1rem 2rem;
-    @include mobile {
-      padding: 1rem;
-    }
+    padding: 1rem;
     flex: 1 0;
 
     .documentation-viewer-content {
@@ -232,7 +229,6 @@
       }
     }
     .documentation-aside {
-      padding: 0 0 0 1rem;
       display: flex;
       flex-direction: column;
       width: 100%;
