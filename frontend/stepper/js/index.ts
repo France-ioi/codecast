@@ -288,6 +288,12 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
     let blocksUsed = 0;
     for (let i = 0; i < blocks.length; i++) {
         let block = blocks[i];
+        // When a block is being moved in Scratch, the block is duplicated
+        // We don't want to count this block twice, so we don't count the block that
+        // has the same id as this insertion marker
+        if (window.Blockly.insertionMarker_ && block.id === window.Blockly.insertionMarker_.id) {
+            continue;
+        }
         blocksUsed += getBlockCount(block, context);
     }
 
