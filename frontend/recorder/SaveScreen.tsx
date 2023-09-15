@@ -26,6 +26,7 @@ interface SaveScreenProps {
 export function SaveScreen(props: SaveScreenProps) {
     const grants = useAppSelector(state => state.user ? state.user.grants : []);
     const {step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, editorUrl, error} = useAppSelector(state => state.save);
+    const ltiUrl = `https://lti.algorea.org/?taskUrl=${encodeURIComponent(playerUrl)}`;
 
     const dispatch = useDispatch();
 
@@ -195,6 +196,19 @@ export function SaveScreen(props: SaveScreenProps) {
                         readOnly
                         onFocus={handleFocus}
                         rightElement={<AnchorButton href={editorUrl} icon={IconNames.EDIT} minimal target='_blank' rel="noreferrer"/>}
+                    />
+                </FormGroup>
+            }
+
+            {playerUrl &&
+                <FormGroup labelFor='ltiUrlInput' label={getMessage('LTI_LINK')} className="mt-4">
+                    <InputGroup
+                        leftIcon={IconNames.LINK}
+                        type='text'
+                        value={ltiUrl}
+                        readOnly
+                        onFocus={handleFocus}
+                        rightElement={<AnchorButton href={ltiUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
             }

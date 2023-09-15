@@ -1,0 +1,2 @@
+from robot import *
+prendre()

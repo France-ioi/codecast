@@ -158,6 +158,7 @@ declare global {
         taskStrings?: any,
         SmartContractConfig?: SmartContractConfigType,
         taskData?: any,
+        instructionsPostProcessing?: (() => void)[],
     }
 }
 

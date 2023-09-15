@@ -47,9 +47,11 @@ export default {
         customItems: true,
         contextType: "numbers",
         hideControls: { saveOrLoad: false},
+        defaultLevel: "basic",
 
         nbPlatforms: 100,
         maxInstructions: {
+            basic: 40,
             easy: 40,
             medium: 40,
             hard: 100
@@ -66,92 +68,54 @@ export default {
         }
     },
     data: {
-        easy: [
+        basic: [
             {
-                container: [
-
-                ],
+                container: [],
                 tiles: [
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 2, 1, 3, 2, 1]
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 2, 1, 1, 1, 1]
                 ],
-                broken: [
-
+                broken: [],
+                target: [
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1]
                 ],
-                initItems: [
-                    { row: 3, col: 0, type: "die", val: 1 } // die init value
-                ],
-                customItems: {
-                },
-                scoring: [
-                    {
-                        score: 1,
-                        target: [
-                            [ 1, 1, 1, 1, 1, 1],
-                            [ 1, 1, 1, 1, 1, 1],
-                            [ 1, 1, 1, 2, 1, 1],
-                            [ 1, 1, 1, 3, 2, 1]
-                        ]
-                    },
-                    {
-                        score: 0.6,
-                        target: [
-                            [ 1, 1, 1, 1, 1, 1],
-                            [ 1, 1, 1, 1, 1, 1],
-                            [ 1, 1, 1, 2, 1, 1],
-                            [ 1, 1, 1, 3, 2, 1]
-                        ],
-                        subset: [
-                            [ 0, 0, 0, 0, 0, 0],
-                            [ 0, 0, 0, 0, 0, 0],
-                            [ 0, 0, 1, 1, 0, 0],
-                            [ 0, 0, 1, 1, 0, 0]
-                        ],
-                    },
-                    {
-                        score: 0.4,
-                        target: [
-                            [ 1, 1, 1, 1, 1, 1],
-                            [ 1, 1, 1, 1, 1, 1],
-                            [ 1, 1, 1, 1, 1, 1],
-                            [ 1, 1, 1, 3, 2, 1]
-                        ]
-                    }
-                ],
-
-                initCranePos: 1,
-                initTool: 0
+                initItems: [],
+                customItems: {},
+                initCranePos: 1
             }
         ],
-        medium: [
+        easy: [
             {
-                container: [
-
-                ],
+                container: [],
                 tiles: [
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 3, 4, 1],
-                    [ 1, 2, 1, 5, 6, 1]
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 3, 4, 1],
+                    [1, 2, 1, 5, 6, 1]
                 ],
-                broken: [
-
-                ],
+                broken: [],
                 target: [
-                    [ 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 2, 1, 1],
-                    [ 1, 1, 1, 3, 4, 1],
-                    [ 1, 1, 1, 5, 6, 1]
+                    [1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 2, 1, 1],
+                    [1, 1, 1, 3, 4, 1],
+                    [1, 1, 1, 5, 6, 1]
                 ],
-                initItems: [
-                ],
+                initItems: [],
                 customItems: {
+                    // 2: { img: "assets/png/activite-01-05.png" },
+                    // 3: { img: "assets/png/activite-01-03.png" },
+                    // 4: { img: "assets/png/activite-01-04.png" },
+                    // 5: { img: "assets/png/activite-01-01.png" },
+                    // 6: { img: "assets/png/activite-01-02.png" }
                 },
                 successAnim: {
                     img: [
-                        { src: "assets/png/anim.png", row: 2, col: 3, width: 2, height: 2, loop: true }
+                        {src: "assets/png/anim.png", row: 2, col: 3, width: 2, height: 2, loop: true}
                     ]
                 },
                 initCranePos: 0

@@ -6,4 +6,5 @@ export enum ActionTypes {
   LayoutZoomLevelChanged = 'Layout.ZoomLevel.Changed',
   LayoutRequiredTypeChanged = 'Layout.RequiredType.Changed',
   LayoutViewsChanged = 'Layout.Views.Changed',
+  LayoutInstructionsIndexChanged = 'Layout.Instructions.Index.Changed',
 }

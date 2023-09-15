@@ -6,6 +6,7 @@ import {CompileStatus} from "./compile";
 import {LayoutType} from "../task/layout/layout";
 import * as C from '@france-ioi/persistent-c';
 import {CodecastPlatform, platformsList} from './platforms';
+import {memoize} from 'proxy-memoize';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;
@@ -46,7 +47,7 @@ interface StepperControlsStateToProps {
     soundEnabled: boolean,
 }
 
-export function getStepperControlsSelector(state: AppStore, {enabled}): StepperControlsStateToProps {
+export const getStepperControlsSelector = memoize(({state, enabled}: {state: AppStore, enabled: boolean}): StepperControlsStateToProps => {
     const {controls, showStepper, platform} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
@@ -152,4 +153,4 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
         runningBackground,
         soundEnabled,
     };
-}
+});

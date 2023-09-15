@@ -76,7 +76,7 @@ import {
     getDefaultTaskLevel,
     platformSaveAnswer,
     platformSetTaskLevels,
-    platformTokenUpdated,
+    platformTokenUpdated, platformUnlockLevel,
     TaskLevelName,
     taskLevelsList
 } from "./platform/platform_slice";
@@ -101,6 +101,7 @@ import {CodecastPlatform, platformsList} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {getMessage, Languages} from '../lang';
+import {getTaskHintsSelector} from './instructions/instructions';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask, callback}: {
     testId?: number,
@@ -264,10 +265,7 @@ function* taskLoadSaga(app: App, action) {
     //     },
     // ]));
 
-    if (state.options.taskHints) {
-        log.getLogger('task').debug('load hints', state.options.taskHints);
-        yield* put(hintsLoaded(state.options.taskHints));
-    }
+
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
     if (currentTask) {
@@ -283,18 +281,36 @@ function* taskLoadSaga(app: App, action) {
 
         let currentLevel = yield* appSelect(state => state.task.currentLevel);
 
-        if (action.payload.level && action.payload.level in currentTask.data) {
+        const levels = {};
+        if (currentTask.data && Object.keys(currentTask.data).length) {
+            for (let [index, level] of Object.keys(currentTask.data).entries()) {
+                if (state.options.levels?.length && -1 === state.options.levels.indexOf(level as TaskLevelName)) {
+                    continue;
+                }
+
+                levels[level] = getDefaultTaskLevel(level as TaskLevelName);
+                if (currentTask.gridInfos && currentTask.gridInfos.unlockedLevels && index >= currentTask.gridInfos.unlockedLevels) {
+                    levels[level].locked = true;
+                }
+            }
+        }
+
+        yield* put(platformSetTaskLevels(levels));
+
+        if (action.payload.level && action.payload.level in levels) {
             yield* put(taskCurrentLevelChange({level: action.payload.level, record: false}));
-        } else if (currentTask.data && (null === currentLevel || !(currentLevel in currentTask.data))) {
+        } else if (Object.keys(levels).length && (null === currentLevel || !(currentLevel in levels))) {
             // Select default level
             let defaultLevel = null;
-            if (currentTask.gridInfos?.defaultLevel && currentTask.gridInfos?.defaultLevel in currentTask.data) {
+            if (state.options.defaultLevel && state.options.defaultLevel in levels) {
+                defaultLevel = state.options.defaultLevel;
+            } else if (currentTask.gridInfos?.defaultLevel && currentTask.gridInfos?.defaultLevel in levels) {
                 defaultLevel = currentTask.gridInfos.defaultLevel;
-            } else if ('easy' in currentTask.data) {
+            } else if ('easy' in levels) {
                 defaultLevel = 'easy';
             } else {
                 for (let level of taskLevelsList) {
-                    if (level in currentTask.data) {
+                    if (level in levels) {
                         defaultLevel = level;
                         break;
                     }
@@ -303,6 +319,15 @@ function* taskLoadSaga(app: App, action) {
 
             yield* put(taskCurrentLevelChange({level: defaultLevel, record: false}));
         }
+    }
+
+    const taskHints = yield* appSelect(getTaskHintsSelector);
+    if (null !== taskHints) {
+        log.getLogger('task').debug('load hints from HTML', taskHints);
+        yield* put(hintsLoaded(taskHints));
+    } else if (state.options.taskHints) {
+        log.getLogger('task').debug('load hints from task options', state.options.taskHints);
+        yield* put(hintsLoaded(state.options.taskHints));
     }
 
     const currentLevel = yield* appSelect(state => state.task.currentLevel);
@@ -320,29 +345,6 @@ function* taskLoadSaga(app: App, action) {
     const testId = action.payload && action.payload.testId ? action.payload.testId : (tests.length ? 0 : null);
     log.getLogger('task').debug('[task.load] update current test id', testId);
     yield* put(updateCurrentTestId({testId, record: false}));
-
-    if (currentTask) {
-        const taskLevels = yield* appSelect(state => state.platform.levels);
-        if (0 === Object.keys(taskLevels).length) {
-            const levels = {};
-            if (currentTask.data && Object.keys(currentTask.data).length) {
-                for (let [index, level] of Object.keys(currentTask.data).entries()) {
-                    if (state.options.level && state.options.level !== level) {
-                        continue;
-                    }
-
-                    levels[level] = getDefaultTaskLevel(level as TaskLevelName);
-                    if (currentTask.gridInfos && currentTask.gridInfos.unlockedLevels && index >= currentTask.gridInfos.unlockedLevels) {
-                        levels[level].locked = true;
-                    }
-                }
-            }
-
-            yield* put(platformSetTaskLevels(levels));
-        }
-
-        log.getLogger('task').debug({testId, tests});
-    }
 
     if (oldSagasTasks[app.environment]) {
         // Unload task first
@@ -508,7 +510,12 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     log.getLogger('task').debug('grading finished');
 
     // Change level
+    if (state.platform.levels[newLevel].locked) {
+        yield* put(platformUnlockLevel(newLevel));
+    }
     yield* put(taskCurrentLevelChange({level: newLevel}));
+
+    yield* put({type: LayoutActionTypes.LayoutInstructionsIndexChanged, payload: {tabIndex: 0, pageIndex: 0}});
 
     const randomSeed = yield* appSelect(state => state.platform.taskRandomSeed);
     const taskToken = getTaskTokenForLevel(newLevel, randomSeed);

@@ -57,6 +57,7 @@ module.exports = {
     UPLOADING_UPDATE_SUBTITLES: 'Mise à jour des sous-titres en cours...',
     UPLOADING_UPLOAD_SUBTITLES: 'Envoi des sous-titres en cours...',
     PLAYBACK_LINK: "Lien pour la lecture :",
+    LTI_LINK: "Lien LTI :",
     EDITOR_LINK: "Lien pour l'édition :",
     PLAYER_PREPARING: "Chargement de l'enregistrement en cours",
     PLAYER_LOADING_AUDIO: "Chargement de l'audio en cours",
@@ -148,9 +149,6 @@ module.exports = {
     PROGRAM_MISSING_LIB: "Vous devez mettre la ligne {line} dans votre programme.",
     PROGRAM_MISSING_LIB_FAMILIAR: "Tu dois mettre la ligne {line} dans ton programme.",
 
-    USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",
-    USER_CHANGE_USER: "Déconnexion",
-
     EDITOR_SPLIT: 'Diviser',
     EDITOR_MERGE: 'Fusionner',
     EDITOR_SKIP: 'Passer',
@@ -175,6 +173,9 @@ module.exports = {
     EDITOR_SUBTITLES_SAVE: 'Enregistrer',
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Confirmez-vous la suppression des sous-titres {language} ?',
     EDITOR_RELOAD_IMPOSSIBLE: "La réponse sauvegardée n'a pas pu être rechargée.",
+
+    USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",
+    USER_CHANGE_USER: "Déconnexion",
 
     KEYWORD: 'mot-clé',
     CONSTANT: "constante",

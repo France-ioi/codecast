@@ -22,10 +22,17 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     let currentLevelFinished = false;
     let currentLevelIndex = null;
     let hasNextLevel = false;
+    let nextLevel = null;
     if (currentLevel && currentLevel in levels) {
         currentLevelFinished = (levels[currentLevel].score >= 1);
         currentLevelIndex = taskLevelsList.indexOf(currentLevel);
-        hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
+        for (let level = currentLevelIndex + 1; level < taskLevelsList.length; level++) {
+            if (taskLevelsList[level] in levels) {
+                hasNextLevel = true;
+                nextLevel = level;
+                break;
+            }
+        }
     }
 
     let intermediateMessage = null;
@@ -37,7 +44,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                 intermediateMessage = <p>{getMessage('TASK_LEVEL_SUCCESS_TRY_NEXT_TASK')}</p>
                 nextAction = 'top';
             } else {
-                intermediateMessage = <p>{getMessage('TASK_LEVEL_SUCCESS_NEXT_LABEL').format({version: getMessage('TASK_LEVEL_VERSION').format({count: currentLevelIndex + 2})})}</p>;
+                intermediateMessage = <p>{getMessage('TASK_LEVEL_SUCCESS_NEXT_LABEL').format({version: getMessage('TASK_LEVEL_VERSION').format({count: nextLevel + 1})})}</p>;
             }
         } else {
             intermediateMessage = <p>{getMessage('TASK_LEVEL_SUCCESS_FINISHED')}</p>;
@@ -47,7 +54,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const triggerNextAction = () => {
         props.onClose();
         if ('next-level' === nextAction) {
-            dispatch(taskChangeLevel(taskLevelsList[currentLevelIndex + 1]));
+            dispatch(taskChangeLevel(taskLevelsList[nextLevel]));
         } else {
             dispatch(callPlatformValidate(nextAction));
         }

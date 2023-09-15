@@ -82,7 +82,7 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
         options.input = query.input || '';
     }
     if ('level' in query) {
-        options.level = query.level || null;
+        options.levels = query.level.split(',') || null;
     }
     if ('theme' in query) {
         options.theme = query.theme || null;
@@ -92,6 +92,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     }
     if ('viewTestDetails' in query) {
         options.viewTestDetails = true;
+    }
+    if ('defaultLevel' in query) {
+        options.defaultLevel = query.defaultLevel;
     }
     options.canDownload = !('noDownload' in query);
 
@@ -113,8 +116,8 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('allowExecutionOverBlocksLimit' in query) {
         options.allowExecutionOverBlocksLimit = true;
     }
-    if ('randomFailedTest' in query) {
-        options.showRandomFailedTest = true;
+    if ('randomizeTestsOrder' in query) {
+        options.randomizeTestsOrder = true;
     }
     if ('ioMode' in query && 'split' === query.ioMode) {
         options.ioMode = IoMode.Split;
@@ -137,7 +140,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     if ('tralalere' === state.options.app) {
         state.options.logAttempts = true;
         state.options.allowExecutionOverBlocksLimit = true;
-        state.options.showRandomFailedTest = true;
+        state.options.randomizeTestsOrder = true;
     }
 
     loadOptionsFromQuery(options, query);

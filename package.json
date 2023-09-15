@@ -20,6 +20,7 @@
     "start": "NODE_ENV=production nodemon --mode production --watch backend --exec yarn babel-node -- backend/server.js",
     "build": "webpack --mode=production --progress --color",
     "build-lib": "BUILD=lib webpack --mode=production --progress --color",
+    "watch-lib": "BUILD=lib webpack --mode=production --progress --color --watch",
     "pack-offline": "rm -rf build && yarn run build-lib && zip -r offline.zip build assets",
     "lint": "./node_modules/.bin/eslint frontend/ --ext .tsx,.ts"
   },
@@ -44,6 +45,7 @@
     "audio-decode": "^1.4.0",
     "aws-sdk": "^2.1401.0",
     "bennu": "^17.3.0",
+    "bezier-easing": "^2.1.0",
     "body-parser": "^1.20.2",
     "bootstrap": "^5.3.0",
     "buffer": "^6.0.3",

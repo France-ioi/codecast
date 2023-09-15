@@ -179,7 +179,6 @@ export default function (bundle: Bundle) {
         yield* takeEvery(submissionChangeDisplayedError, function* ({payload}) {
             if (SubmissionErrorType.CompilationError === payload) {
                 const error = getMessage('SUBMISSION_ERROR_COMPILATION').s;
-
                 yield* put(stepperDisplayError(error));
             } else if (null === payload) {
                 yield* put(stepperClearError());
