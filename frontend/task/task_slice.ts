@@ -11,6 +11,7 @@ import StringsLoginFixture from './fixtures/14_strings_01_login';
 import DatabaseFixture from './fixtures/test_database';
 import P5Fixture from './fixtures/test_p5';
 import CraneFixture from './fixtures/test_crane';
+import Crane2Fixture from './fixtures/test_crane2';
 import MapFixture from './fixtures/test_map';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
@@ -31,6 +32,7 @@ const availableTasks = {
     database: DatabaseFixture,
     p5: P5Fixture,
     crane: CraneFixture,
+    crane2: Crane2Fixture,
     login: StringsLoginFixture,
     map: MapFixture,
 };
