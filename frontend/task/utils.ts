@@ -147,7 +147,7 @@ export function getCurrentImmerState(object) {
     return isDraft(object) ? current(object) : object;
 }
 
-export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName) {
+export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName, taskVariant?: string) {
     const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
     for (let availablePlatform of Object.keys(platformsList)) {
         if (platform !== availablePlatform) {
@@ -160,6 +160,8 @@ export function formatTaskInstructions(instructions: string, platform: CodecastP
             instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
         }
     }
+
+    instructionsJQuery.find(`[class^="variant-"]:not(.variant-${taskVariant})`).remove();
 
     instructionsJQuery.find('[data-current-lang]').html(getMessage('PLATFORM_' + platform.toLocaleUpperCase()).s);
 

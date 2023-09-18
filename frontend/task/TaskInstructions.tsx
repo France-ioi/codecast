@@ -28,6 +28,7 @@ export interface TaskInstructionsProps {
 export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const taskLevel = useAppSelector(state => state.task.currentLevel);
+    const taskVariant = useAppSelector(state => state.options.taskVariant);
     const contextId = useAppSelector(state => state.task.contextId);
     const isBackend = useAppSelector(state => state.options.backend);
     const [instructionsTitle, setInstructionsTitle] = useState(null);
@@ -54,7 +55,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     };
 
     useEffect(() => {
-        let instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel);
+        let instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel, taskVariant);
         let hasTabs = false;
         if (0 < instructionsJQuery.find('.instructions-tabs').length) {
             hasTabs = true;

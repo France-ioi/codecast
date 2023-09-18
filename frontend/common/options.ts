@@ -84,6 +84,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('level' in query) {
         options.levels = query.level.split(',') || null;
     }
+    if ('variant' in query) {
+        options.taskVariant = query.variant || null;
+    }
     if ('theme' in query) {
         options.theme = query.theme || null;
     }

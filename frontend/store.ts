@@ -90,6 +90,7 @@ export interface CodecastOptions {
     allowExecutionOverBlocksLimit?: boolean,
     randomizeTestsOrder?: boolean,
     ioMode: IoMode,
+    taskVariant?: string,
 }
 
 export interface Panes {
