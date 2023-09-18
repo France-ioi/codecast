@@ -34,7 +34,7 @@ export class DebugLib extends QuickAlgoLibrary {
 
         this.customBlocks = {
             debug: {
-                print: [
+                debug: [
                     { name: "log", params: [null], variants: [[null], [null, null]], anyArgs: true},
                 ],
             }

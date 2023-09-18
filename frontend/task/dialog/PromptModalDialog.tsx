@@ -23,7 +23,8 @@ export function PromptModalDialog() {
         setInputValue(modalData.defaultInput ? modalData.defaultInput : '');
     }, [modalData.defaultInput, modalData.open]);
 
-    const validate = () => {
+    const validate = (e) => {
+        e.preventDefault();
         dispatch(validateModal(inputValue));
     };
 
@@ -97,28 +98,30 @@ export function PromptModalDialog() {
         >
             <div dangerouslySetInnerHTML={{__html: modalData.message}}></div>
 
-            {ModalType.input === modalData.mode &&
-                <div className="text-center mb-2 mt-4">
-                    <input type="text" className='modal-input bp3-input bp3-fill' value={inputValue} onChange={(event) => setInputValue(event.target.value)}></input>
-                </div>
-            }
+            <form onSubmit={validate}>
+                {ModalType.input === modalData.mode &&
+                    <div className="text-center mb-2 mt-4">
+                        <input autoFocus type="text" className='modal-input bp3-input bp3-fill' value={inputValue} onChange={(event) => setInputValue(event.target.value)}></input>
+                    </div>
+                }
 
-            {ModalType.dialog !== modalData.mode && ModalType.keypad !== modalData.mode &&
-                <div className="simple-dialog-buttons">
-                    <button className="simple-dialog-button" onClick={validate}>
-                        <Icon icon="small-tick" iconSize={24}/>
-                        <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText || ModalType.input === modalData.mode ? 'VALIDATE' : 'ALRIGHT'))}</span>
-                    </button>
+                {ModalType.dialog !== modalData.mode && ModalType.keypad !== modalData.mode &&
+                    <div className="simple-dialog-buttons">
+                        <button type="submit" className="simple-dialog-button">
+                            <Icon icon="small-tick" iconSize={24}/>
+                            <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText || ModalType.input === modalData.mode ? 'VALIDATE' : 'ALRIGHT'))}</span>
+                        </button>
 
-                    {modalData.noButtonText &&
-                      <button className="simple-dialog-button ml-2" onClick={cancel}>
-                          <span>{modalData.noButtonText}</span>
-                      </button>
-                    }
-                </div>
-            }
+                        {modalData.noButtonText &&
+                            <button className="simple-dialog-button ml-2" onClick={cancel}>
+                                <span>{modalData.noButtonText}</span>
+                            </button>
+                        }
+                    </div>
+                }
 
-            {ModalType.keypad === modalData.mode && keypad}
+                {ModalType.keypad === modalData.mode && keypad}
+            </form>
         </Dialog>
     );
 }
