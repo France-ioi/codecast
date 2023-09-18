@@ -611,6 +611,13 @@ function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}):
     state.stepper.currentStepperState = stepperContext.state;
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;
+
+    if (hasBlockPlatform(state.options.platform) && 'main' === state.environment) {
+        // Cancel reported value because in Scratch, as long as there's a reported value,
+        // the first click on the workspace only removes the reported value, and therefore
+        // it prevents moving a block. One would have to make two clicks to move a block in this case.
+        window.Blockly?.DropDownDiv?.hideWithoutAnimation();
+    }
 }
 
 export function stepperExitReducer(state: AppStoreReplay): void {
@@ -1092,8 +1099,8 @@ function* stepperExitSaga() {
 }
 
 export function* updateSourceHighlightSaga(state: AppStoreReplay) {
-    log.getLogger('stepper').debug('update source hightlight');
     const stepperState = state.stepper.currentStepperState;
+    log.getLogger('stepper').debug('update source highlight', stepperState);
     if (!stepperState) {
         yield* call(clearSourceHighlightSaga);
         return;
