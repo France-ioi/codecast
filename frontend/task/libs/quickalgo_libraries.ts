@@ -4,10 +4,11 @@ import {QuickAlgoLibrary} from "./quickalgo_library";
 import {Bundle} from "../../linker";
 import {apply, call, put, spawn, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
-import {extractLevelSpecific, getCurrentImmerState} from "../utils";
+import {extractLevelSpecific, extractVariantSpecific, getCurrentImmerState} from "../utils";
 import {PrinterLib} from "./printer/printer_lib";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../../stepper/js";
 import {
+    QuickalgoTaskGridInfos,
     selectCurrentTestData,
     taskIncreaseContextId, taskSetAvailablePlatforms,
     taskSetBlocksPanelCollapsed,
@@ -167,8 +168,7 @@ export function* createQuickalgoLibrary() {
     const currentLevel = yield* appSelect(state => state.task.currentLevel);
     window.subTask = currentTask;
 
-    let contextLib;
-    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, currentLevel) : {
+    let levelGridInfos: QuickalgoTaskGridInfos = {
         includeBlocks: {
             generatedBlocks: {
                 printer: ["print", "read", "manipulate"]
@@ -178,6 +178,13 @@ export function* createQuickalgoLibrary() {
             },
         },
     };
+    if (currentTask) {
+        levelGridInfos = extractLevelSpecific(currentTask.gridInfos, currentLevel);
+        const taskVariant = state.options.taskVariant;
+        if (null !== taskVariant && undefined !== taskVariant) {
+            levelGridInfos = extractVariantSpecific(levelGridInfos, taskVariant, currentLevel);
+        }
+    }
 
     if (!state.options.preload) {
         const platform = state.options.platform
@@ -192,6 +199,7 @@ export function* createQuickalgoLibrary() {
     // Reset fully local strings when creating a new context to avoid keeping strings from an other language
     window.languageStrings = {};
 
+    let contextLib;
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];

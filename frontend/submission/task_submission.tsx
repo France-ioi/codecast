@@ -174,7 +174,8 @@ class TaskSubmissionExecutor {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
         const currentTask = state.task.currentTask;
-        const tests = currentTask ? extractTestsFromTask(currentTask, level) : state.task.taskTests;
+        const taskVariant = state.options.taskVariant;
+        const tests = currentTask ? extractTestsFromTask(currentTask, level, taskVariant) : state.task.taskTests;
 
         return yield new Promise<TaskSubmissionResultPayload>(resolve => {
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
@@ -277,7 +278,8 @@ class TaskSubmissionExecutor {
         const environment = state.environment;
         let lastMessage = null;
         const currentTask = state.task.currentTask;
-        const tests = currentTask ? extractTestsFromTask(currentTask, level) : state.task.taskTests;
+        const taskVariant = state.options.taskVariant;
+        const tests = currentTask ? extractTestsFromTask(currentTask, level, taskVariant) : state.task.taskTests;
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,
