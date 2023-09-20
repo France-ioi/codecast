@@ -17,28 +17,41 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
     .smart-contract-log__header {
       display: flex;
       padding: 8px;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
       background: rgba(0, 0, 0, 0.03);
       border-bottom: solid 1px $smart-contract-border-color;
       color: rgb(33, 37, 41);
+      .smart-contract-log__icon {
+        margin-left: 4px;
+        margin-right: 10px;
+      }
       .smart-contract-log__date {
-        color: grey;
         white-space: nowrap;
       }
-      .smart-contract-log__kind {
+      .smart-contract-log__kind, .smart-contract-log__entry_point {
         flex: 1 0;
-        margin-left: 20px;
-        margin-right: 20px;
         font-weight: bold;
-      }
-      .smart-contract-log__hash {
-        text-overflow: ellipsis;
-        overflow: hidden;
-        color: grey;
       }
     }
     .smart-contract-log__scalars {
       display: flex;
       column-gap: 25px;
+    }
+
+    &.is-failed {
+      .smart-contract-log__header {
+        background: rgb(213, 84, 97);
+        color: white;
+        //background: #fdd;
+      }
+    }
+    &:not(.is-failed) {
+      .smart-contract-log__header {
+        background: rgb(61, 159, 113);
+        color: white;
+        //background: rgb(209, 231, 221);
+      }
     }
   }
 
@@ -48,8 +61,22 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
       font-size: 0.85em;
       color: grey;
     }
-    .smart-contract-scalar__value {
-      //font-weight: bold;
+
+    &.is-wrong {
+      .smart-contract-scalar__header {
+        color: red;
+      }
+      .smart-contract-scalar__value {
+        border-color: red;
+      }
+    }
+    &.is-right {
+      .smart-contract-scalar__header {
+        color: green;
+      }
+      .smart-contract-scalar__value {
+        border-color: green;
+      }
     }
   }
 
@@ -57,13 +84,14 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
     padding: 8px;
   }
 
-  .smart-contract-log__entry_point {
-    margin-top: 10px;
-    font-weight: bold;
-  }
-
   .smart-contract-log__costs {
     margin-top: 10px;
+  }
+
+  .smart-contract-error {
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #efa124;
   }
 
   .smart-contract-log + .smart-contract-log {
