@@ -246,7 +246,6 @@ export function Documentation(props: DocumentationProps) {
                                 <div className="documentation-task-instructions">
                                     <TaskInstructions
                                         expanded
-                                        withoutTitle
                                     />
                                 </div>
                                 :

@@ -20,7 +20,6 @@ import {memoize} from 'proxy-memoize';
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
     missionRightSlot?: ReactElement,
-    withoutTitle?: boolean,
     expanded?: boolean,
     hideShowMoreButton?: boolean,
 }
@@ -96,8 +95,6 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     return (
         <div ref={instructionsRef} className={`task-mission ${props.expanded ? 'is-expanded' : ''}`} style={{fontSize: `${zoomLevel}rem`}}>
             {props.missionRightSlot}
-
-            {!props.withoutTitle && <h1>{instructionsTitle ? instructionsTitle : getMessage('TASK_INSTRUCTIONS')}</h1>}
 
             {instructionsTabs ?
                 <TaskInstructionsTabs
