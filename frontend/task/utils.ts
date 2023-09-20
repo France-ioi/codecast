@@ -24,7 +24,7 @@ export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
 }
 
 export function extractLevelSpecific(item: any, level: TaskLevelName) {
-    if ((typeof item != "object")) {
+    if ((typeof item !== "object")) {
         return item;
     }
     if (Array.isArray(item)) {
@@ -73,6 +73,54 @@ export function extractLevelSpecific(item: any, level: TaskLevelName) {
         return newItem;
     }
     console.error("Invalid type for shared property");
+}
+
+const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+const ARGUMENT_NAMES = /([^\s,]+)/g;
+
+export function getParamNames(func) {
+    const fnStr = func.toString().replace(STRIP_COMMENTS, '');
+    const result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
+
+    return null === result ? [] : result;
+}
+
+export function extractVariantSpecific(item: any, variant: string, level?: TaskLevelName): any {
+    if (typeof item === 'function') {
+        const params = getParamNames(item);
+        if (-1 === params.indexOf('variant')) {
+            return item;
+        }
+
+        const args = params.map((name) => {
+            if ('variant' === name) {
+                return variant;
+            } else if ('level' === name) {
+                return level;
+            } else {
+                return null;
+            }
+        });
+
+        return item.apply(null, args);
+    }
+    if ((typeof item !== "object")) {
+        return item;
+    }
+    if (Array.isArray(item)) {
+        return item.map((val) => {
+            return extractVariantSpecific(val, variant, level);
+        });
+    }
+    if (item[`variant_${variant}`] === undefined) {
+        let newItem = {};
+        for (let prop in item) {
+            newItem[prop] = extractVariantSpecific(item[prop], variant, level);
+        }
+        return newItem;
+    } else {
+        return extractVariantSpecific(item[`variant_${variant}`], variant, level);
+    }
 }
 
 export function getAvailableModules(context) {
@@ -148,7 +196,7 @@ export function getCurrentImmerState(object) {
     return isDraft(object) ? current(object) : object;
 }
 
-export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName) {
+export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName, taskVariant?: string) {
     const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
     for (let availablePlatform of Object.keys(platformsList)) {
         if (platform !== availablePlatform) {
@@ -161,6 +209,8 @@ export function formatTaskInstructions(instructions: string, platform: CodecastP
             instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
         }
     }
+
+    instructionsJQuery.find(`[class^="variant_"]:not(.variant_${taskVariant})`).remove();
 
     instructionsJQuery.find('[data-current-lang]').html(getMessage('PLATFORM_' + platform.toLocaleUpperCase()).s);
 

@@ -85,7 +85,7 @@ export interface QuickalgoTaskIncludeBlocksAllLevels {
 }
 
 export interface QuickalgoTaskGridInfosNotLevelDependent {
-    context: string,
+    context?: string,
     contextType?: string,
     images?: {id?: string, path: {default: string}}[],
     importModules?: string[],

@@ -39,6 +39,7 @@ export function Documentation(props: DocumentationProps) {
     const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
     const conceptsWithoutCategory = concepts.filter(concept => !concept.isCategory);
     const conceptIndex = null !== selectedConcept ? conceptsWithoutCategory.findIndex(concept => selectedConceptId === concept.id) : 0;
+
     const [iframeRef, setIframeRef] = useState(null);
 
     let conceptUrl = null;
@@ -245,7 +246,6 @@ export function Documentation(props: DocumentationProps) {
                                 <div className="documentation-task-instructions">
                                     <TaskInstructions
                                         expanded
-                                        withoutTitle
                                     />
                                 </div>
                                 :

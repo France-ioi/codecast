@@ -31,7 +31,7 @@ export interface SmartContractResultLogLine {
     storage_size: number,
     consumed_gas: number,
     paid_storage_size_diff: number,
-
+    expected?: SmartContractResultLogLine,
 }
 
 export const smartContractPlatformsList = {
@@ -103,9 +103,20 @@ export class SmartContractLib extends QuickAlgoLibrary {
 
     getErrorFromTestResult(testResult: TaskSubmissionServerTestResult): LibraryTestResult {
         try {
-            const output = JSON.parse(testResult.output);
+            const logLastLine = testResult.log.trim().split("\n").pop();
+            const output = JSON.parse(logLastLine);
             if (!output.error?.message) {
                 return null;
+            }
+
+            const log = output.log;
+            if (output.error && log.length) {
+                log[log.length - 1].error = output.error;
+            }
+            if (output.expected) {
+                for (let i = 0; i < log.length; i++) {
+                    log[i].expected = output.expected[i];
+                }
             }
 
             return new LibraryTestResult(

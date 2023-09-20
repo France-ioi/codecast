@@ -1,7 +1,7 @@
 import {appSelect} from '../../hooks';
 import {quickAlgoLibraries} from './quick_algo_libraries_model';
 import log from 'loglevel';
-import {extractLevelSpecific} from '../utils';
+import {extractLevelSpecific, extractVariantSpecific} from '../utils';
 import {call, put} from 'typed-redux-saga';
 import {importModules, importPlatformModules, loadFonts} from './import_modules';
 import {SmartContractLib} from './smart_contract/smart_contract_lib';
@@ -25,6 +25,7 @@ import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {QuickAlgoLibrariesActionType, quickAlgoLibraryResetAndReloadStateSaga} from './quickalgo_libraries';
 import {QuickAlgoLibrary} from './quickalgo_library';
 import {DebugLib} from './debug/debug_lib';
+import {QuickalgoTaskGridInfos} from '../task_types';
 
 export function* createQuickalgoLibrary() {
     let state = yield* appSelect();
@@ -41,8 +42,7 @@ export function* createQuickalgoLibrary() {
     const currentLevel = yield* appSelect(state => state.task.currentLevel);
     window.subTask = currentTask;
 
-    let contextLib;
-    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, currentLevel) : {
+    let levelGridInfos: QuickalgoTaskGridInfos = {
         includeBlocks: {
             generatedBlocks: {
                 printer: ["print", "read", "manipulate"]
@@ -52,6 +52,13 @@ export function* createQuickalgoLibrary() {
             },
         },
     };
+    if (currentTask) {
+        levelGridInfos = extractLevelSpecific(currentTask.gridInfos, currentLevel);
+        const taskVariant = state.options.taskVariant;
+        if (null !== taskVariant && undefined !== taskVariant) {
+            levelGridInfos = extractVariantSpecific(levelGridInfos, taskVariant, currentLevel);
+        }
+    }
 
     if (!state.options.preload) {
         const platform = state.options.platform
@@ -66,6 +73,7 @@ export function* createQuickalgoLibrary() {
     // Reset fully local strings when creating a new context to avoid keeping strings from an other language
     window.languageStrings = {};
 
+    let contextLib;
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
@@ -108,10 +116,7 @@ export function* createQuickalgoLibrary() {
         availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.split(',').indexOf(platform));
     }
     if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
-        yield* put({
-            type: CommonActionTypes.PlatformChanged,
-            payload: {platform: availablePlatforms[0], reloadTask: true}
-        });
+        yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: true}});
 
         return false;
     }

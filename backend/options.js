@@ -27,7 +27,7 @@ export function buildOptions(config, req, start, callback) {
     options.backend = true;
     options.callbackUrl = req.originalUrl;
     options.referer = req.headers.referer || null;
-    options.app = 'crane' === req.query.task ? 'tralalere' : config.app;
+    options.app = 'crane' === req.query.task?.substring(0, 5) ? 'tralalere' : config.app;
     options.baseUrl = config.baseUrl;
     if (req.query.platform) {
         options.platform = req.query.platform;

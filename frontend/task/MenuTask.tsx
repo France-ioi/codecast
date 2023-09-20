@@ -39,6 +39,8 @@ export function MenuTask() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);
 
+    const controls = useAppSelector(state => state.options.controls);
+
     const wrapperRef = useRef<HTMLDivElement>();
     const dispatch = useDispatch();
 
@@ -124,14 +126,18 @@ export function MenuTask() {
                     <Icon icon="help"/>
                     <span>{getMessage('MENU_ABOUT')}</span>
                 </div>}
-                <div className="menu-item" onClick={downloadAnswer}>
-                    <FontAwesomeIcon icon={faDownload}/>
-                    <span>{getMessage('MENU_DOWNLOAD')}</span>
-                </div>
-                <div className="menu-item" onClick={reloadAnswer}>
-                    <FontAwesomeIcon icon={faUpload}/>
-                    <span>{getMessage('MENU_RELOAD')}</span>
-                </div>
+                {!(controls && 'reload' in controls && (false === controls['reload'] || '_' === controls['reload'])) &&
+                    <React.Fragment>
+                        <div className="menu-item" onClick={downloadAnswer}>
+                            <FontAwesomeIcon icon={faDownload}/>
+                            <span>{getMessage('MENU_DOWNLOAD')}</span>
+                        </div>
+                        <div className="menu-item" onClick={reloadAnswer}>
+                            <FontAwesomeIcon icon={faUpload}/>
+                            <span>{getMessage('MENU_RELOAD')}</span>
+                        </div>
+                    </React.Fragment>
+                }
             </div>
             <SettingsDialog
                 open={settingsOpen || forceSettingsOpen}

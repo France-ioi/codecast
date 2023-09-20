@@ -325,7 +325,8 @@ function* taskLoadSaga(app: App, action) {
         tests = action.payload.tests;
     } else if (currentTask) {
         if (extractTests) {
-            tests = extractTestsFromTask(currentTask);
+            const taskVariant = state.options.taskVariant;
+            tests = extractTestsFromTask(currentTask, taskVariant);
         } else {
             tests = state.task.taskTests;
         }

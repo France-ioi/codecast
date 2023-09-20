@@ -20,7 +20,6 @@ import {memoize} from 'proxy-memoize';
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
     missionRightSlot?: ReactElement,
-    withoutTitle?: boolean,
     expanded?: boolean,
     hideShowMoreButton?: boolean,
 }
@@ -28,6 +27,7 @@ export interface TaskInstructionsProps {
 export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const taskLevel = useAppSelector(state => state.task.currentLevel);
+    const taskVariant = useAppSelector(state => state.options.taskVariant);
     const contextId = useAppSelector(state => state.task.contextId);
     const isBackend = useAppSelector(state => state.options.backend);
     const [instructionsTitle, setInstructionsTitle] = useState(null);
@@ -54,7 +54,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     };
 
     useEffect(() => {
-        let instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel);
+        let instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel, taskVariant);
         let hasTabs = false;
         if (0 < instructionsJQuery.find('.instructions-tabs').length) {
             hasTabs = true;
@@ -96,8 +96,6 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     return (
         <div ref={instructionsRef} className={`task-mission ${props.expanded ? 'is-expanded' : ''}`} style={{fontSize: `${zoomLevel}rem`}}>
             {props.missionRightSlot}
-
-            {!props.withoutTitle && <h1>{instructionsTitle ? instructionsTitle : getMessage('TASK_INSTRUCTIONS')}</h1>}
 
             {instructionsTabs ?
                 <TaskInstructionsTabs
