@@ -337,7 +337,8 @@ function* taskLoadSaga(app: App, action) {
     if (action.payload && action.payload.tests) {
         tests = action.payload.tests;
     } else if (currentTask) {
-        tests = extractTestsFromTask(currentTask, currentLevel);
+        const taskVariant = state.options.taskVariant;
+        tests = extractTestsFromTask(currentTask, currentLevel, taskVariant);
     }
     log.getLogger('task').debug('[task.load] update task tests', tests);
     yield* put(updateTaskTests(tests));
@@ -530,7 +531,8 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     }
     yield* put(platformAnswerLoaded(newLevelAnswer));
 
-    const tests = extractTestsFromTask(currentTask, newLevel);
+    const taskVariant = state.options.taskVariant;
+    const tests = extractTestsFromTask(currentTask, newLevel, taskVariant);
     log.getLogger('task').debug('[task.currentLevelChange] update task tests', tests);
     yield* put(updateTaskTests(tests));
 
