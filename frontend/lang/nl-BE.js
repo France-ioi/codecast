@@ -176,7 +176,6 @@ module.exports = {
     TASK_VARIABLES: 'Variabelen',
     TASK_EDITOR: 'Uitgever',
     TASK_DOCUMENTATION: 'Informatie',
-    TASK_INSTRUCTIONS: 'Uw missie',
     TASK_INSTRUCTIONS_MORE: 'Meer details',
     TASK_INSTRUCTIONS_LESS: 'De details verbergen',
     TASK_INSTRUCTIONS_FAMILIAR: 'Je missie',
