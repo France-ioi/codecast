@@ -119,82 +119,6 @@ function validateConverters(converters: Converters): boolean {
     return keys.every(isFunction);
 }
 
-function getAttributes(node) {
-    if (!node) {
-        return {};
-    }
-
-    const {attributes} = node;
-    if (!attributes || !attributes.length) {
-        return {};
-    }
-
-    const result = {};
-
-    Array.from<{name: string, value: any}>(attributes)
-        .forEach(({name, value}) => {
-            if ('true' === value) {
-                value = true;
-            }
-            if ('false' === value) {
-                value = false;
-            }
-            result[name] = value;
-        });
-
-    return result;
-}
-
-function getChildren(node) {
-    if (!node) {
-        return [];
-    }
-
-    const { childNodes: children } = node;
-
-    if (!children) {
-        return [];
-    }
-
-    return children.length ? Array.from(children) : [];
-}
-
-function visitNode(node, index, converters, data): XmlParserNode {
-    if (!node) {
-        return null;
-    }
-
-    const { tagName, nodeType } = node;
-    if (nodeType === 3 && node.nodeValue.trim().length) {
-        return node.nodeValue;
-    }
-
-    if (!tagName) {
-        return null;
-    }
-
-    const converter = converters[tagName];
-
-    if (typeof converter !== 'function') {
-        return null;
-    }
-
-    const attributes = getAttributes(node);
-    const {type, metadata, props} = converter(attributes, data);
-    const newProps = Object.assign({}, {key: index}, props);
-    newProps.metadata = metadata ?? {};
-
-    const children = getChildren(node);
-    const visitChildren = (child, childIndex) => visitNode(child, childIndex, converters, data);
-    const childElements = children.map(visitChildren).filter(child => null !== child);
-
-    return {
-        type,
-        props: newProps,
-        elements: childElements,
-    };
-}
-
 class XMLToReact {
     private readonly converters: Converters;
     private readonly xmlParser: DOMParser;
@@ -225,7 +149,7 @@ class XMLToReact {
             return null;
         }
 
-        return visitNode(tree.documentElement, 0, this.converters, data);
+        return this.visitNode(tree.documentElement, 0, this.converters, data);
     }
 
     parseXml(xml: string) {
@@ -240,6 +164,86 @@ class XMLToReact {
         }
 
         return null;
+    }
+
+    getAttributes(node, data) {
+        if (!node) {
+            return {};
+        }
+
+        const {attributes} = node;
+        if (!attributes || !attributes.length) {
+            return {};
+        }
+
+        const result = {};
+
+        Array.from<{name: string, value: any}>(attributes)
+            .forEach(({name, value}) => {
+                if ('true' === value) {
+                    value = true;
+                }
+                if ('false' === value) {
+                    value = false;
+                }
+                let insideVariable = 'string' === typeof value && value.match(/{(\w+)}/);
+                if (insideVariable && insideVariable[1] in data) {
+                    value = data[insideVariable[1]];
+                }
+                result[name] = value;
+            });
+
+        return result;
+    }
+
+    getChildren(node) {
+        if (!node) {
+            return [];
+        }
+
+        const { childNodes: children } = node;
+
+        if (!children) {
+            return [];
+        }
+
+        return children.length ? Array.from(children) : [];
+    }
+
+    visitNode(node, index, converters, data): XmlParserNode {
+        if (!node) {
+            return null;
+        }
+
+        const { tagName, nodeType } = node;
+        if (nodeType === 3 && node.nodeValue.trim().length) {
+            return node.nodeValue;
+        }
+
+        if (!tagName) {
+            return null;
+        }
+
+        const converter = converters[tagName];
+
+        if (typeof converter !== 'function') {
+            return null;
+        }
+
+        const attributes = this.getAttributes(node, data);
+        const {type, metadata, props} = converter(attributes, data);
+        const newProps = Object.assign({}, {key: index}, props);
+        newProps.metadata = metadata ?? {};
+
+        const children = this.getChildren(node);
+        const visitChildren = (child, childIndex) => this.visitNode(child, childIndex, converters, data);
+        const childElements = children.map(visitChildren).filter(child => null !== child);
+
+        return {
+            type,
+            props: newProps,
+            elements: childElements,
+        };
     }
 }
 
@@ -708,7 +712,9 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         return <TaskInstructions hideShowMoreButton expanded/>;
     }
 
-    const elementsTree = xmlToReact.convert(layoutXml);
+    const elementsTree = xmlToReact.convert(layoutXml, {
+        contextVisualizationDesiredSize: layoutProps.options.contextVisualizationDesiredSize ?? '60%',
+    });
 
     return buildZonesLayout(elementsTree, {
         directivesByZone,
