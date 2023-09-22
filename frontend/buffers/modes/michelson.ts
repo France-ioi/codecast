@@ -149,13 +149,13 @@ window.ace.define(
                 }],
                 "#annotations": [{
                     token: "entity.other.attribute-name.michelson",
-                    regex: /(?<=\s)%[A-z_0-9%@]*/
+                    regex: /(?:\s)%[A-z_0-9%@]*/
                 }, {
                     token: "entity.other.attribute-name.michelson",
-                    regex: /(?<=\s)@[A-z_0-9%]+\b/
+                    regex: /(?:\s)@[A-z_0-9%]+\b/
                 }, {
                     token: "entity.other.attribute-name.michelson",
-                    regex: /(?<=\s):[A-z_0-9]+\b/
+                    regex: /(?:\s):[A-z_0-9]+\b/
                 }]
             }
 
