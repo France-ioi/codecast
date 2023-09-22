@@ -121,6 +121,10 @@ export function StepperControls(props: StepperControlsProps) {
         );
     };
 
+    const enabledButtonsCount = ['gotoend', 'out', 'over', 'into', 'run', 'redo', 'undo', 'restart']
+        .filter(control => false !== stepperControlsState.controls[control] && '_' !== stepperControlsState.controls[control])
+        .length;
+
     const onStepRun = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
@@ -179,7 +183,7 @@ export function StepperControls(props: StepperControlsProps) {
             {_button('compile', onCompile, null, null, compileOrExecuteMessage)}
         </div>
         :
-        (<div className={`controls controls-stepper ${controlsType}`}>
+        (<div className={`controls controls-stepper ${controlsType} ${speedDisabled ? 'is-centered' : ''}`} style={speedDisabled && enabledButtonsCount <= 4 ? {gap: '20px'} : {}}>
             {showControls && <React.Fragment>
                 {(LayoutType.MobileVertical !== layoutType || !speedDisplayedState) &&
                     <React.Fragment>
