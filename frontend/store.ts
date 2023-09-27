@@ -91,6 +91,7 @@ export interface CodecastOptions {
     randomizeTestsOrder?: boolean,
     ioMode: IoMode,
     taskVariant?: string,
+    randomTaskVariants?: number,
 }
 
 export interface Panes {
