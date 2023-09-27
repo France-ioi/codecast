@@ -44,6 +44,7 @@ import {appSelect} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {LayoutView} from '../layout/layout';
 import {quickAlgoLibraries} from '../libs/quickalgo_libraries';
+import {ActionTypes} from '../../common/actionTypes';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -321,6 +322,16 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         }
     }
     yield* put(platformTaskRandomSeedUpdated(randomSeed));
+
+    const taskVariant = yield* appSelect(state => state.options.taskVariant);
+    const randomTaskVariants = yield* appSelect(state => state.options.randomTaskVariants);
+    if (undefined === taskVariant && undefined !== randomTaskVariants) {
+        const newTaskVariant = 'v' + (parseInt(randomSeed) % randomTaskVariants + 1);
+        yield* put({
+            type: ActionTypes.TaskVariantChanged,
+            payload: { variant: newTaskVariant }
+        });
+    };
 
     let level = yield* appSelect(state => state.task.currentLevel);
     if (!level) {
