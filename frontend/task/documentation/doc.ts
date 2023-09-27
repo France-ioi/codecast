@@ -200,7 +200,6 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
 
         if (DocumentationLanguage.C !== language) {
             allConcepts = window.getConceptViewerBaseConcepts(baseConceptUrl);
-            console.log('base concepts', allConcepts);
             for (let concept of context.getConceptList()) {
                 if (concept.id && -1 !== allConcepts.findIndex(otherConcept => otherConcept.id === concept.id)) {
                     allConcepts.splice(allConcepts.findIndex(otherConcept => otherConcept.id === concept.id), 1);

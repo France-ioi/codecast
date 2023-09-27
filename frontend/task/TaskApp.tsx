@@ -29,6 +29,7 @@ import {platformTaskLink} from './platform/actionTypes';
 import {ContextVisualizationImages} from './ContextVisualizationImages';
 import {TestsPane} from '../submission/TestsPane';
 import {TaskHintsDialog} from './dialog/TaskHintsDialog';
+import {DebugDialog} from './dialog/DebugDialog';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -202,6 +203,8 @@ export function TaskApp() {
             {taskSuccess && <TaskSuccessDialog onClose={closeTaskSuccess}/>}
 
             <PromptModalDialog/>
+
+            <DebugDialog/>
         </Container>
     );
 }
