@@ -37,6 +37,7 @@ import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../
 import {isServerTask, TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
+import {murmurhash3_32_gc} from '../common/utils';
 
 export const levelScoringData = {
     basic: {
@@ -56,6 +57,8 @@ export const levelScoringData = {
         scoreCoefficient: 1,
     },
 }
+
+let executionsCache = {};
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
@@ -177,9 +180,20 @@ class TaskSubmissionExecutor {
         const taskVariant = state.options.taskVariant;
         const tests = currentTask ? extractTestsFromTask(currentTask, level, taskVariant) : state.task.taskTests;
 
-        return yield new Promise<TaskSubmissionResultPayload>(resolve => {
-            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
-        });
+        const serialized = [JSON.stringify(answer), level, testId, taskVariant, JSON.stringify(tests[testId])].join('§');
+        let h1 = murmurhash3_32_gc(serialized, 0);
+        const cacheKey = h1 + murmurhash3_32_gc(h1 + serialized, 0); // Extend to 64-bit hash
+
+        if (!(cacheKey in executionsCache)) {
+            log.getLogger('tests').debug('Executions cache MISS', {level, testId, taskVariant}, cacheKey);
+            executionsCache[cacheKey] = yield new Promise<TaskSubmissionResultPayload>(resolve => {
+                backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
+            });
+        } else {
+            log.getLogger('tests').debug('Executions cache HIT', {level, testId, taskVariant}, cacheKey);
+        }
+
+        return executionsCache[cacheKey];
     }
 
     *cancelBackgroundExecution() {
