@@ -305,7 +305,7 @@ export default class BlocklyRunner extends AbstractRunner {
         })));
 
         let highlightBlock = (id, callback) => {
-            id = id ? id.toString() : '';
+            id = id ? id.toString() : null;
             // We always execute directly the first highlightBlock
             if (this.firstHighlight) {
                 this.firstHighlight = false;
