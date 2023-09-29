@@ -92,6 +92,7 @@ export interface CodecastOptions {
     ioMode: IoMode,
     taskVariant?: string,
     randomTaskVariants?: number,
+    contextVisualizationDesiredSize?: string,
 }
 
 export interface Panes {

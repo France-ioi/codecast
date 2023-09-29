@@ -109,11 +109,9 @@
   display: flex;
   align-items: center;
   width: 100%;
-  &.normal {
-    max-width: 550px;
-  }
-  &.step_by_step {
-    width: initial;
+
+  &.is-centered {
+    justify-content: center;
   }
 
   > .is-extended {
