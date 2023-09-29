@@ -52,7 +52,7 @@ export function InputOutputView() {
                         readOnly={!currentTestEditable}
                         requiredWidth='100%'
                         requiredHeight='150px'
-                        editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
+                        editorProps={{...(!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions), infoHighlight: consumedHighlight}}
                     />
 
                     {/*{taskState && !taskState.unknownInput ?*/}

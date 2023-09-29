@@ -52,7 +52,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     const dispatch = useDispatch();
 
     const bufferType = 'source' === buffer && hasBlockPlatform(platform) ? BufferType.Block : BufferType.Text;
-    const highlight = useAppSelector(getSourceHighlightFromStateSelector);
+    const highlight = 'source' === buffer ? useAppSelector(getSourceHighlightFromStateSelector) : null;
 
     useEffect(() => {
         if ((width !== prevWidth || height !== prevHeight) && width && height) {
