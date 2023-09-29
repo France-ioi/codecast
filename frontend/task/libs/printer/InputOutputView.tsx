@@ -26,8 +26,6 @@ export function InputOutputView() {
     const currentTest = useAppSelector(selectCurrentTest);
     const currentTestEditable = !currentTask || (currentTest && TaskTestGroupType.User === currentTest.groupType);
 
-    console.log('current test', {currentTest})
-
     const taskState: PrinterLibState = useAppSelector(state => state.task.state?.printer);
     const libOutput = PrinterLib.getOutputTextFromEvents(taskState ? taskState.ioEvents : []);
     const libExpectedOutput = taskState ? taskState.expectedOutput : '';
@@ -57,24 +55,24 @@ export function InputOutputView() {
                         editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
                     />
 
-                    {taskState && !taskState.unknownInput ?
-                        <Editor
-                            name="printer_input"
-                            content={taskState ? consumedInput + taskState.initial : ''}
-                            readOnly
-                            mode='text'
-                            width='100%'
-                            height='100px'
-                            hideCursor
-                            highlightActiveLine={false}
-                            dragEnabled={false}
-                            infoHighlight={consumedHighlight}
-                        />
-                        :
-                        <InputEmptyState
-                            text={getMessage("IOPANE_UNKNOWN_INPUT")}
-                        />
-                    }
+                    {/*{taskState && !taskState.unknownInput ?*/}
+                    {/*    <Editor*/}
+                    {/*        name="printer_input"*/}
+                    {/*        content={taskState ? consumedInput + taskState.initial : ''}*/}
+                    {/*        readOnly*/}
+                    {/*        mode='text'*/}
+                    {/*        width='100%'*/}
+                    {/*        height='100px'*/}
+                    {/*        hideCursor*/}
+                    {/*        highlightActiveLine={false}*/}
+                    {/*        dragEnabled={false}*/}
+                    {/*        infoHighlight={consumedHighlight}*/}
+                    {/*    />*/}
+                    {/*    :*/}
+                    {/*    <InputEmptyState*/}
+                    {/*        text={getMessage("IOPANE_UNKNOWN_INPUT")}*/}
+                    {/*    />*/}
+                    {/*}*/}
                 </Card.Body>
             </Card>
             {currentTask && <Card>
@@ -92,23 +90,23 @@ export function InputOutputView() {
                         editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
                     />
 
-                    {taskState && !taskState.unknownOutput ?
-                        <Editor
-                            name="test_output"
-                            content={libExpectedOutput ? libExpectedOutput : ''}
-                            readOnly
-                            mode='text'
-                            width='100%'
-                            height='100px'
-                            hideCursor
-                            highlightActiveLine={false}
-                            dragEnabled={false}
-                        />
-                        :
-                        <InputEmptyState
-                            text={getMessage("IOPANE_UNKNOWN_OUTPUT")}
-                        />
-                    }
+                    {/*{taskState && !taskState.unknownOutput ?*/}
+                    {/*    <Editor*/}
+                    {/*        name="test_output"*/}
+                    {/*        content={libExpectedOutput ? libExpectedOutput : ''}*/}
+                    {/*        readOnly*/}
+                    {/*        mode='text'*/}
+                    {/*        width='100%'*/}
+                    {/*        height='100px'*/}
+                    {/*        hideCursor*/}
+                    {/*        highlightActiveLine={false}*/}
+                    {/*        dragEnabled={false}*/}
+                    {/*    />*/}
+                    {/*    :*/}
+                    {/*    <InputEmptyState*/}
+                    {/*        text={getMessage("IOPANE_UNKNOWN_OUTPUT")}*/}
+                    {/*    />*/}
+                    {/*}*/}
                 </Card.Body>
             </Card>}
             <Card>

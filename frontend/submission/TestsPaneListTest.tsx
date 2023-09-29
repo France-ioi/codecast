@@ -137,7 +137,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
             </div>}
             <span className="submission-result-test-title">{test.shortName ?? test.name}</span>
             {!!(props.submission && props.submission.result) && <span className="submission-result-test-result">{message}</span>}
-            {TaskTestGroupType.User === test.groupType && !props.submission && <span className="submission-result-test-delete" onClick={deleteTest}>
+            {TaskTestGroupType.User === test.groupType && <span className="submission-result-test-delete" onClick={deleteTest}>
                 <FontAwesomeIcon icon={faTrash}/>
             </span>}
         </div>

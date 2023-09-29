@@ -100,6 +100,15 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
         if (result.evaluated) {
             for (let test of result.tests) {
                 test.score = test.score / 100;
+
+                // If the test has a clientId, change the id of the test to use the client id
+                if (test?.test?.clientId) {
+                    const userTest = state.task.taskTests.find(otherTest => otherTest.id === test.test.clientId);
+                    if (userTest) {
+                        test.test.id = userTest.id;
+                        test.testId = userTest.id;
+                    }
+                }
             }
 
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result}}));

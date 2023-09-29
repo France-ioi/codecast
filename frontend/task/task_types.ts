@@ -192,6 +192,7 @@ export interface TaskTestServer {
     name: string,
     input: string,
     output: string,
+    clientId?: string | null,
 }
 
 export interface TaskServer extends TaskNormalized {

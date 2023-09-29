@@ -207,6 +207,11 @@ export default function (bundle: Bundle) {
             const taskTests = yield* appSelect(selectTaskTests);
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
 
+            const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
+            if (null !== currentSubmissionId) {
+                yield* put(submissionChangeCurrentSubmissionId({submissionId: null}));
+            }
+
             if (null === currentTestId || !(currentTestId in taskTests)) {
                 const level = yield* appSelect(state => state.task.currentLevel);
 
@@ -255,6 +260,11 @@ export default function (bundle: Bundle) {
             }
 
             yield* put(updateCurrentTestId({testId: currentTestId}));
+
+            const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
+            if (null !== currentSubmissionId) {
+                yield* put(submissionChangeCurrentSubmissionId({submissionId: null}));
+            }
 
             const removedTest = taskTests[testIndex];
 

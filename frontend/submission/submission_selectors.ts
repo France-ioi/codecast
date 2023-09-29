@@ -12,9 +12,21 @@ export const selectTaskTests = memoize<AppStore, TaskTest[]>((state: AppStore) =
         if (TaskSubmissionMode.UserTest === submission?.result?.mode) {
             const submissionUserTests = [];
             if (submission && submission?.result?.tests) {
-                for (let test of submission.result.tests) {
-                    if (test.test) {
-                        submissionUserTests.push(mapServerTestToTaskTest(test.test));
+                for (let testResult of submission.result.tests) {
+                    if (testResult.test) {
+                        const test = testResult.test;
+                        let hasUserTest = false;
+                        if (test.clientId) {
+                            const userTest = taskLevelsTests.find(otherTest => otherTest.id === test.clientId);
+                            if (userTest) {
+                                hasUserTest = true;
+                                submissionUserTests.push(userTest);
+                            }
+                        }
+
+                        if (!hasUserTest) {
+                            submissionUserTests.push(mapServerTestToTaskTest(test));
+                        }
                     }
                 }
             }
