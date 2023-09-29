@@ -90,7 +90,7 @@ export interface CodecastOptions {
     allowExecutionOverBlocksLimit?: boolean,
     randomizeTestsOrder?: boolean,
     ioMode: IoMode,
-    taskVariant?: string,
+    taskVariant?: number,
     randomTaskVariants?: number,
     contextVisualizationDesiredSize?: string,
 }

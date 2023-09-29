@@ -40,11 +40,14 @@ const defaultInstructionsHtml = `
   <span data-lang="blockly scratch">Boucle de répétition</span>
   <span data-lang="python">Boucle for</span></a>
 </p>
-<p class="variant_v1">
-    Uniquement variante v1
+<p class="variant_1">
+    Uniquement variante 1
 </p>
-<p class="variant_v2">
-    Uniquement variante v2
+<p class="variant_2">
+    Uniquement variante 2
+</p>
+<p class="variant_1 variant_2">
+    Variante 1 et variante 2
 </p>
 <p class="long">
     Plus de détails sur la mission
