@@ -103,8 +103,11 @@ export class SmartContractLib extends QuickAlgoLibrary {
 
     getErrorFromTestResult(testResult: TaskSubmissionServerTestResult): LibraryTestResult {
         try {
-            const logLastLine = testResult.log.trim().split("\n").pop();
-            const output = JSON.parse(logLastLine);
+            const testResultSplit = testResult.log.trim().split("\n");
+            const jsonFirstIndex = testResultSplit.findIndex(line => line.trim().startsWith('{'));
+            const testResultJson = testResultSplit.slice(jsonFirstIndex).join("\n");
+
+            const output = JSON.parse(testResultJson);
             if (!output.error?.message) {
                 return null;
             }

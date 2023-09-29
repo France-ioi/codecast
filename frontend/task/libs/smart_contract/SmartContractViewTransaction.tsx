@@ -91,11 +91,6 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                     <div className="smart-contract-scalar__value">{log.arg}</div>
                 </div>}
 
-                {/*{wrongExpectedStorage &&*/}
-                {/*    <div className="smart-contract-error mt-2">*/}
-                {/*        <strong>Error, wrong expected storage:</strong>*/}
-                {/*    </div>*/}
-                {/*}*/}
 
                 {undefined !== transactionStorage && <div className={`smart-contract-log__storage smart-contract-scalar ${wrongExpectedStorage ? 'is-wrong' : ''}`}>
                     <div className="smart-contract-scalar__header">
@@ -109,14 +104,13 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                 </div>}
 
                 {wrongExpectedStorage && <div>
-                    <div className="smart-contract-log__storage smart-contract-scalar is-right">
-                        <div className="smart-contract-scalar__header">
-                            <FontAwesomeIcon icon={faCheck} className="mr-1"/>
-                            Expected storage
-                            {undefined !== log.expected.storage_size ? ` (${log.expected.storage_size} bits)` : ''}
-                        </div>
-                        <div className="smart-contract-scalar__value">
-                            <div>{getDisplayedStorage(expectedStorage)}</div>
+                    <div className="smart-contract-error mt-2">
+                        <strong>Error, wrong storage. Expected storage was:</strong>
+
+                        <div className="smart-contract-log__storage smart-contract-scalar">
+                            <div className="smart-contract-scalar__value">
+                                <div>{getDisplayedStorage(expectedStorage)}</div>
+                            </div>
                         </div>
                     </div>
                 </div>}

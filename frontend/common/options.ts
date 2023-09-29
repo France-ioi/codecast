@@ -88,7 +88,7 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
         options.levels = query.level.split(',') || null;
     }
     if ('variant' in query) {
-        options.taskVariant = query.variant || null;
+        options.taskVariant = Number(query.variant) || null;
     }
     if ('theme' in query) {
         options.theme = query.theme || null;
@@ -168,6 +168,11 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.CanChangePlatformChanged);
     bundle.addReducer(ActionTypes.CanChangePlatformChanged, (state, {payload: {canChangePlatform}}) => {
         state.options.canChangePlatform = canChangePlatform;
+    });
+
+    bundle.defineAction(ActionTypes.TaskVariantChanged);
+    bundle.addReducer(ActionTypes.TaskVariantChanged, (state, { payload: { variant } }) => {
+        state.options.taskVariant = variant;
     });
 
     bundle.addSaga(function* () {

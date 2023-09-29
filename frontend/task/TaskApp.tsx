@@ -29,6 +29,7 @@ import {platformTaskLink} from './platform/actionTypes';
 import {ContextVisualizationImages} from './ContextVisualizationImages';
 import {TestsPane} from '../submission/TestsPane';
 import {TaskHintsDialog} from './dialog/TaskHintsDialog';
+import {DebugDialog} from './dialog/DebugDialog';
 import {LayoutView} from './layout/layout_types';
 
 export function TaskApp() {
@@ -206,6 +207,8 @@ export function TaskApp() {
             {taskSuccess && <TaskSuccessDialog onClose={closeTaskSuccess}/>}
 
             <PromptModalDialog/>
+
+            <DebugDialog/>
         </Container>
     );
 }

@@ -4,7 +4,7 @@
             <Instructions/>
             <Variables/>
         </ZoneLayout>
-        <ZoneLayout name="center-left" desiredSize="60%">
+        <ZoneLayout name="center-left" desiredSize="{contextVisualizationDesiredSize}">
             <ContextVisualization/>
         </ZoneLayout>
         <ZoneLayout name="bottom-left"/>

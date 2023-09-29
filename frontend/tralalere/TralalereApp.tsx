@@ -32,6 +32,7 @@ import {DebugLibView} from '../task/libs/debug/DebugLibView';
 import {toHtml} from '../utils/sanitize';
 import {getTaskSuccessMessageSelector} from '../task/instructions/instructions';
 import {InstructionsContext} from '../contexts';
+import {DebugDialog} from '../task/dialog/DebugDialog';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -335,6 +336,8 @@ export function TralalereApp() {
 
                 </TralalereBox>
             </Dialog>
+
+            <DebugDialog/>
         </Container>
     );
 }

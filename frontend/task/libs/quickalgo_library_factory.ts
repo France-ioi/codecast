@@ -164,7 +164,10 @@ export function* createQuickalgoLibrary() {
     yield* put(taskIncreaseContextId());
     yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
-        yield* put(taskSetContextIncludeBlocks({...context.infos.includeBlocks}));
+        // Don't freeze any objet inside context.infos.includeBlocks because
+        // these objects can be modified by blockly_blocks.js,
+        // for example for Scratch: `tsiSingleBlocks = this.blocksToScratch(tsiSingleBlocks);`
+        yield* put(taskSetContextIncludeBlocks(JSON.parse(JSON.stringify(context.infos.includeBlocks))));
     }
     if (context.infos && context.infos.panelCollapsed) {
         yield* put(taskSetBlocksPanelCollapsed({collapsed: false, manual: true}));

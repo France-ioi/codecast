@@ -47,6 +47,7 @@ import {levelScoringData} from '../../submission/scoring';
 import {Codecast} from '../../app_types';
 import {Document} from '../../buffers/buffer_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {ActionTypes} from '../../common/actionTypes';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -324,6 +325,16 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         }
     }
     yield* put(platformTaskRandomSeedUpdated(randomSeed));
+
+    const taskVariant = yield* appSelect(state => state.options.taskVariant);
+    const randomTaskVariants = yield* appSelect(state => state.options.randomTaskVariants);
+    if (undefined === taskVariant && undefined !== randomTaskVariants) {
+        const newTaskVariant = 'v' + (parseInt(randomSeed) % randomTaskVariants + 1);
+        yield* put({
+            type: ActionTypes.TaskVariantChanged,
+            payload: { variant: newTaskVariant }
+        });
+    };
 
     let level = yield* appSelect(state => state.task.currentLevel);
     if (!level) {

@@ -74,6 +74,11 @@ html {
   font-size: 18px;
 }
 
+body {
+  // Override any fixed width as in the Bebras platform
+  width: auto !important;
+}
+
 html:not([active-view="task"]) {
   height: 100%;
   body {

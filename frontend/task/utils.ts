@@ -85,7 +85,7 @@ export function getParamNames(func) {
     return null === result ? [] : result;
 }
 
-export function extractVariantSpecific(item: any, variant: string, level?: TaskLevelName): any {
+export function extractVariantSpecific(item: any, variant: number, level?: TaskLevelName): any {
     if (typeof item === 'function') {
         const params = getParamNames(item);
         if (-1 === params.indexOf('variant')) {
@@ -196,7 +196,7 @@ export function getCurrentImmerState(object) {
     return isDraft(object) ? current(object) : object;
 }
 
-export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName, taskVariant?: string) {
+export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName, taskVariant?: number) {
     const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
     for (let availablePlatform of Object.keys(platformsList)) {
         if (platform !== availablePlatform) {

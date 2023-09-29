@@ -3,21 +3,23 @@ import {getMessage} from '../lang';
 import {extractVariantSpecific} from '../task/utils';
 import {TaskLevelName} from '../task/platform/platform_slice';
 
-export function extractTestsFromTask(task: Task, variant: string = null): TaskTest[] {
+export function extractTestsFromTask(task: Task, variant: number = null): TaskTest[] {
     const tests = getTestsFromTask(task, variant);
     nameTaskTests(tests, task);
 
     return tests;
 }
 
-function getTestsFromTask(task: Task, taskVariant: string = null): TaskTest[] {
+function getTestsFromTask(task: Task, taskVariant: number = null): TaskTest[] {
     if (task.data) {
         let tests = [];
         let testId = 0;
         for (let [level, levelTests] of Object.entries<any>(task.data)) {
-            for (let data of levelTests) {
+            const realLevelTests = null !== taskVariant && undefined !== taskVariant ? extractVariantSpecific(levelTests, taskVariant, level as TaskLevelName) : levelTests;
+
+            for (let data of realLevelTests) {
                 tests.push({
-                    data: null !== taskVariant && undefined !== taskVariant ? extractVariantSpecific(data, taskVariant, level as TaskLevelName) : data,
+                    data,
                     level,
                     contextState: null,
                     id: String(testId),

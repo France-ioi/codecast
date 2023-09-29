@@ -1,7 +1,6 @@
 import {apply, call, put, race, spawn} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
-import React from "react";
 import {
     platformApi,
     PlatformTaskGradingParameters,
@@ -42,6 +41,9 @@ import {
 import {Codecast} from '../app_types';
 import {Document} from '../buffers/buffer_types';
 import {documentToString} from '../buffers/document';
+import {murmurhash3_32_gc} from '../common/utils';
+
+let executionsCache = {};
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
@@ -161,10 +163,22 @@ class TaskSubmissionExecutor {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
         const tests = state.task.taskTests;
+        const taskVariant = state.options.taskVariant;
 
-        return yield new Promise<TaskSubmissionResultPayload>(resolve => {
-            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
-        });
+        const serialized = [JSON.stringify(answer), level, testId, taskVariant, JSON.stringify(tests[testId])].join('§');
+        let h1 = murmurhash3_32_gc(serialized, 0);
+        const cacheKey = h1 + murmurhash3_32_gc(h1 + serialized, 0); // Extend to 64-bit hash
+
+        if (!(cacheKey in executionsCache)) {
+            log.getLogger('tests').debug('Executions cache MISS', {level, testId, taskVariant}, cacheKey);
+            executionsCache[cacheKey] = yield new Promise<TaskSubmissionResultPayload>(resolve => {
+                backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
+            });
+        } else {
+            log.getLogger('tests').debug('Executions cache HIT', {level, testId, taskVariant}, cacheKey);
+        }
+
+        return executionsCache[cacheKey];
     }
 
     *cancelBackgroundExecution() {
