@@ -1,5 +1,5 @@
 import {Bundle} from "../linker";
-import {call, put, takeEvery} from "typed-redux-saga";
+import {call, delay, put, race, take, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {platformApi} from "../task/platform/platform";
 import {appSelect} from '../hooks';
@@ -10,7 +10,7 @@ import {
 } from '../task/libs/quickalgo_libraries';
 import {
     submissionChangeCurrentSubmissionId,
-    submissionChangeDisplayedError,
+    submissionChangeDisplayedError, submissionCloseCurrentSubmission,
     SubmissionErrorType,
     SubmissionExecutionScope,
     submissionSlice,
@@ -40,19 +40,25 @@ import {App} from '../app_types';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {testErrorCodeData} from './TestsPaneListTest';
 import {LibraryTestResult} from '../task/libs/library_test_result';
+import {onEditSource} from '../task';
+import {ActionTypes} from '../recorder/actionTypes';
 
 export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
     return TaskSubmissionEvaluateOn.Server === object.type;
 }
 
 export function selectCurrentServerSubmission(state: AppStore) {
+    const currentSubmission= selectCurrentSubmission(state);
+
+    return null !== currentSubmission && TaskSubmissionEvaluateOn.Server === currentSubmission.type ? currentSubmission : null;
+}
+
+export function selectCurrentSubmission(state: AppStore): TaskSubmission|null {
     if (null === state.submission.currentSubmissionId) {
         return null;
     }
 
-    const currentSubmission = state.submission.taskSubmissions[state.submission.currentSubmissionId];
-
-    return TaskSubmissionEvaluateOn.Server === currentSubmission.type ? currentSubmission : null;
+    return state.submission.taskSubmissions[state.submission.currentSubmissionId];
 }
 
 export interface TestResultDiffLog {
@@ -116,7 +122,7 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(submissionChangeCurrentSubmissionId, function* ({payload: {withoutTestChange}}) {
+        yield* takeEvery([submissionChangeCurrentSubmissionId, submissionCloseCurrentSubmission], function* ({payload}) {
             const submissionId = yield* appSelect(state => state.submission.currentSubmissionId);
             if (null === submissionId) {
                 yield* call(quickAlgoLibraryResetAndReloadStateSaga);
@@ -127,7 +133,7 @@ export default function (bundle: Bundle) {
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
             if (currentTestId > taskTests.length - 1) {
                 yield* put(updateCurrentTestId({testId: taskTests.length ? 0 : null, record: false}));
-            } else if (!withoutTestChange) {
+            } else if (!(payload && payload.withoutTestChange)) {
                 yield* put(updateCurrentTestId({testId: currentTestId, record: false}));
             }
         });
@@ -155,10 +161,13 @@ export default function (bundle: Bundle) {
             const answer = yield* appSelect(selectAnswer);
             const level = yield* appSelect(state => state.task.currentLevel);
 
-            yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer],{
-                level,
-                answer,
-                scope: SubmissionExecutionScope.MyTests,
+            yield* race({
+                grade: call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer],{
+                    level,
+                    answer,
+                    scope: SubmissionExecutionScope.MyTests,
+                }),
+                submissionChanged: take([submissionCloseCurrentSubmission]),
             });
         });
 
@@ -207,10 +216,7 @@ export default function (bundle: Bundle) {
             const taskTests = yield* appSelect(selectTaskTests);
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
 
-            const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
-            if (null !== currentSubmissionId) {
-                yield* put(submissionChangeCurrentSubmissionId({submissionId: null}));
-            }
+            yield* call(onEditSource);
 
             if (null === currentTestId || !(currentTestId in taskTests)) {
                 const level = yield* appSelect(state => state.task.currentLevel);
@@ -261,10 +267,7 @@ export default function (bundle: Bundle) {
 
             yield* put(updateCurrentTestId({testId: currentTestId}));
 
-            const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
-            if (null !== currentSubmissionId) {
-                yield* put(submissionChangeCurrentSubmissionId({submissionId: null}));
-            }
+            yield* call(onEditSource);
 
             const removedTest = taskTests[testIndex];
 

@@ -85,9 +85,8 @@ import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {convertServerTaskToCodecastFormat, getTaskFromId} from "../submission/task_platform";
 import {
-    submissionChangeCurrentSubmissionId,
     submissionChangePaneOpen,
-    submissionChangePlatformName,
+    submissionChangePlatformName, submissionCloseCurrentSubmission, SubmissionExecutionScope,
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
 import {selectTaskTests} from '../submission/submission_selectors';
@@ -104,7 +103,7 @@ import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
-import {isServerSubmission, selectCurrentServerSubmission} from '../submission/submission';
+import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmission} from '../submission/submission';
 import {bufferEdit, bufferEditPlain, bufferResetDocument} from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 
@@ -487,7 +486,7 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
 
     const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
     if (null !== currentSubmissionId) {
-        yield* put(submissionChangeCurrentSubmissionId({submissionId: null}));
+        yield* put(submissionCloseCurrentSubmission());
     }
     yield* put(taskSuccessClear({record: false}));
 
@@ -666,7 +665,7 @@ function* watchRecordingProgressSaga(app: App) {
     }
 }
 
-function* onEditSource() {
+export function* onEditSource() {
     const needsReset = yield* appSelect(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground);
     log.getLogger('task').debug('needs reset', needsReset);
     if (needsReset) {
@@ -674,10 +673,11 @@ function* onEditSource() {
         yield* put({type: StepperActionTypes.StepperExit});
     }
 
-    // const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
-    // if (null !== currentSubmissionId) {
-    // yield* put(submissionChangeCurrentSubmissionId(null));
-    // }
+    // Cancel submission if it's not a Submit
+    const currentSubmission = yield* appSelect(selectCurrentSubmission);
+    if (null !== currentSubmission && SubmissionExecutionScope.Submit !== currentSubmission.scope) {
+        yield* put(submissionCloseCurrentSubmission());
+    }
 
     const currentError = yield* appSelect(state => state.stepper.error);
     if (null !== currentError) {
@@ -879,7 +879,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(StepperActionTypes.Compile, function*({payload}) {
             log.getLogger('task').debug('stepper restart, create new submission');
             if (!payload.keepSubmission) {
-                yield* put(submissionChangeCurrentSubmissionId({submissionId: null}));
+                yield* put(submissionCloseCurrentSubmission());
             }
         });
 

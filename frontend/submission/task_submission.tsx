@@ -1,4 +1,4 @@
-import {apply, call, put, race, spawn} from "typed-redux-saga";
+import {apply, call, cancel, cancelled, put, race, spawn} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
 import {
@@ -233,6 +233,7 @@ class TaskSubmissionExecutor {
 
         yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
 
+        let longPollingTask;
         try {
             const submissionData = yield* makeServerSubmission(answerContent, newTaskToken, answerToken, platform, userTests);
             if (!submissionData.success) {
@@ -244,7 +245,7 @@ class TaskSubmissionExecutor {
             const submissionId = submissionData.submissionId;
 
             const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
-            yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
+            longPollingTask = yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
 
             const outcome = yield* race({
                 result: call(() => deferredPromise.promise),
@@ -284,6 +285,13 @@ class TaskSubmissionExecutor {
 
             return {
                 error: message,
+            }
+        } finally {
+            if (yield* cancelled()) {
+                if (longPollingTask) {
+                    yield* cancel(longPollingTask);
+                }
+                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
             }
         }
     }

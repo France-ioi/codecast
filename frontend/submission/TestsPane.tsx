@@ -5,7 +5,7 @@ import {TestsPaneList} from './TestsPaneList';
 import {Dropdown} from 'react-bootstrap';
 import {
     submissionChangeCurrentSubmissionId,
-    submissionChangePaneOpen, SubmissionExecutionScope,
+    submissionChangePaneOpen, submissionCloseCurrentSubmission, SubmissionExecutionScope,
 } from './submission_slice';
 import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
@@ -68,7 +68,7 @@ export function TestsPane(props: TestsPaneProps) {
             e.preventDefault();
             e.stopPropagation();
             setDropdownOpen(false);
-            dispatch(submissionChangeCurrentSubmissionId({submissionId: null}));
+            dispatch(submissionCloseCurrentSubmission());
         } else {
             const submissionIndex = submissionResults.findIndex(otherSubmission => otherSubmission === submission);
             dispatch(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));

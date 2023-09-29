@@ -9,7 +9,7 @@ import {selectTaskTests} from './submission_selectors';
 import {TaskSubmissionServer} from './submission_types';
 import {getMessage} from '../lang';
 import {faPlus} from '@fortawesome/free-solid-svg-icons/faPlus';
-import {submissionChangeCurrentSubmissionId} from './submission_slice';
+import {submissionCloseCurrentSubmission} from './submission_slice';
 import {submissionCreateTest} from './submission_actions';
 import {useDispatch} from 'react-redux';
 import {TaskTestGroupType} from '../task/task_types';
@@ -51,7 +51,7 @@ export function TestsPaneListUserTests(props: SubmissionResultSubTaskProps) {
 
     const createNewTest = () => {
         if (props.submission) {
-            dispatch(submissionChangeCurrentSubmissionId({submissionId: null}));
+            dispatch(submissionCloseCurrentSubmission());
         }
         dispatch(submissionCreateTest());
     };

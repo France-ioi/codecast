@@ -75,6 +75,9 @@ export const submissionSlice = createSlice({
         submissionChangeCurrentSubmissionId(state, action: PayloadAction<{submissionId: number, withoutTestChange?: boolean}>) {
             state.currentSubmissionId = action.payload.submissionId;
         },
+        submissionCloseCurrentSubmission(state) {
+            state.currentSubmissionId = null;
+        },
         submissionChangeDisplayedError(state, action: PayloadAction<SubmissionErrorType>) {
             state.submissionDisplayedError = action.payload;
         },
@@ -91,6 +94,7 @@ export const {
     submissionStartExecutingTest,
     submissionSetTestResult,
     submissionChangeDisplayedError,
+    submissionCloseCurrentSubmission,
 } = submissionSlice.actions;
 
 export default submissionSlice;
