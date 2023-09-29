@@ -4,17 +4,19 @@ import {TaskTestServer} from './task_platform';
 import {getMessage} from '../lang';
 import {extractVariantSpecific} from '../task/utils';
 
-export function extractTestsFromTask(task: Task, level: TaskLevelName, variant: string = null): TaskTest[] {
+export function extractTestsFromTask(task: Task, level: TaskLevelName, variant: number = null): TaskTest[] {
     const tests = getTestsFromTask(task, level, variant);
     nameTaskTests(tests, task);
 
     return tests;
 }
 
-function getTestsFromTask(task: Task, level: TaskLevelName, taskVariant: string = null): TaskTest[] {
+function getTestsFromTask(task: Task, level: TaskLevelName, taskVariant: number = null): TaskTest[] {
     if (task.data) {
-        return task.data[level].map((data, testId) => ({
-            data: null !== taskVariant && undefined !== taskVariant ? extractVariantSpecific(data, taskVariant, level) : data,
+        const taskData = null !== taskVariant && undefined !== taskVariant ? extractVariantSpecific(task.data[level], taskVariant, level) : task.data[level];
+
+        return taskData.map((data, testId) => ({
+            data,
             contextState: null,
             id: String(testId),
         }));

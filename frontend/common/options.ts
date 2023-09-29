@@ -85,7 +85,7 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
         options.levels = query.level.split(',') || null;
     }
     if ('variant' in query) {
-        options.taskVariant = query.variant || null;
+        options.taskVariant = Number(query.variant) || null;
     }
     if ('theme' in query) {
         options.theme = query.theme || null;
