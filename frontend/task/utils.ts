@@ -181,7 +181,9 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
             return content;
         }
     } else if (hasBlockPlatform(platform)) {
-        if (context) {
+        if (context?.infos?.startingExample && platform in context?.infos?.startingExample) {
+            return {blockly: context.infos.startingExample[platform]};
+        } else if (context?.blocklyHelper) {
             return {blockly: context.blocklyHelper.getDefaultContent()};
         } else {
             return null;
