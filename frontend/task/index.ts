@@ -596,7 +596,7 @@ function* getTestContextState() {
     if (null !== submission && isServerSubmission(submission) && submission.evaluated) {
         const testResult = submission.result.tests.find(test => test.testId === newTest.id);
         const context = quickAlgoLibraries.getContext(null, state.environment);
-        if (undefined !== testResult && !testResult.noFeedback && context.getContextStateFromTestResult) {
+        if (undefined !== testResult && context.getContextStateFromTestResult) {
             const contextState = context.getContextStateFromTestResult(testResult, newTest);
             if (contextState) {
                 return {contextState: {[quickAlgoLibraries.getMainContextName(state.environment)]: contextState}};
@@ -610,7 +610,7 @@ function* getTestContextState() {
     };
 }
 
-function* getTaskAnswer () {
+function* getTaskAnswer() {
     const state = yield* appSelect();
     const taskPlatformMode = getTaskPlatformMode(state);
 
@@ -665,7 +665,7 @@ function* watchRecordingProgressSaga(app: App) {
     }
 }
 
-export function* onEditSource() {
+export function* onEditSource(origin?: string) {
     const needsReset = yield* appSelect(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground);
     log.getLogger('task').debug('needs reset', needsReset);
     if (needsReset) {
@@ -684,14 +684,15 @@ export function* onEditSource() {
         yield* put(stepperClearError());
     }
 
-    const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
-
-    const state = yield* appSelect();
-    if (state.task.blocksPanelCollapsed === blocksPanelWasOpen) {
-        yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
-    }
-    if (false !== state.submission.submissionsPaneOpen) {
-        yield* put(submissionChangePaneOpen(false));
+    if ('test' !== origin) {
+        const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
+        const state = yield* appSelect();
+        if (state.task.blocksPanelCollapsed === blocksPanelWasOpen) {
+            yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
+        }
+        if (false !== state.submission.submissionsPaneOpen) {
+            yield* put(submissionChangePaneOpen(false));
+        }
     }
 }
 

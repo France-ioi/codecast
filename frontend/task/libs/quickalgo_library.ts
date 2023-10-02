@@ -328,6 +328,8 @@ export abstract class QuickAlgoLibrary {
 
     getContextStateFromTestResult?(testResult: TaskSubmissionServerTestResult, test: TaskTest): any|null;
 
+    hasFeedback?(): boolean;
+
     getSupportedPlatforms(): string[] {
         return [
             CodecastPlatform.Blockly,
@@ -346,6 +348,10 @@ export abstract class QuickAlgoLibrary {
 
     supportsCustomTests(): boolean {
         return false;
+    }
+
+    getDefaultEmptyTest() {
+        return null;
     }
 }
 

@@ -2,6 +2,8 @@ import {Task, TaskTest, TaskTestServer} from '../task/task_types';
 import {getMessage} from '../lang';
 import {extractVariantSpecific} from '../task/utils';
 import {TaskLevelName} from '../task/platform/platform_slice';
+import {SubmissionTestErrorCode, TaskSubmissionServerTestResult, TaskSubmissionTestResult} from './submission_types';
+import {testErrorCodeData} from './TestsPaneListTest';
 
 export function extractTestsFromTask(task: Task, variant: number = null): TaskTest[] {
     const tests = getTestsFromTask(task, variant);
@@ -96,3 +98,20 @@ function nameTaskTests(taskTests: TaskTest[], task: Task): void {
     }
 }
 
+export function getTestResultMessage(testResult: TaskSubmissionTestResult) {
+    const errorCodeData = testResult ? testErrorCodeData[testResult.errorCode] : null;
+    const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;
+    let message = errorCodeData.message;
+    const time = Math.floor((testResult as TaskSubmissionServerTestResult).timeMs / 10) / 100;
+    if (hasRelativeScore) {
+        message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
+    } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
+        message = getMessage('SUBMISSION_RESULT_VALIDATED').format({time});
+    } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
+        message = getMessage('SUBMISSION_RESULT_INCORRECT').format({time});
+    } else if (message) {
+        message = getMessage(message);
+    }
+
+    return message;
+}

@@ -17,6 +17,7 @@ import {Button} from '@blueprintjs/core';
 import {selectSubmissionsPaneEnabled, selectTaskTests} from '../submission/submission_selectors';
 import {TaskSubmissionServerTestResult} from '../submission/submission_types';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
+import {TestResultVisualization} from '../submission/TestResultVisualization';
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
@@ -53,7 +54,7 @@ export function ContextVisualization() {
     };
 
     const testsSelectorEnabled = submissionPaneEnabled;
-    const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
+    const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
 
     const submission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
     let currentTestResult: TaskSubmissionServerTestResult|null = null;
@@ -101,10 +102,14 @@ export function ContextVisualization() {
                 {getMessage('TASK_VISUALIZATION_NOT_EVALUATED_EVALUATION')}
             </div>;
         }
-    } else if (currentTestResult && currentTestResult.noFeedback) {
-        innerVisualization = <div className="task-visualization-not-public">
-            {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
-        </div>;
+    // } else if (currentTestResult && currentTestResult.noFeedback) {
+    //     innerVisualization = <div className="task-visualization-not-public">
+    //         {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
+    //     </div>;
+    } else if (currentTestResult && context && context.hasFeedback && !context.hasFeedback()) {
+        innerVisualization = <TestResultVisualization
+            testResult={currentTestResult}
+        />;
     } else if (!currentTask || currentTestPublic || (currentTestResult && !currentTestResult.noFeedback)) {
         innerVisualization = <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
             {Visualization ? <Visualization/> :

@@ -17,6 +17,7 @@ import {SubmissionTestErrorCode, TaskSubmission, TaskSubmissionServerTestResult}
 import {submissionRemoveTest} from './submission_actions';
 import {call} from 'typed-redux-saga';
 import {askConfirmation} from '../alert';
+import {getTestResultMessage} from './tests';
 
 export interface SubmissionResultTestProps {
     index: number,
@@ -86,25 +87,14 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const testResult = props.submission && props.submission.result ? props.submission.result.tests.find(otherTest => otherTest.testId === test.id) : null;
     const testIndex = useAppSelector(state => selectTaskTests(state).findIndex(otherTest => otherTest.id === test.id));
 
-    const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;
     const submissionDisplayError = useAppSelector(state => state.submission.submissionDisplayedError);
 
-    const errorCodeData = testResult? testErrorCodeData[testResult.errorCode] : null;
+    const errorCodeData = testResult ? testErrorCodeData[testResult.errorCode] : null;
 
     let message;
     if (props.submission && isServerSubmission(props.submission)) {
         if (testResult) {
-            message = errorCodeData.message;
-            const time = Math.floor((testResult as TaskSubmissionServerTestResult).timeMs/10)/100;
-            if (hasRelativeScore) {
-                message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
-            } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
-                message = getMessage('SUBMISSION_RESULT_VALIDATED').format({time});
-            } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
-                message = getMessage('SUBMISSION_RESULT_INCORRECT').format({time});
-            } else if (message) {
-                message = getMessage(message);
-            }
+            message = getTestResultMessage(testResult);
         } else {
             message = getMessage('SUBMISSION_RESULT_NOT_EVALUATED');
         }

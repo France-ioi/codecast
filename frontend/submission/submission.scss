@@ -358,3 +358,20 @@
     border-radius: 4px;
   }
 }
+
+.test-result-visualization {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 100px;
+  padding: 15px;
+  .submission-result-icon-container {
+    height: 40px;
+    width: 40px;
+    font-size: 24px;
+  }
+  .test-result-visualization-text {
+    margin-top: 10px;
+  }
+}

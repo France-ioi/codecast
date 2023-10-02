@@ -194,10 +194,13 @@ export default function (bundle: Bundle) {
 
             const newTestId = `user-${nextId}`;
 
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            const newTestData = context ? context.getDefaultEmptyTest() : null;
+
             const newTest: TaskTest = {
                 id: newTestId,
                 name: getMessage('SUBMISSION_OWN_TEST_LABEL').format({index: String(nextName)}),
-                data: null,
+                data: newTestData,
                 contextState: null,
                 groupType: TaskTestGroupType.User,
                 level,
@@ -216,7 +219,7 @@ export default function (bundle: Bundle) {
             const taskTests = yield* appSelect(selectTaskTests);
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
 
-            yield* call(onEditSource);
+            yield* call(onEditSource, 'test');
 
             if (null === currentTestId || !(currentTestId in taskTests)) {
                 const level = yield* appSelect(state => state.task.currentLevel);
@@ -267,7 +270,7 @@ export default function (bundle: Bundle) {
 
             yield* put(updateCurrentTestId({testId: currentTestId}));
 
-            yield* call(onEditSource);
+            yield* call(onEditSource, 'test');
 
             const removedTest = taskTests[testIndex];
 

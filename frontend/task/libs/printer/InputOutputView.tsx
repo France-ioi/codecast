@@ -39,7 +39,7 @@ export function InputOutputView() {
 
     return (
         <div>
-            <Card>
+            {!(taskState && taskState.unknownInput) && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INPUT")}
                     {!currentTestEditable && <Icon icon='lock'/>}
@@ -51,62 +51,40 @@ export function InputOutputView() {
                         mode='text'
                         readOnly={!currentTestEditable}
                         requiredWidth='100%'
-                        requiredHeight='150px'
+                        requiredHeight='100px'
                         editorProps={{...(!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions), infoHighlight: consumedHighlight}}
                     />
-
-                    {/*{taskState && !taskState.unknownInput ?*/}
-                    {/*    <Editor*/}
-                    {/*        name="printer_input"*/}
-                    {/*        content={taskState ? consumedInput + taskState.initial : ''}*/}
-                    {/*        readOnly*/}
-                    {/*        mode='text'*/}
-                    {/*        width='100%'*/}
-                    {/*        height='100px'*/}
-                    {/*        hideCursor*/}
-                    {/*        highlightActiveLine={false}*/}
-                    {/*        dragEnabled={false}*/}
-                    {/*        infoHighlight={consumedHighlight}*/}
-                    {/*    />*/}
-                    {/*    :*/}
-                    {/*    <InputEmptyState*/}
-                    {/*        text={getMessage("IOPANE_UNKNOWN_INPUT")}*/}
-                    {/*    />*/}
-                    {/*}*/}
                 </Card.Body>
-            </Card>
+            </Card>}
+
             {currentTask && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INITIAL_OUTPUT")}
                     {!currentTestEditable && <Icon icon='lock'/>}
                 </Card.Header>
                 <Card.Body>
-                    <BufferEditor
-                        buffer={outputBufferLibTest}
-                        mode='text'
-                        readOnly={!currentTestEditable}
-                        requiredWidth='100%'
-                        requiredHeight='150px'
-                        editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
-                    />
-
-                    {/*{taskState && !taskState.unknownOutput ?*/}
-                    {/*    <Editor*/}
-                    {/*        name="test_output"*/}
-                    {/*        content={libExpectedOutput ? libExpectedOutput : ''}*/}
-                    {/*        readOnly*/}
-                    {/*        mode='text'*/}
-                    {/*        width='100%'*/}
-                    {/*        height='100px'*/}
-                    {/*        hideCursor*/}
-                    {/*        highlightActiveLine={false}*/}
-                    {/*        dragEnabled={false}*/}
-                    {/*    />*/}
-                    {/*    :*/}
-                    {/*    <InputEmptyState*/}
-                    {/*        text={getMessage("IOPANE_UNKNOWN_OUTPUT")}*/}
-                    {/*    />*/}
-                    {/*}*/}
+                    {!currentTestEditable ?
+                        <Editor
+                            name="test_output"
+                            content={libExpectedOutput ? libExpectedOutput : ''}
+                            readOnly
+                            mode='text'
+                            width='100%'
+                            height='100px'
+                            hideCursor
+                            highlightActiveLine={false}
+                            dragEnabled={false}
+                        />
+                        :
+                        <BufferEditor
+                            buffer={outputBufferLibTest}
+                            mode='text'
+                            readOnly={!currentTestEditable}
+                            requiredWidth='100%'
+                            requiredHeight='100px'
+                            editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
+                        />
+                    }
                 </Card.Body>
             </Card>}
             <Card>
@@ -115,7 +93,7 @@ export function InputOutputView() {
                     <Icon icon='lock'/>
                 </Card.Header>
                 <Card.Body>
-                    {taskState && !taskState.errorPreventingOutput ?
+                    {taskState ?
                         <Editor
                             name="printer_output"
                             content={libOutput}

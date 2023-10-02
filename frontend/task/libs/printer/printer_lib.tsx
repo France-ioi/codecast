@@ -27,7 +27,7 @@ import {CodecastPlatform} from '../../../stepper/codecast_platform';
 import {App} from '../../../app_types';
 import {documentToString, getBufferHandler, TextBufferHandler} from '../../../buffers/document';
 import {bufferEdit, bufferResetDocument} from '../../../buffers/buffers_slice';
-import {TaskTest} from '../../task_types';
+import {isTestPublic, TaskTest} from '../../task_types';
 
 export function getTerminalText(events) {
     return events
@@ -178,15 +178,15 @@ interface PrinterLibInputPosition {
 }
 
 export interface PrinterLibState {
-    ioEvents: PrinterLineEvent[],
-    initial: string,
+    ioEvents?: PrinterLineEvent[],
+    initial?: string,
     unknownInput?: boolean,
     unknownOutput?: boolean,
-    expectedOutput: string,
-    inputBuffer: string,
-    inputPosition: PrinterLibInputPosition,
+    expectedOutput?: string,
+    inputBuffer?: string,
+    inputPosition?: PrinterLibInputPosition,
     errorHighlight?: any,
-    errorPreventingOutput?: boolean,
+    noFeedback?: boolean,
 }
 
 let printerLibInstance = 0;
@@ -291,7 +291,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         this.innerState.errorHighlight = null;
         this.innerState.unknownInput = false;
         this.innerState.unknownOutput = false;
-        this.innerState.errorPreventingOutput = false;
+        this.innerState.noFeedback = false;
     }
 
     reset(taskInfos, appState: AppStore = null) {
@@ -741,6 +741,17 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     }
 
+    hasFeedback() {
+        return !this.innerState.noFeedback;
+    }
+
+    getDefaultEmptyTest() {
+        return {
+            input: '',
+            output: '',
+        };
+    }
+
     getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): PrinterLibState|null {
         let unknownInput = true;
         let unknownOutput = true;
@@ -789,7 +800,13 @@ export class PrinterLib extends QuickAlgoLibrary {
                 expectedOutput,
                 errorHighlight: errorHighlightRange,
             };
-        } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
+        } else {
+            if (!isTestPublic(test)) {
+                return {
+                    noFeedback: true,
+                };
+            }
+
             return {
                 initial,
                 unknownInput,
@@ -800,19 +817,6 @@ export class PrinterLib extends QuickAlgoLibrary {
                 inputBuffer: '',
                 inputPosition: {event: 0, pos: 0},
                 expectedOutput,
-            };
-        } else {
-            return {
-                initial,
-                unknownInput,
-                unknownOutput,
-                ioEvents: [
-                    {type: PrinterLineEventType.output, content: ''},
-                ],
-                inputBuffer: '',
-                inputPosition: {event: 0, pos: 0},
-                expectedOutput,
-                errorPreventingOutput: true,
             };
         }
     }

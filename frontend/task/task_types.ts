@@ -213,14 +213,10 @@ export function isServerTest(object: TaskTest): boolean {
 }
 
 // TODO: update this function when we will have a "public" field in tm_task_tests
-export function isTestPublic(task: Task, test: TaskTest|null): boolean {
+export function isTestPublic(test: TaskTest|null): boolean {
     if (!test || !isServerTest(test)) {
         return true;
     }
 
-    if (task && task.gridInfos && 'printer' === task.gridInfos.context) {
-        return !(test && test.data && null === test.data.input);
-    }
-
-    return true;
+    return !(test && test.data && null === test.data.input);
 }

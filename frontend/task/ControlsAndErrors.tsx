@@ -100,7 +100,7 @@ export function ControlsAndErrors() {
         dispatch(callPlatformValidate());
     };
 
-    const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
+    const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
     const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
     const clientControlsEnabled = (!currentTask || currentTestPublic) && platformHasClientRunner;
     const serverTask = null !== currentTask && isServerTask(currentTask);
