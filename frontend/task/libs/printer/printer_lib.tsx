@@ -801,7 +801,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 errorHighlight: errorHighlightRange,
             };
         } else {
-            if (!isTestPublic(test)) {
+            if (!isTestPublic(test) || SubmissionTestErrorCode.WrongAnswer !== testResult.errorCode) {
                 return {
                     noFeedback: true,
                 };

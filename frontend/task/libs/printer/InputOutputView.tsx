@@ -27,9 +27,9 @@ export function InputOutputView() {
     const currentTestEditable = !currentTask || (currentTest && TaskTestGroupType.User === currentTest.groupType);
 
     const taskState: PrinterLibState = useAppSelector(state => state.task.state?.printer);
-    const libOutput = PrinterLib.getOutputTextFromEvents(taskState ? taskState.ioEvents : []);
+    const libOutput = PrinterLib.getOutputTextFromEvents(taskState && taskState.ioEvents ? taskState.ioEvents : []);
     const libExpectedOutput = taskState ? taskState.expectedOutput : '';
-    const consumedInput = PrinterLib.getInputTextFromEvents(taskState ? taskState.ioEvents : []);
+    const consumedInput = PrinterLib.getInputTextFromEvents(taskState && taskState.ioEvents ? taskState.ioEvents : []);
     const consumedInputLines = consumedInput.split("\n").length;
 
     const consumedHighlight: Range = {
