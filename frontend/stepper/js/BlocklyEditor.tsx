@@ -132,7 +132,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             // readOnly: !!subTask.taskParams.readOnly,
             // defaultCode: subTask.defaultCode,
             maxListSize: context.infos.maxListSize,
-            startingExample: context.infos.startingExample,
+            // startingExample: context.infos.startingExample,
             placeholderBlocks: !!(context.placeholderBlocks || context.infos.placeholderBlocks),
             zoom: null,
             scrollbars: false,

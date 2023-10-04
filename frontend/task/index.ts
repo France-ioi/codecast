@@ -381,7 +381,7 @@ function* taskLoadSaga(app: App, action) {
     if ((!source || (typeof source === 'string' && !source.length)) && currentTask) {
         const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment, currentTask);
         if (null !== defaultSourceCode) {
-            log.getLogger('task').debug('Load default source code', defaultSourceCode);
+            log.getLogger('editor').debug('Load default source code', defaultSourceCode);
             const platform = yield* appSelect(state => state.options.platform);
             yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: getModelFromAnswer(defaultSourceCode, platform), goToEnd: true});
         }
