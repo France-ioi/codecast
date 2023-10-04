@@ -326,7 +326,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     const taskVariant = yield* appSelect(state => state.options.taskVariant);
     const randomTaskVariants = yield* appSelect(state => state.options.randomTaskVariants);
     if (undefined === taskVariant && undefined !== randomTaskVariants) {
-        const newTaskVariant = 'v' + (parseInt(randomSeed) % randomTaskVariants + 1);
+        const newTaskVariant = parseInt(randomSeed) % randomTaskVariants + 1;
         yield* put({
             type: ActionTypes.TaskVariantChanged,
             payload: { variant: newTaskVariant }
