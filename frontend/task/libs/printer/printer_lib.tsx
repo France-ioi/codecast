@@ -801,23 +801,23 @@ export class PrinterLib extends QuickAlgoLibrary {
                 errorHighlight: errorHighlightRange,
             };
         } else {
-            if (!isTestPublic(test) || SubmissionTestErrorCode.WrongAnswer !== testResult.errorCode) {
-                return {
-                    noFeedback: true,
-                };
-            }
-
+            // if (!isTestPublic(test) || SubmissionTestErrorCode.WrongAnswer !== testResult.errorCode) {
             return {
-                initial,
-                unknownInput,
-                unknownOutput,
-                ioEvents: [
-                    {type: PrinterLineEventType.output, content: test ? test.data.output : testResult.output},
-                ],
-                inputBuffer: '',
-                inputPosition: {event: 0, pos: 0},
-                expectedOutput,
+                noFeedback: true,
             };
+            // }
+            //
+            // return {
+            //     initial,
+            //     unknownInput,
+            //     unknownOutput,
+            //     ioEvents: [
+            //         {type: PrinterLineEventType.output, content: test ? test.data.output : testResult.output},
+            //     ],
+            //     inputBuffer: '',
+            //     inputPosition: {event: 0, pos: 0},
+            //     expectedOutput,
+            // };
         }
     }
 
