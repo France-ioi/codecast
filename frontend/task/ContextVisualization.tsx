@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
 import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
@@ -24,6 +24,7 @@ export function ContextVisualization() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const taskTests = useAppSelector(selectTaskTests);
+    const taskState = useAppSelector(state => state.task.state);
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const {width, height, ref} = useResizeDetector();
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
@@ -32,6 +33,7 @@ export function ContextVisualization() {
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
+    const [hasNoFeedback, setHasNoFeedback] = useState(false);
 
     useEffect(() => {
         if (context) {
@@ -44,6 +46,13 @@ export function ContextVisualization() {
             context.updateScale();
         }
     }, [width, height]);
+
+    console.log('new task state', taskState);
+
+    useEffect(() => {
+        setHasNoFeedback(context && context.hasFeedback && !context.hasFeedback());
+        console.log('has no feedback', context && context.hasFeedback && !context.hasFeedback());
+    }, [taskState]);
 
     const dismissSubmissionError = () => {
         dispatch(submissionChangeDisplayedError(null));
@@ -106,7 +115,7 @@ export function ContextVisualization() {
     //     innerVisualization = <div className="task-visualization-not-public">
     //         {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
     //     </div>;
-    } else if (currentTestResult && context && context.hasFeedback && !context.hasFeedback()) {
+    } else if (currentTestResult && hasNoFeedback) {
         innerVisualization = <TestResultVisualization
             testResult={currentTestResult}
         />;

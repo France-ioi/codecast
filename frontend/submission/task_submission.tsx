@@ -214,8 +214,6 @@ class TaskSubmissionExecutor {
         const answerToken = getAnswerTokenForLevel(stringify(answerContent), level, randomSeed);
         const platform = state.options.platform;
         const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
-        console.log('user tests part 1', getTaskLevelTests(state));
-        console.log('user tests part 2', getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType));
 
         const serverSubmission: TaskSubmissionServer = {
             evaluated: false,
