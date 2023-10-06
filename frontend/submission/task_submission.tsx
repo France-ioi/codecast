@@ -28,7 +28,7 @@ import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../
 import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
-import {selectSubmissionsPaneEnabled, selectTaskTests} from './submission_selectors';
+import {getTaskLevelTests, selectSubmissionsPaneEnabled} from './submission_selectors';
 import {isServerTask, TaskTestGroupType} from '../task/task_types';
 import {platformAnswerGraded} from '../task/platform/actionTypes';
 import {getMessage} from '../lang';
@@ -61,7 +61,7 @@ class TaskSubmissionExecutor {
         const environment = state.environment;
         const level = state.task.currentLevel;
         const answer = selectAnswer(state);
-        const tests = yield* appSelect(selectTaskTests);
+        const tests = yield* appSelect(getTaskLevelTests);
         if (!tests || 0 === Object.values(tests).length || result.noGrading) {
             return;
         }
@@ -213,7 +213,9 @@ class TaskSubmissionExecutor {
         const newTaskToken = getTaskTokenForLevel(level, randomSeed);
         const answerToken = getAnswerTokenForLevel(stringify(answerContent), level, randomSeed);
         const platform = state.options.platform;
-        const userTests = SubmissionExecutionScope.MyTests === scope ? selectTaskTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
+        const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
+        console.log('user tests part 1', getTaskLevelTests(state));
+        console.log('user tests part 2', getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType));
 
         const serverSubmission: TaskSubmissionServer = {
             evaluated: false,
@@ -257,9 +259,10 @@ class TaskSubmissionExecutor {
                 if (submissionResult.compilationError) {
                     yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
                 } else {
-                    const tests = submissionResult.tests;
-                    if (tests.length) {
-                        yield* put(updateCurrentTestId({testId: 0}));
+                    const selectedTestId = state.task.currentTestId;
+                    // Refresh display by showing the test id that was previously selected
+                    if (null !== selectedTestId) {
+                        yield* put(updateCurrentTestId({testId: selectedTestId}));
                     }
                 }
 
@@ -302,7 +305,7 @@ class TaskSubmissionExecutor {
         const environment = state.environment;
         let lastMessage = null;
         const currentTask = state.task.currentTask;
-        const tests = currentTask ? yield* appSelect(selectTaskTests) : state.task.taskTests;
+        const tests = currentTask ? yield* appSelect(getTaskLevelTests) : state.task.taskTests;
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,

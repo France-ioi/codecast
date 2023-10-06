@@ -268,15 +268,12 @@ export default function (bundle: Bundle) {
                 }
             }
 
-            yield* put(updateCurrentTestId({testId: currentTestId}));
-
-            yield* call(onEditSource, 'test');
-
             const removedTest = taskTests[testIndex];
-
             const allTaskTests = yield* appSelect(state => state.task.taskTests);
             const removedTestPosition = allTaskTests.indexOf(removedTest);
-            yield* put(removeTaskTest(removedTestPosition));
+            yield* put(removeTaskTest({testToRemoveIndex: removedTestPosition, newTestId: currentTestId}));
+            yield* put(updateCurrentTestId({testId: currentTestId}));
+            yield* call(onEditSource, 'test');
         });
     });
 

@@ -41,7 +41,7 @@ export const selectTaskTests = memoize<AppStore, TaskTest[]>((state: AppStore) =
     return taskLevelsTests;
 });
 
-function getTaskLevelTests(state: AppStore) {
+export function getTaskLevelTests(state: AppStore) {
     if (null === state.task.currentLevel) {
         return state.task.taskTests;
     }
