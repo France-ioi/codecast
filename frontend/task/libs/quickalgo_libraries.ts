@@ -27,7 +27,7 @@ import log from 'loglevel';
 import {appSelect} from '../../hooks';
 import {SmartContractLib} from './smart_contract/smart_contract_lib';
 import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
-import {platformsList} from '../../stepper/platforms';
+import {getAvailablePlatformsFromSupportedLanguages, platformsList} from '../../stepper/platforms';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {taskApi} from '../platform/platform';
 import {DebugLib} from './debug/debug_lib';
@@ -239,7 +239,8 @@ export function* createQuickalgoLibrary() {
 
     let availablePlatforms = context.getSupportedPlatforms();
     if (null !== currentTask && currentTask.supportedLanguages?.length && '*' !== currentTask.supportedLanguages) {
-        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.split(',').indexOf(platform));
+        const taskAvailablePlatforms = getAvailablePlatformsFromSupportedLanguages(currentTask.supportedLanguages);
+        availablePlatforms = availablePlatforms.filter(platform => -1 !== taskAvailablePlatforms.indexOf(platform));
     }
     if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
         yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: true}});

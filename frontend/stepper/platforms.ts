@@ -4,6 +4,7 @@ import {Block} from '../task/blocks/blocks';
 import {getCSpecificBlocks} from './views/c/utils';
 import {NotionsBag} from '../task/blocks/notions';
 import {smartContractPlatformsList} from '../task/libs/smart_contract/smart_contract_lib';
+import {SmartContractPlatform} from '../task/libs/smart_contract/smart_contract_blocks';
 
 export enum CodecastPlatform {
     Python = 'python',
@@ -19,6 +20,26 @@ export interface PlatformData {
     aceSourceMode?: string,
     displayBlocks?: boolean,
     getSpecificBlocks?: (notionsBag: NotionsBag, includeBlocks?: QuickalgoTaskIncludeBlocks) => Block[],
+}
+
+const platformBundles = {
+    'smartpy': [SmartContractPlatform.SmartPy, SmartContractPlatform.SmartPy019],
+};
+
+export function getAvailablePlatformsFromSupportedLanguages(supportedLanguages: string): string[] {
+    const languages = supportedLanguages.split(',');
+    const platforms = [];
+    for (let language of languages) {
+        if (language in platformBundles) {
+            for (let platform of platformBundles[language]) {
+                platforms.push(platform);
+            }
+        } else if (language in platformsList) {
+            platforms.push(language);
+        }
+    }
+
+    return platforms;
 }
 
 export const platformsList: {[key: string]: PlatformData} = {
