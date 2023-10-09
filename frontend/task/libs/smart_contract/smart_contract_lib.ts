@@ -103,6 +103,10 @@ export class SmartContractLib extends QuickAlgoLibrary {
         return this.display ? SmartContractView : null;
     };
 
+    usesStack() {
+        return false;
+    }
+
     *getSaga(app: App) {
         log.getLogger('smart_contract_lib').debug('Start Smart Contract Lib Saga');
 

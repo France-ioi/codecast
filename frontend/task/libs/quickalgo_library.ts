@@ -265,6 +265,10 @@ export abstract class QuickAlgoLibrary {
         return null;
     };
 
+    usesStack() {
+        return true;
+    }
+
     getInnerState(): any {
         // For libs that don't implement inner state, we replay them
         return {calls: [...mainQuickAlgoLogger.getQuickAlgoLibraryCalls()]};

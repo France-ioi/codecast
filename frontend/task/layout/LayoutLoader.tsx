@@ -42,7 +42,7 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
 
     if (null !== currentTask && context) {
         const notionsBag = getNotionsBagFromIncludeBlocks(state.task.contextIncludeBlocks, context.getNotionsList());
-        showVariables = showVariables && notionsBag.hasNotion('variables_set');
+        showVariables = showVariables && context.usesStack() && notionsBag.hasNotion('variables_set');
     }
 
     let layoutMobileMode = state.layout.mobileMode;
