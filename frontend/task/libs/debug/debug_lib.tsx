@@ -26,7 +26,7 @@ export class DebugLib extends QuickAlgoLibrary {
     constructor (display, infos) {
         super(display, infos);
 
-        this.setLocalLanguageStrings(localLanguageStrings);
+        this.setLocalLanguageStrings(localLanguageStrings, true);
 
         this.debug = {
             log: this.log,
