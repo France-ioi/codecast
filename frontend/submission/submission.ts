@@ -85,7 +85,7 @@ export interface TaskSubmissionServerTestResult extends TaskSubmissionTestResult
 }
 
 export interface TaskSubmissionServerExecutionMetadata {
-    errorfile: string,
+    errorfile?: string,
     errorline?: number,
 }
 
