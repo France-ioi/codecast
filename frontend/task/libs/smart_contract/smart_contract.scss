@@ -53,6 +53,9 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
         //background: rgb(209, 231, 221);
       }
     }
+        &.is-internal {
+          margin-left: 32px;
+        }
   }
 
   .smart-contract-scalar {

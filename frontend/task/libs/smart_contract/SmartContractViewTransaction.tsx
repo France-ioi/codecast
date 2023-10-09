@@ -16,6 +16,7 @@ import {Icon} from '@blueprintjs/core';
 interface SmartContractViewTransactionProps {
     log: SmartContractResultLogLine,
     failed?: boolean,
+    names: { [key: string]: string }
 }
 
 export function SmartContractViewTransaction(props: SmartContractViewTransactionProps) {
@@ -26,6 +27,8 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
     };
 
     const log = props.log;
+    const addressNames = props.names;
+    const hasMultipleContracts = props.names['_hasMultipleContracts'];
     const hasExpansion = undefined !== log.consumed_gas || undefined !== log.paid_storage_size_diff;
     const transactionStorage = undefined !== log.updated_storage ? log.updated_storage : log.storage;
     const expectedStorage = undefined !== log.expected?.updated_storage ? log.expected?.updated_storage : log.expected?.storage;
@@ -53,25 +56,44 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
         </div>;
     }
 
+    const displayKind = (log: SmartContractResultLogLine) => {
+        if (log.name && log.address) {
+            return <span>{capitalizeFirstLetter(log.kind)}: {log.name} ({truncateString(log.address, 10)})</span>;
+        } else {
+            return <span>{capitalizeFirstLetter(log.kind)}</span>;
+        }
+    }
+
+    const displayAddress = (address: string, name?: string, displayAddress: boolean = true) => {
+        const dname = name || addressNames[address];
+        if (dname) {
+            if (displayAddress) {
+                return <span>{dname} ({truncateString(address, 10)})</span>;
+            } else {
+                return <span>{dname}</span>;
+            }
+        }
+        return <span>{truncateString(address, 10)}</span>;
+    }
+
     return (
-        <div className={`smart-contract-log ${props.failed ? 'is-failed' : ''}`}>
+        <div className={`smart-contract-log ${props.failed ? 'is-failed' : ''} ${log.internal ? 'is-internal' : ''}`}>
             <div className="smart-contract-log__header">
                 <div className="smart-contract-log__icon">
                     <FontAwesomeIcon icon={props.failed ? faTimes : faCheck}/>
                 </div>
                 {undefined !== log.entrypoint ? <div className="smart-contract-log__entry_point">
-                    {/*<FontAwesomeIcon icon={faArrowRight} className="mr-2"/>*/}
-                    <span>{log.entrypoint}({log.arg})</span>
+                    <span>{hasMultipleContracts && log.destination && <span>{displayAddress(log.destination)} <FontAwesomeIcon icon={faArrowRight} /></span>} {log.entrypoint}({log.arg})</span>
                 </div> :
-                    <div className="smart-contract-log__kind">{capitalizeFirstLetter(log.kind)}</div>
+                    <div className="smart-contract-log__kind">{displayKind(log)}</div>
                 }
-                <div className="smart-contract-log__date">{DateTime.fromISO(log.date).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS)}</div>
+                {/* <div className="smart-contract-log__date">{DateTime.fromISO(log.date).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS)}</div> */}
             </div>
             <div className="smart-contract-log__body">
                 <div className="smart-contract-log__scalars">
                     <div className="smart-contract-scalar">
                         <div className="smart-contract-scalar__header">Caller</div>
-                        <div className="smart-contract-scalar__value">{log.as} ({truncateString(log.source, 10)})</div>
+                        <div className="smart-contract-scalar__value">{displayAddress(log.source)}</div>
                     </div>
                     <div className="smart-contract-scalar">
                         <div className="smart-contract-scalar__header">Amount</div>
@@ -80,11 +102,14 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                     {/*<div className="smart-contract-scalar">*/}
                     {/*    <div className="smart-contract-scalar__header">Balance</div>*/}
                     {/*    <div className="smart-contract-scalar__value">{log.balance} tez</div>*/}
-                    {/*</div>*/}
-                    {/*<div className="smart-contract-scalar">*/}
-                    {/*    <div className="smart-contract-scalar__header">Level</div>*/}
-                    {/*    <div className="smart-contract-scalar__value">{log.level}</div>*/}
-                    {/*</div>*/}
+                    {undefined !== log.level && <div className="smart-contract-scalar">
+                        <div className="smart-contract-scalar__header">Level</div>
+                        <div className="smart-contract-scalar__value">{log.level}</div>
+                    </div>}
+                    {undefined !== log.now && <div className="smart-contract-scalar">
+                        <div className="smart-contract-scalar__header">Now</div>
+                        <div className="smart-contract-scalar__value">{DateTime.fromISO(log.now).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS)}</div>
+                    </div>}
                 </div>
 
                 {undefined !== log.arg && <div className="smart-contract-scalar mt-2">
