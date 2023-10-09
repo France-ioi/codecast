@@ -66,7 +66,7 @@ import {
 } from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {clearSourceHighlightSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
-import { makeContext, StepperContext} from "../stepper/api";
+import {makeContext, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -664,10 +664,10 @@ function* onEditSource() {
         yield* put({type: StepperActionTypes.StepperExit});
     }
 
-    // const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
-    // if (null !== currentSubmissionId) {
-    // yield* put(submissionChangeCurrentSubmissionId(null));
-    // }
+    const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
+    if (null !== currentSubmissionId) {
+        yield* put(submissionChangeCurrentSubmissionId(null));
+    }
 
     const currentError = yield* appSelect(state => state.stepper.error);
     if (null !== currentError) {

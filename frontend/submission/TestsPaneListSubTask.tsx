@@ -8,7 +8,7 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCaretUp} from '@fortawesome/free-solid-svg-icons/faCaretUp';
 import {faCaretDown} from '@fortawesome/free-solid-svg-icons/faCaretDown';
 import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneListTest';
-import { TaskSubmissionServer} from './submission';
+import {TaskSubmissionServer} from './submission';
 
 export interface SubmissionResultSubTaskProps {
     submission: TaskSubmissionServer,

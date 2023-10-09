@@ -28,7 +28,7 @@ export interface EditorProps {
     onScroll?: Function,
     onDropBlock?: Function,
     content?: string,
-    errorHighlight?: Range,
+    errorHighlight?: object,
     hideGutter?: boolean,
     printMarginColumn?: boolean,
     highlightActiveLine?: boolean,

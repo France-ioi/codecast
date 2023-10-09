@@ -2,7 +2,7 @@ import {call, put} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {Task} from '../task/task_slice';
 import {appSelect} from '../hooks';
-import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission';
+import {TaskSubmissionServer, TaskSubmissionServerExecutionMetadata, TaskSubmissionServerResult} from './submission';
 import {submissionUpdateTaskSubmission} from './submission_slice';
 import {TaskHint} from '../task/hints/hints_slice';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
@@ -86,6 +86,7 @@ export interface SubmissionNormalized {
     compilationError: boolean,
     compilationMessage: string|null,
     errorMessage: string|null,
+    metadata: TaskSubmissionServerExecutionMetadata|null,
     firstUserOutput: string|null,
     firstExpectedOutput: string|null,
     evaluated: boolean,
