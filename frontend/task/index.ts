@@ -1040,6 +1040,10 @@ export default function (bundle: Bundle) {
 
         app.stepperApi.onInit(function* () {
             log.getLogger('task').debug('stepper init');
+            const environment = yield* appSelect(state => state.environment);
+            for (let library of Object.values(quickAlgoLibraries.getAllLibrariesByName(environment))) {
+                library.onStepperInit();
+            }
             yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         });
