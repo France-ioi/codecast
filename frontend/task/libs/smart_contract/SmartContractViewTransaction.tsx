@@ -30,6 +30,7 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
     const transactionStorage = undefined !== log.updated_storage ? log.updated_storage : log.storage;
     const expectedStorage = undefined !== log.expected?.updated_storage ? log.expected?.updated_storage : log.expected?.storage;
     const wrongExpectedStorage = props.failed && undefined !== expectedStorage && transactionStorage !== expectedStorage;
+    const failMessage = log.fail ? log.fail : (log.stderr ? log.stderr.split("\n")[0] : null);
 
     const getDisplayedStorage = (storage) => {
         if (!task.gridInfos.expectedStorage) {
@@ -129,7 +130,7 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
             {log.failed && <div className={`smart-contract-log__footer ${props.failed ? 'is-failed' : ''}`}>
                 <div>
                     {props.failed ?
-                        <div>Failed, with error: {log.fail}</div>
+                        <div>Failed{failMessage ? `, with error: ${failMessage}` : ''}</div>
                         :
                         (log.fail ? <div>Failed as expected, with error: {log.fail}</div> : <div>Failed as expected</div>)
                     }

@@ -11,6 +11,7 @@ import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
 import {CodecastPlatform, platformsList} from '../../stepper/platforms';
+import {selectErrorHighlightFromSubmission} from '../../submission/submission';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -36,6 +37,11 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
     const displayBlocks = !!(context && blocks.length && platformsList[platform].displayBlocks && 'tralalere' !== options.app);
 
+    const errorHighlight = useAppSelector(selectErrorHighlightFromSubmission);
+    const editorProps = {
+        errorHighlight,
+    };
+
     return (
         <div className="layout-editor" style={props.style}>
             {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
@@ -53,6 +59,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
                     requiredHeight="100%"
                     hasAutocompletion
                     dragEnabled
+                    editorProps={editorProps}
                 />
             </div>
             {'tralalere' !== options.app && <BlocksUsage/>}
