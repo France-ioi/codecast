@@ -16,29 +16,19 @@ export function SmartContractView() {
         );
     }
 
-    const convertInternalOperationFormat = (internalLog: any): SmartContractResultLogLine => {
-        // This conversion might not be needed in the future
-        return {
-            internal: true,
-            source: internalLog.from,
-            destination: internalLog.to,
-            amount: internalLog.amount.substr(1),
-            entrypoint: internalLog.entrypoint,
-            consumed_gas: internalLog.consumed_gas,
-            updated_storage: internalLog.updated_storage,
-            storage_size: internalLog.storage_size,
-        }
-    }
-
     const processInternalOperations = (resultLog: SmartContractResultLogLine[]): SmartContractResultLogLine[] => {
         let processedLog = [];
         resultLog.forEach((log) => {
             processedLog.push(log);
-            if (log.internal_operations) {
-                log.internal_operations.forEach((internalLog) => {
-                    processedLog.push(convertInternalOperationFormat(internalLog));
+            log.internal_operations?.forEach((internalLog) => {
+                processedLog.push({
+                    arg: internalLog.parameter,
+                    level: log.level,
+                    now: log.now,
+                    ...internalLog,
+                    internal: true
                 });
-            }
+            });
         });
         return processedLog;
     };

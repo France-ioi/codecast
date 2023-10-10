@@ -7,8 +7,7 @@ import {capitalizeFirstLetter, nl2br} from '../../../common/utils';
 import {toHtml} from '../../../utils/sanitize';
 import {convertMichelsonStorageToCodecastFormat} from './smart_contract_utils';
 import {useAppSelector} from '../../../hooks';
-import {AnalysisVariable} from '../../../stepper/analysis/AnalysisVariable';
-import {faChevronDown} from '@fortawesome/free-solid-svg-icons/faChevronDown';
+import { AnalysisVariable } from '../../../stepper/analysis/AnalysisVariable';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {Icon} from '@blueprintjs/core';
@@ -58,9 +57,9 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
 
     const displayKind = (log: SmartContractResultLogLine) => {
         if (log.name && log.address) {
-            return <span>{capitalizeFirstLetter(log.kind)}: {log.name} ({truncateString(log.address, 10)})</span>;
+            return <span>{capitalizeFirstLetter(log.kind || "Transaction")}: {log.name} ({truncateString(log.address, 10)})</span>;
         } else {
-            return <span>{capitalizeFirstLetter(log.kind)}</span>;
+            return <span>{capitalizeFirstLetter(log.kind || "Transaction")}</span>;
         }
     }
 
@@ -95,6 +94,10 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                         <div className="smart-contract-scalar__header">Caller</div>
                         <div className="smart-contract-scalar__value">{displayAddress(log.source)}</div>
                     </div>
+                    {undefined === log.kind && undefined === log.entrypoint && <div className="smart-contract-scalar">
+                        <div className="smart-contract-scalar__header">Destination</div>
+                        <div className="smart-contract-scalar__value">{displayAddress(log.destination)}</div>
+                    </div>}
                     <div className="smart-contract-scalar">
                         <div className="smart-contract-scalar__header">Amount</div>
                         <div className="smart-contract-scalar__value">{log.amount} tez</div>
