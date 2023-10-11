@@ -6,6 +6,7 @@ import {
     documentationConceptSelected,
     documentationConceptsLoaded,
     DocumentationLanguage,
+    documentationLanguages,
     documentationLanguageChanged, documentationSlice
 } from "./documentation_slice";
 import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
@@ -28,6 +29,7 @@ import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {addAutoRecordingBehaviour} from '../../recorder/record';
 import {documentFromString} from '../../buffers/document';
 import {AppStore} from '../../store';
+import { smartContractPlatforms } from "../libs/smart_contract/smart_contract_blocks";
 
 let openerChannel;
 
@@ -231,7 +233,12 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
             }])
         }
 
-        const newConcepts = window.conceptsFill(concepts, allConcepts);
+        let newConcepts = window.conceptsFill(concepts, allConcepts);
+
+        if (!documentationLanguages.includes(language)) {
+            newConcepts = newConcepts.filter(concept => concept.id !== 'language');
+        }
+
         documentationConcepts = [...documentationConcepts, ...newConcepts];
     }
 
