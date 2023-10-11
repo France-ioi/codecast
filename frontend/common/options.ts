@@ -139,7 +139,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
         return;
     }
 
-    if (isLocalStorageEnabled() && window.localStorage.getItem('platform')) {
+    if (isLocalStorageEnabled() && window.localStorage.getItem('platform') && window.localStorage.getItem('platform') in platformsList) {
         state.options.platform = window.localStorage.getItem('platform') as CodecastPlatform;
     }
 
