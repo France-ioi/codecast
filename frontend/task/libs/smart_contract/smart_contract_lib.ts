@@ -33,6 +33,7 @@ export interface SmartContractResultLogLine {
     destination?: string
     fail?: string,
     failed?: boolean,
+    isFailed?: boolean,
     kind?: string,
     level?: number,
     name?: string,

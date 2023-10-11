@@ -16,15 +16,20 @@ export function SmartContractView() {
         );
     }
 
+    const hasFailed = !taskState.success;
+
     const processInternalOperations = (resultLog: SmartContractResultLogLine[]): SmartContractResultLogLine[] => {
         let processedLog = [];
-        resultLog.forEach((log) => {
-            processedLog.push(log);
-            log.internal_operations?.forEach((internalLog) => {
+        resultLog.forEach((log, logIdx) => {
+            const failedLog = hasFailed && logIdx === resultLog.length - 1;
+            processedLog.push({ isFailed: failedLog, ...log });
+            log.internal_operations?.forEach((internalLog, internalLogIdx) => {
                 processedLog.push({
                     arg: internalLog.parameter,
                     level: log.level,
                     now: log.now,
+                    expected: log.expected?.internal_operations?.[internalLogIdx],
+                    isFailed: failedLog,
                     ...internalLog,
                     internal: true
                 });
@@ -36,21 +41,34 @@ export function SmartContractView() {
     const resultLog: SmartContractResultLogLine[] = processInternalOperations(taskState.resultLog);
 
     const processAddressNames = (resultLog: SmartContractResultLogLine[]) => {
-        let names = {};
+        let aNames = {}; // maps addresses to names
+        let cNames = {}; // counts how many times a name is used
+        let fcNames = {}; // maps names to first address using it (to rename it to #1)
+        const getNewName = (name: string, address: string) => {
+            if (aNames[address]) {
+                return aNames[address];
+            }
+            if (cNames[name]) {
+                aNames[fcNames[name]] = name + " #1";
+                return name + " #" + (++cNames[name]);
+            }
+            cNames[name] = 1;
+            fcNames[name] = address;
+            return name;
+        }
+
         resultLog.forEach((log) => {
             if (log.name && log.address) {
-                names[log.address] = log.name;
+                aNames[log.address] = getNewName(log.name, log.address);
             }
             if (log.as && log.source) {
-                names[log.source] = log.as;
+                aNames[log.source] = getNewName(log.as, log.source);
             }
         });
-        names['_hasMultipleContracts'] = Object.keys(names).filter((key) => !key.startsWith('tz1')).length > 1;
-        return names;
+        aNames['_hasMultipleContracts'] = Object.keys(aNames).filter((key) => !key.startsWith('tz1')).length > 1;
+        return aNames;
     };
     const addressNames = processAddressNames(resultLog);
-
-    const hasFailed = !taskState.success;
 
     return (
         <div className="smart-contract-visualization">
@@ -58,7 +76,6 @@ export function SmartContractView() {
                 <SmartContractViewTransaction
                     key={logIndex}
                     log={log}
-                    failed={logIndex === resultLog.length - 1 && !taskState.success}
                     names={addressNames}
                 />
             )}
