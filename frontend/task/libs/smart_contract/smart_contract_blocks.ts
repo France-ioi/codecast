@@ -1,8 +1,7 @@
 import {generateAvailableBlocksFromNotions, NotionsBag} from '../../blocks/notions';
 
 export enum SmartContractPlatform {
-    SmartPy = 'smartpy', // SmartPy 0.18
-    SmartPy019 = 'smartpy019', // SmartPy 0.18
+    SmartPy = 'smartpy',
     Archetype = 'archetype',
     Michelson = 'michelson',
     CameLIGO = 'mligo',
@@ -11,7 +10,6 @@ export enum SmartContractPlatform {
 
 export const smartContractPlatforms = [
     SmartContractPlatform.SmartPy,
-    SmartContractPlatform.SmartPy019,
     SmartContractPlatform.Archetype,
     SmartContractPlatform.Michelson,
     SmartContractPlatform.CameLIGO,

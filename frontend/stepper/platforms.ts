@@ -23,7 +23,7 @@ export interface PlatformData {
 }
 
 const platformBundles = {
-    'smartpy': [SmartContractPlatform.SmartPy, SmartContractPlatform.SmartPy019],
+    // 'smartpy': [SmartContractPlatform.SmartPy, SmartContractPlatform.SmartPy019],
 };
 
 export function getAvailablePlatformsFromSupportedLanguages(supportedLanguages: string): string[] {
