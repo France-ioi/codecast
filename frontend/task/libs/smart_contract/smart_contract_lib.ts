@@ -13,24 +13,32 @@ import {Block} from '../../blocks/block_types';
 import {TaskTest} from '../../task_types';
 
 export interface SmartContractResultLogLine {
+    address?: string,
     amount: number,
-    as: string,
-    command: string,
-    date: string,
+    as?: string,
+    command?: string,
+    date?: string,
+    destination?: string
     fail?: string,
     failed?: boolean,
-    kind: string,
+    isFailed?: boolean,
+    kind?: string,
+    level?: number,
+    name?: string,
+    now?: string,
     source: string,
     stderr?: string,
     stdout?: string,
-    storage: any,
+    storage?: any,
     updated_storage?: any,
     operation?: string,
     entrypoint?: string,
     arg?: string,
-    storage_size: number,
-    consumed_gas: number,
-    paid_storage_size_diff: number,
+    storage_size?: number,
+    consumed_gas?: number,
+    paid_storage_size_diff?: number,
+    internal_operations?: any[], // Left as any because format might change to correspond to SmartContractResultLogLine soon, but currently isn't
+    internal?: boolean,
     expected?: SmartContractResultLogLine,
 }
 

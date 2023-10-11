@@ -5,6 +5,7 @@ import {
     documentationConceptSelected,
     documentationConceptsLoaded,
     DocumentationLanguage,
+    documentationLanguages,
     documentationLanguageChanged,
 } from "./documentation_slice";
 import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
@@ -25,6 +26,7 @@ import {App} from '../../app_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {bufferEditPlain} from '../../buffers/buffers_slice';
 import {AppStore} from '../../store';
+import { smartContractPlatforms } from "../libs/smart_contract/smart_contract_blocks";
 
 let openerChannel;
 
@@ -228,7 +230,12 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
             }])
         }
 
-        const newConcepts = window.conceptsFill(concepts, allConcepts);
+        let newConcepts = window.conceptsFill(concepts, allConcepts);
+
+        if (!documentationLanguages.includes(language)) {
+            newConcepts = newConcepts.filter(concept => concept.id !== 'language');
+        }
+
         documentationConcepts = [...documentationConcepts, ...newConcepts];
     }
 

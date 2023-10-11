@@ -7,15 +7,14 @@ import {capitalizeFirstLetter, nl2br} from '../../../common/utils';
 import {toHtml} from '../../../utils/sanitize';
 import {convertMichelsonStorageToCodecastFormat} from './smart_contract_utils';
 import {useAppSelector} from '../../../hooks';
-import {AnalysisVariable} from '../../../stepper/analysis/AnalysisVariable';
-import {faChevronDown} from '@fortawesome/free-solid-svg-icons/faChevronDown';
+import { AnalysisVariable } from '../../../stepper/analysis/AnalysisVariable';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {Icon} from '@blueprintjs/core';
 
 interface SmartContractViewTransactionProps {
     log: SmartContractResultLogLine,
-    failed?: boolean,
+    names: { [key: string]: string }
 }
 
 export function SmartContractViewTransaction(props: SmartContractViewTransactionProps) {
@@ -26,10 +25,12 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
     };
 
     const log = props.log;
+    const addressNames = props.names;
+    const hasMultipleContracts = props.names['_hasMultipleContracts'];
     const hasExpansion = undefined !== log.consumed_gas || undefined !== log.paid_storage_size_diff;
     const transactionStorage = undefined !== log.updated_storage ? log.updated_storage : log.storage;
     const expectedStorage = undefined !== log.expected?.updated_storage ? log.expected?.updated_storage : log.expected?.storage;
-    const wrongExpectedStorage = props.failed && undefined !== expectedStorage && transactionStorage !== expectedStorage;
+    const wrongExpectedStorage = log.isFailed && undefined !== expectedStorage && transactionStorage !== expectedStorage;
     const failMessage = log.fail ? log.fail : (log.stderr ? log.stderr.split("\n")[0] : null);
 
     const getDisplayedStorage = (storage) => {
@@ -53,25 +54,45 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
         </div>;
     }
 
+    const displayKind = (log: SmartContractResultLogLine) => {
+        if (log.name && log.address) {
+            return <span>{capitalizeFirstLetter(log.kind || "Transaction")}: {addressNames[log.address]} ({truncateString(log.address, 10)})</span>;
+        } else if (!log.kind && log.source && log.destination && log.amount) {
+            return <span>Transfer of {log.amount} tez to {displayAddress(log.destination)}</span>;
+        } else {
+            return <span>{capitalizeFirstLetter(log.kind || "Transaction")}</span>;
+        }
+    }
+
+    const displayAddress = (address: string, displayAddress: boolean = true) => {
+        if (addressNames[address]) {
+            if (displayAddress) {
+                return <span>{addressNames[address]} ({truncateString(address, 10)})</span>;
+            } else {
+                return <span>{addressNames[address]}</span>;
+            }
+        }
+        return <span>{truncateString(address, 10)}</span>;
+    }
+
     return (
-        <div className={`smart-contract-log ${props.failed ? 'is-failed' : ''}`}>
+        <div className={`smart-contract-log ${log.isFailed ? 'is-failed' : ''} ${log.internal ? 'is-internal' : ''}`}>
             <div className="smart-contract-log__header">
                 <div className="smart-contract-log__icon">
-                    <FontAwesomeIcon icon={props.failed ? faTimes : faCheck}/>
+                    <FontAwesomeIcon icon={log.isFailed ? faTimes : faCheck} />
                 </div>
                 {undefined !== log.entrypoint ? <div className="smart-contract-log__entry_point">
-                    {/*<FontAwesomeIcon icon={faArrowRight} className="mr-2"/>*/}
-                    <span>{log.entrypoint}({log.arg})</span>
+                    <span>{hasMultipleContracts && log.destination && displayAddress(log.destination, false)}.{log.entrypoint}({log.arg})</span>
                 </div> :
-                    <div className="smart-contract-log__kind">{capitalizeFirstLetter(log.kind)}</div>
+                    <div className="smart-contract-log__kind">{displayKind(log)}</div>
                 }
-                <div className="smart-contract-log__date">{DateTime.fromISO(log.date).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS)}</div>
+                {/* <div className="smart-contract-log__date">{DateTime.fromISO(log.date).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS)}</div> */}
             </div>
             <div className="smart-contract-log__body">
                 <div className="smart-contract-log__scalars">
                     <div className="smart-contract-scalar">
                         <div className="smart-contract-scalar__header">Caller</div>
-                        <div className="smart-contract-scalar__value">{log.as} ({truncateString(log.source, 10)})</div>
+                        <div className="smart-contract-scalar__value">{displayAddress(log.source)}</div>
                     </div>
                     <div className="smart-contract-scalar">
                         <div className="smart-contract-scalar__header">Amount</div>
@@ -80,11 +101,14 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                     {/*<div className="smart-contract-scalar">*/}
                     {/*    <div className="smart-contract-scalar__header">Balance</div>*/}
                     {/*    <div className="smart-contract-scalar__value">{log.balance} tez</div>*/}
-                    {/*</div>*/}
-                    {/*<div className="smart-contract-scalar">*/}
-                    {/*    <div className="smart-contract-scalar__header">Level</div>*/}
-                    {/*    <div className="smart-contract-scalar__value">{log.level}</div>*/}
-                    {/*</div>*/}
+                    {undefined !== log.level && <div className="smart-contract-scalar">
+                        <div className="smart-contract-scalar__header">Level</div>
+                        <div className="smart-contract-scalar__value">{log.level}</div>
+                    </div>}
+                    {undefined !== log.now && <div className="smart-contract-scalar">
+                        <div className="smart-contract-scalar__header">Now</div>
+                        <div className="smart-contract-scalar__value">{DateTime.fromISO(log.now).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS)}</div>
+                    </div>}
                 </div>
 
                 {undefined !== log.arg && <div className="smart-contract-scalar mt-2">
@@ -127,9 +151,9 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                     </div>}
                 </div>}
             </div>
-            {log.failed && <div className={`smart-contract-log__footer ${props.failed ? 'is-failed' : ''}`}>
+            {log.failed && <div className={`smart-contract-log__footer ${log.isFailed ? 'is-failed' : ''}`}>
                 <div>
-                    {props.failed ?
+                    {log.isFailed ?
                         <div>Failed{failMessage ? `, with error: ${failMessage}` : ''}</div>
                         :
                         (log.fail ? <div>Failed as expected, with error: {log.fail}</div> : <div>Failed as expected</div>)

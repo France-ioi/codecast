@@ -59,17 +59,8 @@ window.ace.define(
                 }],
                 "#comment": [{
                     token: "comment.language.michelson",
-                    regex: /#/,
-                    push: [{
-                        token: "comment.language.michelson",
-                        regex: /\n/,
-                        next: "pop"
-                    }, {
-                        token: "constant.character.escape.michelson",
-                        regex: /wordPattern/
-                    }, {
-                        defaultToken: "comment.language.michelson"
-                    }]
+                    regex: /#.*$/,
+                    next: "pop"
                 }],
                 "#multicomment": [{
                     token: "comment.language.michelson",
