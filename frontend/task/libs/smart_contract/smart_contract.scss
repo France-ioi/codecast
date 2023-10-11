@@ -37,6 +37,8 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
     .smart-contract-log__scalars {
       display: flex;
       column-gap: 25px;
+      flex-wrap: wrap;
+      row-gap: 10px;
     }
 
     &.is-failed {
