@@ -532,7 +532,7 @@ html:not([active-view="task"]) {
 .task-mission {
   color: #7c7c7c;
 
-  .success-message, .hints {
+  .success-message, .hints, #taskHints {
     display: none;
   }
 
