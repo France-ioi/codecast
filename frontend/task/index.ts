@@ -371,7 +371,7 @@ function* taskLoadSaga(app: App, action) {
     if (isEmptyDocument(source) && currentTask) {
         const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment, currentTask);
         if (null !== defaultSourceCode) {
-            log.getLogger('task').debug('Load default source code', defaultSourceCode);
+            log.getLogger('editor').debug('Load default source code', defaultSourceCode);
             yield* put(bufferResetDocument({buffer: 'source', document: defaultSourceCode, goToEnd: true}));
         }
     }
@@ -1047,6 +1047,10 @@ export default function (bundle: Bundle) {
 
         app.stepperApi.onInit(function* () {
             log.getLogger('task').debug('stepper init');
+            const environment = yield* appSelect(state => state.environment);
+            for (let library of Object.values(quickAlgoLibraries.getAllLibrariesByName(environment))) {
+                library.onStepperInit();
+            }
             yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         });

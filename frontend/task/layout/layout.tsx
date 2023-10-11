@@ -521,6 +521,7 @@ function allocateSpaceRelativeLayout(node: XmlParserNode, data: BuildZoneLayoutD
     let desiredSizeSum = 0;
     let elementsWithoutDesiredSize = 0;
     const elementsDesiredSize: number[] = [];
+    let elementsWithPercentage = [];
     for (let element of node.elements) {
         let desiredSizeValue = element.props.metadata['desiredSize'];
         let desiredSize: number = null;
@@ -529,11 +530,18 @@ function allocateSpaceRelativeLayout(node: XmlParserNode, data: BuildZoneLayoutD
         } else if (desiredSizeValue.indexOf('%') !== -1) {
             desiredSize = relevantDimensionSize * (parseFloat(desiredSizeValue.split('%')[0]) / 100);
             desiredSizeSum += desiredSize;
+            elementsWithPercentage.push(element);
         } else {
             desiredSize = parseFloat(desiredSizeValue);
             desiredSizeSum += desiredSize;
         }
         elementsDesiredSize.push(desiredSize);
+    }
+
+    // If there is a single element in this group that has a percentage, the percentage is not useful
+    // We want the element to fill the space instead
+    if (elementsWithPercentage.length === 1 && 0 === elementsWithoutDesiredSize) {
+        elementsWithPercentage[0].props.metadata['desiredSize'] = null;
     }
 
     const remainingSize = relevantDimensionSize - desiredSizeSum;
@@ -664,7 +672,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 },
             })
         } : {}),
-        ...(!instructionsAvailable ? {
+        ...(!instructionsAvailable && layoutProps.showVariables ? {
             Variables: (attrs) => ({
                 type: LayoutStackView,
                 metadata: {

@@ -2,9 +2,10 @@ import {call, put} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {Task, TaskServer, TaskTest} from '../task/task_types';
 import {appSelect} from '../hooks';
+import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission_types';
 import {submissionUpdateTaskSubmission} from './submission_slice';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
-import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission_types';
+import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms';
 
 export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -31,7 +32,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
     }
 
     // Use this for now to check if it's a Smart Contract task. Change this in the future
-    if (smartContractPlatforms.find(platform => -1 !== task.supportedLanguages.indexOf(platform))) {
+    if (smartContractPlatforms.find(platform => -1 !== getAvailablePlatformsFromSupportedLanguages(task.supportedLanguages).indexOf(platform))) {
         return {
             ...task,
             gridInfos: {

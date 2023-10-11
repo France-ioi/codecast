@@ -80,17 +80,22 @@ export abstract class QuickAlgoLibrary {
     }
 
     // Set the localLanguageStrings for this context
-    setLocalLanguageStrings(localLanguageStrings) {
+    setLocalLanguageStrings(localLanguageStrings, doNotReplace = false) {
         log.getLogger('libraries').debug('set local language strings', localLanguageStrings);
         const stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
 
         if (typeof window.languageStrings != "object") {
             console.error("window.languageStrings is not an object");
         } else { // merge translations
-            window.languageStrings = merge(
-                window.languageStrings,
-                localLanguageStrings[stringsLanguage],
-            );
+            window.languageStrings = doNotReplace ?
+                merge(
+                    localLanguageStrings[stringsLanguage],
+                    window.languageStrings,
+                ) :
+                merge(
+                    window.languageStrings,
+                    localLanguageStrings[stringsLanguage],
+                );
         }
         this.strings = window.languageStrings;
 
@@ -163,6 +168,7 @@ export abstract class QuickAlgoLibrary {
     }
 
     waitUntilCallback(callback, value = null) {
+        log.getLogger('libraries').debug('Wait until callback', callback, value);
         if (this.runner) {
             this.delaysStartedCount++;
             this.runner.noDelay(callback, value);
@@ -173,6 +179,11 @@ export abstract class QuickAlgoLibrary {
 
     signalExecutionIsOver() {
         this.delayOver();
+    }
+
+    onStepperInit() {
+        this.delaysStartedCount = 0;
+        this.delaysEndedCount = 0;
     }
 
     callCallback (callback, value) {
@@ -264,6 +275,10 @@ export abstract class QuickAlgoLibrary {
     getComponent() {
         return null;
     };
+
+    usesStack() {
+        return true;
+    }
 
     getInnerState(): any {
         // For libs that don't implement inner state, we replay them

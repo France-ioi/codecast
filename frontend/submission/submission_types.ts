@@ -1,5 +1,4 @@
-import {TaskTest, TaskTestServer} from '../task/task_types';
-
+import {TaskTestServer} from '../task/task_types';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {SubmissionExecutionScope} from './submission_slice';
@@ -13,6 +12,7 @@ export interface SubmissionNormalized {
     compilationError: boolean,
     compilationMessage: string | null,
     errorMessage: string | null,
+    metadata: TaskSubmissionServerExecutionMetadata|null,
     firstUserOutput: string | null,
     firstExpectedOutput: string | null,
     evaluated: boolean,
@@ -110,7 +110,12 @@ export interface TaskSubmissionServerResult extends SubmissionNormalized {
 }
 
 export interface TaskSubmissionServerTestResult extends TaskSubmissionTestResult, SubmissionTestNormalized {
+    metadata?: TaskSubmissionServerExecutionMetadata|null,
+}
 
+export interface TaskSubmissionServerExecutionMetadata {
+    errorfile?: string,
+    errorline?: number,
 }
 
 export interface TaskSubmissionResultPayload {

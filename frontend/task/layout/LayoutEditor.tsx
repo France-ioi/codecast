@@ -9,8 +9,8 @@ import {getContextBlocksDataSelector} from "../blocks/blocks";
 import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
+import {selectErrorHighlightFromSubmission} from '../../submission/submission';
 import {platformsList} from '../../stepper/platforms';
-import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {LayoutMobileMode, LayoutType} from './layout_types';
 
@@ -46,6 +46,11 @@ export function LayoutEditor(props: LayoutEditorProps) {
         && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
     );
 
+    const errorHighlight = useAppSelector(selectErrorHighlightFromSubmission);
+    const editorProps = {
+        errorHighlight,
+    };
+
     return (
         <div className="layout-editor" style={props.style}>
             {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
@@ -63,6 +68,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
                     requiredHeight="100%"
                     hasAutocompletion
                     dragEnabled
+                    editorProps={editorProps}
                 />
             </div>
             {'tralalere' !== options.app && <BlocksUsage/>}

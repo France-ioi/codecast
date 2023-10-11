@@ -3,7 +3,7 @@ import {call, delay, put, race, take, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {platformApi} from "../task/platform/platform";
 import {appSelect} from '../hooks';
-import {addNewTaskTest, removeTaskTest, updateCurrentTestId, updateTaskTest} from '../task/task_slice';
+import {addNewTaskTest, selectCurrentTest, removeTaskTest, updateCurrentTestId, updateTaskTest} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
 import {
     quickAlgoLibraryResetAndReloadStateSaga
@@ -27,7 +27,7 @@ import {
     SubmissionTestErrorCode,
     TaskSubmission,
     TaskSubmissionEvaluateOn,
-    TaskSubmissionServer
+    TaskSubmissionServer, TaskSubmissionServerExecutionMetadata, TaskSubmissionServerTestResult
 } from './submission_types';
 import {
     callPlatformValidate,
@@ -42,6 +42,8 @@ import {testErrorCodeData} from './TestsPaneListTest';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {onEditSource} from '../task';
 import {ActionTypes} from '../recorder/actionTypes';
+import {memoize} from 'proxy-memoize';
+import {Range} from '../buffers/buffer_types';
 
 export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
     return TaskSubmissionEvaluateOn.Server === object.type;
@@ -60,6 +62,41 @@ export function selectCurrentSubmission(state: AppStore): TaskSubmission|null {
 
     return state.submission.taskSubmissions[state.submission.currentSubmissionId];
 }
+
+export const selectErrorHighlightFromSubmission = memoize((state: AppStore): Range|null => {
+    if (null === state.submission.currentSubmissionId) {
+        return null;
+    }
+
+    const currentSubmission = state.submission.taskSubmissions[state.submission.currentSubmissionId];
+    if (!isServerSubmission(currentSubmission) || !currentSubmission.result) {
+        return null;
+    }
+
+    const getRangeFromErrorLine = (metadata: TaskSubmissionServerExecutionMetadata) => {
+        if (metadata.errorline) {
+            return {start: {row: metadata.errorline - 1, column: 0}, end: {row: metadata.errorline - 1, column: 999}};
+        }
+
+        return null;
+    }
+
+    const currentTest = selectCurrentTest(state);
+    if (null !== currentTest) {
+        const testResult: TaskSubmissionServerTestResult = currentSubmission.result.tests.find(testResult => testResult.testId === currentTest.id) as TaskSubmissionServerTestResult;
+        if (testResult?.metadata) {
+            return getRangeFromErrorLine(testResult.metadata);
+        }
+    }
+
+    if (currentSubmission.result.metadata?.errorline) {
+        const metadata = currentSubmission.result.metadata;
+
+        return getRangeFromErrorLine(metadata);
+    }
+
+    return null;
+});
 
 export interface TestResultDiffLog {
     remainingInput?: string,

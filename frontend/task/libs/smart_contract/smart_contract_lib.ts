@@ -36,6 +36,7 @@ export interface SmartContractResultLogLine {
 
 export const smartContractPlatformsList = {
     [SmartContractPlatform.SmartPy]: {aceSourceMode: 'python', displayBlocks: true, needsCompilation: true, getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.SmartPy)},
+    [SmartContractPlatform.SmartPy019]: {aceSourceMode: 'python', displayBlocks: true, needsCompilation: true, getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.SmartPy)},
     [SmartContractPlatform.Archetype]: {aceSourceMode: 'archetype', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Archetype)},
     [SmartContractPlatform.Michelson]: {aceSourceMode: 'michelson', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Michelson)},
     [SmartContractPlatform.CameLIGO]: {aceSourceMode: 'ocaml', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.CameLIGO)},
@@ -90,8 +91,17 @@ export class SmartContractLib extends QuickAlgoLibrary {
         return this.display ? SmartContractView : null;
     };
 
+    usesStack() {
+        return false;
+    }
+
     getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): SmartContractLibState {
-        const output = JSON.parse(testResult.output);
+        const testResultSplit = testResult.log.trim().split("\n");
+        const jsonFirstIndex = testResultSplit.findIndex(line => line.trim().startsWith('{'));
+        const testResultJson = testResultSplit.slice(jsonFirstIndex).join("\n");
+
+        const output = JSON.parse(testResultJson);
+
         const log = output.log;
 
         return {

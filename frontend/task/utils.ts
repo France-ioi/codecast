@@ -184,7 +184,9 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
             return TextBufferHandler.documentFromString(content);
         }
     } else if (hasBlockPlatform(platform)) {
-        if (context) {
+        if (context?.infos?.startingExample && platform in context?.infos?.startingExample) {
+            return BlockBufferHandler.documentFromObject({blockly: context.infos.startingExample[platform]});
+        } else if (context?.blocklyHelper) {
             return BlockBufferHandler.documentFromObject({blockly: context.blocklyHelper.getDefaultContent()});
         }
     }

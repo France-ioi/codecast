@@ -14,6 +14,8 @@ import {Alert} from "react-bootstrap";
 import {toHtml} from '../utils/sanitize';
 import {nl2br} from '../common/utils';
 import {Button} from '@blueprintjs/core';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {selectSubmissionsPaneEnabled, selectTaskTests} from '../submission/submission_selectors';
 import {TaskSubmissionServerTestResult} from '../submission/submission_types';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
@@ -85,6 +87,11 @@ export function ContextVisualization() {
         innerVisualization = createAlertVisualization(submission.result.compilationMessage);
     } else if (submission && SubmissionErrorType.ExecutionError === submissionDisplayedError && submission.result && submission.result.errorMessage) {
         innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(nl2br(submission.result.errorMessage))}></div>);
+    } else if (submission && !submission.evaluated && !submission.crashed && isServerSubmission(submission)) {
+        innerVisualization = <div className="task-visualization-not-public">
+            <FontAwesomeIcon icon={faSpinner} className="fa-spin mr-1"/>
+            {getMessage('SUBMISSION_RESULTS_EVALUATING')}
+        </div>;
     } else if (submission && submission.result && submission.result.compilationError) {
         innerVisualization = <div className="task-visualization-not-public">
             <div>

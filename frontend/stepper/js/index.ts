@@ -260,7 +260,9 @@ const getBlockCount = function (block, context: QuickAlgoLibrary) {
 }
 
 export const getBlocklyBlocksUsage = function (answer: BlockDocument, context: QuickAlgoLibrary) {
-    if (!answer || !answer.content?.blockly) {
+    // We cannot evaluate blocks as long as the answer has not been loaded into Blockly
+    // Thus we wait that context.blocklyHelper.programs is filled (by BlocklyEditor)
+    if (!answer || !answer.content?.blockly || !context.blocklyHelper?.programs?.length) {
         return {
             blocksCurrent: 0,
             limitations: [],
