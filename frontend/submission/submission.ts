@@ -63,7 +63,7 @@ export function selectCurrentSubmission(state: AppStore): TaskSubmission|null {
     return state.submission.taskSubmissions[state.submission.currentSubmissionId];
 }
 
-export const selectErrorHighlightFromSubmission = memoize((state: AppStore): Range|null => {
+export const selectErrorHighlightFromSubmission = (state: AppStore): Range|null => {
     if (null === state.submission.currentSubmissionId) {
         return null;
     }
@@ -96,7 +96,7 @@ export const selectErrorHighlightFromSubmission = memoize((state: AppStore): Ran
     }
 
     return null;
-});
+};
 
 export interface TestResultDiffLog {
     remainingInput?: string,
