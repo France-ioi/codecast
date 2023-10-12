@@ -143,7 +143,12 @@ export class SmartContractLib extends QuickAlgoLibrary {
             }
 
             return new LibraryTestResult(
-                output.error?.message
+                output.error?.message,
+                'task-submission-test-result-smart-contract',
+                {
+                    log: output.log,
+                    success: 1 == testResult.score,
+                },
             );
         } catch (e) {
             return LibraryTestResult.fromString(testResult.log);
