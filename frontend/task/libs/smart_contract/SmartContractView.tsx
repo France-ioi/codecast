@@ -43,11 +43,11 @@ export function SmartContractView() {
                 if ('origination' == log.kind) {
                     balances[log.address] = Number(log.amount);
                 }
-                if (isContract(log.source)) {
-                    log.balance_source = balances[log.source] = (balances[log.source] || 0) - Number(log.amount);
+                if (isContract(log.source) && undefined !== balances[log.source]) {
+                    log.balance_source = balances[log.source] -= Number(log.amount);
                 }
-                if (isContract(log.destination)) {
-                    log.balance_destination = balances[log.destination] = (balances[log.destination] || 0) + Number(log.amount);
+                if (isContract(log.destination) && undefined !== balances[log.destination]) {
+                    log.balance_destination = balances[log.destination] += Number(log.amount);
                 }
             }
         });
