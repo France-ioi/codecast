@@ -27,7 +27,7 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
     const log = props.log;
     const addressNames = props.names;
     const hasMultipleContracts = props.names['_hasMultipleContracts'];
-    const hasExpansion = undefined !== log.consumed_gas || undefined !== log.paid_storage_size_diff;
+    const hasExpansion = undefined !== log.consumed_gas || undefined !== log.paid_storage_size_diff || undefined !== log.balance_source || undefined !== log.balance_destination;
     const transactionStorage = undefined !== log.updated_storage ? log.updated_storage : log.storage;
     const expectedStorage = undefined !== log.expected?.updated_storage ? log.expected?.updated_storage : log.expected?.storage;
     const wrongExpectedStorage = log.isFailed && undefined !== expectedStorage && transactionStorage !== expectedStorage;
@@ -98,9 +98,6 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                         <div className="smart-contract-scalar__header">Amount</div>
                         <div className="smart-contract-scalar__value">{log.amount} tez</div>
                     </div>
-                    {/*<div className="smart-contract-scalar">*/}
-                    {/*    <div className="smart-contract-scalar__header">Balance</div>*/}
-                    {/*    <div className="smart-contract-scalar__value">{log.balance} tez</div>*/}
                     {undefined !== log.level && <div className="smart-contract-scalar">
                         <div className="smart-contract-scalar__header">Level</div>
                         <div className="smart-contract-scalar__value">{log.level}</div>
@@ -148,6 +145,14 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
                     {undefined !== log.paid_storage_size_diff && <div className="smart-contract-scalar">
                         <div className="smart-contract-scalar__header">Paid storage size diff</div>
                         <div className="smart-contract-scalar__value">{log.paid_storage_size_diff}</div>
+                    </div>}
+                    {undefined !== log.balance_source && <div className="smart-contract-scalar">
+                        <div className="smart-contract-scalar__header">Caller balance</div>
+                        <div className="smart-contract-scalar__value">{log.balance_source} tez</div>
+                    </div>}
+                    {undefined !== log.balance_destination && <div className="smart-contract-scalar">
+                        <div className="smart-contract-scalar__header">Destination balance</div>
+                        <div className="smart-contract-scalar__value">{log.balance_destination} tez</div>
                     </div>}
                 </div>}
             </div>

@@ -18,8 +18,10 @@ export function SmartContractView() {
 
     const hasFailed = !taskState.success;
 
-    const processInternalOperations = (resultLog: SmartContractResultLogLine[]): SmartContractResultLogLine[] => {
-        let processedLog = [];
+    const isContract = (address: string): boolean => address && !address.startsWith('tz1');
+
+    const processLog = (resultLog: SmartContractResultLogLine[]): SmartContractResultLogLine[] => {
+        let processedLog: SmartContractResultLogLine[] = [];
         resultLog.forEach((log, logIdx) => {
             const failedLog = hasFailed && logIdx === resultLog.length - 1;
             processedLog.push({ isFailed: failedLog, ...log });
@@ -35,12 +37,26 @@ export function SmartContractView() {
                 });
             });
         });
+        let balances = {};
+        processedLog.forEach((log) => {
+            if (log.amount) {
+                if ('origination' == log.kind) {
+                    balances[log.address] = Number(log.amount);
+                }
+                if (isContract(log.source)) {
+                    log.balance_source = balances[log.source] = (balances[log.source] || 0) - Number(log.amount);
+                }
+                if (isContract(log.destination)) {
+                    log.balance_destination = balances[log.destination] = (balances[log.destination] || 0) + Number(log.amount);
+                }
+            }
+        });
         return processedLog;
     };
 
-    const resultLog: SmartContractResultLogLine[] = processInternalOperations(taskState.resultLog);
+    const resultLog: SmartContractResultLogLine[] = processLog(taskState.resultLog);
 
-    const processAddressNames = (resultLog: SmartContractResultLogLine[]) => {
+    const getAddressNames = (resultLog: SmartContractResultLogLine[]) => {
         let aNames = {}; // maps addresses to names
         let cNames = {}; // counts how many times a name is used
         let fcNames = {}; // maps names to first address using it (to rename it to #1)
@@ -65,10 +81,10 @@ export function SmartContractView() {
                 aNames[log.source] = getNewName(log.as, log.source);
             }
         });
-        aNames['_hasMultipleContracts'] = Object.keys(aNames).filter((key) => !key.startsWith('tz1')).length > 1;
+        aNames['_hasMultipleContracts'] = Object.keys(aNames).filter(isContract).length > 1;
         return aNames;
     };
-    const addressNames = processAddressNames(resultLog);
+    const addressNames = getAddressNames(resultLog);
 
     return (
         <div className="smart-contract-visualization">

@@ -17,6 +17,8 @@ export interface SmartContractResultLogLine {
     address?: string,
     amount: number,
     as?: string,
+    balance_source?: number,
+    balance_destination?: number,
     command?: string,
     date?: string,
     destination?: string
