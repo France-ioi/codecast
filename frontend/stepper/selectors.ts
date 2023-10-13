@@ -1,12 +1,12 @@
 import {AppStore, AppStoreReplay} from '../store';
 import {Stepper, StepperControlsType, StepperState} from "./index";
 import {getMessage} from "../lang";
-import {hasBlockPlatform} from "./js";
 import {CompileStatus} from "./compile";
-import {LayoutType} from "../task/layout/layout";
 import * as C from '@france-ioi/persistent-c';
-import {CodecastPlatform, platformsList} from './platforms';
 import {memoize} from 'proxy-memoize';
+import {hasBlockPlatform, platformsList} from './platforms';
+import {LayoutType} from '../task/layout/layout_types';
+import {CodecastPlatform} from './codecast_platform';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;

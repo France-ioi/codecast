@@ -17,17 +17,18 @@ import {IoMode} from "./stepper/io";
 import {SubtitlesState} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
-import {QuickalgoTask, TaskState} from "./task/task_slice";
+import {QuickalgoTask, TaskState} from "./task/task_types";
 import {LayoutState} from "./task/layout/layout";
 import {DocumentationState} from "./task/documentation/documentation_slice";
-import {BufferState} from "./buffers";
 import {EditorState} from "./editor";
 import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
 import {AnalysisState} from "./stepper/analysis/analysis_slice";
 import {ModalState} from "./common/modal_slice";
 import {HintsState, TaskHint} from "./task/hints/hints_slice";
 import {SubmissionState} from "./submission/submission_slice";
-import {CodecastPlatform} from './stepper/platforms';
+
+import {CodecastPlatform} from './stepper/codecast_platform';
+import {BuffersState} from './buffers/buffers_slice';
 
 export enum CodecastOptionsMode {
     Edit = 'edit',
@@ -107,11 +108,11 @@ export interface Panes {
 
 export interface AppStoreReplay {
     arduino: typeof initialStateArduino,
-    buffers: {[key: string]: BufferState},
     stepper: Stepper,
     compile: typeof initialStateCompile,
     task: TaskState,
     platform: PlatformState,
+    buffers: BuffersState,
 
     options: CodecastOptions,
     environment: string,

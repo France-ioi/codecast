@@ -4,10 +4,11 @@ import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {Carousel} from 'react-bootstrap';
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../../hooks";
-import {hintUnlocked, selectAvailableHints} from "./hints_slice";
+import {hintUnlocked} from "./hints_slice";
 import {getMessage} from '../../lang';
 import {TaskHint} from './TaskHint';
 import log from 'loglevel';
+import {selectAvailableHints} from './hints_selectors';
 
 export interface TaskHintProps {
     askHintClassName?: string

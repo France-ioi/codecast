@@ -18,12 +18,12 @@ import {AppStore} from "../store";
 import {RecorderStatus} from "./store";
 import {Bundle} from "../linker";
 import {ReplayContext} from "../player/sagas";
-import {App} from "../index";
 import {PlayerInstant, playerReset} from "../player";
 import {ActionCreatorWithPayload, PayloadAction} from "@reduxjs/toolkit";
 import log from 'loglevel';
 import {appSelect} from '../hooks';
 import {Action, ActionCreator} from 'redux';
+import {App} from '../app_types';
 
 export interface AutoRecordingParams {
     sliceName?: string,

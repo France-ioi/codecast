@@ -17,12 +17,10 @@ import {ZoneLayoutVisualizationGroup} from "./ZoneLayoutVisualizationGroup";
 import {LayoutStackView} from "./LayoutStackView";
 import {LayoutEditor} from "./LayoutEditor";
 import {LayoutDirective} from "./LayoutDirective";
-import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {Screen} from "../../common/screens";
 import {Documentation} from "../documentation/Documentation";
 import {getMessage} from "../../lang";
-import {call, put, select, takeEvery} from "typed-redux-saga";
-import {App} from "../../index";
+import {call, put, takeEvery} from "typed-redux-saga";
 import {PlayerInstant} from "../../player";
 import {askConfirmation} from "../../alert";
 import {selectAnswer} from "../selectors";
@@ -32,6 +30,9 @@ import {capitalizeFirstLetter} from '../../common/utils';
 import {appSelect} from '../../hooks';
 import {taskSetBlocksPanelCollapsed} from '../task_slice';
 import {submissionChangePaneOpen} from '../../submission/submission_slice';
+import {LayoutMobileMode, LayoutPlayerMode, LayoutType, LayoutView} from './layout_types';
+import {App} from '../../app_types';
+import {quickAlgoLibraries, QuickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -766,11 +767,6 @@ function layoutInstructionsIndexChangedReducer(state: AppStore, {payload}) {
     };
 }
 
-export enum LayoutView {
-    Task = 'task', // instructions
-    Editor = 'editor', // solving interface (everything without instructions)
-}
-
 export function selectActiveView(state: AppStore): LayoutView|null {
     const activeViews = Object.entries(state.layout.views).find(([view, active]) => !!active);
 
@@ -796,25 +792,6 @@ export function computeLayoutType(width: number, height: number) {
     } else {
         return LayoutType.Desktop; // and tablet horizontal
     }
-}
-
-export enum LayoutType {
-    Desktop = 'desktop', // and tablet horizontal
-    TabletVertical = 'tablet-vertical',
-    MobileHorizontal = 'mobile-horizontal',
-    MobileVertical = 'mobile-vertical',
-}
-
-export enum LayoutMobileMode {
-    Instructions = 'instructions',
-    Editor = 'editor',
-    Player = 'player',
-    EditorPlayer = 'editor_player',
-}
-
-export enum LayoutPlayerMode {
-    Execution = 'execution',
-    Replay = 'replay',
 }
 
 export interface LayoutState {

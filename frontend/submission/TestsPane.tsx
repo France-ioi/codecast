@@ -1,25 +1,33 @@
-import React from "react";
+import React, {useState} from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {TestsPaneList} from './TestsPaneList';
 import {Dropdown} from 'react-bootstrap';
 import {
     submissionChangeCurrentSubmissionId,
-    submissionChangePaneOpen,
+    submissionChangePaneOpen, submissionCloseCurrentSubmission, SubmissionExecutionScope,
 } from './submission_slice';
 import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {capitalizeFirstLetter} from '../common/utils';
-import {isServerSubmission, TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission';
+import {isServerSubmission} from './submission';
 import {DateTime} from 'luxon';
 import {faClock} from '@fortawesome/free-solid-svg-icons';
+import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
+import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission_types';
+import {Button} from '@blueprintjs/core';
 
-export function TestsPane() {
+export interface TestsPaneProps {
+    open: boolean,
+}
+
+export function TestsPane(props: TestsPaneProps) {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
     const dispatch = useDispatch();
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
-    const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type);
+    const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type && SubmissionExecutionScope.MyTests !== submission.scope);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const getSubmissionLabel = (submissionResult: TaskSubmissionServer) => {
         const dateTime = DateTime.fromISO(submissionResult.date);
@@ -32,9 +40,14 @@ export function TestsPane() {
                     </div>
                 </div>
                 :
-                <div className="submission-label-loader">
-                    <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
+                (submissionResult.crashed ? <div className="submission-label-icon submission-label-icon-crash">
+                    <div className="submission-label-score">
+                        <FontAwesomeIcon icon={faTimes}/>
+                    </div>
                 </div>
+                    : <div className="submission-label-loader">
+                        <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
+                    </div>)
             }
             <div className="submission-label-name">
                 <p>{getMessage('SUBMISSION_RESULTS_LABEL').format({platform: capitalizeFirstLetter(submissionResult.platform)})}</p>
@@ -54,28 +67,30 @@ export function TestsPane() {
         if (null === submission) {
             e.preventDefault();
             e.stopPropagation();
-            dispatch(submissionChangeCurrentSubmissionId(null));
+            setDropdownOpen(false);
+            dispatch(submissionCloseCurrentSubmission());
         } else {
             const submissionIndex = submissionResults.findIndex(otherSubmission => otherSubmission === submission);
-            dispatch(submissionChangeCurrentSubmissionId(submissionIndex));
+            dispatch(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
         }
     };
 
     return (
-        <div className="submission-results">
+        <div className="submission-results" style={{display: props.open ? 'flex' : 'none'}}>
             <div className="submission-results__header">
                 <div className="submission-results__title">{getMessage(currentSubmission ? 'SUBMISSION_RESULTS_TITLE' : 'SUBMISSION_RESULTS_TESTS_TITLE')}</div>
                 <div className="submission-results__close" onClick={closePane}>
                 </div>
             </div>
             {serverSubmissionResults.length > 0 && <div className="submission-results__selector">
-                <Dropdown>
+                <Dropdown
+                    onToggle={(nextShow) => setDropdownOpen(nextShow)}
+                    show={dropdownOpen}
+                >
                     <Dropdown.Toggle>
-                        {null !== currentSubmission && isServerSubmission(currentSubmission) ? <div className="submission-toggle">
+                        {null !== currentSubmission && isServerSubmission(currentSubmission) && SubmissionExecutionScope.MyTests !== currentSubmission.scope ? <div className="submission-toggle">
                             {getSubmissionLabel(currentSubmission)}
-                            <div className="submission-results__close submission-toggle__close" onClick={(e) => setCurrentSubmission(null, e)}>
-                            </div>
-                        </div> : getMessage('SELECT')}
+                        </div> : getMessage('SUBMISSION_RESULTS_SELECT')}
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu>
@@ -87,22 +102,33 @@ export function TestsPane() {
                     </Dropdown.Menu>
                 </Dropdown>
             </div>}
-            {null !== currentSubmission && <div className="submission-results__submission">
-                {currentSubmission.evaluated ?
+
+            {!!currentSubmission && <div className="submission-results__cancel">
+                <Button
+                    className="quickalgo-button"
+                    onClick={(e) => setCurrentSubmission(null, e)}
+                >
+                    Fermer l'évaluation
+                </Button>
+            </div>}
+
+            <div className="submission-results__submission">
+                <div style={{display: !currentSubmission || currentSubmission.evaluated ? 'block' : 'none'}}>
                     <TestsPaneList
                         submission={currentSubmission}
                     />
-                    :
-                    <div className="submission-results__submission-loader">
-                        <FontAwesomeIcon icon={faSpinner} className="fa-spin mr-2"/>
-                        {getMessage('SUBMISSION_RESULTS_EVALUATING')}
+                </div>
+
+                {(currentSubmission && !currentSubmission.evaluated) && (
+                    currentSubmission.crashed ? <div className="submission-results__submission-crashed">
+                        {getMessage('SUBMISSION_RESULTS_CRASHED')}
                     </div>
-                }
-            </div>}
-            {null === currentSubmission && <div className="submission-results__submission">
-                <TestsPaneList
-                />
-            </div>}
+                        : <div className="submission-results__submission-loader">
+                            <FontAwesomeIcon icon={faSpinner} className="fa-spin mr-2"/>
+                            {getMessage('SUBMISSION_RESULTS_EVALUATING')}
+                        </div>
+                )}
+            </div>
         </div>
     )
 }

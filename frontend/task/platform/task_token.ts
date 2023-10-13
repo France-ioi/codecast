@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import {levelScoringData} from "../../submission/task_submission";
 import {TaskLevelName} from "./platform_slice";
+import {levelScoringData} from '../../submission/scoring';
 
 export const getTaskTokenForLevel = (level: TaskLevelName, randomSeed: string) => {
     return getTaskTokenObject(level, randomSeed).get();

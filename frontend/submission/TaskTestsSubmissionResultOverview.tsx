@@ -4,8 +4,9 @@ import {useDispatch} from "react-redux";
 import {ActionTypes} from "../stepper/actionTypes";
 import {StepperStepMode} from "../stepper";
 import {getMessage} from "../lang";
-import {TaskSubmissionResultPayload} from './submission';
 import {useAppSelector} from '../hooks';
+import {selectTaskTests} from './submission_selectors';
+import {TaskSubmissionResultPayload} from './submission_types';
 
 export interface TaskTestsSubmissionResultOverviewProps {
     results: TaskSubmissionResultPayload[],
@@ -13,7 +14,7 @@ export interface TaskTestsSubmissionResultOverviewProps {
 
 export function TaskTestsSubmissionResultOverview(props: TaskTestsSubmissionResultOverviewProps) {
     const dispatch = useDispatch();
-    const tests = useAppSelector(state => state.task.taskTests);
+    const tests = useAppSelector(selectTaskTests);
 
     const seeFailedTest = (testId) => {
         dispatch(updateCurrentTestId({testId}));

@@ -4,7 +4,8 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
-import {App} from "../index";
+
+import {App} from '../app_types';
 
 export const initialStateFullscreen = {
     active: false,

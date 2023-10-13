@@ -3,8 +3,9 @@ import {AppStore} from "../../store";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
-import {App} from "../../index";
-import {CodecastPlatform} from '../platforms';
+
+import {CodecastPlatform} from '../codecast_platform';
+import {App} from '../../app_types';
 
 const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);

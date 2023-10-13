@@ -1,6 +1,10 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from './submission';
-import {SubmissionTestErrorCode} from './task_platform';
+import {
+    SubmissionTestErrorCode,
+    TaskSubmission,
+    TaskSubmissionEvaluateOn,
+    TaskSubmissionResultPayload
+} from './submission_types';
 
 export enum SubmissionExecutionScope {
     ThisTest = 'this_test',
@@ -50,7 +54,7 @@ export const submissionSlice = createSlice({
         submissionAddNewTaskSubmission(state, action: PayloadAction<TaskSubmission>) {
             state.taskSubmissions.push(action.payload);
         },
-        submissionUpdateTaskSubmission(state, action: PayloadAction<{id: number, submission: TaskSubmission}>) {
+        submissionUpdateTaskSubmission(state, action: PayloadAction<{id: number, submission: TaskSubmission, withoutTestChange?: boolean}>) {
             state.taskSubmissions[action.payload.id] = action.payload.submission;
         },
         submissionStartExecutingTest(state, action: PayloadAction<{submissionId: number, testId: number}>) {
@@ -68,8 +72,11 @@ export const submissionSlice = createSlice({
         submissionChangePaneOpen(state, action: PayloadAction<boolean>) {
             state.submissionsPaneOpen = action.payload;
         },
-        submissionChangeCurrentSubmissionId(state, action: PayloadAction<number>) {
-            state.currentSubmissionId = action.payload;
+        submissionChangeCurrentSubmissionId(state, action: PayloadAction<{submissionId: number, withoutTestChange?: boolean}>) {
+            state.currentSubmissionId = action.payload.submissionId;
+        },
+        submissionCloseCurrentSubmission(state) {
+            state.currentSubmissionId = null;
         },
         submissionChangeDisplayedError(state, action: PayloadAction<SubmissionErrorType>) {
             state.submissionDisplayedError = action.payload;
@@ -87,6 +94,7 @@ export const {
     submissionStartExecutingTest,
     submissionSetTestResult,
     submissionChangeDisplayedError,
+    submissionCloseCurrentSubmission,
 } = submissionSlice.actions;
 
 export default submissionSlice;

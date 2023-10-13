@@ -1,18 +1,11 @@
 import {getPythonSpecificBlocks} from '../task/python_utils';
-import {QuickalgoTaskIncludeBlocks} from '../task/task_slice';
-import {Block} from '../task/blocks/blocks';
+import {QuickalgoTaskIncludeBlocks} from '../task/task_types';
 import {getCSpecificBlocks} from './views/c/utils';
 import {NotionsBag} from '../task/blocks/notions';
 import {smartContractPlatformsList} from '../task/libs/smart_contract/smart_contract_lib';
+import {CodecastPlatform} from './codecast_platform';
+import {Block} from '../task/blocks/block_types';
 import {SmartContractPlatform} from '../task/libs/smart_contract/smart_contract_blocks';
-
-export enum CodecastPlatform {
-    Python = 'python',
-    Unix = 'unix',
-    Arduino = 'arduino',
-    Blockly = 'blockly',
-    Scratch = 'scratch',
-}
 
 export interface PlatformData {
     needsCompilation?: boolean,
@@ -23,7 +16,7 @@ export interface PlatformData {
 }
 
 const platformBundles = {
-    'smartpy': [SmartContractPlatform.SmartPy, SmartContractPlatform.SmartPy019],
+    // 'smartpy': [SmartContractPlatform.SmartPy, SmartContractPlatform.SmartPy019],
 };
 
 export function getAvailablePlatformsFromSupportedLanguages(supportedLanguages: string): string[] {
@@ -49,4 +42,8 @@ export const platformsList: {[key: string]: PlatformData} = {
     [CodecastPlatform.Blockly]: {aceSourceMode: 'text'},
     [CodecastPlatform.Scratch]: {aceSourceMode: 'text'},
     ...smartContractPlatformsList,
+};
+
+export const hasBlockPlatform = (platform: CodecastPlatform) => {
+    return CodecastPlatform.Blockly === platform || CodecastPlatform.Scratch === platform;
 };

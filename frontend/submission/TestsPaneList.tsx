@@ -4,13 +4,23 @@ import {getMessage} from '../lang';
 import {useAppSelector} from '../hooks';
 import {TestsPaneListSubTask} from './TestsPaneListSubTask';
 import {TestsPaneListTest} from './TestsPaneListTest';
-import {isServerSubmission, TaskSubmission, TaskSubmissionServer} from './submission';
+import {
+    isServerSubmission
+} from './submission';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {useDispatch} from 'react-redux';
-import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_slice';
+import {
+    submissionChangeDisplayedError,
+    SubmissionErrorType
+} from './submission_slice';
 import {platformsList} from '../stepper/platforms';
 import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
+import {selectTaskTests} from './submission_selectors';
+import {TaskSubmission, TaskSubmissionMode, TaskSubmissionServer} from './submission_types';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {TestsPaneListUserTests} from './TestsPaneListUserTests';
+import {TaskTestGroupType} from '../task/task_types';
 
 export interface SubmissionResultProps {
     submission?: TaskSubmission,
@@ -18,11 +28,13 @@ export interface SubmissionResultProps {
 
 export function TestsPaneList(props: SubmissionResultProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const testsOrdered = useAppSelector(state => state.task.taskTests);
+    const testsOrdered = useAppSelector(selectTaskTests);
     const submission = props.submission;
-    const subTasksOrdered = currentTask.subTasks ? [...currentTask.subTasks] : [];
+    const subTasksOrdered = currentTask?.subTasks ? [...currentTask.subTasks] : [];
     subTasksOrdered.sort((a, b) => a.rank - b.rank);
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    const canCreateOwnTests = context ? context.supportsCustomTests() : false;
 
     const dispatch = useDispatch();
     const showSubmissionError = (type: SubmissionErrorType) => {
@@ -61,7 +73,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
 
     return (
         <div className="submission-result">
-            {submission && isServerSubmission(submission) && 'UserTest' === submission.result.mode && <div>
+            {submission && isServerSubmission(submission) && TaskSubmissionMode.UserTest === submission.result?.mode && <div>
                 <Alert intent={Intent.WARNING}>{getMessage('SUBMISSION_USER_TEST_WARNING')}</Alert>
             </div>}
             {submission && !submission.evaluated && <div>
@@ -71,7 +83,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
             <React.Fragment>
                 {compilationResult}
 
-                {submission && (!isServerSubmission(submission) || !submission.result.compilationError) && submission.result.tests.length === 0 && <div>
+                {submission && (!isServerSubmission(submission) || !submission.result?.compilationError) && submission.result?.tests.length === 0 && <div>
                     {getMessage('SUBMISSION_NO_TESTS')}
                 </div>}
 
@@ -85,16 +97,19 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             />
                         )}
                     </div>}
-                    {subTasksOrdered.length === 0 && <React.Fragment>
-                        {testsOrdered.map((test, testIndex) =>
-                            <TestsPaneListTest
-                                key={testIndex}
-                                index={testIndex}
-                                test={test}
-                                submission={submission}
-                            />
-                        )}
-                    </React.Fragment>}
+                    {testsOrdered.filter(test => !test.subtaskId && test.groupType !== TaskTestGroupType.User).map((test, testIndex) =>
+                        <TestsPaneListTest
+                            key={testIndex}
+                            index={testIndex}
+                            test={test}
+                            submission={submission}
+                        />
+                    )}
+                    {canCreateOwnTests && <div className="submission-result-subtasks">
+                        <TestsPaneListUserTests
+                            submission={submission as TaskSubmissionServer}
+                        />
+                    </div>}
                 </React.Fragment>
             </React.Fragment>
         </div>

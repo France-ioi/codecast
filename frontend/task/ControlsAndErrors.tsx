@@ -3,7 +3,6 @@ import {StepperControls} from "../stepper/views/StepperControls";
 import {stepperClearError} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
 import {Button, Icon} from "@blueprintjs/core";
-import {LayoutMobileMode, LayoutType} from "./layout/layout";
 import {ActionTypes} from "./layout/actionTypes";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCogs, faFileAlt, faPencilAlt, faPlay, faSpinner} from "@fortawesome/free-solid-svg-icons";
@@ -12,18 +11,18 @@ import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "../submission/TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
-import {submissionChangeExecutionMode} from "../submission/submission_slice";
+import {submissionChangeExecutionMode, SubmissionExecutionScope} from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
-import {
-    callPlatformValidate,
-    TaskSubmissionEvaluateOn
-} from '../submission/submission';
 import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
-import {isServerTask, isTestPublic} from './task_slice';
+import {isServerTask, isTestPublic} from './task_types';
 import {LibraryTestResult} from './libs/library_test_result';
 import {getStepperControlsSelector} from '../stepper/selectors';
+import {selectTaskTests} from '../submission/submission_selectors';
+import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
+import {callPlatformValidate} from '../submission/submission_actions';
+import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -31,7 +30,7 @@ export function ControlsAndErrors() {
     const {showStepper} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
-    const taskTests = useAppSelector(state => state.task.taskTests);
+    const taskTests = useAppSelector(selectTaskTests);
     const executionMode = useAppSelector(state => state.submission.executionMode);
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
     const stepperStatus = useAppSelector(state => state.stepper.status);
@@ -101,7 +100,7 @@ export function ControlsAndErrors() {
         dispatch(callPlatformValidate());
     };
 
-    const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
+    const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
     const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
     const clientControlsEnabled = (!currentTask || currentTestPublic) && platformHasClientRunner;
     const serverTask = null !== currentTask && isServerTask(currentTask);
@@ -170,7 +169,7 @@ export function ControlsAndErrors() {
                             <Button
                                 className="quickalgo-button is-medium"
                                 disabled={isEvaluating || StepperStatus.Clear !== stepperStatus}
-                                icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
+                                icon={isEvaluating && SubmissionExecutionScope.Submit === lastSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
                                 onClick={submitSubmission}
                             >
                                 {getMessage('SUBMISSION_EXECUTE_SUBMIT')}

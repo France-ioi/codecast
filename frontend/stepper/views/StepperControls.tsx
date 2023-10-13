@@ -5,7 +5,6 @@ import {ActionTypes} from "../actionTypes";
 import {useDispatch} from "react-redux";
 import {StepperControlsType, stepperMaxSpeed, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
-import {LayoutType} from "../../task/layout/layout";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
     faFastForward,
@@ -21,6 +20,7 @@ import {
 import {getMessage} from "../../lang";
 import {getStepperControlsSelector} from "../selectors";
 import {useAppSelector} from "../../hooks";
+import {LayoutType} from '../../task/layout/layout_types';
 
 interface StepperControlsProps {
     enabled: boolean,

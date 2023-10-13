@@ -27,10 +27,11 @@ import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
-import {App} from "../../index";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 import {appSelect} from '../../hooks';
-import {CodecastPlatform} from '../platforms';
+
+import {CodecastPlatform} from '../codecast_platform';
+import {App} from '../../app_types';
 
 export enum PinMode {
   Input = 0,

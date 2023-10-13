@@ -1,10 +1,10 @@
 import {AppStoreReplay} from "../store";
-import {getBufferModel} from "../buffers/selectors";
 import log from 'loglevel';
+import {Document} from '../buffers/buffer_types';
 
-export function selectAnswer(state: AppStoreReplay): any {
-    const sourceModel = getBufferModel(state, 'source');
-    // log.getLogger('editor').debug('select current answer', sourceModel ? sourceModel.document.getContent() : null);
+export function selectAnswer(state: AppStoreReplay): Document|null {
+    const sourceModel = state.buffers['source'];
+    // log.getLogger('editor').debug('select current answer', sourceModel ? sourceModel.document : null);
 
-    return sourceModel ? sourceModel.document.getContent() : null;
+    return sourceModel ? sourceModel.document : null;
 }

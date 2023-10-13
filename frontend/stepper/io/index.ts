@@ -9,11 +9,11 @@ import {AppStore} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
 import {Bundle} from "../../linker";
-import {App} from "../../index";
 import log from 'loglevel';
-import {CodecastPlatform} from '../platforms';
 import {appSelect} from '../../hooks';
 import {PlayerInstant} from '../../player';
+import {CodecastPlatform} from '../codecast_platform';
+import {App} from '../../app_types';
 
 export enum IoMode {
     Terminal = 'terminal',

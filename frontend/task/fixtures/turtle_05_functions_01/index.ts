@@ -1,4 +1,4 @@
-import {QuickalgoTask} from '../../task_slice';
+import {QuickalgoTask} from '../../task_types';
 
 const images = [
     {path: require('./angles.png')},

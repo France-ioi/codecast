@@ -18,8 +18,8 @@
 import * as C from '@france-ioi/persistent-c';
 import {StepperContext} from "../api";
 import {Bundle} from "../../linker";
-import {App} from "../../index";
 import produce from "immer";
+import {App} from '../../app_types';
 
 export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {

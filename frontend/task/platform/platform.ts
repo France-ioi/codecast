@@ -25,7 +25,6 @@ import {
     taskUnloadEvent,
     taskUpdateTokenEvent,
 } from './actionTypes';
-import {Codecast} from "../../index";
 import {Action, ActionCreator} from "redux";
 import {
     platformSaveAnswer,
@@ -34,16 +33,20 @@ import {
     platformTokenUpdated,
     TaskLevelName,
 } from "./platform_slice";
-import {levelScoringData} from "../../submission/task_submission";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
-import {taskLoad} from '../index';
 import {taskLoaded} from '../task_slice';
 import {appSelect} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
-import {LayoutView} from '../layout/layout';
-import {quickAlgoLibraries} from '../libs/quickalgo_libraries';
+import {SubmissionExecutionScope} from '../../submission/submission_slice';
+import {getMessage} from '../../lang';
+import {LayoutView} from '../layout/layout_types';
+import {taskLoad} from '../task_actions';
+import {levelScoringData} from '../../submission/scoring';
+import {Codecast} from '../../app_types';
+import {Document} from '../../buffers/buffer_types';
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
 
 let getTaskAnswer: () => Generator;
@@ -165,7 +168,7 @@ function* showDifferentViews() {
     if (currentTask && 'showViews' in currentTask?.gridInfos) {
         return currentTask.gridInfos.showViews;
     }
-    if (context.showViews) {
+    if (context?.showViews) {
         return context.showViews();
     }
 
@@ -428,15 +431,17 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             //     answerToken = window.task_token.getAnswerToken(stringify(answer));
             // }
 
+            const answerObject = JSON.parse(answer);
+
             // Score is between 0 and 1
-            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer});
+            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer: answerObject});
             const scoreWithPlatformParameters = minScore + (maxScore - minScore) * score;
 
             yield* put(platformAnswerGraded({score, message}));
             yield* call(success, scoreWithPlatformParameters, message, scoreToken);
         }
     } catch (ex: any) {
-        const message = ex.message === 'Network request failed' ? "Vous n'êtes actuellement pas connecté à Internet."
+        const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
             : (ex.message ? ex.message : ex.toString());
         yield* put(platformAnswerGraded({error: message}));
         console.error(ex);
@@ -471,7 +476,8 @@ function getTopLevel(levels: TaskLevelName[]) {
 
 export interface PlatformTaskGradingParameters {
     level?: TaskLevelName,
-    answer?: any,
+    answer?: Document,
+    scope?: SubmissionExecutionScope,
 }
 
 export interface PlatformTaskGradingResult {

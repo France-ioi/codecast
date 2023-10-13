@@ -1,21 +1,19 @@
-import {AppStore} from '../store';
-import {call, put, select} from 'typed-redux-saga';
+import {call, put} from 'typed-redux-saga';
 import {ReplayContext} from '../player/sagas';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {ActionTypes, stepperRunBackgroundFinished} from './actionTypes';
 import {PlayerInstant} from '../player';
 import log from 'loglevel';
 import {
-    mainQuickAlgoLogger,
-    quickAlgoLibraries,
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../task/libs/quickalgo_libraries';
-import {selectCurrentTestData} from '../task/task_slice';
 import {getCurrentStepperState, isStepperInterrupting} from './selectors';
-import {App, Codecast} from '../index';
 import {StepperContext} from './api';
 import {getNodeRange, initialStateStepper, stepperMaxSpeed, StepperStatus} from './index';
 import {appSelect} from '../hooks';
+import {App, Codecast} from '../app_types';
+import {mainQuickAlgoLogger} from '../task/libs/quick_algo_logger';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 
 export function addStepperRecordAndReplayHooks(app: App) {
     const {recordApi, replayApi} = app;

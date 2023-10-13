@@ -19,7 +19,8 @@ import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
 import {taskChangeSoundEnabled} from "../task/task_slice";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
-import {LayoutType} from "../task/layout/layout";
+
+import {LayoutType} from '../task/layout/layout_types';
 
 interface StepperControlsProps {
     enabled: boolean,

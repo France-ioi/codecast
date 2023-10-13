@@ -7,16 +7,17 @@ import {
 import {AppStore} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
-import {App, Codecast} from "../../index";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {Action} from "redux";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {selectAnswer} from "../../task/selectors";
 import {delay} from "../../player/sagas";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
-import {CodecastPlatform} from '../platforms';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
+import {CodecastPlatform} from '../codecast_platform';
+import {App, Codecast} from '../../app_types';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {documentToString} from '../../buffers/document';
 
 export function* compilePythonCodeSaga(source: string) {
     log.getLogger('python_runner').debug('compile python code', source);
@@ -80,7 +81,7 @@ export default function(bundle: Bundle) {
 
                 context.onError = (diagnostics) => {
                     log.getLogger('python_runner').debug('context error', diagnostics);
-                    channel.put(stepperExecutionError(LibraryTestResult.fromString(diagnostics), false));
+                    channel.put(stepperExecutionError(LibraryTestResult.fromString(diagnostics)));
                 };
 
                 stepperState.directives = {
@@ -91,7 +92,7 @@ export default function(bundle: Bundle) {
 
                 // Currently in replay we don't compile Python code.
                 // TODO: compile Python code so we don't need this
-                const source = selectAnswer(state);
+                const source = documentToString(selectAnswer(state));
                 const pythonSource = source + "\npass";
 
                 const blocksData = getContextBlocksDataSelector({state, context});

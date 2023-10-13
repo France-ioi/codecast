@@ -1,12 +1,12 @@
 import AbstractRunner from "../abstract_runner";
 import {Stepper, StepperState} from "../index";
 import {StepperContext} from "../api";
-import {Block, BlockType} from "../../task/blocks/blocks";
-import {Codecast} from "../../index";
 import {AnalysisSnapshot} from "../analysis/analysis";
 import {fetchLatestBlocklyAnalysis} from "./analysis";
 import log from "loglevel";
 import {getMessage} from '../../lang';
+import {Codecast} from '../../app_types';
+import {Block, BlockType} from '../../task/blocks/block_types';
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
