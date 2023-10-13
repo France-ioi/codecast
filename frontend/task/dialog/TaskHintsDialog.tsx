@@ -23,6 +23,7 @@ export function TaskHintsDialog() {
         <Dialog
             title={getMessage('TRALALERE_MENU_HINTS')}
             icon="lightbulb"
+            className="hints-dialog"
             isOpen={hintsOpen}
             canOutsideClickClose={true}
             canEscapeKeyClose={true}
