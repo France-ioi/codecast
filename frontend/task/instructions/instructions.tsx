@@ -174,8 +174,9 @@ export const getTaskHintsSelector = memoize((state: AppStore) => {
     const platform = state.options.platform;
 
     let hints = [];
-    for (let level of Object.keys(state.platform.levels)) {
-        const instructionsJQuery = formatTaskInstructions(html, platform, level as TaskLevelName);
+
+    const addHintsForLevel = (level: TaskLevelName) => {
+        const instructionsJQuery = formatTaskInstructions(html, platform, level);
         if (instructionsJQuery.find('.hints').length) {
             const levelHints = instructionsJQuery.find('.hints').first().children('div').toArray().map(elm => {
                 return {
@@ -196,6 +197,14 @@ export const getTaskHintsSelector = memoize((state: AppStore) => {
 
             hints = [...hints, ...levelHints];
         }
+    };
+
+    if (Object.keys(state.platform.levels).length) {
+        for (let level of Object.keys(state.platform.levels)) {
+            addHintsForLevel(level as TaskLevelName);
+        }
+    } else {
+        addHintsForLevel(null);
     }
 
     return hints.length ? hints : null;
