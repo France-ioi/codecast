@@ -13,6 +13,7 @@ import {selectErrorHighlightFromSubmission} from '../../submission/submission';
 import {platformsList} from '../../stepper/platforms';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {LayoutMobileMode, LayoutType} from './layout_types';
+import {BufferEditorTabs} from '../../buffers/BufferEditorTabs';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -27,6 +28,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const preventInput = useAppSelector(state => getPlayerState(state).isPlaying);
     const layoutType = useAppSelector(state => state.layout.type);
     const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
+    const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     const dispatch = useDispatch();
@@ -51,27 +53,33 @@ export function LayoutEditor(props: LayoutEditorProps) {
         errorHighlight,
     };
 
+    const editorTabsEnabled = true; // TODO: make an option
+
     return (
         <div className="layout-editor" style={props.style}>
-            {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
-            <div className="task-layout-editor-container">
-                {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
-                    <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
-                </div>}
-                <BufferEditor
-                    platform={platform}
-                    buffer="source"
-                    readOnly={isMobile && LayoutMobileMode.Editor !== layoutMobileMode}
-                    shield={preventInput}
-                    mode={sourceMode}
-                    requiredWidth="100%"
-                    requiredHeight="100%"
-                    hasAutocompletion
-                    dragEnabled
-                    editorProps={editorProps}
-                />
-            </div>
-            {'tralalere' !== options.app && <BlocksUsage/>}
+            {editorTabsEnabled && <BufferEditorTabs/>}
+
+            {null !== activeBufferName && <div className="layout-editor-section">
+                {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
+                <div className="task-layout-editor-container">
+                    {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
+                        <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
+                    </div>}
+                    <BufferEditor
+                        platform={platform}
+                        bufferName={activeBufferName}
+                        readOnly={isMobile && LayoutMobileMode.Editor !== layoutMobileMode}
+                        shield={preventInput}
+                        mode={sourceMode}
+                        requiredWidth="100%"
+                        requiredHeight="100%"
+                        hasAutocompletion
+                        dragEnabled
+                        editorProps={editorProps}
+                    />
+                </div>
+                {'tralalere' !== options.app && <BlocksUsage/>}
+            </div>}
         </div>
     );
 }

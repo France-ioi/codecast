@@ -58,13 +58,16 @@ import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
 import {BufferType, TextDocumentDelta, TextDocumentDeltaAction, Range} from './buffer_types';
 import {
+    bufferChangeActiveBufferName,
     bufferEdit,
-    bufferEditPlain, bufferModelEdit,
-    bufferReset,
+    bufferEditPlain, bufferInit, bufferModelEdit,
+    bufferReset, bufferResetDocument,
     bufferScrollToLine,
     bufferSelect
 } from './buffers_slice';
-import {bufferDownload, bufferReload} from './buffer_actions';
+import {bufferCreateSourceBuffer, bufferDownload, bufferReload} from './buffer_actions';
+import {selectSourceBuffers} from './buffer_selectors';
+import {getDefaultSourceCode} from '../task/utils';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -73,15 +76,12 @@ export default function(bundle: Bundle) {
     bundle.defer(addReplayHooks);
 };
 
-export function getBufferEditor(state, buffer) {
-    return buffer in state.buffers ? state.buffers[buffer].editor : null;
-}
-
 function* buffersSaga() {
     yield* takeEvery(bufferDownload, function* () {
         const state: AppStore = yield* appSelect();
+        const activeBufferName = state.buffers.activeBufferName;
         const platform = state.options.platform;
-        const bufferHandler = getBufferHandler(state.buffers['source']);
+        const bufferHandler = getBufferHandler(state.buffers.buffers[activeBufferName]);
         const answer = bufferHandler.documentToString();
 
         const data = new Blob([answer], {type: 'text/plain'});
@@ -92,6 +92,22 @@ function* buffersSaga() {
         anchor.target = '_blank';
         anchor.download = `program_${platform}.txt`;
         anchor.click();
+    });
+
+    yield* takeEvery(bufferCreateSourceBuffer, function* () {
+        const state: AppStore = yield* appSelect();
+
+        const currentSourceBuffers = selectSourceBuffers(state);
+        let i = 0;
+        while (`source:${i}` in currentSourceBuffers) {
+            i++;
+        }
+
+        const newBufferName = `source:${i}`;
+        const document = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
+        log.getLogger('editor').debug('Load default source code', document);
+        yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
+        yield* put(bufferChangeActiveBufferName(newBufferName));
     });
 
     yield* takeEvery(bufferReload, function* () {
@@ -166,8 +182,8 @@ function addRecordHooks({recordApi}: App) {
         const state: AppStore = yield* appSelect();
 
         init.buffers = {};
-        for (let bufferName of Object.keys(state.buffers)) {
-            const bufferModel = state.buffers[bufferName];
+        for (let bufferName of Object.keys(state.buffers.buffers)) {
+            const bufferModel = state.buffers.buffers[bufferName];
 
             init.buffers[bufferName] = {
                 document: documentToString(bufferModel.document),
@@ -277,8 +293,8 @@ function addReplayHooks({replayApi}: App) {
     replayApi.onReset(function* ({state}: PlayerInstant, quick) {
         /* Reset all buffers. */
         log.getLogger('editor').debug('Editor Buffer Reset', state);
-        for (let buffer of Object.keys(state.buffers)) {
-            const model = state.buffers[buffer];
+        for (let buffer of Object.keys(state.buffers.buffers)) {
+            const model = state.buffers.buffers[buffer];
             yield* put(bufferReset({buffer, state: model}))
         }
     });

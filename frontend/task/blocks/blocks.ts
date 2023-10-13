@@ -241,7 +241,8 @@ export default function (bundle: Bundle) {
         yield* debounce(500, bufferReset, checkSourceSaga);
 
         yield* takeEvery(bufferInit, function* ({payload}) {
-            if ('source' === payload.buffer) {
+            const activeBufferName = yield* appSelect(state => state.buffers.activeBufferName);
+            if (activeBufferName === payload.buffer) {
                 yield* call(checkSourceSaga);
             }
         });

@@ -823,7 +823,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
     *updateBufferFromTests() {
         const currentTest = yield* appSelect(selectCurrentTestData);
-        const buffers = yield* appSelect(state => state.buffers);
+        const buffers = yield* appSelect(state => state.buffers.buffers);
         const inputBufferContent = buffers[inputBufferLibTest] ? documentToString(buffers[inputBufferLibTest].document) : '';
         if (currentTest?.input !== inputBufferContent) {
             yield* put(bufferResetDocument({buffer: inputBufferLibTest, document: TextBufferHandler.documentFromString(currentTest?.input)}));
@@ -844,10 +844,10 @@ export class PrinterLib extends QuickAlgoLibrary {
         yield* takeEvery(bufferEdit, function* ({payload}) {
             const {buffer} = payload;
             if (inputBufferLibTest === buffer) {
-                const inputValue = yield* appSelect(state => getBufferHandler(state.buffers[inputBufferLibTest]).documentToString());
+                const inputValue = yield* appSelect(state => getBufferHandler(state.buffers.buffers[inputBufferLibTest]).documentToString());
                 yield* put(submissionUpdateCurrentTest({input: inputValue}));
             } else if (outputBufferLibTest === buffer) {
-                const outputValue = yield* appSelect(state => getBufferHandler(state.buffers[outputBufferLibTest]).documentToString());
+                const outputValue = yield* appSelect(state => getBufferHandler(state.buffers.buffers[outputBufferLibTest]).documentToString());
                 yield* put(submissionUpdateCurrentTest({output: outputValue}));
             }
         });

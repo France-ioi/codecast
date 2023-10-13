@@ -47,7 +47,7 @@ export function InputOutputView() {
                 <Card.Body>
                     {/*Use a buffer to allow recording cursor moves here*/}
                     <BufferEditor
-                        buffer={inputBufferLibTest}
+                        bufferName={inputBufferLibTest}
                         mode='text'
                         readOnly={!currentTestEditable}
                         requiredWidth='100%'
@@ -77,7 +77,7 @@ export function InputOutputView() {
                         />
                         :
                         <BufferEditor
-                            buffer={outputBufferLibTest}
+                            bufferName={outputBufferLibTest}
                             mode='text'
                             readOnly={!currentTestEditable}
                             requiredWidth='100%'

@@ -49,11 +49,8 @@ export function ContextVisualization() {
         }
     }, [width, height]);
 
-    console.log('new task state', taskState);
-
     useEffect(() => {
         setHasNoFeedback(context && context.hasFeedback && !context.hasFeedback());
-        console.log('has no feedback', context && context.hasFeedback && !context.hasFeedback());
     }, [taskState]);
 
     const dismissSubmissionError = () => {

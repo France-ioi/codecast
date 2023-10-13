@@ -3,7 +3,6 @@ import {Editor, EditorProps} from "./Editor";
 import {useDispatch} from "react-redux";
 import {withResizeDetector} from "react-resize-detector";
 import {BlocklyEditor} from "../stepper/js/BlocklyEditor";
-import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {Block} from '../task/blocks/block_types';
 import {
@@ -35,7 +34,7 @@ interface BufferEditorProps {
     requiredHeight: any,
     width?: number,
     height?: number,
-    buffer: string,
+    bufferName: string,
     hasAutocompletion?: boolean,
     platform?: CodecastPlatform,
     dragEnabled?: boolean,
@@ -43,52 +42,50 @@ interface BufferEditorProps {
 }
 
 const _BufferEditor = (props: BufferEditorProps) => {
-    const {buffer, width, height, platform} = props;
-    const bufferState = useAppSelector(state => state.buffers[buffer]);
-
+    const {bufferName, width, height} = props;
+    const bufferState = useAppSelector(state => state.buffers.buffers[bufferName]);
+    const bufferType = bufferState.type;
+    const highlight = bufferState.source ? useAppSelector(getSourceHighlightFromStateSelector) : null;
     const [prevWidth, setPrevWidth] = useState(0);
     const [prevHeight, setPrevHeight] = useState(0);
 
     const dispatch = useDispatch();
 
-    const bufferType = 'source' === buffer && hasBlockPlatform(platform) ? BufferType.Block : BufferType.Text;
-    const highlight = 'source' === buffer ? useAppSelector(getSourceHighlightFromStateSelector) : null;
-
     useEffect(() => {
         if ((width !== prevWidth || height !== prevHeight) && width && height) {
-            dispatch(bufferResize({buffer}));
+            dispatch(bufferResize({buffer: bufferName}));
         }
         setPrevWidth(width);
         setPrevHeight(height);
     }, [props.width, props.height])
 
     const onInit = useCallback(() => {
-        dispatch(bufferInit({buffer, type: bufferType}));
-    }, [buffer, bufferType]);
+        dispatch(bufferInit({buffer: bufferName, type: bufferType}));
+    }, [bufferName, bufferType]);
 
     const onSelect = useCallback((selection: Range) => {
-        dispatch(bufferSelect({buffer, selection}))
-    }, [buffer]);
+        dispatch(bufferSelect({buffer: bufferName, selection}))
+    }, [bufferName]);
 
     const onEdit = useCallback((delta: TextDocumentDelta) => {
-        dispatch(bufferEdit({buffer, delta}));
-    }, [buffer]);
+        dispatch(bufferEdit({buffer: bufferName, delta}));
+    }, [bufferName]);
 
     const onEditPlain = useCallback((document: Document) => {
-        dispatch(bufferEditPlain({buffer, document}))
-    }, [buffer]);
+        dispatch(bufferEditPlain({buffer: bufferName, document}))
+    }, [bufferName]);
 
     const onScroll = useCallback((firstVisibleRow: number) => {
-        dispatch(bufferScrollToLine({buffer, firstVisibleRow}));
-    }, [buffer]);
+        dispatch(bufferScrollToLine({buffer: bufferName, firstVisibleRow}));
+    }, [bufferName]);
 
     const onDropBlock = useCallback((block: Block, pos: TextPosition) => {
-        dispatch(bufferInsertBlock({buffer, block, pos}));
-    }, [buffer]);
+        dispatch(bufferInsertBlock({buffer: bufferName, block, pos}));
+    }, [bufferName]);
 
     if (BufferType.Block === bufferType) {
         return <BlocklyEditor
-            name={buffer}
+            name={bufferName}
             state={bufferState as BlockBufferState}
             highlight={highlight}
             onInit={onInit}
@@ -99,7 +96,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     }
 
     return <Editor
-        name={buffer}
+        name={bufferName}
         state={bufferState as TextBufferState}
         highlight={highlight}
         onInit={onInit}
@@ -115,7 +112,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         width={props.requiredWidth}
         height={props.requiredHeight}
         hasAutocompletion={props.hasAutocompletion}
-        hasScrollMargin={'source' === buffer}
+        hasScrollMargin={bufferState.source}
         dragEnabled={props.dragEnabled}
         {...props.editorProps}
     />;

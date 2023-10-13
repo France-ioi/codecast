@@ -106,6 +106,8 @@ import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
 import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmission} from '../submission/submission';
 import {bufferEdit, bufferEditPlain, bufferResetDocument} from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
+import {selectSourceBuffers} from '../buffers/buffer_selectors';
+import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -367,13 +369,9 @@ function* taskLoadSaga(app: App, action) {
     });
 
     state = yield* appSelect();
-    const source = selectAnswer(state);
-    if (isEmptyDocument(source) && currentTask) {
-        const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment, currentTask);
-        if (null !== defaultSourceCode) {
-            log.getLogger('editor').debug('Load default source code', defaultSourceCode);
-            yield* put(bufferResetDocument({buffer: 'source', document: defaultSourceCode, goToEnd: true}));
-        }
+    const sourceBuffers = selectSourceBuffers(state);
+    if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state))) {
+        yield* put(bufferCreateSourceBuffer());
     }
 
     yield* call(taskLevelLoadedSaga);
@@ -735,7 +733,8 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery([bufferEdit, bufferEditPlain], function* ({payload}) {
             const {buffer} = payload;
-            if (buffer === 'source') {
+            const bufferState = yield* appSelect(state => state.buffers.buffers[buffer]);
+            if (bufferState.source) {
                 yield* call(onEditSource);
             }
         });

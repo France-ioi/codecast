@@ -172,10 +172,10 @@ export function getBlocksUsage(answer: Document|null, platform: CodecastPlatform
     return null;
 }
 
-export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask: Task): Document|null {
+export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask?: Task): Document|null {
     const context = quickAlgoLibraries.getContext(null, environment);
     if (CodecastPlatform.Python === platform) {
-        if (context && !isServerTask(currentTask)) {
+        if (context && currentTask && !isServerTask(currentTask)) {
             const availableModules = getAvailableModules(context);
             let content = '';
             for (let i = 0; i < availableModules.length; i++) {

@@ -186,16 +186,16 @@ export default function(bundle: Bundle) {
                 yield* put({type: StepperActionTypes.StepperExit});
 
                 // Reset source if we change from a block platform to a non-block platform
-                const currentModel = yield* appSelect(state => state.buffers['source']);
-                if (currentModel?.type !== getBufferTypeFromPlatform(newPlatform)) {
-                    const newModel = createEmptyBufferState(getBufferTypeFromPlatform(newPlatform));
-                    yield* put(bufferReset({buffer: 'source', state: newModel}));
-                }
+                // const currentModel = yield* appSelect(state => state.buffers['source']);
+                // if (currentModel?.type !== getBufferTypeFromPlatform(newPlatform)) {
+                //     const newModel = createEmptyBufferState(getBufferTypeFromPlatform(newPlatform));
+                //     yield* put(bufferReset({buffer: 'source', state: newModel}));
+                // }
 
-                const levels = yield* appSelect(state => state.platform.levels);
-                for (let level of Object.keys(levels)) {
-                    yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
-                }
+                // const levels = yield* appSelect(state => state.platform.levels);
+                // for (let level of Object.keys(levels)) {
+                //     yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
+                // }
                 yield* put(taskLoad({reloadContext: true}));
             }
         });

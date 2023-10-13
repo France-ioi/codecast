@@ -1,10 +1,11 @@
-import React, {useEffect} from "react";
+import React, {useCallback, useEffect} from "react";
 import {useDrag} from "react-dnd";
 import {getEmptyImage} from "react-dnd-html5-backend";
 import {useDispatch} from "react-redux";
 import {toHtml} from "../../utils/sanitize";
 import {Block} from './block_types';
 import {bufferInsertBlock} from '../../buffers/buffers_slice';
+import {useAppSelector} from '../../hooks';
 
 export interface AvailableBlockProps {
     block: Block,
@@ -13,6 +14,7 @@ export interface AvailableBlockProps {
 
 export function AvailableBlock(props: AvailableBlockProps) {
     const {block} = props;
+    const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
 
     const [{isDragging}, drag, dragPreview] = useDrag(() => ({
         type: 'block',
@@ -34,9 +36,9 @@ export function AvailableBlock(props: AvailableBlockProps) {
 
     const dispatch = useDispatch();
 
-    const insertBlock = () => {
-        dispatch(bufferInsertBlock({buffer: 'source', block}));
-    };
+    const insertBlock = useCallback(() => {
+        dispatch(bufferInsertBlock({buffer: activeBufferName, block}));
+    }, [activeBufferName, block]);
 
     return (
         <div className="task-available-block" ref={drag} onClick={insertBlock}>
