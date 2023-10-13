@@ -39,7 +39,7 @@ export interface BlockBufferState extends BufferState {
 export interface BufferState {
     source?: boolean,
     fileName?: string,
-    language?: CodecastPlatform,
+    platform?: CodecastPlatform,
     submissionId?: string,
     type: BufferType,
     document: Document,

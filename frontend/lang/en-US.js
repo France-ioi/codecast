@@ -285,6 +285,8 @@ module.exports = {
     SUBMISSION_EXECUTE_MY_TESTS: 'My tests',
     SUBMISSION_EXECUTE_SUBMIT: 'Submit',
 
+    BUFFER_TAB_FILENAME: 'Code {i}',
+
     SUBMISSION_RESULTS_TESTS_TITLE: 'Tests list',
     SUBMISSION_RESULTS_TITLE: 'Tests results',
     SUBMISSION_RESULTS_EVALUATING: 'Evaluating submission...',

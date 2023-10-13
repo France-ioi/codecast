@@ -10,6 +10,7 @@ import {
 } from './buffer_types';
 import {Block} from '../task/blocks/block_types';
 import {createEmptyBufferState, TextBufferHandler} from './document';
+import {CodecastPlatform} from '../stepper/codecast_platform';
 
 export interface BuffersState {
     buffers: {
@@ -33,8 +34,17 @@ export const buffersSlice = createSlice({
     name: 'buffers',
     initialState: buffersInitialState,
     reducers: {
-        bufferInit(state, action: PayloadAction<{buffer: string, type: BufferType}>) {
+        bufferInit(state, action: PayloadAction<{buffer: string, type: BufferType, source?: boolean, fileName?: string, platform?: CodecastPlatform}>) {
             initBufferIfNeeded(state, action.payload.buffer, action.payload.type);
+            if ('source' in action.payload) {
+                state.buffers[action.payload.buffer].source = action.payload.source;
+            }
+            if ('fileName' in action.payload) {
+                state.buffers[action.payload.buffer].fileName = action.payload.fileName;
+            }
+            if ('platform' in action.payload) {
+                state.buffers[action.payload.buffer].platform = action.payload.platform;
+            }
         },
         bufferEdit(state, action: PayloadAction<{buffer: string, delta: TextDocumentDelta}>) {
             // initBufferIfNeeded(state, buffer);
@@ -101,6 +111,19 @@ export const buffersSlice = createSlice({
         bufferChangeActiveBufferName(state, action: PayloadAction<string>) {
             state.activeBufferName = action.payload;
         },
+        bufferRemove(state, action: PayloadAction<string>) {
+            if (action.payload === state.activeBufferName) {
+                const keys = Object.keys(state.buffers);
+                const currentPosition = keys.indexOf(state.activeBufferName);
+                if (currentPosition - 1 >= 0) {
+                    state.activeBufferName = keys[currentPosition - 1];
+                } else if (currentPosition + 1 <= keys.length - 1) {
+                    state.activeBufferName = keys[currentPosition + 1];
+                }
+            }
+
+            delete state.buffers[action.payload];
+        },
     },
 });
 
@@ -118,6 +141,7 @@ export const {
     bufferInsertBlock,
     bufferClearBlocksToInsert,
     bufferChangeActiveBufferName,
+    bufferRemove,
 } = buffersSlice.actions;
 
 export default buffersSlice;

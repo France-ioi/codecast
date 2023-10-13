@@ -1,0 +1,55 @@
+.layout-editor-tabs {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: #4a4a4a;
+
+  .layout-editor-tab {
+    padding: 5px 20px;
+    width: 200px;
+    background: #bfbfbf;
+    display: block;
+    text-align: center;
+    position: relative;
+    &.is-active {
+      background: #ddd;
+      font-weight: bold;
+    }
+    &:not(.is-active) {
+      cursor: pointer;
+    }
+    svg {
+      width: .7em;
+    }
+    .layout-editor-tab-close {
+      position: absolute;
+      top: calc(50% - 13px);
+      right: 10px;
+      cursor: pointer;
+      display: none;
+    }
+
+    & + .layout-editor-tab {
+      border-left: solid 1px #4a4a4a;
+    }
+
+    &:hover .layout-editor-tab-close, &.is-active .layout-editor-tab-close {
+      display: inline-block;
+    }
+  }
+  .layout-editor-tabs-section {
+    flex: 1 0;
+    display: flex;
+    align-items: center;
+  }
+  .layout-editor-tabs-end {
+    flex: 0 1;
+    display: flex;
+    align-items: center;
+    .layout-editor-tabs-option {
+      padding: 0 10px;
+      color: white;
+      cursor: pointer;
+    }
+  }
+}
