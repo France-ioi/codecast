@@ -85,6 +85,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
 
     if (BufferType.Block === bufferType) {
         return <BlocklyEditor
+            key={bufferName}
             name={bufferName}
             state={bufferState as BlockBufferState}
             highlight={highlight}
@@ -96,6 +97,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     }
 
     return <Editor
+        key={bufferName}
         name={bufferName}
         state={bufferState as TextBufferState}
         highlight={highlight}
