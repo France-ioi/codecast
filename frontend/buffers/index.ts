@@ -68,6 +68,7 @@ import {
 import {bufferCreateSourceBuffer, bufferDownload, bufferDuplicateSourceBuffer, bufferReload} from './buffer_actions';
 import {selectSourceBuffers} from './buffer_selectors';
 import {getDefaultSourceCode} from '../task/utils';
+import {submissionChangeCurrentSubmissionId} from '../submission/submission_slice';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -140,6 +141,20 @@ function* buffersSaga() {
         const document = state.buffers.buffers[activeBuffer].document;
         const documentCopy = JSON.parse(JSON.stringify(document));
         yield* call(createSourceBufferFromDocument, documentCopy);
+    });
+
+    yield* takeEvery(bufferChangeActiveBufferName, function* () {
+        const state: AppStore = yield* appSelect();
+        const activeBuffer = state.buffers.activeBufferName;
+        if (null === activeBuffer) {
+            return;
+        }
+        const submissionIndex = state.buffers.buffers[activeBuffer].submissionIndex;
+        const currentSubmissionIndex = state.submission.currentSubmissionId;
+
+        if (currentSubmissionIndex !== submissionIndex) {
+            yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
+        }
     });
 
     yield* takeEvery(bufferReload, function* () {

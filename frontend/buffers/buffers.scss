@@ -83,3 +83,28 @@
     color: var(--primary-color);
   }
 }
+
+.submission-results__selector {
+  .dropdown {
+    @include codecast-dropdown;
+    .dropdown-menu {
+      background: #4a4a4a;
+      border-radius: 0;
+      border: 0;
+      width: 300px;
+    }
+    .dropdown-toggle {
+      background: transparent !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      &:after {
+        display: none;
+      }
+    }
+    .dropdown-item {
+      color: white;
+    }
+  }
+}
