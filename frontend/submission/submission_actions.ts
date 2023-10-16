@@ -17,3 +17,9 @@ export const submissionRemoveTest = createAction('submission/removeTest', (testI
         testIndex,
     },
 }));
+
+export const submissionCancel = createAction('submission/cancel', (submissionIndex: number) => ({
+    payload: {
+        submissionIndex,
+    },
+}));

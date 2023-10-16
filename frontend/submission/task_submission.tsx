@@ -1,4 +1,4 @@
-import {apply, call, cancel, cancelled, put, race, spawn} from "typed-redux-saga";
+import {apply, call, cancel, cancelled, fork, put, race, spawn} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
 import {
@@ -42,8 +42,10 @@ import {Codecast} from '../app_types';
 import {Document} from '../buffers/buffer_types';
 import {documentToString} from '../buffers/document';
 import {murmurhash3_32_gc} from '../common/utils';
+import {bufferAssociateToSubmission} from '../buffers/buffers_slice';
 
-let executionsCache = {};
+const executionsCache = {};
+const submissionExecutionTasks = {};
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
@@ -225,6 +227,8 @@ class TaskSubmissionExecutor {
         yield* put(submissionAddNewTaskSubmission(serverSubmission));
 
         const submissionIndex = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
+        const activeBufferName = state.buffers.activeBufferName;
+        yield* put(bufferAssociateToSubmission({buffer: activeBufferName, submissionIndex}));
 
         const submissionsPaneEnabled = yield* appSelect(selectSubmissionsPaneEnabled);
         if (submissionsPaneEnabled) {
@@ -233,17 +237,23 @@ class TaskSubmissionExecutor {
 
         yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
 
+        const submissionData = yield* makeServerSubmission(answerContent, newTaskToken, answerToken, platform, userTests);
+        if (!submissionData.success) {
+            yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
+
+            return {score: 0};
+        }
+
+        const submissionId = submissionData.submissionId;
+        submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId);
+        yield submissionExecutionTasks[submissionIndex].toPromise();
+
+        return submissionExecutionTasks[submissionIndex].result();
+    }
+
+    *gradeAnswerLongPolling(submissionIndex: number, serverSubmission: TaskSubmissionServer, submissionId: string) {
         let longPollingTask;
         try {
-            const submissionData = yield* makeServerSubmission(answerContent, newTaskToken, answerToken, platform, userTests);
-            if (!submissionData.success) {
-                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
-
-                return {score: 0};
-            }
-
-            const submissionId = submissionData.submissionId;
-
             const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
             longPollingTask = yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
 
@@ -257,7 +267,7 @@ class TaskSubmissionExecutor {
                 if (submissionResult.compilationError) {
                     yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
                 } else {
-                    const selectedTestId = state.task.currentTestId;
+                    const selectedTestId = yield* appSelect(state => state.task.currentTestId);
                     // Refresh display by showing the test id that was previously selected
                     if (null !== selectedTestId) {
                         yield* put(updateCurrentTestId({testId: selectedTestId}));
@@ -292,7 +302,7 @@ class TaskSubmissionExecutor {
                 if (longPollingTask) {
                     yield* cancel(longPollingTask);
                 }
-                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
+                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true, cancelled: true}}));
             }
         }
     }
@@ -341,6 +351,12 @@ class TaskSubmissionExecutor {
             score: worstRate,
             message: lastMessage,
         };
+    }
+
+    *cancelSubmission(submissionIndex: number) {
+        if (submissionIndex in submissionExecutionTasks) {
+            yield* cancel(submissionExecutionTasks[submissionIndex]);
+        }
     }
 
     setAfterExecutionCallback(callback) {

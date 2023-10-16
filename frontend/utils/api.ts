@@ -1,9 +1,11 @@
 import request from 'superagent';
 import {isLocalStorageEnabled} from "../common/utils";
+import {CANCEL} from 'redux-saga';
 
 export const asyncRequestJson = function(path, body, withCredentials = true) {
-    return new Promise<any>(function(resolve, reject) {
-        const req = request.post(path);
+    let req;
+    const promise = new Promise<any>(function(resolve, reject) {
+        req = request.post(path);
 
         const token = isLocalStorageEnabled() && withCredentials ? window.localStorage.getItem('token') : null;
         req.set('Accept', 'application/json');
@@ -16,11 +18,18 @@ export const asyncRequestJson = function(path, body, withCredentials = true) {
             resolve(res.body);
         });
     });
+
+    promise[CANCEL] = () => {
+        req.abort();
+    };
+
+    return promise;
 };
 
 export const asyncGetJson = function (path, withToken: boolean = false) {
-    return new Promise(function(resolve, reject) {
-        const req = request.get(path);
+    let req;
+    const promise = new Promise(function(resolve, reject) {
+        req = request.get(path);
 
         req.set('Accept', 'application/json');
         const token = isLocalStorageEnabled() && withToken ? window.localStorage.getItem('token') : null;
@@ -35,4 +44,10 @@ export const asyncGetJson = function (path, withToken: boolean = false) {
             resolve(res.body || JSON.parse(res.text));
         });
     });
+
+    promise[CANCEL] = () => {
+        req.abort();
+    };
+
+    return promise;
 };

@@ -75,6 +75,7 @@ export interface TaskSubmission {
     date: string, // ISO format
     evaluated: boolean,
     crashed?: boolean,
+    cancelled?: boolean,
     platform: CodecastPlatform,
     result?: TaskSubmissionResult,
     scope?: SubmissionExecutionScope,

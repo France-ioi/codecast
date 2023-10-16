@@ -174,6 +174,16 @@ export function getBlocksUsage(answer: Document|null, platform: CodecastPlatform
 
 export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask?: Task): Document|null {
     const context = quickAlgoLibraries.getContext(null, environment);
+    if (hasBlockPlatform(platform)) {
+        if (context?.infos?.startingExample && platform in context?.infos?.startingExample) {
+            return BlockBufferHandler.documentFromObject({blockly: context.infos.startingExample[platform]});
+        } else if (context?.blocklyHelper) {
+            return BlockBufferHandler.documentFromObject({blockly: context.blocklyHelper.getDefaultContent()});
+        } else {
+            return BlockBufferHandler.documentFromObject({blockly: '<xml></xml>'});
+        }
+    }
+
     if (CodecastPlatform.Python === platform) {
         if (context && currentTask && !isServerTask(currentTask)) {
             const availableModules = getAvailableModules(context);
@@ -183,15 +193,9 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
             }
             return TextBufferHandler.documentFromString(content);
         }
-    } else if (hasBlockPlatform(platform)) {
-        if (context?.infos?.startingExample && platform in context?.infos?.startingExample) {
-            return BlockBufferHandler.documentFromObject({blockly: context.infos.startingExample[platform]});
-        } else if (context?.blocklyHelper) {
-            return BlockBufferHandler.documentFromObject({blockly: context.blocklyHelper.getDefaultContent()});
-        }
     }
 
-    return null;
+    return TextBufferHandler.documentFromString('');
 }
 
 export function getCurrentImmerState(object) {

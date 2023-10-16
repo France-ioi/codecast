@@ -375,3 +375,13 @@
     margin-top: 10px;
   }
 }
+
+.submission-pending {
+  .message {
+    padding-left: 10px;
+    margin-right: 0 !important;
+  }
+  .stop-icon {
+    cursor: pointer;
+  }
+}

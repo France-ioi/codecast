@@ -40,7 +40,7 @@ export interface BufferState {
     source?: boolean,
     fileName?: string,
     platform?: CodecastPlatform,
-    submissionId?: string,
+    submissionIndex?: number,
     type: BufferType,
     document: Document,
     selection?: any,

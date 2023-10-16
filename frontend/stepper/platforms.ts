@@ -39,8 +39,8 @@ export const platformsList: {[key: string]: PlatformData} = {
     [CodecastPlatform.Python]: {aceSourceMode: 'python', displayBlocks: true, extension: 'py', getSpecificBlocks: getPythonSpecificBlocks},
     [CodecastPlatform.Unix]: {needsCompilation: true, hasMicroSteps: true, extension: 'cpp', aceSourceMode: 'c_cpp', getSpecificBlocks: getCSpecificBlocks},
     [CodecastPlatform.Arduino]: {needsCompilation: true, hasMicroSteps: true, extension: 'cpp', aceSourceMode: 'arduino', getSpecificBlocks: getCSpecificBlocks},
-    [CodecastPlatform.Blockly]: {aceSourceMode: 'text', extension: 'xml',},
-    [CodecastPlatform.Scratch]: {aceSourceMode: 'text', extension: 'xml',},
+    [CodecastPlatform.Blockly]: {aceSourceMode: 'text', extension: 'blockly'},
+    [CodecastPlatform.Scratch]: {aceSourceMode: 'text', extension: 'scratch'},
     ...smartContractPlatformsList,
 };
 

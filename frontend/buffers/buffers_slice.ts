@@ -124,6 +124,12 @@ export const buffersSlice = createSlice({
 
             delete state.buffers[action.payload];
         },
+        bufferAssociateToSubmission(state, action: PayloadAction<{buffer: string, submissionIndex: number}>) {
+            state.buffers[action.payload.buffer].submissionIndex = action.payload.submissionIndex;
+        },
+        bufferDissociateFromSubmission(state, action: PayloadAction<{buffer: string}>) {
+            state.buffers[action.payload.buffer].submissionIndex = null;
+        },
     },
 });
 
@@ -142,6 +148,8 @@ export const {
     bufferClearBlocksToInsert,
     bufferChangeActiveBufferName,
     bufferRemove,
+    bufferAssociateToSubmission,
+    bufferDissociateFromSubmission,
 } = buffersSlice.actions;
 
 export default buffersSlice;

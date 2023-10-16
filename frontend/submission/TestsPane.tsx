@@ -26,7 +26,7 @@ export function TestsPane(props: TestsPaneProps) {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
     const dispatch = useDispatch();
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
-    const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type && SubmissionExecutionScope.MyTests !== submission.scope);
+    const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type && SubmissionExecutionScope.MyTests !== submission.scope && !submission.cancelled);
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const getSubmissionLabel = (submissionResult: TaskSubmissionServer) => {

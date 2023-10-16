@@ -297,6 +297,8 @@ module.exports = {
     SUBMISSION_EXECUTE_SUBMIT: 'Soumettre',
 
     BUFFER_TAB_FILENAME: 'Code {i}',
+    BUFFER_TAB_PENDING_SUBMISSION: 'Soumission en cours',
+    BUFFER_TAB_FINISHED_SUBMISSION: 'Résultats disponibles',
 
     SUBMISSION_RESULTS_TESTS_TITLE: 'Liste des tests',
     SUBMISSION_RESULTS_TITLE: 'Résultat des tests',
@@ -305,6 +307,8 @@ module.exports = {
     SUBMISSION_RESULTS_CRASHED_NETWORK: "Vous n'êtes actuellement pas connecté à Internet.",
     SUBMISSION_RESULTS_LABEL: 'Soumission en {platform}',
     SUBMISSION_RESULTS_SELECT: 'Précédentes soumissions',
+    SUBMISSION_EVALUATING_USER_TESTS: "Évaluation serveur en cours sur les tests perso...",
+    SUBMISSION_EVALUATING_SUBMIT: "Soumission en cours sur le serveur...",
     SUBMISSION_TEST_NUMBER: "Test {testNumber}",
     SUBMISSION_USER_TEST_WARNING: "Attention : cette évaluation a été réalisée sur vos propres tests. Pour obtenir une note, n'oubliez pas de Valider votre réponse.",
     SUBMISSION_ERROR_COMPILATION: "Erreur de compilation",

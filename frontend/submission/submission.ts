@@ -30,7 +30,7 @@ import {
     TaskSubmissionServer, TaskSubmissionServerExecutionMetadata, TaskSubmissionServerTestResult
 } from './submission_types';
 import {
-    callPlatformValidate,
+    callPlatformValidate, submissionCancel,
     submissionCreateTest,
     submissionExecuteMyTests,
     submissionRemoveTest,
@@ -44,6 +44,7 @@ import {onEditSource} from '../task';
 import {ActionTypes} from '../recorder/actionTypes';
 import {memoize} from 'proxy-memoize';
 import {Range} from '../buffers/buffer_types';
+import {bufferDissociateFromSubmission} from '../buffers/buffers_slice';
 
 export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
     return TaskSubmissionEvaluateOn.Server === object.type;
@@ -61,6 +62,23 @@ export function selectCurrentSubmission(state: AppStore): TaskSubmission|null {
     }
 
     return state.submission.taskSubmissions[state.submission.currentSubmissionId];
+}
+
+export function selectCancellableSubmissionIndex(state: AppStore): number|null {
+    if (null !== state.buffers.activeBufferName && null !== state.buffers.buffers[state.buffers.activeBufferName].submissionIndex) {
+        const submissionIndex = state.buffers.buffers[state.buffers.activeBufferName].submissionIndex;
+        const submission = state.submission.taskSubmissions[submissionIndex];
+        if (submission && !submission.evaluated && !submission.crashed) {
+            return submissionIndex;
+        }
+    }
+
+    const pendingUserTestSubmissionIndex = state.submission.taskSubmissions.findIndex(submission => SubmissionExecutionScope.MyTests === submission.scope && !submission.evaluated && !submission.crashed);
+    if (-1 !== pendingUserTestSubmissionIndex) {
+        return pendingUserTestSubmissionIndex;
+    }
+
+    return null;
 }
 
 export const selectErrorHighlightFromSubmission = (state: AppStore): Range|null => {
@@ -311,6 +329,21 @@ export default function (bundle: Bundle) {
             yield* put(removeTaskTest({testToRemoveIndex: removedTestPosition, newTestId: currentTestId}));
             yield* put(updateCurrentTestId({testId: currentTestId}));
             yield* call(onEditSource, 'test');
+        });
+
+        yield* takeEvery(submissionCancel, function* ({payload: {submissionIndex}}) {
+            yield* call([taskSubmissionExecutor, taskSubmissionExecutor.cancelSubmission], submissionIndex);
+
+            const state = yield* appSelect();
+            for (let [bufferName, buffer] of Object.entries(state.buffers.buffers)) {
+                if (submissionIndex === buffer.submissionIndex) {
+                    yield* put(bufferDissociateFromSubmission({buffer: bufferName}));
+                }
+            }
+
+            if (submissionIndex === state.submission.currentSubmissionId) {
+                yield* put(submissionCloseCurrentSubmission());
+            }
         });
     });
 

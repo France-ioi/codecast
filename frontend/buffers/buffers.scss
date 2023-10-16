@@ -5,15 +5,17 @@
   background: #4a4a4a;
 
   .layout-editor-tab {
-    padding: 5px 20px;
-    width: 200px;
+    padding: 5px 35px 5px 20px;
+    min-width: 200px;
     background: #bfbfbf;
+    color: #666;
     display: block;
     text-align: center;
     position: relative;
+    font-weight: 600;
     &.is-active {
-      background: #ddd;
-      font-weight: bold;
+      background: var(--primary-color);
+      color: white;
     }
     &:not(.is-active) {
       cursor: pointer;

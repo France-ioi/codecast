@@ -286,11 +286,15 @@ module.exports = {
     SUBMISSION_EXECUTE_SUBMIT: 'Submit',
 
     BUFFER_TAB_FILENAME: 'Code {i}',
+    BUFFER_TAB_PENDING_SUBMISSION: 'Evaluating submission',
+    BUFFER_TAB_FINISHED_SUBMISSION: 'Available results',
 
     SUBMISSION_RESULTS_TESTS_TITLE: 'Tests list',
     SUBMISSION_RESULTS_TITLE: 'Tests results',
     SUBMISSION_RESULTS_EVALUATING: 'Evaluating submission...',
     SUBMISSION_RESULTS_SELECT: 'Previous evaluations',
+    SUBMISSION_EVALUATING_USER_TESTS: "Evaluating your tests on the server...",
+    SUBMISSION_EVALUATING_SUBMIT: "Evaluating submission on the server...",
     SUBMISSION_RESULTS_CRASHED: "An error has occured during submission evaluation.",
     SUBMISSION_RESULTS_CRASHED_NETWORK: "You are currently offline.",
     SUBMISSION_RESULTS_LABEL: 'Submission in {platform}',
