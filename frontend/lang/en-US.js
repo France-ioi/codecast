@@ -17,6 +17,7 @@ module.exports = {
     YES: 'Yes',
     NO: 'No',
     CONFIRM: 'Confirm',
+    COPY: 'Make a copy',
     FULLSCREEN: "fullscreen",
     EXIT_FULLSCREEN: "exit fullscreen",
     SAVE_RECORDING: "Save recording",
@@ -288,6 +289,7 @@ module.exports = {
     BUFFER_TAB_FILENAME: 'Code {i}',
     BUFFER_TAB_PENDING_SUBMISSION: 'Evaluating submission',
     BUFFER_TAB_FINISHED_SUBMISSION: 'Available results',
+    BUFFER_TAB_NOT_EDITABLE: "This code is no longer editable.",
 
     SUBMISSION_RESULTS_TESTS_TITLE: 'Tests list',
     SUBMISSION_RESULTS_TITLE: 'Tests results',

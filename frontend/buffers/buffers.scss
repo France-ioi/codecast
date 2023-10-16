@@ -55,3 +55,31 @@
     }
   }
 }
+
+.layout-editor-read-only {
+  margin: 10px 40px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  background: #e0e8f5;
+  border-radius: 500px;
+  color: var(--primary-color);
+  .layout-editor-read-only-icon {
+    background: var(--primary-color);
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    color: white;
+    svg {
+      width: 0.7em;
+    }
+  }
+  .layout-editor-read-only-link {
+    font-weight: 600;
+    text-decoration: underline;
+    color: var(--primary-color);
+  }
+}

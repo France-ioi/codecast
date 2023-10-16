@@ -53,10 +53,10 @@ import {stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {appSelect} from '../hooks';
-import {hasBlockPlatform, platformsList} from '../stepper/platforms';
+import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
-import {BufferType, TextDocumentDelta, TextDocumentDeltaAction, Range} from './buffer_types';
+import {BufferType, TextDocumentDelta, TextDocumentDeltaAction, Range, Document} from './buffer_types';
 import {
     bufferChangeActiveBufferName,
     bufferEdit,
@@ -65,7 +65,7 @@ import {
     bufferScrollToLine,
     bufferSelect
 } from './buffers_slice';
-import {bufferCreateSourceBuffer, bufferDownload, bufferReload} from './buffer_actions';
+import {bufferCreateSourceBuffer, bufferDownload, bufferDuplicateSourceBuffer, bufferReload} from './buffer_actions';
 import {selectSourceBuffers} from './buffer_selectors';
 import {getDefaultSourceCode} from '../task/utils';
 
@@ -75,6 +75,36 @@ export default function(bundle: Bundle) {
     bundle.defer(addRecordHooks);
     bundle.defer(addReplayHooks);
 };
+
+function* createSourceBufferFromDocument(document: Document) {
+    const state: AppStore = yield* appSelect();
+
+    const currentSourceBuffers = selectSourceBuffers(state);
+    let i = 0;
+    while (`source:${i}` in currentSourceBuffers) {
+        i++;
+    }
+    const newBufferName = `source:${i}`;
+
+    const platform = state.options.platform;
+    let j = 1;
+    while (Object.values(currentSourceBuffers).find(buffer => platform === buffer.platform && getMessage('BUFFER_TAB_FILENAME').format({i: j}) === buffer.fileName)) {
+        j++;
+    }
+    const newFileName = getMessage('BUFFER_TAB_FILENAME').format({i: j});
+
+    const newBuffer = {
+        buffer: newBufferName,
+        type: document.type,
+        source: true,
+        fileName: newFileName,
+        platform,
+    };
+
+    yield* put(bufferInit(newBuffer));
+    yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
+    yield* put(bufferChangeActiveBufferName(newBufferName));
+}
 
 function* buffersSaga() {
     yield* takeEvery(bufferDownload, function* () {
@@ -96,35 +126,20 @@ function* buffersSaga() {
 
     yield* takeEvery(bufferCreateSourceBuffer, function* () {
         const state: AppStore = yield* appSelect();
-
-        const currentSourceBuffers = selectSourceBuffers(state);
-        let i = 0;
-        while (`source:${i}` in currentSourceBuffers) {
-            i++;
-        }
-        const newBufferName = `source:${i}`;
-
-        const platform = state.options.platform;
-        let j = 1;
-        while (Object.values(currentSourceBuffers).find(buffer => platform === buffer.platform && getMessage('BUFFER_TAB_FILENAME').format({i: j}) === buffer.fileName)) {
-            j++;
-        }
-        const newFileName = getMessage('BUFFER_TAB_FILENAME').format({i: j});
-
         const document = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
         log.getLogger('editor').debug('Load default source code', document);
+        yield* call(createSourceBufferFromDocument, document);
+    });
 
-        const newBuffer = {
-            buffer: newBufferName,
-            type: document.type,
-            source: true,
-            fileName: newFileName,
-            platform,
-        };
-
-        yield* put(bufferInit(newBuffer));
-        yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
-        yield* put(bufferChangeActiveBufferName(newBufferName));
+    yield* takeEvery(bufferDuplicateSourceBuffer, function* () {
+        const state: AppStore = yield* appSelect();
+        const activeBuffer = state.buffers.activeBufferName;
+        if (null === activeBuffer) {
+            return;
+        }
+        const document = state.buffers.buffers[activeBuffer].document;
+        const documentCopy = JSON.parse(JSON.stringify(document));
+        yield* call(createSourceBufferFromDocument, documentCopy);
     });
 
     yield* takeEvery(bufferReload, function* () {

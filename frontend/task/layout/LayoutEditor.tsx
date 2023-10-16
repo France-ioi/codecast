@@ -9,11 +9,17 @@ import {getContextBlocksDataSelector} from "../blocks/blocks";
 import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
-import {selectErrorHighlightFromSubmission} from '../../submission/submission';
+import {
+    selectActiveBufferPendingSubmissionIndex,
+    selectErrorHighlightFromSubmission
+} from '../../submission/submission';
 import {platformsList} from '../../stepper/platforms';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {LayoutMobileMode, LayoutType} from './layout_types';
 import {BufferEditorTabs} from '../../buffers/BufferEditorTabs';
+import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
+import {getMessage} from '../../lang';
+import {bufferCreateSourceBuffer, bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -29,24 +35,24 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const layoutType = useAppSelector(state => state.layout.type);
     const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
+    const activeBufferPendingSubmissionIndex = useAppSelector(selectActiveBufferPendingSubmissionIndex);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     const dispatch = useDispatch();
+
+    console.log('active buffer pending', activeBufferPendingSubmissionIndex);
 
     const collapseBlocks = () => {
         dispatch(taskSetBlocksPanelCollapsed({collapsed: !blocksCollapsed, manual: true}));
     };
 
+    const duplicateCurrentSource = () => {
+        dispatch(bufferDuplicateSourceBuffer());
+    };
+
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector({state, context}) : []);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
-    const displayBlocks = !!(
-        context
-        && blocks.length
-        && platformsList[platform].displayBlocks
-        && 'tralalere' !== options.app
-        && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
-    );
 
     const errorHighlight = useAppSelector(selectErrorHighlightFromSubmission);
     const editorProps = {
@@ -54,13 +60,31 @@ export function LayoutEditor(props: LayoutEditorProps) {
     };
 
     const editorTabsEnabled = true; // TODO: make an option
+    const readOnly = (isMobile && LayoutMobileMode.Editor !== layoutMobileMode) || null !== activeBufferPendingSubmissionIndex;
+
+    const displayBlocks = !!(
+        context
+        && blocks.length
+        && platformsList[platform].displayBlocks
+        && 'tralalere' !== options.app
+        && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
+        && !readOnly
+    );
 
     return (
         <div className="layout-editor" style={props.style}>
             {editorTabsEnabled && <BufferEditorTabs/>}
 
+            {null !== activeBufferPendingSubmissionIndex && <div className="layout-editor-read-only">
+                <div className="layout-editor-read-only-icon">
+                    <FontAwesomeIcon icon={faBell}/>
+                </div>
+                <span className="ml-2">{getMessage('BUFFER_TAB_NOT_EDITABLE')}</span>
+                <a onClick={duplicateCurrentSource} className="layout-editor-read-only-link ml-1">{getMessage('COPY')}</a>
+            </div>}
+
             {null !== activeBufferName && <div className="layout-editor-section">
-                {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
+                {currentTask && displayBlocks && !readOnly && <AvailableBlocks collapsed={blocksCollapsed}/>}
                 <div className="task-layout-editor-container">
                     {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
                         <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
@@ -68,7 +92,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
                     <BufferEditor
                         platform={platform}
                         bufferName={activeBufferName}
-                        readOnly={isMobile && LayoutMobileMode.Editor !== layoutMobileMode}
+                        readOnly={readOnly}
                         shield={preventInput}
                         mode={sourceMode}
                         requiredWidth="100%"

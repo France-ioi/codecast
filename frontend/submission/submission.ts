@@ -81,6 +81,20 @@ export function selectCancellableSubmissionIndex(state: AppStore): number|null {
     return null;
 }
 
+export function selectActiveBufferPendingSubmissionIndex(state: AppStore): number|null {
+    if (null === state.buffers.activeBufferName || null === state.buffers.buffers[state.buffers.activeBufferName].submissionIndex) {
+        return null;
+    }
+
+    const submissionIndex = state.buffers.buffers[state.buffers.activeBufferName].submissionIndex;
+    const submission = state.submission.taskSubmissions[submissionIndex];
+    if (submission && !submission.evaluated && !submission.crashed) {
+        return submissionIndex;
+    }
+
+    return null;
+}
+
 export const selectErrorHighlightFromSubmission = (state: AppStore): Range|null => {
     if (null === state.submission.currentSubmissionId) {
         return null;
