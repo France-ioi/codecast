@@ -233,6 +233,9 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
         if (taskLevels && Object.keys(taskLevels).length && answer) {
             const currentLevel = yield getTaskLevel();
             const answerObject = JSON.parse(answer);
+            if ('object' !== typeof answerObject) {
+                throw new Error("Answer is not an object: " + answer);
+            }
             for (let {level} of Object.values(taskLevels)) {
                 yield* put(platformSaveAnswer({level, answer: answerObject[level]}));
                 if (level === currentLevel) {
