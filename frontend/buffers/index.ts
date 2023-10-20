@@ -32,6 +32,7 @@ import {
     documentToString,
     expandRange,
     getBufferHandler,
+    TextBufferHandler,
     uncompressIntoDocument
 } from "./document";
 import "ace-builds/src-min-noconflict/mode-c_cpp";
@@ -56,7 +57,14 @@ import {appSelect} from '../hooks';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
-import {BufferType, TextDocumentDelta, TextDocumentDeltaAction, Range, Document} from './buffer_types';
+import {
+    BufferType,
+    TextDocumentDelta,
+    TextDocumentDeltaAction,
+    Range,
+    Document,
+    BufferStateParameters
+} from './buffer_types';
 import {
     bufferChangeActiveBufferName,
     bufferEdit,
@@ -68,7 +76,7 @@ import {
 import {bufferCreateSourceBuffer, bufferDownload, bufferDuplicateSourceBuffer, bufferReload} from './buffer_actions';
 import {selectSourceBuffers} from './buffer_selectors';
 import {getDefaultSourceCode} from '../task/utils';
-import {submissionChangeCurrentSubmissionId} from '../submission/submission_slice';
+import {submissionChangeCurrentSubmissionId, submissionCloseCurrentSubmission} from '../submission/submission_slice';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -77,16 +85,22 @@ export default function(bundle: Bundle) {
     bundle.defer(addReplayHooks);
 };
 
-function* createSourceBufferFromDocument(document: Document) {
-    const state: AppStore = yield* appSelect();
-
-    const currentSourceBuffers = selectSourceBuffers(state);
+function* getNewBufferName() {
+    const currentSourceBuffers = yield* appSelect(selectSourceBuffers);
     let i = 0;
     while (`source:${i}` in currentSourceBuffers) {
         i++;
     }
-    const newBufferName = `source:${i}`;
 
+    return `source:${i}`;
+}
+
+function* createSourceBufferFromDocument(document: Document) {
+    const state: AppStore = yield* appSelect();
+
+    const newBufferName = yield* call(getNewBufferName);
+
+    const currentSourceBuffers = selectSourceBuffers(state);
     const platform = state.options.platform;
     let j = 1;
     while (Object.values(currentSourceBuffers).find(buffer => platform === buffer.platform && getMessage('BUFFER_TAB_FILENAME').format({i: j}) === buffer.fileName)) {
@@ -94,15 +108,41 @@ function* createSourceBufferFromDocument(document: Document) {
     }
     const newFileName = getMessage('BUFFER_TAB_FILENAME').format({i: j});
 
-    const newBuffer = {
-        buffer: newBufferName,
+    const newBuffer: BufferStateParameters = {
         type: document.type,
         source: true,
         fileName: newFileName,
         platform,
     };
 
-    yield* put(bufferInit(newBuffer));
+    yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
+    yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
+    yield* put(bufferChangeActiveBufferName(newBufferName));
+}
+
+function* createBufferFromSubmission(submissionId: number) {
+    const newBufferName = yield* call(getNewBufferName);
+
+    const state: AppStore = yield* appSelect();
+
+    const submission = state.submission.taskSubmissions[submissionId];
+    if (!submission?.result?.sourceCode?.source) {
+        return;
+    }
+
+    const platform = submission.result.sourceCode.params.sLangProg as CodecastPlatform;
+
+    const document = TextBufferHandler.documentFromString(submission?.result?.sourceCode?.source);
+
+    const newBuffer: BufferStateParameters = {
+        type: document.type,
+        source: true,
+        fileName: null,
+        platform,
+        submissionIndex: submissionId,
+    };
+
+    yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
     yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
     yield* put(bufferChangeActiveBufferName(newBufferName));
 }
@@ -177,6 +217,27 @@ function* buffersSaga() {
                 yield* put(stepperDisplayError(e.message));
             }
         }
+    });
+
+    yield* takeEvery(submissionChangeCurrentSubmissionId, function* () {
+        const state = yield* appSelect();
+        const newSubmissionId = state.submission.currentSubmissionId;
+        if (null === newSubmissionId) {
+            return;
+        }
+
+        // Open (or re-open) a buffer for this submission
+        for (let [bufferName, bufferState] of Object.entries(state.buffers.buffers)) {
+            if (newSubmissionId === bufferState.submissionIndex) {
+                if (state.buffers.activeBufferName !== bufferName) {
+                    yield* put(bufferChangeActiveBufferName(bufferName));
+                }
+
+                return;
+            }
+        }
+
+        yield* call(createBufferFromSubmission, newSubmissionId);
     });
 }
 

@@ -7,10 +7,10 @@ import {
     TextPosition,
     BufferType,
     TextDocument,
+    BufferStateParameters,
 } from './buffer_types';
 import {Block} from '../task/blocks/block_types';
 import {createEmptyBufferState, TextBufferHandler} from './document';
-import {CodecastPlatform} from '../stepper/codecast_platform';
 
 export interface BuffersState {
     buffers: {
@@ -34,16 +34,12 @@ export const buffersSlice = createSlice({
     name: 'buffers',
     initialState: buffersInitialState,
     reducers: {
-        bufferInit(state, action: PayloadAction<{buffer: string, type: BufferType, source?: boolean, fileName?: string, platform?: CodecastPlatform}>) {
+        bufferInit(state, action: PayloadAction<{buffer: string} & BufferStateParameters>) {
             initBufferIfNeeded(state, action.payload.buffer, action.payload.type);
-            if ('source' in action.payload) {
-                state.buffers[action.payload.buffer].source = action.payload.source;
-            }
-            if ('fileName' in action.payload) {
-                state.buffers[action.payload.buffer].fileName = action.payload.fileName;
-            }
-            if ('platform' in action.payload) {
-                state.buffers[action.payload.buffer].platform = action.payload.platform;
+            for (let item of ['source', 'fileName', 'platform', 'submissionIndex']) {
+                if (item in action.payload) {
+                    state.buffers[action.payload.buffer][item] = action.payload[item];
+                }
             }
         },
         bufferEdit(state, action: PayloadAction<{buffer: string, delta: TextDocumentDelta}>) {

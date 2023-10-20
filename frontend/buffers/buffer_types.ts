@@ -36,12 +36,16 @@ export interface BlockBufferState extends BufferState {
     selection?: string,
 }
 
-export interface BufferState {
+export interface BufferStateParameters {
     source?: boolean,
     fileName?: string,
     platform?: CodecastPlatform,
     submissionIndex?: number,
     type: BufferType,
+    document?: Document,
+}
+
+export interface BufferState extends BufferStateParameters {
     document: Document,
     selection?: any,
     firstVisibleRow?: number,

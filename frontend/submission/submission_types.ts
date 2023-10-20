@@ -94,6 +94,12 @@ export interface TaskSubmissionResult {
     compilationMessage?: string | null,
     errorMessage?: string | null,
     mode?: TaskSubmissionMode,
+    sourceCode?: {
+        params: {
+            sLangProg: string,
+        },
+        source: string,
+    },
 }
 
 export interface TaskSubmissionClient extends TaskSubmission {
