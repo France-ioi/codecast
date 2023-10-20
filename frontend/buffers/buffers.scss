@@ -85,7 +85,13 @@
 }
 
 .submission-results__selector {
+  .no-recent-submission {
+    color: white;
+    padding: 0 10px;
+  }
+
   .dropdown {
+    cursor: auto;
     @include codecast-dropdown;
     .dropdown-menu {
       background: #4a4a4a;
@@ -104,7 +110,10 @@
       }
     }
     .dropdown-item {
-      color: white;
+      color: white !important;
+      &:hover, &:focus, &:active {
+        background: #636363 !important;
+      }
     }
   }
 }

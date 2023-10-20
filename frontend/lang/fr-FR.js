@@ -301,6 +301,7 @@ module.exports = {
     BUFFER_TAB_PENDING_SUBMISSION: 'Soumission en cours',
     BUFFER_TAB_FINISHED_SUBMISSION: 'Résultats disponibles',
     BUFFER_TAB_NOT_EDITABLE: "Ce code n'est plus éditable.",
+    BUFFER_TAB_NO_PAST_SUBMISSION: "Aucune soumission récente",
 
     SUBMISSION_RESULTS_TESTS_TITLE: 'Liste des tests',
     SUBMISSION_RESULTS_TITLE: 'Résultat des tests',

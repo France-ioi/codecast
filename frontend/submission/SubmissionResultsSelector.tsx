@@ -19,10 +19,7 @@ export interface SubmissionResultsSelectorProps {
 
 export function SubmissionResultsSelector(props: SubmissionResultsSelectorProps) {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
-    const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
     const dispatch = useDispatch();
-
-    // {serverSubmissionResults.length > 0 && }
 
     const setCurrentSubmission = (submission: TaskSubmission|null, e = null) => {
         if (null === submission) {
@@ -35,15 +32,6 @@ export function SubmissionResultsSelector(props: SubmissionResultsSelectorProps)
             dispatch(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
         }
     };
-
-    // {!!currentSubmission && <div className="submission-results__cancel">
-    //     <Button
-    //         className="quickalgo-button"
-    //         onClick={(e) => setCurrentSubmission(null, e)}
-    //     >
-    //         Fermer l'évaluation
-    //     </Button>
-    // </div>}
 
     const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type && SubmissionExecutionScope.MyTests !== submission.scope && !submission.cancelled);
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -89,9 +77,8 @@ export function SubmissionResultsSelector(props: SubmissionResultsSelectorProps)
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu>
-                    {0 === serverSubmissionResults.length && <div>
-                        Aucune soumission passée
-                        {/*TODO: translate this*/}
+                    {0 === serverSubmissionResults.length && <div className="no-recent-submission">
+                        {getMessage('BUFFER_TAB_NO_PAST_SUBMISSION')}
                     </div>}
                     {serverSubmissionResults.map((submission, submissionIndex) =>
                         <Dropdown.Item key={submissionIndex} onClick={() => setCurrentSubmission(submission)}>
