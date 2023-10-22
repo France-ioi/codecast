@@ -89,7 +89,7 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
             }
             return isContract(a) ? 1 : -1;
         })
-        return addresses.map((address, _idx) => <div className="smart-contract-log__balances-balance">
+        return addresses.map((address, _idx) => <div className="smart-contract-log__balances-balance" key={address}>
             <div className="smart-contract-log__balances-address">{displayAddressName(address)}</div>
             <div className="smart-contract-log__balances-dots"></div>
             <div className="smart-contract-log__balances-amount">{log.balances[address]} tez</div>
