@@ -131,6 +131,48 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
     }
   }
 
+  .smart-contract-log__balances {
+    margin-top: 8px;
+    margin-bottom: 6px;
+
+    .smart-contract-log__balances-header {
+      text-transform: uppercase;
+      font-size: 0.9em;
+      color: grey;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .smart-contract-log__balances-body {
+      margin-left: 8px;
+    }
+
+    .smart-contract-log__balances-balance {
+      display: flex;
+
+      .smart-contract-log__balances-address {
+        flex: 0 0 auto;
+        font-size: 0.9em;
+      }
+
+      .smart-contract-log__balances-dots {
+        flex: 0 1 99%;
+        display: inline-block;
+        background-image: linear-gradient(to right, grey 33%, rgba(255,255,255,0) 0%);
+        background-position: bottom;
+        background-size: 4px 1px;
+        background-repeat: repeat-x;
+      }
+
+      .smart-contract-log__balances-amount {
+        flex: 0 0 auto;
+        display: inline-block;
+        font-size: 0.9em;
+        margin-left: 8px;
+      }
+    }
+  }
+
   .smart-contract-log__footer {
     display: flex;
     padding: 8px;

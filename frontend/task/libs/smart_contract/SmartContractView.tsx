@@ -1,7 +1,7 @@
 import React from "react";
 import {AppStore} from "../../../store";
 import {useAppSelector} from "../../../hooks";
-import {SmartContractResultLogLine} from './smart_contract_lib';
+import { SmartContractResultLogLine, isContract } from './smart_contract_lib';
 import {SmartContractViewTransaction} from './SmartContractViewTransaction';
 import {Alert} from "react-bootstrap";
 import {getMessage} from '../../../lang';
@@ -17,8 +17,6 @@ export function SmartContractView() {
     }
 
     const hasFailed = !taskState.success;
-
-    const isContract = (address: string): boolean => address && !address.startsWith('tz1');
 
     const processLog = (resultLog: SmartContractResultLogLine[]): SmartContractResultLogLine[] => {
         let processedLog: SmartContractResultLogLine[] = [];
@@ -43,13 +41,16 @@ export function SmartContractView() {
                 if ('origination' == log.kind) {
                     balances[log.address] = Number(log.amount);
                 }
-                if (isContract(log.source) && undefined !== balances[log.source]) {
-                    log.balance_source = balances[log.source] -= Number(log.amount);
+                if (log.source && (undefined !== balances[log.source] || !isContract(log.source))) {
+                    // if undefined, it's not a contract and starts with 10000 tez
+                    balances[log.source] = (balances[log.source] ?? 10000) - Number(log.amount);
                 }
-                if (isContract(log.destination) && undefined !== balances[log.destination]) {
-                    log.balance_destination = balances[log.destination] += Number(log.amount);
+                if (log.destination && (undefined !== balances[log.destination] || !isContract(log.destination))) {
+                    // if undefined, it's not a contract and starts with 10000 tez
+                    balances[log.destination] = (balances[log.destination] ?? 10000) + Number(log.amount);
                 }
             }
+            log.balances = Object.assign({}, balances);
         });
         return processedLog;
     };
