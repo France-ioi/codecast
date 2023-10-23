@@ -13,6 +13,7 @@
     text-align: center;
     position: relative;
     font-weight: 600;
+    white-space: nowrap;
     &.is-active {
       background: var(--primary-color);
       color: white;
@@ -31,11 +32,13 @@
       display: none;
     }
 
-    & + .layout-editor-tab {
-      border-left: solid 1px #4a4a4a;
+    &:hover .layout-editor-tab-close, &.is-active .layout-editor-tab-close {
+      display: inline-block;
     }
 
-    &:hover .layout-editor-tab-close, &.is-active .layout-editor-tab-close {
+    .layout-editor-tab-pen {
+      cursor: pointer;
+      padding: 0 10px;
       display: inline-block;
     }
   }
@@ -43,6 +46,8 @@
     flex: 1 0;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 1px;
   }
   .layout-editor-tabs-end {
     flex: 0 1;
@@ -53,6 +58,14 @@
       color: white;
       cursor: pointer;
     }
+  }
+}
+
+.layout-editor-tab-edit {
+  padding: 10px;
+  border-radius: 8px;
+  label {
+    font-weight: bold;
   }
 }
 

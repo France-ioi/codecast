@@ -19,7 +19,7 @@ import {LayoutMobileMode, LayoutType} from './layout_types';
 import {BufferEditorTabs} from '../../buffers/BufferEditorTabs';
 import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
 import {getMessage} from '../../lang';
-import {bufferCreateSourceBuffer, bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
+import {bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -39,8 +39,6 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     const dispatch = useDispatch();
-
-    console.log('active buffer pending', activeBufferPendingSubmissionIndex);
 
     const collapseBlocks = () => {
         dispatch(taskSetBlocksPanelCollapsed({collapsed: !blocksCollapsed, manual: true}));

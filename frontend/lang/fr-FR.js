@@ -302,6 +302,9 @@ module.exports = {
     BUFFER_TAB_FINISHED_SUBMISSION: 'Résultats disponibles',
     BUFFER_TAB_NOT_EDITABLE: "Ce code n'est plus éditable.",
     BUFFER_TAB_NO_PAST_SUBMISSION: "Aucune soumission récente",
+    BUFFER_TAB_FILE_NAME: "Titre du fichier",
+    BUFFER_TAB_LANGUAGE: "Langage du fichier",
+    BUFFER_TAB_SAVE: "Enregistrer",
 
     SUBMISSION_RESULTS_TESTS_TITLE: 'Liste des tests',
     SUBMISSION_RESULTS_TITLE: 'Résultat des tests',

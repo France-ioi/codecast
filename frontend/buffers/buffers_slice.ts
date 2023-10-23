@@ -28,6 +28,7 @@ function initBufferIfNeeded(state: BuffersState, buffer: string, type: BufferTyp
     if (!(buffer in state.buffers)) {
         state.buffers[buffer] = createEmptyBufferState(type);
     }
+    state.buffers[buffer].type = type;
 }
 
 export const buffersSlice = createSlice({

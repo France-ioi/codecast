@@ -24,6 +24,7 @@ import {
 } from './buffer_types';
 import {useAppSelector} from '../hooks';
 import {getSourceHighlightFromStateSelector} from '../stepper';
+import {createEmptyBufferState} from './document';
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -43,7 +44,7 @@ interface BufferEditorProps {
 
 const _BufferEditor = (props: BufferEditorProps) => {
     const {bufferName, width, height} = props;
-    const bufferState = useAppSelector(state => state.buffers.buffers[bufferName]);
+    const bufferState = useAppSelector(state => state.buffers.buffers[bufferName] ? state.buffers.buffers[bufferName] : createEmptyBufferState(BufferType.Text));
     const bufferType = bufferState.type;
     const highlight = bufferState.source ? useAppSelector(getSourceHighlightFromStateSelector) : null;
     const [prevWidth, setPrevWidth] = useState(0);

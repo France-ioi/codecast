@@ -28,7 +28,8 @@ user interaction change the view.
 
 import {call, put, takeEvery} from 'typed-redux-saga';
 import {
-    compressRange, createEmptyBufferState,
+    compressRange,
+    createEmptyBufferState,
     documentToString,
     expandRange,
     getBufferHandler,
@@ -58,25 +59,35 @@ import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
 import {
+    BufferStateParameters,
     BufferType,
-    TextDocumentDelta,
-    TextDocumentDeltaAction,
-    Range,
     Document,
-    BufferStateParameters
+    Range,
+    TextDocumentDelta,
+    TextDocumentDeltaAction
 } from './buffer_types';
 import {
     bufferChangeActiveBufferName,
+    bufferDissociateFromSubmission,
     bufferEdit,
-    bufferEditPlain, bufferInit, bufferModelEdit,
-    bufferReset, bufferResetDocument,
+    bufferEditPlain,
+    bufferInit,
+    bufferModelEdit,
+    bufferReset,
+    bufferResetDocument,
     bufferScrollToLine,
     bufferSelect
 } from './buffers_slice';
-import {bufferCreateSourceBuffer, bufferDownload, bufferDuplicateSourceBuffer, bufferReload} from './buffer_actions';
+import {
+    bufferChangePlatform,
+    bufferCreateSourceBuffer,
+    bufferDownload,
+    bufferDuplicateSourceBuffer,
+    bufferReload
+} from './buffer_actions';
 import {selectSourceBuffers} from './buffer_selectors';
 import {getDefaultSourceCode} from '../task/utils';
-import {submissionChangeCurrentSubmissionId, submissionCloseCurrentSubmission} from '../submission/submission_slice';
+import {submissionChangeCurrentSubmissionId} from '../submission/submission_slice';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -95,18 +106,22 @@ function* getNewBufferName() {
     return `source:${i}`;
 }
 
-function* createSourceBufferFromDocument(document: Document) {
-    const state: AppStore = yield* appSelect();
-
-    const newBufferName = yield* call(getNewBufferName);
-
+function getNewFileName(state: AppStore, platform: CodecastPlatform) {
     const currentSourceBuffers = selectSourceBuffers(state);
-    const platform = state.options.platform;
     let j = 1;
     while (Object.values(currentSourceBuffers).find(buffer => platform === buffer.platform && getMessage('BUFFER_TAB_FILENAME').format({i: j}) === buffer.fileName)) {
         j++;
     }
-    const newFileName = getMessage('BUFFER_TAB_FILENAME').format({i: j});
+
+    return getMessage('BUFFER_TAB_FILENAME').format({i: j});
+}
+
+function* createSourceBufferFromDocument(document: Document) {
+    const state: AppStore = yield* appSelect();
+
+    const newBufferName = yield* call(getNewBufferName);
+    const platform = state.options.platform;
+    const newFileName = getNewFileName(state, platform);
 
     const newBuffer: BufferStateParameters = {
         type: document.type,
@@ -216,6 +231,30 @@ function* buffersSaga() {
             if (e && e.message) {
                 yield* put(stepperDisplayError(e.message));
             }
+        }
+    });
+
+    yield* takeEvery(bufferDissociateFromSubmission, function* ({payload: {buffer}}) {
+        const state = yield* appSelect();
+        const bufferState = state.buffers.buffers[buffer];
+        if (null !== bufferState.fileName) {
+            return;
+        }
+
+        const newFileName = getNewFileName(state, bufferState.platform);
+        yield* put(bufferInit({buffer, fileName: newFileName}));
+    });
+
+    yield* takeEvery(bufferChangePlatform, function* ({payload: {bufferName, platform}}) {
+        const state = yield* appSelect();
+        const bufferState = state.buffers.buffers[bufferName];
+        const currentPlatform = bufferState.platform;
+        yield* put(bufferInit({buffer: bufferName, platform}));
+
+        const documentChangeNeeded = hasBlockPlatform(currentPlatform) !== hasBlockPlatform(platform);
+        if (documentChangeNeeded) {
+            const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
+            yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
         }
     });
 

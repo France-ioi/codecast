@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import {BufferState} from './buffer_types';
 import {platformsList} from '../stepper/platforms';
 import {useAppSelector} from '../hooks';
@@ -10,6 +10,9 @@ import {selectSourceBuffers} from './buffer_selectors';
 import {TaskSubmission} from '../submission/submission_types';
 import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
+import {faPen} from '@fortawesome/free-solid-svg-icons/faPen';
+import {OverlayTrigger, Popover, Tooltip} from "react-bootstrap";
+import {BufferEditorTabEdit} from './BufferEditorTabEdit';
 
 export interface BufferEditorTabProps {
     bufferName: string,
@@ -27,8 +30,14 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
     const submission: TaskSubmission|null = useAppSelector(state => null !== submissionIndex && undefined !== submissionIndex ? state.submission.taskSubmissions[submissionIndex] : null);
     const isEvaluating = submission && !submission.evaluated && !submission.crashed;
     const hasResults = submission && !isEvaluating;
+    const isEditable = null === submissionIndex;
+    const [showEdit, setShowEdit] = useState(false);
 
     const changeTab = () => {
+        dispatch(bufferChangeActiveBufferName(bufferName));
+    };
+
+    const editTab = () => {
         dispatch(bufferChangeActiveBufferName(bufferName));
     };
 
@@ -39,21 +48,47 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
 
     const closable = Object.keys(sourceBuffers).length > 1;
 
+    const popoverStyle = {
+        backgroundColor: "#dddddd",
+        '--bs-popover-bg': '#dddddd'
+    } as React.CSSProperties;
+
     return (
-        <div className={`layout-editor-tab ${isActive ? 'is-active' : ''}`} onClick={changeTab}>
-            {hasResults && <React.Fragment>
-                <span>{getMessage('BUFFER_TAB_FINISHED_SUBMISSION')}</span>
-            </React.Fragment>}
-            {isEvaluating && <React.Fragment>
-                <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
-                <span className="ml-1">{getMessage('BUFFER_TAB_PENDING_SUBMISSION')}</span>
-            </React.Fragment>}
-            {null === submission && <React.Fragment>
-                {fileName}
-            </React.Fragment>}
-            {closable && <div className="layout-editor-tab-close" onClick={closeTab}>
-                <FontAwesomeIcon icon={faTimes}/>
-            </div>}
-        </div>
+        <OverlayTrigger
+            placement="bottom"
+            trigger="click"
+            show={showEdit}
+            onToggle={setShowEdit}
+            overlay={
+                <Popover style={popoverStyle}>
+                    <BufferEditorTabEdit
+                        bufferName={bufferName}
+                        onClose={() =>setShowEdit(false)}
+                    />
+                </Popover>
+            }
+            rootClose
+        >
+            {({ ref, ...triggerHandler }) => (
+                <div className={`layout-editor-tab ${isActive ? 'is-active' : ''}`} onClick={changeTab} ref={ref}>
+                    {hasResults && <React.Fragment>
+                        <span>{getMessage('BUFFER_TAB_FINISHED_SUBMISSION')}</span>
+                    </React.Fragment>}
+                    {isEvaluating && <React.Fragment>
+                        <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
+                        <span className="ml-2">{getMessage('BUFFER_TAB_PENDING_SUBMISSION')}</span>
+                    </React.Fragment>}
+                    {null === submission && <React.Fragment>
+                        {fileName}
+                    </React.Fragment>}
+                    {isEditable && isActive && <div className="layout-editor-tab-pen" {...triggerHandler}>
+                        <FontAwesomeIcon icon={faPen}/>
+                    </div>}
+                    {closable && <div className="layout-editor-tab-close" onClick={closeTab}>
+                        <FontAwesomeIcon icon={faTimes}/>
+                    </div>}
+                </div>
+            )}
+        </OverlayTrigger>
     );
 }

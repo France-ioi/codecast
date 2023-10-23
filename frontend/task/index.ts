@@ -104,7 +104,12 @@ import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
 import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmission} from '../submission/submission';
-import {bufferEdit, bufferEditPlain, bufferResetDocument} from '../buffers/buffers_slice';
+import {
+    bufferDissociateFromSubmission,
+    bufferEdit,
+    bufferEditPlain,
+    bufferResetDocument
+} from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectSourceBuffers} from '../buffers/buffer_selectors';
 import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
@@ -664,7 +669,9 @@ function* watchRecordingProgressSaga(app: App) {
 }
 
 export function* onEditSource(origin?: string) {
-    const needsReset = yield* appSelect(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground);
+    const state = yield* appSelect();
+
+    const needsReset = StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground;
     log.getLogger('task').debug('needs reset', needsReset);
     if (needsReset) {
         log.getLogger('task').debug('HANDLE RESET');
@@ -672,19 +679,29 @@ export function* onEditSource(origin?: string) {
     }
 
     // Cancel submission if it's not a Submit
-    const currentSubmission = yield* appSelect(selectCurrentSubmission);
+    const currentSubmission = selectCurrentSubmission(state);
     if (null !== currentSubmission && SubmissionExecutionScope.Submit !== currentSubmission.scope) {
         yield* put(submissionCloseCurrentSubmission());
     }
 
-    const currentError = yield* appSelect(state => state.stepper.error);
+    const currentError = state.stepper.error;
     if (null !== currentError) {
         yield* put(stepperClearError());
     }
 
+    const activeBufferName = state.buffers.activeBufferName;
+    if (null !== activeBufferName) {
+        const activeBuffer = state.buffers.buffers[activeBufferName];
+        if (null !== activeBuffer.submissionIndex) {
+            yield* put(bufferDissociateFromSubmission({buffer: activeBufferName}));
+            if (activeBuffer.submissionIndex === state.submission.currentSubmissionId) {
+                yield* put(submissionCloseCurrentSubmission());
+            }
+        }
+    }
+
     if ('test' !== origin) {
-        const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
-        const state = yield* appSelect();
+        const blocksPanelWasOpen = state.task.blocksPanelWasOpen;
         if (state.task.blocksPanelCollapsed === blocksPanelWasOpen) {
             yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
         }

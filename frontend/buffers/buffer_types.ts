@@ -41,7 +41,7 @@ export interface BufferStateParameters {
     fileName?: string,
     platform?: CodecastPlatform,
     submissionIndex?: number,
-    type: BufferType,
+    type?: BufferType,
     document?: Document,
 }
 
