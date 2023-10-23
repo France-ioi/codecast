@@ -1061,10 +1061,6 @@ export default function (bundle: Bundle) {
         });
         app.replayApi.on(taskChangeLevel.type, function* (replayContext: ReplayContext, event) {
             yield* put(taskChangeLevel(event[2]));
-            replayContext.addSaga(function* (instant: PlayerInstant) {
-                const answer = selectAnswer(instant.state);
-                yield* put(bufferResetDocument({buffer: 'source', document: answer, goToEnd: true}));
-            });
         });
 
         app.stepperApi.onInit(function* () {

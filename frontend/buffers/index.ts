@@ -180,11 +180,11 @@ function* buffersSaga() {
         anchor.click();
     });
 
-    yield* takeEvery(bufferCreateSourceBuffer, function* () {
+    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document}}) {
         const state: AppStore = yield* appSelect();
-        const document = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
-        log.getLogger('editor').debug('Load default source code', document);
-        yield* call(createSourceBufferFromDocument, document);
+        let newDocument = document ?? getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
+        log.getLogger('editor').debug('Load new source code', newDocument);
+        yield* call(createSourceBufferFromDocument, newDocument);
     });
 
     yield* takeEvery(bufferDuplicateSourceBuffer, function* () {

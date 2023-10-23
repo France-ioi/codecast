@@ -78,7 +78,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
                     <FontAwesomeIcon icon={faBell}/>
                 </div>
                 <span className="ml-2">{getMessage('BUFFER_TAB_NOT_EDITABLE')}</span>
-                <a onClick={duplicateCurrentSource} className="layout-editor-read-only-link ml-1">{getMessage('COPY')}</a>
+                {editorTabsEnabled && <a onClick={duplicateCurrentSource} className="layout-editor-read-only-link ml-1">{getMessage('COPY')}</a>}
             </div>}
 
             {null !== activeBufferName && <div className="layout-editor-section">
