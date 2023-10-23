@@ -26,7 +26,10 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
         if (window.taskData?.gridInfos) {
             return {
                 ...task,
-                gridInfos: window.taskData.gridInfos,
+                gridInfos: {
+                    tabsEnabled: true,
+                    ...window.taskData.gridInfos,
+                },
             };
         }
     }
@@ -40,6 +43,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                 importModules: ['smart_contract_config'],
                 showLabels: true,
                 conceptViewer: true,
+                tabsEnabled: true,
                 includeBlocks: {
                     groupByCategory: true,
                     standardBlocks: {
@@ -62,6 +66,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                 importModules: [],
                 showLabels: true,
                 conceptViewer: true,
+                tabsEnabled: true,
                 // maxInstructions: {
                 //     easy: 20,
                 //     medium: 30,

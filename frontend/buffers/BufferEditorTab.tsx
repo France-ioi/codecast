@@ -11,7 +11,7 @@ import {TaskSubmission} from '../submission/submission_types';
 import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {faPen} from '@fortawesome/free-solid-svg-icons/faPen';
-import {OverlayTrigger, Popover, Tooltip} from "react-bootstrap";
+import {OverlayTrigger, Popover} from "react-bootstrap";
 import {BufferEditorTabEdit} from './BufferEditorTabEdit';
 
 export interface BufferEditorTabProps {
@@ -34,10 +34,6 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
     const [showEdit, setShowEdit] = useState(false);
 
     const changeTab = () => {
-        dispatch(bufferChangeActiveBufferName(bufferName));
-    };
-
-    const editTab = () => {
         dispatch(bufferChangeActiveBufferName(bufferName));
     };
 
@@ -78,11 +74,11 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
                         <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
                         <span className="ml-2">{getMessage('BUFFER_TAB_PENDING_SUBMISSION')}</span>
                     </React.Fragment>}
-                    {null === submission && <React.Fragment>
+                    {isEditable && <div {...(isActive ? triggerHandler : {})} className={isActive ? 'has-pointer' : ''}>
                         {fileName}
-                    </React.Fragment>}
-                    {isEditable && isActive && <div className="layout-editor-tab-pen" {...triggerHandler}>
-                        <FontAwesomeIcon icon={faPen}/>
+                        {isActive && <div className="layout-editor-tab-pen">
+                            <FontAwesomeIcon icon={faPen}/>
+                        </div>}
                     </div>}
                     {closable && <div className="layout-editor-tab-close" onClick={closeTab}>
                         <FontAwesomeIcon icon={faTimes}/>

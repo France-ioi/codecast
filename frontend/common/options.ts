@@ -171,8 +171,13 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defineAction(ActionTypes.TaskVariantChanged);
-    bundle.addReducer(ActionTypes.TaskVariantChanged, (state, { payload: { variant } }) => {
+    bundle.addReducer(ActionTypes.TaskVariantChanged, (state, {payload: {variant}}) => {
         state.options.taskVariant = variant;
+    });
+
+    bundle.defineAction(ActionTypes.TabsEnabledChanged);
+    bundle.addReducer(ActionTypes.TabsEnabledChanged, (state, {payload: {tabsEnabled}}) => {
+        state.options.tabsEnabled = tabsEnabled;
     });
 
     bundle.addSaga(function* () {

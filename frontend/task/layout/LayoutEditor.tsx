@@ -37,6 +37,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
     const activeBufferPendingSubmissionIndex = useAppSelector(selectActiveBufferPendingSubmissionIndex);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
+    const editorTabsEnabled = options.tabsEnabled;
 
     const dispatch = useDispatch();
 
@@ -57,7 +58,6 @@ export function LayoutEditor(props: LayoutEditorProps) {
         errorHighlight,
     };
 
-    const editorTabsEnabled = true; // TODO: make an option
     const readOnly = (isMobile && LayoutMobileMode.Editor !== layoutMobileMode) || null !== activeBufferPendingSubmissionIndex;
 
     const displayBlocks = !!(

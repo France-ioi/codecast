@@ -113,6 +113,7 @@ import {
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectSourceBuffers} from '../buffers/buffer_selectors';
 import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
+import {submissionCancel} from '../submission/submission_actions';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -359,6 +360,10 @@ function* taskLoadSaga(app: App, action) {
             return;
         }
     }
+
+    context = quickAlgoLibraries.getContext(null, state.environment);
+    const tabsEnabled = context?.infos?.tabsEnabled;
+    yield* put({type: ActionTypes.TabsEnabledChanged, payload: {tabsEnabled}});
 
     oldSagasTasks[app.environment] = yield* fork(function* () {
         try {
@@ -678,10 +683,11 @@ export function* onEditSource(origin?: string) {
         yield* put({type: StepperActionTypes.StepperExit});
     }
 
-    // Cancel submission if it's not a Submit
-    const currentSubmission = selectCurrentSubmission(state);
-    if (null !== currentSubmission && SubmissionExecutionScope.Submit !== currentSubmission.scope) {
-        yield* put(submissionCloseCurrentSubmission());
+    // Cancel server submission that are not Submit
+    for (let [submissionIndex, submission] of state.submission.taskSubmissions.entries()) {
+        if (isServerSubmission(submission) && !submission.result && !submission.crashed && SubmissionExecutionScope.Submit !== submission.scope) {
+            yield* put(submissionCancel(submissionIndex));
+        }
     }
 
     const currentError = state.stepper.error;

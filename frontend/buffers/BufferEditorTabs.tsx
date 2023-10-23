@@ -6,7 +6,6 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons/faPlus';
 import {useDispatch} from 'react-redux';
 import {bufferCreateSourceBuffer} from './buffer_actions';
-import {faClock} from '@fortawesome/free-solid-svg-icons';
 import {SubmissionResultsSelector} from '../submission/SubmissionResultsSelector';
 
 export interface BufferEditorTabsProps {
@@ -19,6 +18,10 @@ export function BufferEditorTabs(props: BufferEditorTabsProps) {
     const createNewTab = () => {
         dispatch(bufferCreateSourceBuffer());
     };
+
+    if (0 === Object.keys(sourceBuffers).length) {
+        return null;
+    }
 
     return (
         <div className="layout-editor-tabs">
