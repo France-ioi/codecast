@@ -10,7 +10,7 @@ import {
 } from '../task/libs/quickalgo_libraries';
 import {
     submissionChangeCurrentSubmissionId,
-    submissionChangeDisplayedError, submissionCloseCurrentSubmission,
+    submissionChangeDisplayedError, submissionChangePaneOpen, submissionCloseCurrentSubmission,
     SubmissionErrorType,
     SubmissionExecutionScope,
     submissionSlice,
@@ -18,7 +18,7 @@ import {
 } from './submission_slice';
 import {getMessage} from '../lang';
 import {addAutoRecordingBehaviour} from '../recorder/record';
-import {selectTaskTests} from './submission_selectors';
+import {selectSubmissionsPaneEnabled, selectTaskTests} from './submission_selectors';
 import {taskSubmissionExecutor} from './task_submission';
 import {selectAnswer} from '../task/selectors';
 import {TaskTest, TaskTestGroupType} from '../task/task_types';
@@ -205,6 +205,17 @@ export default function (bundle: Bundle) {
             } else if (!(payload && payload.withoutTestChange)) {
                 yield* put(updateCurrentTestId({testId: currentTestId, record: false}));
             }
+
+            if (null !== submissionId) {
+                const submission = yield* appSelect(state => state.submission.taskSubmissions[submissionId]);
+                if (isServerSubmission(submission) && submission.result) {
+                    const submissionsPaneEnabled = yield* appSelect(selectSubmissionsPaneEnabled);
+                    if (submissionsPaneEnabled) {
+                        yield* put(submissionChangePaneOpen(true));
+                    }
+                }
+            }
+
         });
 
         yield* takeEvery(submissionUpdateTaskSubmission, function* ({payload: {withoutTestChange}}) {

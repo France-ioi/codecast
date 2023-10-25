@@ -5,8 +5,7 @@
   background: #4a4a4a;
 
   .layout-editor-tab {
-    padding: 5px 35px 5px 20px;
-    min-width: 200px;
+    padding: 5px 30px 5px 15px;
     background: #bfbfbf;
     color: #666;
     display: block;
@@ -26,7 +25,7 @@
     }
     .layout-editor-tab-close {
       position: absolute;
-      top: calc(50% - 13px);
+      top: calc(50% - 12px);
       right: 10px;
       cursor: pointer;
       display: none;

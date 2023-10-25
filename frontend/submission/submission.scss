@@ -17,6 +17,18 @@
   width: 350px;
   min-width: 350px;
   user-select: none;
+  .submission-results__label-container {
+    padding: .5rem .75rem;
+    padding-top: 0;
+    margin-top: -.5em;
+    .submission-label {
+      border-radius: 6px;
+      color: #333 !important;
+      white-space: nowrap;
+      font-size: 14px;
+      padding: 4px 5px !important;
+    }
+  }
 }
 
 .submission-results__header {

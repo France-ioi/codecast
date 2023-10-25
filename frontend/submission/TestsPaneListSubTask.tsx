@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {Collapse} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -8,6 +8,7 @@ import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneLi
 import {selectTaskTests} from './submission_selectors';
 import {SubmissionTestErrorCode, TaskSubmissionServer} from './submission_types';
 import {TaskSubtaskNormalized} from '../task/task_types';
+import {selectCurrentTest} from '../task/task_slice';
 
 export interface SubmissionResultSubTaskProps {
     submission: TaskSubmissionServer,
@@ -16,11 +17,20 @@ export interface SubmissionResultSubTaskProps {
 
 export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
     const taskTests = useAppSelector(selectTaskTests);
+    const currentTest = useAppSelector(selectCurrentTest);
+
     const subTask = props.subTask;
     const subTaskResult = props.submission && props.submission.result?.subTasks ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
-    const [open, setOpen] = useState(false);
 
     const testsOrdered = [...taskTests.filter(test => test.subtaskId === subTask.id)];
+    const subTaskHasTest = -1 !== testsOrdered.indexOf(currentTest);
+    const [open, setOpen] = useState(subTaskHasTest);
+
+    useEffect(() => {
+        if (subTaskHasTest && !open) {
+            setOpen(true);
+        }
+    }, [subTaskHasTest, props.submission]);
 
     const testsByIcon: {[key: number]: number} = {};
     let testsByIconValues: {errorCodeData: ErrorCodeData, count: number}[];

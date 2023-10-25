@@ -9,6 +9,8 @@ import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {SubmissionResultsSelector} from './SubmissionResultsSelector';
+import {SubmissionResultLabel} from './SubmissionResultLabel';
+import {isServerSubmission} from './submission';
 
 export interface TestsPaneProps {
     open: boolean,
@@ -30,6 +32,10 @@ export function TestsPane(props: TestsPaneProps) {
                 <div className="submission-results__close" onClick={closePane}>
                 </div>
             </div>
+
+            {currentSubmission && isServerSubmission(currentSubmission) && <div className="submission-results__label-container">
+                <SubmissionResultLabel submission={currentSubmission}/>
+            </div>}
 
             <div className="submission-results__submission">
                 <div style={{display: !currentSubmission || currentSubmission.evaluated ? 'block' : 'none'}}>
