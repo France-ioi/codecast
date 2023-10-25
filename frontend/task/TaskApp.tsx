@@ -30,7 +30,7 @@ import {ContextVisualizationImages} from './ContextVisualizationImages';
 import {TestsPane} from '../submission/TestsPane';
 import {TaskHintsDialog} from './dialog/TaskHintsDialog';
 import {DebugDialog} from './dialog/DebugDialog';
-import {LayoutView} from './layout/layout_types';
+import {LayoutPlayerMode, LayoutView} from './layout/layout_types';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -181,7 +181,7 @@ export function TaskApp() {
                 {playerEnabled && isPlayerReady &&
                     <div className="layout-footer">
                         <PlayerControls/>
-                        <SubtitlesBand/>
+                        {LayoutPlayerMode.Replay === layoutPlayerMode && <SubtitlesBand/>}
                     </div>
                 }
 
