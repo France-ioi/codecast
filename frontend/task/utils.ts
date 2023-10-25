@@ -4,7 +4,7 @@ import {getMessage} from "../lang";
 import {AppStore} from "../store";
 import {checkBlocklyCode, getBlocklyBlocksUsage} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
-import {isServerTask, Task} from './task_types';
+import {isServerTask, Task, TaskAnswer} from './task_types';
 import {hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
@@ -137,36 +137,40 @@ export function getAvailableModules(context) {
     }
 }
 
-export function checkCompilingCode(code: Document|null, platform: CodecastPlatform, state: AppStore, disabledValidations: string[] = []) {
-    if (-1 === disabledValidations.indexOf('empty') && !code) {
-        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
-    }
-    if (null === code) {
+export function checkCompilingCode(answer: TaskAnswer|null, state: AppStore, disabledValidations: string[] = []) {
+    if (null === answer) {
+        if (-1 === disabledValidations.indexOf('empty')) {
+            throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
+        }
+
         return;
     }
 
+    const {document, platform} = answer;
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context && state.task.currentTask) {
-        if (CodecastPlatform.Python === platform && BufferType.Text === code.type) {
-            checkPythonCode(documentToString(code), context, state, disabledValidations);
+        if (CodecastPlatform.Python === platform && BufferType.Text === document.type) {
+            checkPythonCode(documentToString(document), context, state, disabledValidations);
         }
         if (hasBlockPlatform(platform)) {
-            checkBlocklyCode(code as BlockDocument, context, state, disabledValidations);
+            checkBlocklyCode(document as BlockDocument, context, state, disabledValidations);
         }
     }
 }
 
-export function getBlocksUsage(answer: Document|null, platform: CodecastPlatform) {
+export function getBlocksUsage(answer: TaskAnswer|null) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     if (!context) {
         return null;
     }
 
+    const {document, platform} = answer;
+
     if (CodecastPlatform.Python === platform) {
-        return getPythonBlocksUsage(documentToString(answer), context);
+        return getPythonBlocksUsage(documentToString(document), context);
     }
     if (hasBlockPlatform(platform)) {
-        return getBlocklyBlocksUsage(answer as BlockDocument, context);
+        return getBlocklyBlocksUsage(document as BlockDocument, context);
     }
 
     return null;
@@ -177,7 +181,7 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
     if (hasBlockPlatform(platform)) {
         if (context?.infos?.startingExample && platform in context?.infos?.startingExample) {
             return BlockBufferHandler.documentFromObject({blockly: context.infos.startingExample[platform]});
-        } else if (context?.blocklyHelper) {
+        } else if (context?.blocklyHelper && !context.blocklyHelper.fake) {
             return BlockBufferHandler.documentFromObject({blockly: context.blocklyHelper.getDefaultContent()});
         } else {
             return BlockBufferHandler.documentFromObject({blockly: '<xml></xml>'});

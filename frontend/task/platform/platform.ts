@@ -48,6 +48,7 @@ import {Codecast} from '../../app_types';
 import {Document} from '../../buffers/buffer_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
+import {TaskAnswer} from '../task_types';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -476,7 +477,7 @@ function getTopLevel(levels: TaskLevelName[]) {
 
 export interface PlatformTaskGradingParameters {
     level?: TaskLevelName,
-    answer?: Document,
+    answer?: TaskAnswer,
     scope?: SubmissionExecutionScope,
 }
 

@@ -34,7 +34,9 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
     const [showEdit, setShowEdit] = useState(false);
 
     const changeTab = () => {
-        dispatch(bufferChangeActiveBufferName(bufferName));
+        if (activeBufferName !== bufferName) {
+            dispatch(bufferChangeActiveBufferName(bufferName));
+        }
     };
 
     const closeTab = (e) => {

@@ -1,6 +1,8 @@
 import {TaskLevelName} from './platform/platform_slice';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {TaskHint} from './hints/hints_slice';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {Document} from '../buffers/buffer_types';
 
 export interface BlocksUsage {
     error?: string,
@@ -194,6 +196,13 @@ export interface TaskTestServer {
     input: string,
     output: string,
     clientId?: string | null,
+}
+
+export interface TaskAnswer {
+    document: Document,
+    platform?: CodecastPlatform,
+    fileName?: string,
+    //submissionId: string ?
 }
 
 export interface TaskServer extends TaskNormalized {

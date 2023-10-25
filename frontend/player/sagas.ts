@@ -592,7 +592,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
             const stepperState = instants[instantIndex-1].state.stepper;
             if (context) {
                 if (!Codecast.runner) {
-                    Codecast.runner = yield* call(createRunnerSaga);
+                    Codecast.runner = yield* call(createRunnerSaga, stepperState?.currentStepperState?.platform);
                 }
                 context.runner = Codecast.runner;
 

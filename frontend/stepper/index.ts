@@ -94,6 +94,7 @@ import {LayoutMobileMode} from '../task/layout/layout_types';
 import {shuffleArray} from '../utils/javascript';
 import {computeDelayForCurrentStep} from './speed';
 import {memoize} from 'proxy-memoize';
+import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -196,9 +197,8 @@ export const initialStateStepper = {
     backgroundRunData: null as TaskSubmissionResultPayload,
 };
 
-export function* createRunnerSaga(): SagaIterator<AbstractRunner> {
+export function* createRunnerSaga(platform: CodecastPlatform): SagaIterator<AbstractRunner> {
     const environment = yield* appSelect(state => state.environment);
-    const platform = yield* appSelect(state => state.options.platform);
     const context = quickAlgoLibraries.getContext(null, environment);
     const runnerClass = getRunnerClassFromPlatform(platform);
 
@@ -514,7 +514,7 @@ function stringifyError(error) {
 
 /* Reducers */
 
-function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}}): void {
+function stepperRestartReducer(state: AppStore, {payload: {stepperState}}): void {
     const {platform} = state.options;
 
     if (stepperState) {
@@ -601,7 +601,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 }
 
-function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
+function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
     enrichStepperState(stepperContext.state, 'Stepper.Idle', stepperContext);
@@ -614,7 +614,7 @@ function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}):
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;
 
-    if (hasBlockPlatform(state.options.platform) && 'main' === state.environment) {
+    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && 'main' === state.environment) {
         // Cancel reported value because in Scratch, as long as there's a reported value,
         // the first click on the workspace only removes the reported value, and therefore
         // it prevents moving a block. One would have to make two clicks to move a block in this case.
@@ -745,11 +745,11 @@ function* compileSucceededSaga(app: App) {
     try {
         yield* put({type: ActionTypes.StepperDisabled});
 
-        // TODO: Check to see if we can move this into compilation step
-        Codecast.runner = yield* call(createRunnerSaga);
+        const platform = yield* appSelect(state => state.compile.answer.platform);
+        Codecast.runner = yield* call(createRunnerSaga, platform);
 
         /* Build the stepper state. This automatically runs into user source code. */
-        let stepperState = yield* call(app.stepperApi.buildState);
+        let stepperState = yield* call(app.stepperApi.buildState, platform);
         const state = yield* appSelect();
         log.getLogger('stepper').debug('[stepper init] new state', state.task.state);
         // buildState may have triggered an error.
@@ -1066,7 +1066,7 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         yield* call(quickAlgoLibraryResetAndReloadStateSaga);
 
         if (!Codecast.runner) {
-            Codecast.runner = yield* call(createRunnerSaga);
+            Codecast.runner = yield* call(createRunnerSaga, stepperContext.state.platform);
         }
         taskContext.runner = Codecast.runner;
 
@@ -1107,7 +1107,7 @@ export const getSourceHighlightFromStateSelector = memoize((state: AppStore) => 
         return null;
     }
 
-    if (hasBlockPlatform(state.options.platform)) {
+    if (hasBlockPlatform(selectActiveBufferPlatform(state))) {
         return stepperState.currentBlockId;
     } else {
         return getNodeRange(stepperState);

@@ -2,10 +2,11 @@ import React, {useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../../hooks";
 import {getMessage, getMessageChoices} from "../../lang";
 import {AppStore} from "../../store";
+import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 
 export function BlocksUsage() {
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);
-    const platform = useAppSelector((state: AppStore) => state.options.platform);
+    const platform = useAppSelector(selectActiveBufferPlatform);
     const [collapsed, setCollapsed] = useState(true);
 
     const toggleCollapsed = () => {

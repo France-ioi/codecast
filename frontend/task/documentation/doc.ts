@@ -301,24 +301,25 @@ export default function (bundle: Bundle) {
         yield* takeEvery(documentationUseCodeExample, function* (action) {
             const {code, language} = action.payload;
             const document = TextBufferHandler.documentFromString(code);
+            const newPlatform = ('c' === language ? CodecastPlatform.Unix : language) as CodecastPlatform;
             const state = yield* appSelect();
             if (state.options.tabsEnabled) {
-                yield* put(bufferCreateSourceBuffer(document));
+                yield* put(bufferCreateSourceBuffer(document, newPlatform));
             } else {
                 const activeBuffer = state.buffers.activeBufferName;
                 yield* put(bufferResetDocument({buffer: activeBuffer, document}));
+
+                const currentPlatform = yield* appSelect(state => state.options.platform);
+                if (newPlatform !== currentPlatform) {
+                    yield* put({
+                        type: CommonActionTypes.PlatformChanged,
+                        payload: {
+                            platform: newPlatform,
+                        },
+                    });
+                }
             }
 
-            const newPlatform = 'c' === language ? CodecastPlatform.Unix : language;
-            const currentPlatform = yield* appSelect(state => state.options.platform);
-            if (newPlatform !== currentPlatform) {
-                yield* put({
-                    type: CommonActionTypes.PlatformChanged,
-                    payload: {
-                        platform: newPlatform,
-                    },
-                });
-            }
             yield* put({
                 type: CommonActionTypes.AppSwitchToScreen,
                 payload: {screen: null},

@@ -29,7 +29,7 @@ import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
 import {getTaskLevelTests, selectSubmissionsPaneEnabled} from './submission_selectors';
-import {isServerTask, TaskTestGroupType} from '../task/task_types';
+import {isServerTask, TaskAnswer, TaskTestGroupType} from '../task/task_types';
 import {platformAnswerGraded} from '../task/platform/actionTypes';
 import {getMessage} from '../lang';
 import {
@@ -43,6 +43,7 @@ import {Document} from '../buffers/buffer_types';
 import {documentToString} from '../buffers/document';
 import {murmurhash3_32_gc} from '../common/utils';
 import {bufferAssociateToSubmission} from '../buffers/buffers_slice';
+import {TaskLevelName} from '../task/platform/platform_slice';
 
 const executionsCache = {};
 const submissionExecutionTasks = {};
@@ -75,7 +76,7 @@ class TaskSubmissionExecutor {
             yield* put(submissionAddNewTaskSubmission({
                 evaluated: false,
                 date: new Date().toISOString(),
-                platform: state.options.platform,
+                platform: answer.platform,
                 type: TaskSubmissionEvaluateOn.Client,
                 result: {
                     tests: tests.map((test, testIndex) => ({executing: false, score: 0, testId: test.id ? test.id : String(testIndex), errorCode: null})),
@@ -161,7 +162,7 @@ class TaskSubmissionExecutor {
         }
     }
 
-    *makeBackgroundExecution(level, testId, answer: Document) {
+    *makeBackgroundExecution(level: TaskLevelName, testId: number, answer: TaskAnswer) {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
         const tests = state.task.taskTests;
@@ -211,10 +212,10 @@ class TaskSubmissionExecutor {
         const state = yield* appSelect();
 
         const randomSeed = state.platform.taskRandomSeed;
-        const answerContent = documentToString(answer);
+        const answerContent = documentToString(answer.document);
         const newTaskToken = getTaskTokenForLevel(level, randomSeed);
         const answerToken = getAnswerTokenForLevel(stringify(answerContent), level, randomSeed);
-        const platform = state.options.platform;
+        const platform = answer.platform;
         const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
 
         const serverSubmission: TaskSubmissionServer = {

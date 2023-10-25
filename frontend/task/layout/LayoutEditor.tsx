@@ -20,6 +20,7 @@ import {BufferEditorTabs} from '../../buffers/BufferEditorTabs';
 import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
 import {getMessage} from '../../lang';
 import {bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
+import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -27,7 +28,7 @@ export interface LayoutEditorProps {
 
 export function LayoutEditor(props: LayoutEditorProps) {
     const options = useAppSelector(state => state.options);
-    const platform = options.platform;
+    const platform = useAppSelector(selectActiveBufferPlatform);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
     const sourceMode = platformsList[platform].aceSourceMode;

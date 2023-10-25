@@ -72,11 +72,6 @@ export abstract class QuickAlgoLibrary {
         this.raphaelFactory = new window.RaphaelFactory();
 
         this.setLocalLanguageStrings(window.quickAlgoLanguageStrings);
-
-        // this.blocklyHelper = {
-        //     updateSize: function () {
-        //     },
-        // }
     }
 
     // Set the localLanguageStrings for this context

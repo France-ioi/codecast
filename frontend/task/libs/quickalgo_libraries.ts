@@ -14,6 +14,7 @@ import {DebugLib} from './debug/debug_lib';
 import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from './quick_algo_libraries_model';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
+import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -53,8 +54,9 @@ export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: Q
     yield* call(quickAlgoLibraryResetAndReloadStateSaga);
 
     log.getLogger('libraries').debug('replay previous quickalgo calls', quickAlgoCalls);
+    const platform = yield* appSelect(selectActiveBufferPlatform);
     if (!Codecast.runner) {
-        Codecast.runner = yield* call(createRunnerSaga);
+        Codecast.runner = yield* call(createRunnerSaga, platform);
     }
     const environment = yield* appSelect(state => state.environment);
     const context = quickAlgoLibraries.getContext(null, environment);

@@ -59,6 +59,7 @@ import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
 import {
+    BufferState,
     BufferStateParameters,
     BufferType,
     Document,
@@ -88,6 +89,11 @@ import {
 import {selectSourceBuffers} from './buffer_selectors';
 import {getDefaultSourceCode} from '../task/utils';
 import {submissionChangeCurrentSubmissionId} from '../submission/submission_slice';
+import {loadBlocklyHelperSaga} from '../stepper/js';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {importPlatformModules} from '../task/libs/import_modules';
+import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
+import {TaskAnswer} from '../task/task_types';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -115,6 +121,18 @@ function getNewFileName(state: AppStore, platform: CodecastPlatform) {
 
     return getMessage('BUFFER_TAB_FILENAME').format({i: j});
 }
+
+export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
+    return {
+        document: buffer.document,
+        fileName: buffer.fileName,
+        platform: buffer.platform,
+    };
+}
+
+// export function denormalizeBufferFromAnswer(answer: TaskAnswer): BufferState {
+//
+// }
 
 function* createSourceBufferFromDocument(document: Document) {
     const state: AppStore = yield* appSelect();
@@ -180,7 +198,7 @@ function* buffersSaga() {
         anchor.click();
     });
 
-    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document}}) {
+    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document, platform}}) {
         const state: AppStore = yield* appSelect();
         let newDocument = document ?? getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
         log.getLogger('editor').debug('Load new source code', newDocument);
@@ -225,7 +243,12 @@ function* buffersSaga() {
                 throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
             }
 
-            yield* put(platformAnswerLoaded(document));
+            const answer: TaskAnswer = {
+                document,
+                platform: state.options.platform,
+            };
+
+            yield* put(platformAnswerLoaded(answer));
             yield* put(platformTaskRefresh());
         } catch (e: any) {
             if (e && e.message) {
@@ -251,11 +274,21 @@ function* buffersSaga() {
         const currentPlatform = bufferState.platform;
         yield* put(bufferInit({buffer: bufferName, platform}));
 
-        const documentChangeNeeded = hasBlockPlatform(currentPlatform) !== hasBlockPlatform(platform);
-        if (documentChangeNeeded) {
+        if (currentPlatform !== platform) {
+            yield* call(createQuickalgoLibrary);
             const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
             yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
         }
+        // const documentChangeNeeded = hasBlockPlatform(currentPlatform) !== hasBlockPlatform(platform);
+        // if (documentChangeNeeded) {
+        //     yield* call(importPlatformModules, platform, window.modulesPath);
+        //     // if (hasBlockPlatform(platform)) {
+        //     //     const context = quickAlgoLibraries.getContext(null, 'main');
+        //     //     yield* call(loadBlocklyHelperSaga, context);
+        //     // }
+        //     const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
+        //     yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
+        // }
     });
 
     yield* takeEvery(submissionChangeCurrentSubmissionId, function* () {

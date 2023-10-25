@@ -111,7 +111,7 @@ import {
     bufferResetDocument
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
-import {selectSourceBuffers} from '../buffers/buffer_selectors';
+import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
 import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
 import {submissionCancel} from '../submission/submission_actions';
 
@@ -380,7 +380,7 @@ function* taskLoadSaga(app: App, action) {
 
     state = yield* appSelect();
     const sourceBuffers = selectSourceBuffers(state);
-    if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state))) {
+    if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state)?.document)) {
         yield* put(bufferCreateSourceBuffer());
     }
 
@@ -464,7 +464,7 @@ function* cancelHandleLibrariesEventListenerSaga(app: App) {
     }
 }
 
-function* taskRunExecution(app: App, {type, payload}) {
+function* taskRunExecution({type, payload}) {
     log.getLogger('task').debug('START RUN EXECUTION', type, payload);
     const {level, testId, tests, options, answer, resolve} = payload;
 
@@ -837,9 +837,8 @@ export default function (bundle: Bundle) {
                 if (context.success) {
                     if (state.options.allowExecutionOverBlocksLimit) {
                         const answer = selectAnswer(state);
-                        const platform = state.options.platform;
                         try {
-                            checkCompilingCode(answer, platform, state);
+                            checkCompilingCode(answer, state);
                         } catch (e) {
                             log.getLogger('task').debug('Post compilation error', e);
                             aggregatedLibraryTestResult.message = `${aggregatedLibraryTestResult.message} ${getMessage('TASK_POST_COMPILATION_ERROR').s} ${e.toString()}`;
@@ -896,7 +895,7 @@ export default function (bundle: Bundle) {
         // @ts-ignore
         yield* takeEvery(updateCurrentTestId, taskUpdateCurrentTestIdSaga);
 
-        yield* takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution, app);
+        yield* takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution);
 
         // @ts-ignore
         yield* takeEvery(StepperActionTypes.Compile, function*({payload}) {
@@ -920,7 +919,8 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(platformAnswerLoaded, function*({payload: {answer}}) {
             log.getLogger('task').debug('Platform answer loaded', answer);
-            yield* put(bufferResetDocument({buffer: 'source', document: answer, goToEnd: true}));
+            //TODO: fix this
+            // yield* put(bufferResetDocument({buffer: 'source', document: answer, goToEnd: true}));
         });
 
         yield* takeEvery(taskChangeSoundEnabled, function* () {
@@ -934,8 +934,8 @@ export default function (bundle: Bundle) {
         yield* takeEvery(ActionTypes.WindowResized, function* () {
             const context = quickAlgoLibraries.getContext(null, 'main');
             const state = yield* appSelect();
-            if (hasBlockPlatform(state.options.platform) && state.task.currentTask) {
-                yield* call(loadBlocklyHelperSaga, context, state.task.currentLevel);
+            if (hasBlockPlatform(selectActiveBufferPlatform(state)) && state.task.currentTask) {
+                yield* call(loadBlocklyHelperSaga, context);
             }
         });
 

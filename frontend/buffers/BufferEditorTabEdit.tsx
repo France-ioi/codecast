@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {FormEvent, useState} from "react";
 import {getMessage} from '../lang';
 import {Button} from '@blueprintjs/core';
 import {useAppSelector} from '../hooks';
@@ -20,54 +20,60 @@ export function BufferEditorTabEdit(props: BufferEditorTabEditProps) {
     const bufferState = useAppSelector(state => state.buffers.buffers[bufferName]);
     const [fileName, setFileName] = useState(bufferState.fileName);
     const [platform, setPlatform] = useState(bufferState.platform);
+    const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
     const dispatch = useDispatch();
 
-    const saveTab = () => {
+    const saveTab = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         dispatch(bufferInit({buffer: bufferName, fileName}));
-        dispatch(bufferChangePlatform(bufferName, platform));
+        if (canChangePlatform) {
+            dispatch(bufferChangePlatform(bufferName, platform));
+        }
         props.onClose();
     };
 
     return (
         <div className="layout-editor-tab-edit">
-            <div>
-                <label className='bp3-label'>
-                    {getMessage('BUFFER_TAB_FILE_NAME')}
-                    <input
-                        type='text'
-                        placeholder="Name"
-                        className='bp3-input bp3-fill'
-                        value={fileName || ''}
-                        onChange={(e) => setFileName(e.target.value)}
-                    />
-                </label>
-            </div>
-
-            <div>
-                <label className='bp3-label'>
-                    {getMessage('BUFFER_TAB_LANGUAGE')}
-                    <div className='bp3-select'>
-                        <PlatformSelection
-                            customPlatform={platform}
-                            customSetPlatform={setPlatform}
-                            withoutLabel
+            <form onSubmit={saveTab}>
+                <div>
+                    <label className='bp3-label'>
+                        {getMessage('BUFFER_TAB_FILE_NAME')}
+                        <input
+                            type='text'
+                            placeholder="Name"
+                            className='bp3-input bp3-fill'
+                            value={fileName || ''}
+                            onChange={(e) => setFileName(e.target.value)}
                         />
-                    </div>
+                    </label>
+                </div>
 
-                    {hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
-                        {getMessage('PLATFORM_RELOAD').format({platform: getMessage('PLATFORM_' + platform.toLocaleUpperCase())})}
-                    </div>}
-                </label>
-            </div>
+                {canChangePlatform && <div>
+                    <label className='bp3-label'>
+                        {getMessage('BUFFER_TAB_LANGUAGE')}
+                        <div className='bp3-select'>
+                            <PlatformSelection
+                                customPlatform={platform}
+                                customSetPlatform={setPlatform}
+                                withoutLabel
+                            />
+                        </div>
 
-            <div>
-                <Button
-                    className="quickalgo-button is-fullwidth"
-                    onClick={saveTab}
-                >
-                    {getMessage('BUFFER_TAB_SAVE')}
-                </Button>
-            </div>
+                        {hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
+                            {getMessage('PLATFORM_RELOAD').format({platform: getMessage('PLATFORM_' + platform.toLocaleUpperCase())})}
+                        </div>}
+                    </label>
+                </div>}
+
+                <div>
+                    <Button
+                        type="submit"
+                        className="quickalgo-button is-fullwidth"
+                    >
+                        {getMessage('BUFFER_TAB_SAVE')}
+                    </Button>
+                </div>
+            </form>
         </div>
     );
 }

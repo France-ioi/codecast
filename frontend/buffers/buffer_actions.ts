@@ -4,9 +4,10 @@ import {Document} from './buffer_types';
 
 export const bufferDownload = createAction('buffer/download');
 export const bufferReload = createAction('buffer/reload');
-export const bufferCreateSourceBuffer = createAction('buffer/createSourceBuffer', (document: Document = null) => ({
+export const bufferCreateSourceBuffer = createAction('buffer/createSourceBuffer', (document?: Document, platform?: CodecastPlatform) => ({
     payload: {
         document,
+        platform,
     },
 }));
 export const bufferDuplicateSourceBuffer = createAction('buffer/duplicateSourceBuffer');

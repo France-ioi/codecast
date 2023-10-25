@@ -28,6 +28,7 @@ import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
 import {callPlatformValidate, submissionCancel} from '../submission/submission_actions';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {selectCancellableSubmissionIndex} from '../submission/submission';
+import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -40,7 +41,7 @@ export function ControlsAndErrors() {
     const stepperStatus = useAppSelector(state => state.stepper.status);
     const cancellableSubmissionIndex = useAppSelector(selectCancellableSubmissionIndex);
     const cancellableSubmission = useAppSelector(state => null !== cancellableSubmissionIndex ? state.submission.taskSubmissions[cancellableSubmissionIndex] : null);
-    const platform = useAppSelector(state => state.options.platform);
+    const platform = useAppSelector(selectActiveBufferPlatform);
     const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector({state, enabled: true})).canRestart;
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);

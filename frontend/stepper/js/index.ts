@@ -20,10 +20,10 @@ import {BlockDocument} from '../../buffers/buffer_types';
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
 
-export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
+export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     let blocklyHelper;
 
-    if (context && context.blocklyHelper) {
+    if (context && context.blocklyHelper && !context.blocklyHelper.fake) {
         context.blocklyHelper.unloadLevel();
     }
 
@@ -72,8 +72,8 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
         };
     }
 
-    log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context);
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
+    log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
     // during loadPrograms at the start of the program execution
     blocklyHelper.onChangeResetDisplay = () => {
@@ -349,12 +349,12 @@ export const blocklyFindLimited = (blocks, limitedUses, context) => {
 export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {
         stepperApi.onInit(async function(stepperState: StepperState, state: AppStore, environment: string) {
-            const {platform} = state.options;
-            const answer = selectAnswer(state) as BlockDocument;
-            const context = quickAlgoLibraries.getContext(null, environment);
-            const language = state.options.language.split('-')[0];
+            const answer = selectAnswer(state);
+            if (hasBlockPlatform(answer.platform)) {
+                const document = answer.document as BlockDocument;
+                const context = quickAlgoLibraries.getContext(null, environment);
+                const language = state.options.language.split('-')[0];
 
-            if (hasBlockPlatform(platform)) {
                 log.getLogger('blockly_runner').debug('init stepper js', environment);
                 context.onError = (diagnostics) => {
                     log.getLogger('blockly_runner').debug('context error', diagnostics);
@@ -369,7 +369,7 @@ export default function(bundle: Bundle) {
                 const blocklyHelper = context.blocklyHelper;
                 log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);
                 log.getLogger('blockly_runner').debug('display', context.display);
-                const blocklyXmlCode = answer.content.blockly;
+                const blocklyXmlCode = document.content.blockly;
                 if (!blocklyHelper.workspace) {
                     blocklyHelper.load(language, context.display, 1, {});
                 }

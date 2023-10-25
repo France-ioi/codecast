@@ -86,7 +86,7 @@ export interface StepperApi {
     addSaga?: Function,
     onEffect?: Function,
     addBuiltin?: Function,
-    buildState?: () => Generator<any, StepperState>,
+    buildState?: (platform: CodecastPlatform) => Generator<any, StepperState>,
     rootStepperSaga?: any,
     executeEffects?: Function,
 }
@@ -137,10 +137,9 @@ export default function(bundle: Bundle) {
 
 
     /* Build a stepper state from the given init data. */
-    function* buildState(): Generator<any, StepperState> {
+    function* buildState(platform: CodecastPlatform): Generator<any, StepperState> {
         const state = yield* appSelect();
         const environment = state.environment;
-        const {platform} = state.options;
 
         log.getLogger('stepper').debug('do build state', state, environment);
 

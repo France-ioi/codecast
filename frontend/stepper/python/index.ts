@@ -72,11 +72,11 @@ export default function(bundle: Bundle) {
 
     bundle.defer(function({stepperApi}: App) {
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, environment: string) {
-            const {platform} = state.options;
             const context = quickAlgoLibraries.getContext(null, environment);
+            const answer = selectAnswer(state);
 
             log.getLogger('python_runner').debug('init stepper python', environment);
-            if (platform === CodecastPlatform.Python) {
+            if (CodecastPlatform.Python === answer.platform) {
                 let channel = pythonInterpreterChannel;
 
                 context.onError = (diagnostics) => {
@@ -92,7 +92,7 @@ export default function(bundle: Bundle) {
 
                 // Currently in replay we don't compile Python code.
                 // TODO: compile Python code so we don't need this
-                const source = documentToString(selectAnswer(state));
+                const source = documentToString(answer.document);
                 const pythonSource = source + "\npass";
 
                 const blocksData = getContextBlocksDataSelector({state, context});
