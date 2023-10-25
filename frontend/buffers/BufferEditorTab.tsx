@@ -61,7 +61,7 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
                 <Popover style={popoverStyle}>
                     <BufferEditorTabEdit
                         bufferName={bufferName}
-                        onClose={() =>setShowEdit(false)}
+                        onClose={() => setShowEdit(false)}
                     />
                 </Popover>
             }
