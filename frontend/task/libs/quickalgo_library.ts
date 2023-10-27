@@ -80,22 +80,18 @@ export abstract class QuickAlgoLibrary {
     }
 
     // Set the localLanguageStrings for this context
-    setLocalLanguageStrings(localLanguageStrings, doNotReplace = false) {
+    setLocalLanguageStrings(localLanguageStrings) {
         log.getLogger('libraries').debug('set local language strings', localLanguageStrings);
         const stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
 
         if (typeof window.languageStrings != "object") {
             console.error("window.languageStrings is not an object");
-        } else { // merge translations
-            window.languageStrings = doNotReplace ?
-                merge(
-                    localLanguageStrings[stringsLanguage],
-                    window.languageStrings,
-                ) :
-                merge(
-                    window.languageStrings,
-                    localLanguageStrings[stringsLanguage],
-                );
+        } else { // merge translations into new object
+            window.languageStrings = merge(
+                {},
+                window.languageStrings,
+                localLanguageStrings[stringsLanguage],
+            );
         }
         this.strings = window.languageStrings;
 
