@@ -50,7 +50,7 @@ import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
 import {TaskAnswer} from '../task_types';
 
-let getTaskAnswer: () => Generator;
+let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
 let getTaskLevel: () => Generator<unknown, TaskLevelName>;
 let taskChangeLevel: ActionCreator<Action>;
@@ -64,8 +64,8 @@ export let setTaskEventsEnvironment = (environment: string) => {
     taskEventsEnvironment = environment;
 }
 
-export function* getTaskAnswerAggregated () {
-    const currentAnswer = yield getTaskAnswer();
+export function* getTaskAnswerAggregated() {
+    const currentAnswer: TaskAnswer = yield getTaskAnswer();
 
     const levels = yield* appSelect(state => state.platform.levels);
     if (levels && Object.keys(levels).length) {

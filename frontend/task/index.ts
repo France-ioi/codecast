@@ -79,7 +79,7 @@ import {
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
-import {isEmptyDocument} from "../buffers/document";
+import {createEmptyBufferState, isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
@@ -114,6 +114,8 @@ import {getTaskHintsSelector} from './instructions/instructions';
 import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
 import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
 import {submissionCancel} from '../submission/submission_actions';
+import {createSourceBufferFromDocument} from '../buffers';
+import {RECORDING_FORMAT_VERSION} from '../version';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -523,8 +525,12 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     // Reload answer
     let newLevelAnswer = yield* appSelect(state => state.platform.levels[newLevel].answer);
     log.getLogger('task').debug('new level answer', newLevelAnswer);
-    if (!newLevelAnswer || (typeof newLevelAnswer === 'string' && !newLevelAnswer.length)) {
-        newLevelAnswer = getDefaultSourceCode(state.options.platform, state.environment, currentTask);
+    if (!newLevelAnswer || isEmptyDocument(newLevelAnswer.document)) {
+        newLevelAnswer = {
+            version: RECORDING_FORMAT_VERSION,
+            document: getDefaultSourceCode(state.options.platform, state.environment, currentTask),
+            platform: state.options.platform,
+        }
     }
     yield* put(platformAnswerLoaded(newLevelAnswer));
 
@@ -919,8 +925,13 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(platformAnswerLoaded, function*({payload: {answer}}) {
             log.getLogger('task').debug('Platform answer loaded', answer);
-            //TODO: fix this
-            // yield* put(bufferResetDocument({buffer: 'source', document: answer, goToEnd: true}));
+            const state = yield* appSelect();
+            if (state.options.tabsEnabled) {
+                yield* call(createSourceBufferFromDocument, answer.document);
+            } else {
+                const currentBuffer = state.buffers.activeBufferName;
+                yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
+            }
         });
 
         yield* takeEvery(taskChangeSoundEnabled, function* () {

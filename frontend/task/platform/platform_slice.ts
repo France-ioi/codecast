@@ -1,4 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {TaskAnswer} from '../task_types';
 
 export enum TaskLevelName {
     Basic = 'basic',
@@ -11,8 +12,8 @@ export const taskLevelsList = [TaskLevelName.Basic, TaskLevelName.Easy, TaskLeve
 
 export interface TaskLevel {
     level: TaskLevelName,
-    answer: any,
-    bestAnswer: any,
+    answer: TaskAnswer|null,
+    bestAnswer: TaskAnswer|null,
     score: number,
     locked?: boolean,
 }

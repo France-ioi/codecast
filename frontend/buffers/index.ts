@@ -94,6 +94,8 @@ import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {importPlatformModules} from '../task/libs/import_modules';
 import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
 import {TaskAnswer} from '../task/task_types';
+import {selectAnswer} from '../task/selectors';
+import {RECORDING_FORMAT_VERSION} from '../version';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -124,6 +126,7 @@ function getNewFileName(state: AppStore, platform: CodecastPlatform) {
 
 export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
     return {
+        version: RECORDING_FORMAT_VERSION,
         document: buffer.document,
         fileName: buffer.fileName,
         platform: buffer.platform,
@@ -134,7 +137,7 @@ export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
 //
 // }
 
-function* createSourceBufferFromDocument(document: Document) {
+export function* createSourceBufferFromDocument(document: Document) {
     const state: AppStore = yield* appSelect();
 
     const newBufferName = yield* call(getNewBufferName);
@@ -183,18 +186,16 @@ function* createBufferFromSubmission(submissionId: number) {
 function* buffersSaga() {
     yield* takeEvery(bufferDownload, function* () {
         const state: AppStore = yield* appSelect();
-        const activeBufferName = state.buffers.activeBufferName;
-        const platform = state.options.platform;
-        const bufferHandler = getBufferHandler(state.buffers.buffers[activeBufferName]);
-        const answer = bufferHandler.documentToString();
+        const currentAnswer = selectAnswer(state);
+        const answerString = documentToString(currentAnswer.document);
 
-        const data = new Blob([answer], {type: 'text/plain'});
+        const data = new Blob([answerString], {type: 'text/plain'});
         const textFile = window.URL.createObjectURL(data);
 
         const anchor = document.createElement('a');
         anchor.href = textFile
         anchor.target = '_blank';
-        anchor.download = `program_${platform}.txt`;
+        anchor.download = `program_${currentAnswer.platform}.txt`;
         anchor.click();
     });
 
@@ -244,6 +245,7 @@ function* buffersSaga() {
             }
 
             const answer: TaskAnswer = {
+                version: RECORDING_FORMAT_VERSION,
                 document,
                 platform: state.options.platform,
             };
