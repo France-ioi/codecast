@@ -210,11 +210,6 @@ class TaskSubmissionExecutor {
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
         const {level, answer, scope} = parameters;
         const state = yield* appSelect();
-
-        const randomSeed = state.platform.taskRandomSeed;
-        const answerContent = documentToString(answer.document);
-        const newTaskToken = getTaskTokenForLevel(level, randomSeed);
-        const answerToken = getAnswerTokenForLevel(stringify(answerContent), level, randomSeed);
         const platform = answer.platform;
         const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
 
@@ -238,7 +233,7 @@ class TaskSubmissionExecutor {
 
         yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
 
-        const submissionData = yield* makeServerSubmission(answerContent, newTaskToken, answerToken, platform, userTests);
+        const submissionData = yield* makeServerSubmission(answer, level, platform, userTests);
         if (!submissionData.success) {
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 

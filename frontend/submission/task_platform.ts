@@ -1,11 +1,16 @@
 import {call, put} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
-import {Task, TaskServer, TaskTest} from '../task/task_types';
+import {Task, TaskAnswer, TaskServer, TaskTest} from '../task/task_types';
 import {appSelect} from '../hooks';
 import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission_types';
 import {submissionUpdateTaskSubmission} from './submission_slice';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
 import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms';
+import {documentToString} from '../buffers/document';
+import {getAnswerTokenForLevel, getTaskTokenForLevel} from '../task/platform/task_token';
+import stringify from 'json-stable-stringify-without-jsonify';
+import {TaskLevelName} from '../task/platform/platform_slice';
+import {CodecastPlatform} from '../stepper/codecast_platform';
 
 export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -125,16 +130,21 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
     }
 }
 
-export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string, platform: string, userTests: TaskTest[]) {
+export function* makeServerSubmission(answer: TaskAnswer, level: TaskLevelName, platform: CodecastPlatform, userTests: TaskTest[]) {
     const state = yield* appSelect();
-    const {taskPlatformUrl} = state.options;
+    const taskPlatformUrl = state.options.taskPlatformUrl;
+    const randomSeed = state.platform.taskRandomSeed;
+    const newTaskToken = getTaskTokenForLevel(level, randomSeed);
+    const answerContent = documentToString(answer.document);
+    const answerToken = getAnswerTokenForLevel(stringify(answerContent), level, randomSeed);
 
     const body = {
-        token: taskToken,
+        token: newTaskToken,
         answerToken: answerToken,
         answer: {
             language: platform,
-            sourceCode: answer,
+            fileName: answer.fileName,
+            sourceCode: answerContent,
         },
         userTests: userTests.map(test => ({
             name: test.name,

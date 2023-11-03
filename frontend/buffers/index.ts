@@ -174,7 +174,7 @@ function* createBufferFromSubmission(submissionId: number) {
     const newBuffer: BufferStateParameters = {
         type: document.type,
         source: true,
-        fileName: null,
+        fileName: submission?.result?.sourceCode?.name,
         platform,
         submissionIndex: submissionId,
     };

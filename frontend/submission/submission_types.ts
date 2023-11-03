@@ -98,6 +98,7 @@ export interface TaskSubmissionResult {
         params: {
             sLangProg: string,
         },
+        name: string,
         source: string,
     },
 }
