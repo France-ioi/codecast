@@ -8,11 +8,10 @@ import {bufferChangeActiveBufferName, bufferRemove} from './buffers_slice';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {selectSourceBuffers} from './buffer_selectors';
 import {TaskSubmission} from '../submission/submission_types';
-import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
-import {faPen} from '@fortawesome/free-solid-svg-icons/faPen';
 import {OverlayTrigger, Popover} from "react-bootstrap";
 import {BufferEditorTabEdit} from './BufferEditorTabEdit';
+import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
 
 export interface BufferEditorTabProps {
     bufferName: string,
@@ -70,17 +69,15 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
             {({ ref, ...triggerHandler }) => (
                 <div className={`layout-editor-tab ${isActive ? 'is-active' : ''}`} onClick={changeTab} ref={ref}>
                     {hasResults && <React.Fragment>
-                        <span>{getMessage('BUFFER_TAB_FINISHED_SUBMISSION')}</span>
+                        <FontAwesomeIcon icon={faBell}/>
+                        <span className="ml-2">{fileName}</span>
                     </React.Fragment>}
                     {isEvaluating && <React.Fragment>
                         <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
-                        <span className="ml-2">{getMessage('BUFFER_TAB_PENDING_SUBMISSION')}</span>
+                        <span className="ml-2">{fileName}</span>
                     </React.Fragment>}
                     {isEditable && <div {...(isActive ? triggerHandler : {})} className={isActive ? 'has-pointer' : ''}>
                         {fileName}
-                        {isActive && <div className="layout-editor-tab-pen">
-                            <FontAwesomeIcon icon={faPen}/>
-                        </div>}
                     </div>}
                     {closable && <div className="layout-editor-tab-close" onClick={closeTab}>
                         <FontAwesomeIcon icon={faTimes}/>

@@ -9,6 +9,7 @@ import {bufferCreateSourceBuffer} from './buffer_actions';
 import {SubmissionResultsSelector} from '../submission/SubmissionResultsSelector';
 import {faArrowLeft} from '@fortawesome/free-solid-svg-icons/faArrowLeft';
 import {faArrowRight} from '@fortawesome/free-solid-svg-icons/faArrowRight';
+import debounce from 'lodash.debounce';
 
 export interface BufferEditorTabsProps {
 }
@@ -44,10 +45,7 @@ export function BufferEditorTabs(props: BufferEditorTabsProps) {
         updateArrows();
     };
 
-    const onScroll = () => {
-        //TODO : debounce this
-        updateArrows();
-    }
+    const onScroll = useCallback(debounce(updateArrows, 50), []);
 
     useEffect(() => {
         updateArrows();

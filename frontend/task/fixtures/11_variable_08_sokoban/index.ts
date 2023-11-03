@@ -34,7 +34,7 @@ export default {
             hard: 40
         },
         unlockedLevels: 2,
-        tabsEnabled: true,
+        tabsEnabled: false,
         zoom: {
             wheel: true,
         },
