@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {BufferState} from './buffer_types';
 import {platformsList} from '../stepper/platforms';
 import {useAppSelector} from '../hooks';
@@ -31,6 +31,23 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
     const hasResults = submission && !isEvaluating;
     const isEditable = null === submissionIndex;
     const [showEdit, setShowEdit] = useState(false);
+    const [isFlashing, setFlashing] = useState(false);
+    const waitingEvaluation = useRef<boolean>(false);
+
+    useEffect(() => {
+        if (isEvaluating) {
+            waitingEvaluation.current = true;
+        }
+    }, [isEvaluating]);
+
+    useEffect(() => {
+        if (hasResults && waitingEvaluation.current) {
+            waitingEvaluation.current = false;
+            setFlashing(!isActive);
+        } else {
+            setFlashing(false);
+        }
+    }, [hasResults, isActive]);
 
     const changeTab = () => {
         if (activeBufferName !== bufferName) {
@@ -67,9 +84,9 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
             rootClose
         >
             {({ ref, ...triggerHandler }) => (
-                <div className={`layout-editor-tab ${isActive ? 'is-active' : ''}`} onClick={changeTab} ref={ref}>
+                <div className={`layout-editor-tab ${isActive ? 'is-active' : ''} ${isFlashing ? 'is-flashing' : ''}`} onClick={changeTab} ref={ref}>
                     {hasResults && <React.Fragment>
-                        <FontAwesomeIcon icon={faBell}/>
+                        <FontAwesomeIcon icon={faBell} className={`icon-bell ${isFlashing ? 'is-animated' : ''}`}/>
                         <span className="ml-2">{fileName}</span>
                     </React.Fragment>}
                     {isEvaluating && <React.Fragment>

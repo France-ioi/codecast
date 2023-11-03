@@ -17,6 +17,9 @@
       background: var(--primary-color);
       color: white;
     }
+    &.is-flashing {
+      animation: blinking-color 1s 5;
+    }
     &:not(.is-active) {
       cursor: pointer;
     }
@@ -65,6 +68,12 @@
       cursor: pointer;
     }
   }
+}
+
+@keyframes blinking-color {
+  0%		{ background-color: #bfbfbf;}
+  50%		{ background-color: #f1ab27;}
+  100%	{ background-color: #bfbfbf;}
 }
 
 .layout-editor-tab-edit {
@@ -204,4 +213,47 @@ button[disabled].rts___btn {
 }
 .rts___left___nav___btn {
   left: 6px;
+}
+
+.icon-bell.is-animated {
+  animation: ring 1s ease 5;
+  transform-origin-x: 50%;
+  transform-origin-y: 0px;
+  transform-origin-z: initial;
+}
+
+@keyframes ring {
+  0% {
+    transform: rotate(-15deg);
+  }
+  8% {
+    transform: rotate(15deg);
+  }
+  16% {
+    transform: rotate(-18deg);
+  }
+  24% {
+    transform: rotate(18deg);
+  }
+  32% {
+    transform: rotate(-22deg);
+  }
+  40% {
+    transform: rotate(22deg);
+  }
+  48% {
+    transform: rotate(-18deg);
+  }
+  56% {
+    transform: rotate(18deg);
+  }
+  64% {
+    transform: rotate(-12deg);
+  }
+  72% {
+    transform: rotate(12deg);
+  }
+  80% {
+    transform: rotate(0deg);
+  }
 }
