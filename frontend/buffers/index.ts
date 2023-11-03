@@ -51,7 +51,7 @@ import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
 import log from 'loglevel';
-import {stepperDisplayError} from '../stepper/actionTypes';
+import {ActionTypes as StepperActionTypes, stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {appSelect} from '../hooks';
@@ -96,6 +96,7 @@ import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
 import {TaskAnswer} from '../task/task_types';
 import {selectAnswer} from '../task/selectors';
 import {RECORDING_FORMAT_VERSION} from '../version';
+import {StepperStatus} from '../stepper';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -223,6 +224,11 @@ function* buffersSaga() {
         if (null === activeBuffer) {
             return;
         }
+
+        if (state.stepper && state.stepper.status !== StepperStatus.Clear) {
+            yield* put({type: StepperActionTypes.StepperExit});
+        }
+
         const submissionIndex = state.buffers.buffers[activeBuffer].submissionIndex;
         const currentSubmissionIndex = state.submission.currentSubmissionId;
 
@@ -281,16 +287,6 @@ function* buffersSaga() {
             const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
             yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
         }
-        // const documentChangeNeeded = hasBlockPlatform(currentPlatform) !== hasBlockPlatform(platform);
-        // if (documentChangeNeeded) {
-        //     yield* call(importPlatformModules, platform, window.modulesPath);
-        //     // if (hasBlockPlatform(platform)) {
-        //     //     const context = quickAlgoLibraries.getContext(null, 'main');
-        //     //     yield* call(loadBlocklyHelperSaga, context);
-        //     // }
-        //     const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
-        //     yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
-        // }
     });
 
     yield* takeEvery(submissionChangeCurrentSubmissionId, function* () {
