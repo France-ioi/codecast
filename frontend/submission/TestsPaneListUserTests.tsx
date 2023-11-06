@@ -13,6 +13,7 @@ import {submissionCloseCurrentSubmission} from './submission_slice';
 import {submissionCreateTest} from './submission_actions';
 import {useDispatch} from 'react-redux';
 import {TaskTestGroupType} from '../task/task_types';
+import {selectCurrentTest} from '../task/task_slice';
 
 export interface SubmissionResultSubTaskProps {
     submission: TaskSubmissionServer,
@@ -23,7 +24,15 @@ export function TestsPaneListUserTests(props: SubmissionResultSubTaskProps) {
     const [open, setOpen] = useState(false);
     const dispatch = useDispatch();
 
+    const currentTest = useAppSelector(selectCurrentTest);
     const testsOrdered = [...taskTests.filter(test => TaskTestGroupType.User === test.groupType)];
+    const subTaskHasTest = -1 !== testsOrdered.indexOf(currentTest);
+
+    useEffect(() => {
+        if (subTaskHasTest && !open) {
+            setOpen(true);
+        }
+    }, [subTaskHasTest, props.submission]);
 
     const testsByIcon: {[key: number]: number} = {};
     let testsByIconValues: {errorCodeData: ErrorCodeData, count: number}[];

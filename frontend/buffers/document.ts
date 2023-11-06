@@ -22,12 +22,14 @@ export function createEmptyBufferState(type: BufferType): BufferState {
         return {
             type: BufferType.Text,
             document: TextBufferHandler.getEmptyDocument(),
+            submissionIndex: null,
             actions: {},
         }
     } else if (BufferType.Block === type) {
         return {
             type: BufferType.Block,
             document: BlockBufferHandler.getEmptyDocument(),
+            submissionIndex: null,
             actions: {},
         }
     } else {

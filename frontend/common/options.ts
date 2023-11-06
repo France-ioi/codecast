@@ -19,6 +19,7 @@ import {
     getBufferTypeFromPlatform
 } from '../buffers/document';
 import {bufferReset} from '../buffers/buffers_slice';
+import {bufferChangePlatform} from '../buffers/buffer_actions';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -171,32 +172,30 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defineAction(ActionTypes.TaskVariantChanged);
-    bundle.addReducer(ActionTypes.TaskVariantChanged, (state, { payload: { variant } }) => {
+    bundle.addReducer(ActionTypes.TaskVariantChanged, (state, {payload: {variant}}) => {
         state.options.taskVariant = variant;
+    });
+
+    bundle.defineAction(ActionTypes.TabsEnabledChanged);
+    bundle.addReducer(ActionTypes.TabsEnabledChanged, (state, {payload: {tabsEnabled}}) => {
+        state.options.tabsEnabled = tabsEnabled;
     });
 
     bundle.addSaga(function* () {
         // @ts-ignore
         yield* takeEvery(ActionTypes.PlatformChanged, function* ({payload: {reloadTask}}) {
-            const newPlatform = yield* appSelect(state => state.options.platform);
+            const state = yield* appSelect();
+            const newPlatform = state.options.platform;
             if (isLocalStorageEnabled()) {
                 window.localStorage.setItem('platform', newPlatform);
             }
             if (false !== reloadTask) {
                 yield* put({type: StepperActionTypes.StepperExit});
 
-                // Reset source if we change from a block platform to a non-block platform
-                const currentModel = yield* appSelect(state => state.buffers['source']);
-                if (currentModel?.type !== getBufferTypeFromPlatform(newPlatform)) {
-                    const newModel = createEmptyBufferState(getBufferTypeFromPlatform(newPlatform));
-                    yield* put(bufferReset({buffer: 'source', state: newModel}));
+                if (!state.options.tabsEnabled) {
+                    const activeBufferName = state.buffers.activeBufferName;
+                    yield* put(bufferChangePlatform(activeBufferName, newPlatform));
                 }
-
-                const levels = yield* appSelect(state => state.platform.levels);
-                for (let level of Object.keys(levels)) {
-                    yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
-                }
-                yield* put(taskLoad({reloadContext: true}));
             }
         });
     });

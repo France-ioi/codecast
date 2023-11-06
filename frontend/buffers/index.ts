@@ -28,10 +28,12 @@ user interaction change the view.
 
 import {call, put, takeEvery} from 'typed-redux-saga';
 import {
-    compressRange, createEmptyBufferState,
+    compressRange,
+    createEmptyBufferState,
     documentToString,
     expandRange,
     getBufferHandler,
+    TextBufferHandler,
     uncompressIntoDocument
 } from "./document";
 import "ace-builds/src-min-noconflict/mode-c_cpp";
@@ -49,22 +51,52 @@ import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
 import log from 'loglevel';
-import {stepperDisplayError} from '../stepper/actionTypes';
+import {ActionTypes as StepperActionTypes, stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {appSelect} from '../hooks';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
-import {BufferType, TextDocumentDelta, TextDocumentDeltaAction, Range} from './buffer_types';
 import {
+    BufferState,
+    BufferStateParameters,
+    BufferType,
+    Document,
+    Range,
+    TextDocumentDelta,
+    TextDocumentDeltaAction
+} from './buffer_types';
+import {
+    bufferChangeActiveBufferName,
+    bufferDissociateFromSubmission,
     bufferEdit,
-    bufferEditPlain, bufferModelEdit,
+    bufferEditPlain,
+    bufferInit,
+    bufferModelEdit,
     bufferReset,
+    bufferResetDocument,
     bufferScrollToLine,
     bufferSelect
 } from './buffers_slice';
-import {bufferDownload, bufferReload} from './buffer_actions';
+import {
+    bufferChangePlatform,
+    bufferCreateSourceBuffer,
+    bufferDownload,
+    bufferDuplicateSourceBuffer,
+    bufferReload
+} from './buffer_actions';
+import {selectSourceBuffers} from './buffer_selectors';
+import {getDefaultSourceCode} from '../task/utils';
+import {submissionChangeCurrentSubmissionId} from '../submission/submission_slice';
+import {loadBlocklyHelperSaga} from '../stepper/js';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {importPlatformModules} from '../task/libs/import_modules';
+import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
+import {TaskAnswer} from '../task/task_types';
+import {selectAnswer} from '../task/selectors';
+import {RECORDING_FORMAT_VERSION} from '../version';
+import {StepperStatus} from '../stepper';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -73,25 +105,136 @@ export default function(bundle: Bundle) {
     bundle.defer(addReplayHooks);
 };
 
-export function getBufferEditor(state, buffer) {
-    return buffer in state.buffers ? state.buffers[buffer].editor : null;
+function* getNewBufferName() {
+    const currentSourceBuffers = yield* appSelect(selectSourceBuffers);
+    let i = 0;
+    while (`source:${i}` in currentSourceBuffers) {
+        i++;
+    }
+
+    return `source:${i}`;
+}
+
+function getNewFileName(state: AppStore, platform: CodecastPlatform) {
+    const currentSourceBuffers = selectSourceBuffers(state);
+    let j = 1;
+    while (Object.values(currentSourceBuffers).find(buffer => platform === buffer.platform && getMessage('BUFFER_TAB_FILENAME').format({i: j}) === buffer.fileName)) {
+        j++;
+    }
+
+    return getMessage('BUFFER_TAB_FILENAME').format({i: j});
+}
+
+export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
+    return {
+        version: RECORDING_FORMAT_VERSION,
+        document: buffer.document,
+        fileName: buffer.fileName,
+        platform: buffer.platform,
+    };
+}
+
+// export function denormalizeBufferFromAnswer(answer: TaskAnswer): BufferState {
+//
+// }
+
+export function* createSourceBufferFromDocument(document: Document) {
+    const state: AppStore = yield* appSelect();
+
+    const newBufferName = yield* call(getNewBufferName);
+    const platform = state.options.platform;
+    const newFileName = getNewFileName(state, platform);
+
+    const newBuffer: BufferStateParameters = {
+        type: document.type,
+        source: true,
+        fileName: newFileName,
+        platform,
+    };
+
+    yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
+    yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
+    yield* put(bufferChangeActiveBufferName(newBufferName));
+}
+
+function* createBufferFromSubmission(submissionId: number) {
+    const newBufferName = yield* call(getNewBufferName);
+
+    const state: AppStore = yield* appSelect();
+
+    const submission = state.submission.taskSubmissions[submissionId];
+    if (!submission?.result?.sourceCode?.source) {
+        return;
+    }
+
+    const platform = submission.result.sourceCode.params.sLangProg as CodecastPlatform;
+
+    const document = TextBufferHandler.documentFromString(submission?.result?.sourceCode?.source);
+
+    const newBuffer: BufferStateParameters = {
+        type: document.type,
+        source: true,
+        fileName: submission?.result?.sourceCode?.name,
+        platform,
+        submissionIndex: submissionId,
+    };
+
+    yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
+    yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
+    yield* put(bufferChangeActiveBufferName(newBufferName));
 }
 
 function* buffersSaga() {
     yield* takeEvery(bufferDownload, function* () {
         const state: AppStore = yield* appSelect();
-        const platform = state.options.platform;
-        const bufferHandler = getBufferHandler(state.buffers['source']);
-        const answer = bufferHandler.documentToString();
+        const currentAnswer = selectAnswer(state);
+        const answerString = documentToString(currentAnswer.document);
 
-        const data = new Blob([answer], {type: 'text/plain'});
+        const data = new Blob([answerString], {type: 'text/plain'});
         const textFile = window.URL.createObjectURL(data);
 
         const anchor = document.createElement('a');
         anchor.href = textFile
         anchor.target = '_blank';
-        anchor.download = `program_${platform}.txt`;
+        anchor.download = `program_${currentAnswer.platform}.txt`;
         anchor.click();
+    });
+
+    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document, platform}}) {
+        const state: AppStore = yield* appSelect();
+        let newDocument = document ?? getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
+        log.getLogger('editor').debug('Load new source code', newDocument);
+        yield* call(createSourceBufferFromDocument, newDocument);
+    });
+
+    yield* takeEvery(bufferDuplicateSourceBuffer, function* () {
+        const state: AppStore = yield* appSelect();
+        const activeBuffer = state.buffers.activeBufferName;
+        if (null === activeBuffer) {
+            return;
+        }
+        const document = state.buffers.buffers[activeBuffer].document;
+        const documentCopy = JSON.parse(JSON.stringify(document));
+        yield* call(createSourceBufferFromDocument, documentCopy);
+    });
+
+    yield* takeEvery(bufferChangeActiveBufferName, function* () {
+        const state: AppStore = yield* appSelect();
+        const activeBuffer = state.buffers.activeBufferName;
+        if (null === activeBuffer) {
+            return;
+        }
+
+        if (state.stepper && state.stepper.status !== StepperStatus.Clear) {
+            yield* put({type: StepperActionTypes.StepperExit});
+        }
+
+        const submissionIndex = state.buffers.buffers[activeBuffer].submissionIndex;
+        const currentSubmissionIndex = state.submission.currentSubmissionId;
+
+        if (currentSubmissionIndex !== submissionIndex) {
+            yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
+        }
     });
 
     yield* takeEvery(bufferReload, function* () {
@@ -107,13 +250,64 @@ function* buffersSaga() {
                 throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
             }
 
-            yield* put(platformAnswerLoaded(document));
+            const answer: TaskAnswer = {
+                version: RECORDING_FORMAT_VERSION,
+                document,
+                platform: state.options.platform,
+            };
+
+            yield* put(platformAnswerLoaded(answer));
             yield* put(platformTaskRefresh());
         } catch (e: any) {
             if (e && e.message) {
                 yield* put(stepperDisplayError(e.message));
             }
         }
+    });
+
+    yield* takeEvery(bufferDissociateFromSubmission, function* ({payload: {buffer}}) {
+        const state = yield* appSelect();
+        const bufferState = state.buffers.buffers[buffer];
+        if (null !== bufferState.fileName) {
+            return;
+        }
+
+        const newFileName = getNewFileName(state, bufferState.platform);
+        yield* put(bufferInit({buffer, fileName: newFileName}));
+    });
+
+    yield* takeEvery(bufferChangePlatform, function* ({payload: {bufferName, platform}}) {
+        const state = yield* appSelect();
+        const bufferState = state.buffers.buffers[bufferName];
+        const currentPlatform = bufferState.platform;
+        yield* put(bufferInit({buffer: bufferName, platform}));
+
+        if (currentPlatform !== platform) {
+            yield* call(createQuickalgoLibrary);
+            const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
+            yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
+        }
+    });
+
+    yield* takeEvery(submissionChangeCurrentSubmissionId, function* () {
+        const state = yield* appSelect();
+        const newSubmissionId = state.submission.currentSubmissionId;
+        if (null === newSubmissionId) {
+            return;
+        }
+
+        // Open (or re-open) a buffer for this submission
+        for (let [bufferName, bufferState] of Object.entries(state.buffers.buffers)) {
+            if (newSubmissionId === bufferState.submissionIndex) {
+                if (state.buffers.activeBufferName !== bufferName) {
+                    yield* put(bufferChangeActiveBufferName(bufferName));
+                }
+
+                return;
+            }
+        }
+
+        yield* call(createBufferFromSubmission, newSubmissionId);
     });
 }
 
@@ -166,8 +360,8 @@ function addRecordHooks({recordApi}: App) {
         const state: AppStore = yield* appSelect();
 
         init.buffers = {};
-        for (let bufferName of Object.keys(state.buffers)) {
-            const bufferModel = state.buffers[bufferName];
+        for (let bufferName of Object.keys(state.buffers.buffers)) {
+            const bufferModel = state.buffers.buffers[bufferName];
 
             init.buffers[bufferName] = {
                 document: documentToString(bufferModel.document),
@@ -277,8 +471,8 @@ function addReplayHooks({replayApi}: App) {
     replayApi.onReset(function* ({state}: PlayerInstant, quick) {
         /* Reset all buffers. */
         log.getLogger('editor').debug('Editor Buffer Reset', state);
-        for (let buffer of Object.keys(state.buffers)) {
-            const model = state.buffers[buffer];
+        for (let buffer of Object.keys(state.buffers.buffers)) {
+            const model = state.buffers.buffers[buffer];
             yield* put(bufferReset({buffer, state: model}))
         }
     });

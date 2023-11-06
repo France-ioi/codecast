@@ -1,4 +1,4 @@
-import {AppStoreReplay} from "../../store";
+import {AppStore, AppStoreReplay} from "../../store";
 import {Bundle} from "../../linker";
 import {call, debounce, put, takeEvery} from "typed-redux-saga";
 import {BlocksUsage} from "../task_types";
@@ -14,6 +14,7 @@ import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {Block, BlockType} from './block_types';
 import {bufferEdit, bufferEditPlain, bufferInit, bufferReset} from '../../buffers/buffers_slice';
+import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 
 export interface DraggableBlockItem {
     block: Block,
@@ -56,10 +57,10 @@ function getSnippet(proto) {
     }
 }
 
-export const getContextBlocksDataSelector = memoize(({state, context}: {state: AppStoreReplay, context: QuickAlgoLibrary}): Block[] => {
+export const getContextBlocksDataSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}): Block[] => {
     const contextIncludeBlocks = state.task.contextIncludeBlocks;
     const contextStrings = state.task.contextStrings;
-    const platform = state.options.platform;
+    const platform = selectActiveBufferPlatform(state);
 
     let availableBlocks: Block[] = [];
 
@@ -214,12 +215,12 @@ function* checkSourceSaga() {
 
     let blocksUsage: BlocksUsage = {};
     try {
-        checkCompilingCode(answer, state.options.platform, state, ['empty']);
+        checkCompilingCode(answer, state, ['empty']);
     } catch (e) {
         blocksUsage.error = e.toString();
     }
 
-    const currentUsage = getBlocksUsage(answer, state.options.platform);
+    const currentUsage = getBlocksUsage(answer);
     if (currentUsage) {
         const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
 
@@ -241,7 +242,8 @@ export default function (bundle: Bundle) {
         yield* debounce(500, bufferReset, checkSourceSaga);
 
         yield* takeEvery(bufferInit, function* ({payload}) {
-            if ('source' === payload.buffer) {
+            const activeBufferName = yield* appSelect(state => state.buffers.activeBufferName);
+            if (activeBufferName === payload.buffer) {
                 yield* call(checkSourceSaga);
             }
         });

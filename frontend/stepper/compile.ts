@@ -34,6 +34,8 @@ import {LibraryTestResult} from '../task/libs/library_test_result';
 import {CodecastPlatform} from './codecast_platform';
 import {App, Codecast} from '../app_types';
 import {documentToString, TextBufferHandler} from '../buffers/document';
+import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
+import {TaskAnswer} from '../task/task_types';
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -44,7 +46,7 @@ export enum CompileStatus {
 
 export const initialStateCompile = {
     status: CompileStatus.Clear,
-    source: '',
+    answer: null as TaskAnswer,
     syntaxTree: null as any
 };
 
@@ -79,19 +81,22 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* watchCompile() {
         yield* takeLatest(ActionTypes.Compile, function* () {
             let state = yield* appSelect();
-            const source = selectAnswer(state);
-            const {platform, allowExecutionOverBlocksLimit} = state.options;
+            const answer = selectAnswer(state);
+            const {allowExecutionOverBlocksLimit} = state.options;
+            const platform = answer.platform;
 
             yield* put({
                 type: ActionTypes.CompileStarted,
-                source,
+                payload: {
+                    answer,
+                },
             });
 
             // Create a runner for this
-            Codecast.runner = yield* call(createRunnerSaga);
+            Codecast.runner = yield* call(createRunnerSaga, answer.platform);
 
             try {
-                checkCompilingCode(source, platform, state, allowExecutionOverBlocksLimit ? ['blocks_limit'] : []);
+                checkCompilingCode(answer, state, allowExecutionOverBlocksLimit ? ['blocks_limit'] : []);
             } catch (e) {
                 yield* put({
                     type: ActionTypes.CompileFailed,
@@ -111,7 +116,7 @@ export default function(bundle: Bundle) {
                 });
             } else if (CodecastPlatform.Python === platform) {
                 try {
-                    yield* call(compilePythonCodeSaga, documentToString(source));
+                    yield* call(compilePythonCodeSaga, documentToString(answer.document));
                 } catch (ex) {
                     yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
                 }
@@ -119,7 +124,7 @@ export default function(bundle: Bundle) {
                 state = yield* appSelect();
                 try {
                     const logData = state.statistics.logData;
-                    const postData = {source, platform, logData};
+                    const postData = {source: documentToString(answer.document), platform, logData};
                     const {baseUrl} = state.options;
 
                     response = yield* call(asyncRequestJson, baseUrl + '/compile', postData);
@@ -162,9 +167,9 @@ export default function(bundle: Bundle) {
             yield* call(addEvent, 'compile.start', source); // XXX should also have platform
         });
         replayApi.on(['stepper.compile', 'compile.start'], function* (replayContext: ReplayContext, event) {
-            const source = event[2];
+            const answer = event[2];
 
-            yield* put({type: ActionTypes.CompileStarted, source});
+            yield* put({type: ActionTypes.CompileStarted, answer});
         });
 
         recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {
@@ -256,20 +261,19 @@ const addNodeRanges = function(source, syntaxTree) {
     return traverse(syntaxTree);
 };
 
-function compileStartedReducer(state: AppStore, action): void {
-    const {source} = action;
+function compileStartedReducer(state: AppStore, {payload}): void {
+    const {answer} = payload;
 
     state.compile.status = CompileStatus.Running;
-    state.compile.source = source;
+    state.compile.answer = answer;
 }
 
 function compileSucceededReducer(state: AppStore, action): void {
-    if (-1 !== [CodecastPlatform.Unix, CodecastPlatform.Arduino].indexOf(state.options.platform)) {
+    const answer = state.compile.answer;
+    if (-1 !== [CodecastPlatform.Unix, CodecastPlatform.Arduino].indexOf(answer.platform)) {
         const {ast, diagnostics} = action.response;
-        const source = state.compile.source;
-
         state.compile.status = CompileStatus.Done;
-        state.compile.syntaxTree = addNodeRanges(source, ast);
+        state.compile.syntaxTree = addNodeRanges(documentToString(answer.document), ast);
         state.stepper.error = diagnostics;
     } else {
         state.compile.status = CompileStatus.Done;

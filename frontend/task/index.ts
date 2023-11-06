@@ -79,7 +79,7 @@ import {
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
-import {isEmptyDocument} from "../buffers/document";
+import {createEmptyBufferState, isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
@@ -104,8 +104,18 @@ import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
 import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmission} from '../submission/submission';
-import {bufferEdit, bufferEditPlain, bufferResetDocument} from '../buffers/buffers_slice';
+import {
+    bufferDissociateFromSubmission,
+    bufferEdit,
+    bufferEditPlain,
+    bufferResetDocument
+} from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
+import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
+import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
+import {submissionCancel} from '../submission/submission_actions';
+import {createSourceBufferFromDocument} from '../buffers';
+import {RECORDING_FORMAT_VERSION} from '../version';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -353,6 +363,10 @@ function* taskLoadSaga(app: App, action) {
         }
     }
 
+    context = quickAlgoLibraries.getContext(null, state.environment);
+    const tabsEnabled = context?.infos?.tabsEnabled;
+    yield* put({type: ActionTypes.TabsEnabledChanged, payload: {tabsEnabled}});
+
     oldSagasTasks[app.environment] = yield* fork(function* () {
         try {
             const sagas = quickAlgoLibraries.getSagas(app, app.environment);
@@ -367,13 +381,9 @@ function* taskLoadSaga(app: App, action) {
     });
 
     state = yield* appSelect();
-    const source = selectAnswer(state);
-    if (isEmptyDocument(source) && currentTask) {
-        const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment, currentTask);
-        if (null !== defaultSourceCode) {
-            log.getLogger('editor').debug('Load default source code', defaultSourceCode);
-            yield* put(bufferResetDocument({buffer: 'source', document: defaultSourceCode, goToEnd: true}));
-        }
+    const sourceBuffers = selectSourceBuffers(state);
+    if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state)?.document)) {
+        yield* put(bufferCreateSourceBuffer());
     }
 
     yield* call(taskLevelLoadedSaga);
@@ -456,7 +466,7 @@ function* cancelHandleLibrariesEventListenerSaga(app: App) {
     }
 }
 
-function* taskRunExecution(app: App, {type, payload}) {
+function* taskRunExecution({type, payload}) {
     log.getLogger('task').debug('START RUN EXECUTION', type, payload);
     const {level, testId, tests, options, answer, resolve} = payload;
 
@@ -515,8 +525,12 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     // Reload answer
     let newLevelAnswer = yield* appSelect(state => state.platform.levels[newLevel].answer);
     log.getLogger('task').debug('new level answer', newLevelAnswer);
-    if (!newLevelAnswer || (typeof newLevelAnswer === 'string' && !newLevelAnswer.length)) {
-        newLevelAnswer = getDefaultSourceCode(state.options.platform, state.environment, currentTask);
+    if (!newLevelAnswer || isEmptyDocument(newLevelAnswer.document)) {
+        newLevelAnswer = {
+            version: RECORDING_FORMAT_VERSION,
+            document: getDefaultSourceCode(state.options.platform, state.environment, currentTask),
+            platform: state.options.platform,
+        }
     }
     yield* put(platformAnswerLoaded(newLevelAnswer));
 
@@ -666,27 +680,40 @@ function* watchRecordingProgressSaga(app: App) {
 }
 
 export function* onEditSource(origin?: string) {
-    const needsReset = yield* appSelect(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground);
+    const state = yield* appSelect();
+
+    const needsReset = StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground;
     log.getLogger('task').debug('needs reset', needsReset);
     if (needsReset) {
         log.getLogger('task').debug('HANDLE RESET');
         yield* put({type: StepperActionTypes.StepperExit});
     }
 
-    // Cancel submission if it's not a Submit
-    const currentSubmission = yield* appSelect(selectCurrentSubmission);
-    if (null !== currentSubmission && SubmissionExecutionScope.Submit !== currentSubmission.scope) {
-        yield* put(submissionCloseCurrentSubmission());
+    // Cancel server submission that are not Submit
+    for (let [submissionIndex, submission] of state.submission.taskSubmissions.entries()) {
+        if (isServerSubmission(submission) && !submission.result && !submission.crashed && SubmissionExecutionScope.Submit !== submission.scope) {
+            yield* put(submissionCancel(submissionIndex));
+        }
     }
 
-    const currentError = yield* appSelect(state => state.stepper.error);
+    const currentError = state.stepper.error;
     if (null !== currentError) {
         yield* put(stepperClearError());
     }
 
+    const activeBufferName = state.buffers.activeBufferName;
+    if (null !== activeBufferName) {
+        const activeBuffer = state.buffers.buffers[activeBufferName];
+        if (null !== activeBuffer.submissionIndex) {
+            yield* put(bufferDissociateFromSubmission({buffer: activeBufferName}));
+            if (activeBuffer.submissionIndex === state.submission.currentSubmissionId) {
+                yield* put(submissionCloseCurrentSubmission());
+            }
+        }
+    }
+
     if ('test' !== origin) {
-        const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
-        const state = yield* appSelect();
+        const blocksPanelWasOpen = state.task.blocksPanelWasOpen;
         if (state.task.blocksPanelCollapsed === blocksPanelWasOpen) {
             yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
         }
@@ -735,7 +762,8 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery([bufferEdit, bufferEditPlain], function* ({payload}) {
             const {buffer} = payload;
-            if (buffer === 'source') {
+            const bufferState = yield* appSelect(state => state.buffers.buffers[buffer]);
+            if (bufferState.source) {
                 yield* call(onEditSource);
             }
         });
@@ -815,9 +843,8 @@ export default function (bundle: Bundle) {
                 if (context.success) {
                     if (state.options.allowExecutionOverBlocksLimit) {
                         const answer = selectAnswer(state);
-                        const platform = state.options.platform;
                         try {
-                            checkCompilingCode(answer, platform, state);
+                            checkCompilingCode(answer, state);
                         } catch (e) {
                             log.getLogger('task').debug('Post compilation error', e);
                             aggregatedLibraryTestResult.message = `${aggregatedLibraryTestResult.message} ${getMessage('TASK_POST_COMPILATION_ERROR').s} ${e.toString()}`;
@@ -874,7 +901,7 @@ export default function (bundle: Bundle) {
         // @ts-ignore
         yield* takeEvery(updateCurrentTestId, taskUpdateCurrentTestIdSaga);
 
-        yield* takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution, app);
+        yield* takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution);
 
         // @ts-ignore
         yield* takeEvery(StepperActionTypes.Compile, function*({payload}) {
@@ -898,7 +925,13 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(platformAnswerLoaded, function*({payload: {answer}}) {
             log.getLogger('task').debug('Platform answer loaded', answer);
-            yield* put(bufferResetDocument({buffer: 'source', document: answer, goToEnd: true}));
+            const state = yield* appSelect();
+            if (state.options.tabsEnabled) {
+                yield* call(createSourceBufferFromDocument, answer.document);
+            } else {
+                const currentBuffer = state.buffers.activeBufferName;
+                yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
+            }
         });
 
         yield* takeEvery(taskChangeSoundEnabled, function* () {
@@ -912,8 +945,8 @@ export default function (bundle: Bundle) {
         yield* takeEvery(ActionTypes.WindowResized, function* () {
             const context = quickAlgoLibraries.getContext(null, 'main');
             const state = yield* appSelect();
-            if (hasBlockPlatform(state.options.platform) && state.task.currentTask) {
-                yield* call(loadBlocklyHelperSaga, context, state.task.currentLevel);
+            if (hasBlockPlatform(selectActiveBufferPlatform(state)) && state.task.currentTask) {
+                yield* call(loadBlocklyHelperSaga, context);
             }
         });
 
@@ -1039,10 +1072,6 @@ export default function (bundle: Bundle) {
         });
         app.replayApi.on(taskChangeLevel.type, function* (replayContext: ReplayContext, event) {
             yield* put(taskChangeLevel(event[2]));
-            replayContext.addSaga(function* (instant: PlayerInstant) {
-                const answer = selectAnswer(instant.state);
-                yield* put(bufferResetDocument({buffer: 'source', document: answer, goToEnd: true}));
-            });
         });
 
         app.stepperApi.onInit(function* () {

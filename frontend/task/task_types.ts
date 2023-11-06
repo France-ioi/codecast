@@ -1,6 +1,8 @@
 import {TaskLevelName} from './platform/platform_slice';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {TaskHint} from './hints/hints_slice';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {Document} from '../buffers/buffer_types';
 
 export interface BlocksUsage {
     error?: string,
@@ -119,6 +121,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     hints?: TaskHint[],
     taskStrings?: any,
     showViews?: boolean,
+    tabsEnabled?: boolean,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
@@ -193,6 +196,14 @@ export interface TaskTestServer {
     input: string,
     output: string,
     clientId?: string | null,
+}
+
+export interface TaskAnswer {
+    version: string,
+    document: Document,
+    platform?: CodecastPlatform,
+    fileName?: string,
+    //submissionId: string ?
 }
 
 export interface TaskServer extends TaskNormalized {

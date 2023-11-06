@@ -1,4 +1,5 @@
 import {Block} from '../task/blocks/block_types';
+import {CodecastPlatform} from '../stepper/codecast_platform';
 
 export enum BufferType {
     Text = 'text',
@@ -35,8 +36,16 @@ export interface BlockBufferState extends BufferState {
     selection?: string,
 }
 
-export interface BufferState {
-    type: BufferType,
+export interface BufferStateParameters {
+    source?: boolean,
+    fileName?: string,
+    platform?: CodecastPlatform,
+    submissionIndex?: number,
+    type?: BufferType,
+    document?: Document,
+}
+
+export interface BufferState extends BufferStateParameters {
     document: Document,
     selection?: any,
     firstVisibleRow?: number,

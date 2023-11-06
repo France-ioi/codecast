@@ -7,13 +7,10 @@ import {createRunnerSaga} from "../../stepper";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
 import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
-import {getAvailablePlatformsFromSupportedLanguages, platformsList} from '../../stepper/platforms';
-import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
-import {taskApi} from '../platform/platform';
-import {DebugLib} from './debug/debug_lib';
 import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from './quick_algo_libraries_model';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
+import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -53,8 +50,9 @@ export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: Q
     yield* call(quickAlgoLibraryResetAndReloadStateSaga);
 
     log.getLogger('libraries').debug('replay previous quickalgo calls', quickAlgoCalls);
+    const platform = yield* appSelect(selectActiveBufferPlatform);
     if (!Codecast.runner) {
-        Codecast.runner = yield* call(createRunnerSaga);
+        Codecast.runner = yield* call(createRunnerSaga, platform);
     }
     const environment = yield* appSelect(state => state.environment);
     const context = quickAlgoLibraries.getContext(null, environment);

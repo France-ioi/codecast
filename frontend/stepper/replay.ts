@@ -186,7 +186,8 @@ export function addStepperRecordAndReplayHooks(app: App) {
     });
 
     replayApi.on('stepper.restart', function* () {
-        const stepperState = yield* call(app.stepperApi.buildState);
+        const platform = yield* appSelect(state => state.compile.answer.platform);
+        const stepperState = yield* call(app.stepperApi.buildState, platform);
 
         yield* put({type: ActionTypes.StepperEnabled});
         yield* put({type: ActionTypes.StepperRestart, payload: {stepperState}});

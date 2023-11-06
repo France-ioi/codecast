@@ -75,6 +75,7 @@ export interface TaskSubmission {
     date: string, // ISO format
     evaluated: boolean,
     crashed?: boolean,
+    cancelled?: boolean,
     platform: CodecastPlatform,
     result?: TaskSubmissionResult,
     scope?: SubmissionExecutionScope,
@@ -93,6 +94,13 @@ export interface TaskSubmissionResult {
     compilationMessage?: string | null,
     errorMessage?: string | null,
     mode?: TaskSubmissionMode,
+    sourceCode?: {
+        params: {
+            sLangProg: string,
+        },
+        name: string,
+        source: string,
+    },
 }
 
 export interface TaskSubmissionClient extends TaskSubmission {

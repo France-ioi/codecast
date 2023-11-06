@@ -1,10 +1,12 @@
 import {AppStoreReplay} from "../store";
 import log from 'loglevel';
-import {Document} from '../buffers/buffer_types';
+import {TaskAnswer} from './task_types';
+import {normalizeBufferToTaskAnswer} from '../buffers';
 
-export function selectAnswer(state: AppStoreReplay): Document|null {
-    const sourceModel = state.buffers['source'];
-    // log.getLogger('editor').debug('select current answer', sourceModel ? sourceModel.document : null);
+export function selectAnswer(state: AppStoreReplay): TaskAnswer|null {
+    const activeBufferName = state.buffers.activeBufferName;
+    const sourceBuffer = state.buffers.buffers[activeBufferName];
+    // log.getLogger('editor').debug('select current answer', sourceBuffer);
 
-    return sourceModel ? sourceModel.document : null;
+    return sourceBuffer ? normalizeBufferToTaskAnswer(sourceBuffer) : null;
 }

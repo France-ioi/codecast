@@ -11,6 +11,7 @@ import {NotionArborescence} from '../../blocks/notions';
 import {DocumentationConcept} from '../../documentation/documentation_slice';
 import {Block} from '../../blocks/block_types';
 import {TaskTest} from '../../task_types';
+import {PlatformData} from '../../../stepper/platforms';
 
 export interface SmartContractResultLogLine {
     address?: string,
@@ -42,12 +43,12 @@ export interface SmartContractResultLogLine {
     expected?: SmartContractResultLogLine,
 }
 
-export const smartContractPlatformsList = {
-    [SmartContractPlatform.SmartPy]: {aceSourceMode: 'python', displayBlocks: true, needsCompilation: true, getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.SmartPy)},
-    [SmartContractPlatform.Archetype]: {aceSourceMode: 'archetype', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Archetype)},
-    [SmartContractPlatform.Michelson]: {aceSourceMode: 'michelson', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Michelson)},
-    [SmartContractPlatform.CameLIGO]: {aceSourceMode: 'ocaml', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.CameLIGO)},
-    [SmartContractPlatform.JsLIGO]: {aceSourceMode: 'javascript', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.JsLIGO)},
+export const smartContractPlatformsList: {[key: string]: PlatformData} = {
+    [SmartContractPlatform.SmartPy]: {aceSourceMode: 'python', extension: 'py', displayBlocks: true, needsCompilation: true, getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.SmartPy)},
+    [SmartContractPlatform.Archetype]: {aceSourceMode: 'archetype', extension: 'arl', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Archetype)},
+    [SmartContractPlatform.Michelson]: {aceSourceMode: 'michelson', extension: 'tz', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Michelson)},
+    [SmartContractPlatform.CameLIGO]: {aceSourceMode: 'ocaml', extension: 'ml', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.CameLIGO)},
+    [SmartContractPlatform.JsLIGO]: {aceSourceMode: 'javascript', extension: 'js', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.JsLIGO)},
 };
 
 interface SmartContractLibState {

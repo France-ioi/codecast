@@ -5,13 +5,13 @@ import {NotionsBag} from '../task/blocks/notions';
 import {smartContractPlatformsList} from '../task/libs/smart_contract/smart_contract_lib';
 import {CodecastPlatform} from './codecast_platform';
 import {Block} from '../task/blocks/block_types';
-import {SmartContractPlatform} from '../task/libs/smart_contract/smart_contract_blocks';
 
 export interface PlatformData {
     needsCompilation?: boolean,
     hasMicroSteps?: boolean,
     aceSourceMode?: string,
     displayBlocks?: boolean,
+    extension?: string,
     getSpecificBlocks?: (notionsBag: NotionsBag, includeBlocks?: QuickalgoTaskIncludeBlocks) => Block[],
 }
 
@@ -36,11 +36,11 @@ export function getAvailablePlatformsFromSupportedLanguages(supportedLanguages: 
 }
 
 export const platformsList: {[key: string]: PlatformData} = {
-    [CodecastPlatform.Python]: {aceSourceMode: 'python', displayBlocks: true, getSpecificBlocks: getPythonSpecificBlocks},
-    [CodecastPlatform.Unix]: {needsCompilation: true, hasMicroSteps: true, aceSourceMode: 'c_cpp', getSpecificBlocks: getCSpecificBlocks},
-    [CodecastPlatform.Arduino]: {needsCompilation: true, hasMicroSteps: true, aceSourceMode: 'arduino', getSpecificBlocks: getCSpecificBlocks},
-    [CodecastPlatform.Blockly]: {aceSourceMode: 'text'},
-    [CodecastPlatform.Scratch]: {aceSourceMode: 'text'},
+    [CodecastPlatform.Python]: {aceSourceMode: 'python', displayBlocks: true, extension: 'py', getSpecificBlocks: getPythonSpecificBlocks},
+    [CodecastPlatform.Unix]: {needsCompilation: true, hasMicroSteps: true, extension: 'cpp', aceSourceMode: 'c_cpp', getSpecificBlocks: getCSpecificBlocks},
+    [CodecastPlatform.Arduino]: {needsCompilation: true, hasMicroSteps: true, extension: 'cpp', aceSourceMode: 'arduino', getSpecificBlocks: getCSpecificBlocks},
+    [CodecastPlatform.Blockly]: {aceSourceMode: 'text', extension: 'blockly'},
+    [CodecastPlatform.Scratch]: {aceSourceMode: 'text', extension: 'scratch'},
     ...smartContractPlatformsList,
 };
 

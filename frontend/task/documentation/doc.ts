@@ -24,9 +24,10 @@ import {QuickalgoTaskIncludeBlocks, Task} from '../task_types';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App} from '../../app_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
-import {bufferEditPlain} from '../../buffers/buffers_slice';
+import {bufferEditPlain, bufferResetDocument} from '../../buffers/buffers_slice';
 import {AppStore} from '../../store';
 import { smartContractPlatforms } from "../libs/smart_contract/smart_contract_blocks";
+import {bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
 
 let openerChannel;
 
@@ -300,18 +301,25 @@ export default function (bundle: Bundle) {
         yield* takeEvery(documentationUseCodeExample, function* (action) {
             const {code, language} = action.payload;
             const document = TextBufferHandler.documentFromString(code);
-            yield* put(bufferEditPlain({buffer: 'source', document}));
+            const newPlatform = ('c' === language ? CodecastPlatform.Unix : language) as CodecastPlatform;
+            const state = yield* appSelect();
+            if (state.options.tabsEnabled) {
+                yield* put(bufferCreateSourceBuffer(document, newPlatform));
+            } else {
+                const activeBuffer = state.buffers.activeBufferName;
+                yield* put(bufferResetDocument({buffer: activeBuffer, document}));
 
-            const newPlatform = 'c' === language ? CodecastPlatform.Unix : language;
-            const currentPlatform = yield* appSelect(state => state.options.platform);
-            if (newPlatform !== currentPlatform) {
-                yield* put({
-                    type: CommonActionTypes.PlatformChanged,
-                    payload: {
-                        platform: newPlatform,
-                    },
-                });
+                const currentPlatform = yield* appSelect(state => state.options.platform);
+                if (newPlatform !== currentPlatform) {
+                    yield* put({
+                        type: CommonActionTypes.PlatformChanged,
+                        payload: {
+                            platform: newPlatform,
+                        },
+                    });
+                }
             }
+
             yield* put({
                 type: CommonActionTypes.AppSwitchToScreen,
                 payload: {screen: null},

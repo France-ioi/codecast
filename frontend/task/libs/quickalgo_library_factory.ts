@@ -26,6 +26,7 @@ import {QuickAlgoLibrariesActionType, quickAlgoLibraryResetAndReloadStateSaga} f
 import {QuickAlgoLibrary} from './quickalgo_library';
 import {DebugLib} from './debug/debug_lib';
 import {QuickalgoTaskGridInfos} from '../task_types';
+import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 
 export function* createQuickalgoLibrary() {
     let state = yield* appSelect();
@@ -61,7 +62,7 @@ export function* createQuickalgoLibrary() {
     }
 
     if (!state.options.preload) {
-        const platform = state.options.platform
+        const platform = selectActiveBufferPlatform(state);
         yield* call(importPlatformModules, platform, window.modulesPath);
 
         if (levelGridInfos.importModules) {
@@ -122,7 +123,6 @@ export function* createQuickalgoLibrary() {
         return false;
     }
 
-
     yield* put(taskSetAvailablePlatforms(availablePlatforms));
 
     log.getLogger('libraries').debug('created context', context);
@@ -138,11 +138,12 @@ export function* createQuickalgoLibrary() {
     }
 
     yield* call(createDisplayHelper);
-    if (hasBlockPlatform(state.options.platform) && currentTask) {
-        yield* call(loadBlocklyHelperSaga, context, currentLevel);
+    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && currentTask) {
+        yield* call(loadBlocklyHelperSaga, context);
     } else {
         // Create a fake blockly helper to make other libs like Turtle work
         context.blocklyHelper = {
+            fake: true,
             updateSize() {
 
             },
@@ -154,11 +155,6 @@ export function* createQuickalgoLibrary() {
     taskApi.displayedSubTask = {
         context,
     };
-    // if (!context.blocklyHelper) {
-    //     context.blocklyHelper = {
-    //         updateSize: () => {},
-    //     };
-    // }
     if (context instanceof PrinterLib && currentTask) {
         yield* put({type: IOActionTypes.IoPaneModeChanged, payload: {mode: IoMode.Split}});
     }

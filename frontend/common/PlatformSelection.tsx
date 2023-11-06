@@ -6,9 +6,12 @@ import {select} from 'typed-redux-saga';
 import {getJsLibLoaded} from '../task/libs/import_modules';
 import {getMessage} from '../lang';
 import {hasBlockPlatform} from '../stepper/platforms';
+import {CodecastPlatform} from '../stepper/codecast_platform';
 
 export interface PlatformSelectionProps {
-    withoutLabel?: boolean
+    withoutLabel?: boolean,
+    customPlatform?: CodecastPlatform,
+    customSetPlatform?: (platform: CodecastPlatform) => void,
 }
 
 export function PlatformSelection(props: PlatformSelectionProps) {
@@ -16,16 +19,22 @@ export function PlatformSelection(props: PlatformSelectionProps) {
     const availablePlatforms = useAppSelector(state => state.task.availablePlatforms);
     const dispatch = useDispatch();
 
+    let currentPlatform = props.customPlatform ?? platform;
+
     const setPlatform = (event) => {
         const platform = event.target.value;
-        dispatch({
-            type: CommonActionTypes.PlatformChanged,
-            payload: {platform},
-        });
+        if (props.customSetPlatform) {
+            props.customSetPlatform(platform);
+        } else {
+            dispatch({
+                type: CommonActionTypes.PlatformChanged,
+                payload: {platform},
+            });
+        }
     };
 
     const selector = <div className='bp3-select'>
-        <select onChange={setPlatform} value={platform}>
+        <select onChange={setPlatform} value={currentPlatform}>
             {availablePlatforms.map(platform =>
                 <option key={platform} value={platform}>{getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`)}</option>
             )}
@@ -43,8 +52,8 @@ export function PlatformSelection(props: PlatformSelectionProps) {
                 {selector}
             </label>
 
-            {hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
-                {getMessage('PLATFORM_RELOAD').format({platform: getMessage('PLATFORM_' + platform.toLocaleUpperCase())})}
+            {hasBlockPlatform(currentPlatform) && currentPlatform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
+                {getMessage('PLATFORM_RELOAD').format({platform: getMessage('PLATFORM_' + currentPlatform.toLocaleUpperCase())})}
             </div>}
         </div>
     );

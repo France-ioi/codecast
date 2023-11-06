@@ -11,7 +11,11 @@ import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "../submission/TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
-import {submissionChangeExecutionMode, SubmissionExecutionScope} from "../submission/submission_slice";
+import {
+    submissionChangeExecutionMode,
+    submissionCloseCurrentSubmission,
+    SubmissionExecutionScope
+} from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
 import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
@@ -21,8 +25,10 @@ import {LibraryTestResult} from './libs/library_test_result';
 import {getStepperControlsSelector} from '../stepper/selectors';
 import {selectTaskTests} from '../submission/submission_selectors';
 import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
-import {callPlatformValidate} from '../submission/submission_actions';
+import {callPlatformValidate, submissionCancel} from '../submission/submission_actions';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
+import {selectCancellableSubmissionIndex} from '../submission/submission';
+import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -32,10 +38,10 @@ export function ControlsAndErrors() {
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const taskTests = useAppSelector(selectTaskTests);
     const executionMode = useAppSelector(state => state.submission.executionMode);
-    const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
     const stepperStatus = useAppSelector(state => state.stepper.status);
-    const isEvaluating = lastSubmission && !lastSubmission.evaluated && !lastSubmission.crashed;
-    const platform = useAppSelector(state => state.options.platform);
+    const cancellableSubmissionIndex = useAppSelector(selectCancellableSubmissionIndex);
+    const cancellableSubmission = useAppSelector(state => null !== cancellableSubmissionIndex ? state.submission.taskSubmissions[cancellableSubmissionIndex] : null);
+    const platform = useAppSelector(selectActiveBufferPlatform);
     const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector({state, enabled: true})).canRestart;
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
@@ -98,6 +104,10 @@ export function ControlsAndErrors() {
 
     const submitSubmission = () => {
         dispatch(callPlatformValidate());
+    };
+
+    const cancelEvaluation = () => {
+        dispatch(submissionCancel(cancellableSubmissionIndex));
     };
 
     const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
@@ -168,8 +178,8 @@ export function ControlsAndErrors() {
                         <div className="execution-controls-submit">
                             <Button
                                 className="quickalgo-button is-medium"
-                                disabled={isEvaluating || StepperStatus.Clear !== stepperStatus}
-                                icon={isEvaluating && SubmissionExecutionScope.Submit === lastSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
+                                disabled={null !== cancellableSubmission || StepperStatus.Clear !== stepperStatus}
+                                icon={null !== cancellableSubmission && SubmissionExecutionScope.Submit === cancellableSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
                                 onClick={submitSubmission}
                             >
                                 {getMessage('SUBMISSION_EXECUTE_SUBMIT')}
@@ -179,7 +189,7 @@ export function ControlsAndErrors() {
                 </div>}
             </div>}
 
-            {hasError && <div className={`error-message ${errorClosable ? 'is-closable' : ''}`} onClick={onClearError}>
+            {hasError && null === cancellableSubmission && <div className={`error-message ${errorClosable ? 'is-closable' : ''}`} onClick={onClearError}>
                 {errorClosable && <button type="button" className="close-button" onClick={onClearError}>
                     <Icon icon="cross"/>
                 </button>}
@@ -191,6 +201,16 @@ export function ControlsAndErrors() {
                     <div className="message">
                         {error}
                     </div>
+                </div>
+            </div>}
+
+            {null !== cancellableSubmission && <div className={`error-message submission-pending`}>
+                <div className="error-message-wrapper">
+                    <div className="message">
+                        <FontAwesomeIcon icon={faSpinner} className="fa-spin mr-2"/>
+                        {getMessage(SubmissionExecutionScope.MyTests === cancellableSubmission?.scope ? 'SUBMISSION_EVALUATING_USER_TESTS' : 'SUBMISSION_EVALUATING_SUBMIT')}
+                    </div>
+                    <Icon icon="stop" className="bell-icon stop-icon" onClick={cancelEvaluation}/>
                 </div>
             </div>}
 
