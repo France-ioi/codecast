@@ -870,6 +870,7 @@ export default function (bundle: Bundle) {
             if (Codecast.runner) {
                 Codecast.runner.stop();
             }
+            window.Blockly?.DropDownDiv?.hideWithoutAnimation();
             yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             log.getLogger('task').debug('put task reset done to true');
             yield* put(taskResetDone(true));
