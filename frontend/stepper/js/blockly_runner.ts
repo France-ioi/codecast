@@ -1,12 +1,13 @@
 import AbstractRunner from "../abstract_runner";
-import {Stepper, StepperState} from "../index";
+import {StepperState} from "../index";
 import {StepperContext} from "../api";
-import {AnalysisSnapshot} from "../analysis/analysis";
+import {AnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "../analysis/analysis";
 import {fetchLatestBlocklyAnalysis} from "./analysis";
 import log from "loglevel";
 import {getMessage} from '../../lang';
 import {Codecast} from '../../app_types';
 import {Block, BlockType} from '../../task/blocks/block_types';
+import {ContextEnrichingTypes} from '../actionTypes';
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
@@ -619,9 +620,36 @@ export default class BlocklyRunner extends AbstractRunner {
         return fetchLatestBlocklyAnalysis(localVariables, lastAnalysis, newStepNum);
     }
 
-    public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
-        if (state.analysis) {
-            stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
+    public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
+        stepperState.currentBlockId = (Codecast.runner as BlocklyRunner).getCurrentBlockId();
+        log.getLogger('stepper').debug('got block id', stepperState.currentBlockId);
+        if (context === ContextEnrichingTypes.StepperProgress) {
+            stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
+
+            if (Codecast.runner._isFinished) {
+                stepperState.isFinished = true;
+            } else {
+                stepperState.analysis = (Codecast.runner as BlocklyRunner).fetchLatestBlocklyAnalysis(stepperState.localVariables, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
+            }
         }
+
+        if (!stepperState.analysis) {
+            stepperState.analysis =  {
+                stackFrames: [],
+                code: (Codecast.runner as BlocklyRunner)._code,
+                stepNum: 0
+            };
+
+            stepperState.lastAnalysis = {
+                stackFrames: [],
+                code: (Codecast.runner as BlocklyRunner)._code,
+                stepNum: 0
+            };
+        }
+
+        log.getLogger('stepper').debug('blockly analysis', stepperState.analysis);
+        log.getLogger('stepper').debug('last analysis', stepperState.lastAnalysis);
+        stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
+        log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
     }
 }

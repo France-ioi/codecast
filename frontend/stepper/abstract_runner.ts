@@ -1,5 +1,7 @@
 import {StepperContext} from "./api";
 import {StepperState} from "./index";
+import {ContextEnrichingTypes} from './actionTypes';
+import {TaskAnswer} from '../task/task_types';
 
 export default abstract class AbstractRunner {
     //TODO: improve this
@@ -23,7 +25,13 @@ export default abstract class AbstractRunner {
     }
 
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState): void {
-    };
+        if (state.analysis) {
+            stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
+        }
+    }
+
+    public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext): void {
+    }
 
     public isStuck(stepperState: StepperState): boolean {
         return false;
@@ -72,5 +80,8 @@ export default abstract class AbstractRunner {
     public signalAction() {
         // Allows a context to signal an "action" happened
         this._stepsWithoutAction = 0;
-    };
+    }
+
+    public *compileAnswer(answer: TaskAnswer): Generator<any, void> {
+    }
 }

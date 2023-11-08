@@ -129,6 +129,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('ioMode' in query && 'split' === query.ioMode) {
         options.ioMode = IoMode.Split;
     }
+    if ('remoteExecution' in query) {
+        options.remoteExecution = true;
+    }
 }
 
 function appInitReducer(state: AppStore, {payload: {options, query}}) {

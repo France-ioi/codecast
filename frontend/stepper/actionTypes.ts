@@ -43,6 +43,12 @@ export enum ActionTypes {
     CompileFailed = 'Compile.Failed',
 }
 
+export enum ContextEnrichingTypes {
+    StepperIdle = ActionTypes.StepperIdle,
+    StepperProgress = ActionTypes.StepperProgress,
+    StepperRestart = ActionTypes.StepperRestart,
+}
+
 export const stepperExecutionSuccess = (testResult: LibraryTestResult) => ({
     type: ActionTypes.StepperExecutionSuccess,
     payload: {

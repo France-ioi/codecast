@@ -19,47 +19,6 @@ import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {documentToString} from '../../buffers/document';
 
-export function* compilePythonCodeSaga(source: string) {
-    log.getLogger('python_runner').debug('compile python code', source);
-    const state = yield* appSelect();
-    const context = quickAlgoLibraries.getContext(null, state.environment);
-
-    let compileError = null;
-    context.onError = (error) => {
-        compileError = error;
-    }
-
-    /**
-     * Add a last instruction at the end of the code so Skupt will generate a Suspension state
-     * for after the user's last instruction. Otherwise it would be impossible to retrieve the
-     * modifications made by the last user's line.
-     *
-     * @type {string} pythonSource
-     */
-    const pythonSource = source + "\npass";
-
-    const blocksData = getContextBlocksDataSelector({state, context});
-
-    const pythonInterpreter = Codecast.runner;
-    pythonInterpreter.initCodes([pythonSource], blocksData);
-
-    yield* delay(0);
-
-    if (compileError) {
-        yield* put({
-            type: ActionTypes.CompileFailed,
-            payload: {
-                testResult: LibraryTestResult.fromString(String(compileError)),
-            },
-        });
-    } else {
-        yield* put({
-            type: ActionTypes.CompileSucceeded,
-            platform: CodecastPlatform.Python,
-        });
-    }
-}
-
 export default function(bundle: Bundle) {
     const pythonInterpreterChannel = channel<Action>();
 

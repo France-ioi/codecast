@@ -8,6 +8,19 @@ import AbstractRunner from "../abstract_runner";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
 import {Block, BlockType} from '../../task/blocks/block_types';
+import {ActionTypes, ContextEnrichingTypes} from '../actionTypes';
+import {Codecast} from '../../app_types';
+import {convertSkulptStateToAnalysisSnapshot, getSkulptSuspensionsCopy} from './analysis';
+import {parseDirectives} from './directives';
+import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
+import {appSelect} from '../../hooks';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
+import {delay} from '../../player/sagas';
+import {put} from 'typed-redux-saga';
+import {LibraryTestResult} from '../../task/libs/library_test_result';
+import {TaskAnswer} from '../../task/task_types';
+import {documentToString} from '../../buffers/document';
 
 function definePythonNumber() {
     // Create a class which behaves as a Number, but can have extra properties
@@ -58,12 +71,6 @@ export default class PythonRunner extends AbstractRunner {
 
     public static needsCompilation(): boolean {
         return true;
-    }
-
-    public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
-        if (state.analysis) {
-            stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
-        }
     }
 
     public isStuck(stepperState: StepperState): boolean {
@@ -641,5 +648,86 @@ export default class PythonRunner extends AbstractRunner {
         log.getLogger('python_runner').debug('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
 
         return !(analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode);
+    }
+
+    public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
+        if (context === ContextEnrichingTypes.StepperProgress) {
+            stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
+
+            // Don't reanalyse after program is finished :
+            // keep the last state of the stack and set isFinished state.
+            if (Codecast.runner._isFinished) {
+                stepperState.isFinished = true;
+            } else {
+                log.getLogger('stepper').debug('INCREASE STEP NUM TO ', stepperState.analysis.stepNum + 1);
+                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
+                stepperState.directives = {
+                    ordered: parseDirectives(stepperState.analysis),
+                    functionCallStackMap: null,
+                    functionCallStack: null
+                };
+            }
+        }
+
+        if (!stepperState.analysis) {
+            stepperState.analysis =  {
+                stackFrames: [],
+                code: (Codecast.runner as PythonRunner)._code,
+                lines: (Codecast.runner as PythonRunner)._code.split("\n"),
+                stepNum: 0
+            };
+
+            stepperState.lastAnalysis = {
+                stackFrames: [],
+                code: (Codecast.runner as PythonRunner)._code,
+                lines: (Codecast.runner as PythonRunner)._code.split("\n"),
+                stepNum: 0
+            };
+        }
+
+        log.getLogger('stepper').debug('python analysis', stepperState.analysis);
+        stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
+        log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
+    }
+
+    public *compileAnswer(answer: TaskAnswer) {
+        const source = documentToString(answer.document);
+        log.getLogger('python_runner').debug('compile python code', source);
+        const state = yield* appSelect();
+        const context = quickAlgoLibraries.getContext(null, state.environment);
+
+        let compileError = null;
+        context.onError = (error) => {
+            compileError = error;
+        }
+
+        /**
+         * Add a last instruction at the end of the code so Skulpt will generate a Suspension state
+         * for after the user's last instruction. Otherwise it would be impossible to retrieve the
+         * modifications made by the last user's line.
+         *
+         * @type {string} pythonSource
+         */
+        const pythonSource = source + "\npass";
+
+        const blocksData = getContextBlocksDataSelector({state, context});
+
+        const pythonInterpreter = Codecast.runner;
+        pythonInterpreter.initCodes([pythonSource], blocksData);
+
+        yield* delay(0);
+
+        if (compileError) {
+            yield* put({
+                type: ActionTypes.CompileFailed,
+                payload: {
+                    testResult: LibraryTestResult.fromString(String(compileError)),
+                },
+            });
+        } else {
+            yield* put({
+                type: ActionTypes.CompileSucceeded,
+            });
+        }
     }
 }

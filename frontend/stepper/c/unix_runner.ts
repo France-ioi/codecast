@@ -3,6 +3,15 @@ import {getNodeStartRow, StepperContext, isStuck} from "../api";
 import * as C from '@france-ioi/persistent-c';
 import {StepperState} from "../index";
 import log from 'loglevel';
+import {ActionTypes, ContextEnrichingTypes} from '../actionTypes';
+import {analyseState, collectDirectives} from './analysis';
+import {TaskAnswer} from '../../task/task_types';
+import {appSelect} from '../../hooks';
+import {documentToString} from '../../buffers/document';
+import {call, put} from 'typed-redux-saga';
+import {asyncRequestJson} from '../../utils/api';
+import {LibraryTestResult} from '../../task/libs/library_test_result';
+import {CodecastPlatform} from '../codecast_platform';
 
 export default class UnixRunner extends AbstractRunner {
     public static needsCompilation(): boolean {
@@ -16,6 +25,20 @@ export default class UnixRunner extends AbstractRunner {
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
         stepperContext.state.programState = C.clearMemoryLog(state.programState);
         stepperContext.state.lastProgramState = {...state.programState}
+    }
+
+    public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
+        const {programState, controls} = stepperState;
+        if (!programState) {
+            return;
+        }
+
+        stepperContext.state.isFinished = !stepperContext.state.programState.control;
+        const analysis = stepperState.analysis = analyseState(programState);
+        const focusDepth = controls.stack.focusDepth;
+        stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
+
+        // TODO? initialize controls for each directive added, clear controls for each directive removed (except 'stack').
     }
 
     public isStuck(stepperState: StepperState): boolean {
@@ -48,6 +71,31 @@ export default class UnixRunner extends AbstractRunner {
                 position
             });
             stepperContext.position = position;
+        }
+    }
+
+    public *compileAnswer(answer: TaskAnswer) {
+        let response;
+        const state = yield* appSelect();
+        const platform = CodecastPlatform.Unix;
+        try {
+            const logData = state.statistics.logData;
+            const postData = {source: documentToString(answer.document), platform, logData};
+            const {baseUrl} = state.options;
+
+            response = yield* call(asyncRequestJson, baseUrl + '/compile', postData);
+        } catch (ex) {
+            response = {error: ex.toString()};
+        }
+
+        response.platform = platform;
+        if (response.ast) {
+            yield* put({
+                type: ActionTypes.CompileSucceeded,
+                response,
+            });
+        } else {
+            yield* put({type: ActionTypes.CompileFailed, payload: {testResult: new LibraryTestResult(null, 'compilation', {content: response.diagnostics})}});
         }
     }
 }

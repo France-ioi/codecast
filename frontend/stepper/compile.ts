@@ -13,10 +13,7 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-saga';
-
-import {asyncRequestJson} from '../utils/api';
-
+import {call, put, race, take, takeEvery, takeLatest} from 'typed-redux-saga';
 import {TextEncoder} from "text-encoding-utf-8";
 import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
 import {ActionTypes} from "./actionTypes";
@@ -28,13 +25,11 @@ import {Bundle} from "../linker";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {selectAnswer} from "../task/selectors";
-import {compilePythonCodeSaga} from "./python";
 import {appSelect} from '../hooks';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {CodecastPlatform} from './codecast_platform';
 import {App, Codecast} from '../app_types';
-import {documentToString, TextBufferHandler} from '../buffers/document';
-import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
+import {documentToString} from '../buffers/document';
 import {TaskAnswer} from '../task/task_types';
 
 export enum CompileStatus {
@@ -107,40 +102,16 @@ export default function(bundle: Bundle) {
                 return;
             }
 
-            let response;
             const runnerClass = getRunnerClassFromPlatform(platform);
             if (!runnerClass.needsCompilation()) {
                 yield* put({
                     type: ActionTypes.CompileSucceeded,
-                    platform
                 });
-            } else if (CodecastPlatform.Python === platform) {
+            } else {
                 try {
-                    yield* call(compilePythonCodeSaga, documentToString(answer.document));
+                    yield* call([Codecast.runner, Codecast.runner.compileAnswer], answer);
                 } catch (ex) {
                     yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
-                }
-            } else {
-                state = yield* appSelect();
-                try {
-                    const logData = state.statistics.logData;
-                    const postData = {source: documentToString(answer.document), platform, logData};
-                    const {baseUrl} = state.options;
-
-                    response = yield* call(asyncRequestJson, baseUrl + '/compile', postData);
-                } catch (ex) {
-                    response = {error: ex.toString()};
-                }
-
-                response.platform = platform;
-                if (response.ast) {
-                    yield* put({
-                        type: ActionTypes.CompileSucceeded,
-                        response,
-                        platform
-                    });
-                } else {
-                    yield* put({type: ActionTypes.CompileFailed, payload: {testResult: new LibraryTestResult(null, 'compilation', {content: response.diagnostics})}});
                 }
             }
         });
