@@ -7,7 +7,7 @@ import {
 } from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {all, call, cancel, cancelled, fork, put, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {all, call, cancel, cancelled, delay, fork, put, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {AppStore} from "../store";
 import QuickalgoLibsBundle, {
@@ -383,11 +383,13 @@ function* taskLoadSaga(app: App, action) {
     state = yield* appSelect();
     const sourceBuffers = selectSourceBuffers(state);
     if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state)?.document)) {
-        yield* put(bufferCreateSourceBuffer());
+        let newDocument = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
+        yield* call(createSourceBufferFromDocument, newDocument);
     }
 
     yield* call(taskLevelLoadedSaga);
 
+    yield* delay(0);
     log.getLogger('task').debug('task loaded', app.environment);
     yield* put(taskLoaded());
     if (action.payload.callback) {
