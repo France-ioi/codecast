@@ -10,6 +10,7 @@ import {StepperContext} from '../api';
 import AbstractRunner from '../abstract_runner';
 import {StepperState} from '../index';
 import {DeferredPromise} from '../../utils/app';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 
 // TODO: add error handling
 
@@ -46,12 +47,17 @@ export class RemoteDebugExecutor extends AbstractRunner {
 
             const answerContent = documentToString(answer.document);
 
+            const context = quickAlgoLibraries.getContext('printer', 'main');
+            // @ts-ignore
+            const input: string = context.getInputText();
+
             const response = yield* call([this, this.sendMessageAndWaitResponse], {
                 action: 'start',
                 answer: {
                     language: answer.platform,
                     fileName: answer.fileName,
                     sourceCode: answerContent,
+                    input,
                 },
             });
             log.getLogger('remote_execution').debug('[Remote] Compilation made', response);
