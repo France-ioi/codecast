@@ -377,8 +377,8 @@ export function getNodeRange(stepperState?: StepperState) {
         return null;
     }
 
-    if (stepperState.platform === CodecastPlatform.Python) {
-        const {stackFrames} = stepperState.analysis;
+    if (stepperState.codecastAnalysis) {
+        const {stackFrames} = stepperState.codecastAnalysis;
         const stackFrame = stackFrames[stackFrames.length - 1];
         if (!stackFrame) {
             return null;
@@ -397,9 +397,6 @@ export function getNodeRange(stepperState?: StepperState) {
                 column: 100,
             }
         };
-    } else if (hasBlockPlatform(stepperState.platform)) {
-        //TODO
-        return null;
     } else {
         const {control} = stepperState.programState;
         if (!control || !control.node) {
