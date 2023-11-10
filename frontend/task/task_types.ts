@@ -122,6 +122,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     taskStrings?: any,
     showViews?: boolean,
     tabsEnabled?: boolean,
+    documentationOpenByDefault?: boolean,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {

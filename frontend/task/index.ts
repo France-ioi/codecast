@@ -81,7 +81,7 @@ import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
 import {createEmptyBufferState, isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
-import {ActionTypes} from "../common/actionTypes";
+import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {convertServerTaskToCodecastFormat, getTaskFromId} from "../submission/task_platform";
 import {
@@ -116,6 +116,7 @@ import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
 import {submissionCancel} from '../submission/submission_actions';
 import {createSourceBufferFromDocument} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
+import {Screen} from '../common/screens';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -265,6 +266,10 @@ function* taskLoadSaga(app: App, action) {
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
     if (currentTask) {
+        if (currentTask?.gridInfos?.documentationOpenByDefault) {
+            yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
+        }
+
         const language = yield* appSelect(state => state.options.language.split('-')[0]);
         if (
             currentTask?.strings?.length

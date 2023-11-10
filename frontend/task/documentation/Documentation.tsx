@@ -1,17 +1,17 @@
 import React, {ReactFragment, useEffect, useState} from 'react';
-import {Icon} from "@blueprintjs/core";
+import {Button, Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {
     documentationLoad,
     documentationOpenInNewWindow,
-    documentationUseCodeExample,
+    documentationUseCodeExample, selectShowDocumentation,
     sendCodeExampleToOpener
 } from "./doc";
 import {useAppSelector} from "../../hooks";
 import {DocumentationConcept, documentationConceptSelected} from "./documentation_slice";
 import {Screen} from "../../common/screens";
-import {call, select} from "typed-redux-saga";
+import {select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {getMessage} from "../../lang";
@@ -39,6 +39,7 @@ export function Documentation(props: DocumentationProps) {
     const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
     const conceptsWithoutCategory = concepts.filter(concept => !concept.isCategory);
     const conceptIndex = null !== selectedConcept ? conceptsWithoutCategory.findIndex(concept => selectedConceptId === concept.id) : 0;
+    const showDocumentation = useAppSelector(selectShowDocumentation);
 
     const [iframeRef, setIframeRef] = useState(null);
 
@@ -130,6 +131,25 @@ export function Documentation(props: DocumentationProps) {
         displayedConcepts = conceptsWithoutCategory.slice(conceptsWithoutCategory.length - 3);
     } else {
         displayedConcepts = conceptsWithoutCategory.slice(conceptIndex - 1, conceptIndex + 2);
+    }
+
+    if (!showDocumentation && 'task-instructions' === selectedConcept?.id) {
+        return (
+            <div className={`documentation ${Screen.DocumentationBig === screen ? 'is-big' : 'is-small'} ${props.standalone ? 'is-standalone' : ''}`}>
+                <div className="documentation-task-instructions-only">
+                    <TaskInstructions
+                        expanded
+                    />
+
+                    <p className="has-text-centered">
+                        <Button
+                            className="quickalgo-button is-medium"
+                            onClick={closeDocumentation}
+                        >{getMessage('TASK_INSTRUCTIONS_OK')}</Button>
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (
