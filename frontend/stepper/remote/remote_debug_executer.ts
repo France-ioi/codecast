@@ -142,6 +142,12 @@ export class RemoteDebugExecutor extends AbstractRunner {
 
         this.currentAnalysis = response.snapshot;
 
+        if (this.currentAnalysis.stdout) {
+            for (let line of this.currentAnalysis.stdout) {
+                const result = yield stepperContext.quickAlgoCallsExecutor('printer', 'print', [line]);
+            }
+        }
+
         const arg = {};
         const deferredPromise = new DeferredPromise();
 

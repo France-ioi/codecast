@@ -45,7 +45,7 @@ export interface StepperContext {
     onStepperDone?: Function,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
-    quickAlgoCallsExecutor?: Function,
+    quickAlgoCallsExecutor?: (module: string, action: string, args: any[], callback?: Function) => Promise<void>,
     resume?: Function | null,
     position?: any,
     lineCounter?: number,
