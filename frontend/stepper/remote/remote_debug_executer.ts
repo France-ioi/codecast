@@ -153,7 +153,8 @@ export class RemoteDebugExecutor extends AbstractRunner {
 
         if (this.currentAnalysis.stdout) {
             for (let line of this.currentAnalysis.stdout) {
-                const result = yield stepperContext.quickAlgoCallsExecutor('printer', 'print', [line]);
+                const normalizedLine = line.replace(/\r/g, "\n");
+                yield stepperContext.quickAlgoCallsExecutor('printer', 'print_end', [normalizedLine, '']);
             }
         }
 
