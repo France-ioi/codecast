@@ -48,7 +48,7 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
             const stackFrame: AnalysisStackFrame = {
                 id: suspensionIdx,
                 name: null,
-                column: suspension.$colno,
+                column: suspension.$colno + 1,
                 line: suspension.$lineno,
                 directives: getDirectiveVariables(suspVariables),
                 scopes: [],

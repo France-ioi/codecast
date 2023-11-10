@@ -72,7 +72,7 @@ export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, l
             name: stackFrame.name,
             directives: stackFrame.directives,
             line: stackFrame.line,
-            column: stackFrame.column,
+            column: stackFrame.column - 1,
             source: stackFrame.source,
             args: stackFrame.args,
             variables: [],
