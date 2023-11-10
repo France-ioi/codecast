@@ -38,7 +38,7 @@ export function InputOutputView() {
     };
 
     return (
-        <div>
+        <div className="input-output-view">
             {!(taskState && taskState.unknownInput) && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INPUT")}
@@ -51,7 +51,7 @@ export function InputOutputView() {
                         mode='text'
                         readOnly={!currentTestEditable}
                         requiredWidth='100%'
-                        requiredHeight='100px'
+                        requiredHeight='100%'
                         editorProps={{...(!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions), infoHighlight: consumedHighlight}}
                     />
                 </Card.Body>
@@ -70,7 +70,7 @@ export function InputOutputView() {
                             readOnly
                             mode='text'
                             width='100%'
-                            height='100px'
+                            height='100%'
                             hideCursor
                             highlightActiveLine={false}
                             dragEnabled={false}
@@ -81,7 +81,7 @@ export function InputOutputView() {
                             mode='text'
                             readOnly={!currentTestEditable}
                             requiredWidth='100%'
-                            requiredHeight='100px'
+                            requiredHeight='100%'
                             editorProps={!currentTestEditable ? bufferNonEditableOptions : bufferEditableOptions}
                         />
                     }
@@ -100,7 +100,7 @@ export function InputOutputView() {
                             readOnly
                             mode='text'
                             width='100%'
-                            height='100px'
+                            height='100%'
                             errorHighlight={taskState && taskState.errorHighlight ? taskState.errorHighlight : null}
                             hideCursor
                             highlightActiveLine={false}

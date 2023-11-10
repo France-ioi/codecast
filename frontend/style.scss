@@ -190,6 +190,11 @@ body#app, #app h1, #app h2, #app h3 {
 .terminal-placeholder {
   color: #AAA;
 }
+.input-output-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 .terminal-view-header {
   display: flex;
   align-items: center;
