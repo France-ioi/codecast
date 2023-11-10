@@ -42,6 +42,7 @@ export interface EditorProps {
     maxLines?: number,
     dragEnabled?: boolean,
     hideCursor?: boolean,
+    goToEndOnChange?: boolean,
 }
 
 function toRange(selection) {
@@ -448,7 +449,11 @@ export function Editor(props: EditorProps) {
             editor.current.getSession().setValue(value);
             editor.current.resize(true);
             firstVisibleRow.current = props.state?.firstVisibleRow;
-            editor.current.scrollToLine(props.state?.firstVisibleRow ?? 0);
+            if (props.goToEndOnChange) {
+                goToEnd();
+            } else {
+                editor.current.scrollToLine(props.state?.firstVisibleRow ?? 0);
+            }
             scrollTop.current = editor.current.getSession().getScrollTop();
             log.getLogger('editor').debug('[buffer] done reset', {name: props.name, firstVisibleRow: firstVisibleRow.current, scrollTop: editor.current.getSession().getScrollTop()})
             // Clear a previously set marker, if any.

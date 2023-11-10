@@ -97,6 +97,7 @@ export function InputOutputView() {
                         <Editor
                             name="printer_output"
                             content={libOutput}
+                            goToEndOnChange
                             readOnly
                             mode='text'
                             width='100%'
