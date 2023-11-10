@@ -76,6 +76,9 @@ export class RemoteDebugExecutor extends AbstractRunner {
     public stop() {
         if (this.ws) {
             this.listeners = [];
+            this.sendMessage({
+                action: 'close',
+            });
             this.ws.close();
         }
     }
