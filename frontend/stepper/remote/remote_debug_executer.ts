@@ -49,7 +49,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
 
             const context = quickAlgoLibraries.getContext('printer', 'main');
             // @ts-ignore
-            const input: string = context.getInputText();
+            const input: string = context?.getInputText ? context?.getInputText() : null;
 
             const response = yield* call([this, this.sendMessageAndWaitResponse], {
                 action: 'start',

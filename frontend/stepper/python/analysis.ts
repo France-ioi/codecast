@@ -27,7 +27,8 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
     if (suspensions) {
         let stackFrameIndex = 0;
         for (let suspensionIdx = 0; suspensionIdx < suspensions.length; suspensionIdx++) {
-            const suspension = suspensions[suspensionIdx];
+            // Reverse suspension order so that the current suspension is the first to appear in the analysis
+            const suspension = suspensions[suspensions.length - 1 - suspensionIdx];
             if (!isProgramSuspension(suspension)) {
                 continue;
             }
