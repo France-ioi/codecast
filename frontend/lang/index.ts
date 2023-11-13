@@ -12,6 +12,7 @@ import {taskLoad} from '../task/task_actions';
 import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from '../task/task_slice';
 import {appSelect} from '../hooks';
 import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
+import {current, isDraft} from 'immer';
 
 export const Languages = {
     'en-US': require('./en-US.js'),
@@ -102,6 +103,12 @@ export function updateLanguageCalls(state: AppStore) {
     const currentTask = state.task.currentTask;
     window.stringsLanguage = language.split('-')[0];
 
+    const taskStrings = isDraft(currentTask?.gridInfos?.taskStrings) ? current(currentTask?.gridInfos?.taskStrings) : currentTask?.gridInfos?.taskStrings;
+    const languageKeys = {
+        ...Languages[language],
+        ...(taskStrings ?? {}),
+    };
+
     const localizedMessage = Object.create(Message, {
         _l: {
             writable: false,
@@ -111,11 +118,6 @@ export function updateLanguageCalls(state: AppStore) {
     });
 
     localGetMessage = memoize(function (message, defaultText) {
-        const languageKeys = {
-            ...Languages[language],
-            ...(currentTask?.gridInfos?.taskStrings ?? {}),
-        };
-
         const value = languageKeys[message + (familiarEnabled ? '_FAMILIAR' : '')] || languageKeys[message] || defaultText || `L:${message}`;
 
         return Object.create(localizedMessage, {
