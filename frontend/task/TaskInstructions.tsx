@@ -39,7 +39,6 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const dispatch = useDispatch();
     const platform = useAppSelector(state => state.options.platform);
     const [hasShortOrLong, setHasShortOrLong] = useState(false);
-    const documentationOpenByDefault = useAppSelector(state => state.task.currentTask?.gridInfos?.documentationOpenByDefault);
     const {
         html: newInstructionsHtml,
         title: newInstructionsTitle
@@ -111,7 +110,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
                 className="quickalgo-button mt-2"
                 onClick={toggleTaskInstructions}
                 icon={<FontAwesomeIcon icon={documentationOpen ? faMinus : faPlus}/>}
-            >{getMessage(`TASK_INSTRUCTIONS_${documentationOpen ? 'LESS' : 'MORE'}${documentationOpenByDefault ? '_HELP' : ''}`)}</Button>}
+            >{getMessage(`TASK_INSTRUCTIONS_${documentationOpen ? 'LESS' : 'MORE'}`)}</Button>}
         </div>
     );
 }
