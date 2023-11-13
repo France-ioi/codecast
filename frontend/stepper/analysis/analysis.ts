@@ -87,6 +87,9 @@ export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, l
                 const codecastVariable = convertVariableDAPToCodecastFormat(stackFrameId, scopeId, null, variable, previousValues, variablesByReference);
                 codecastStackFrame.variables.push(codecastVariable);
             }
+
+            // Keep only the first scope for now (local variables), maybe we'll need to change that later
+            break;
         }
 
         codecastAnalysis.stackFrames.push(codecastStackFrame);
