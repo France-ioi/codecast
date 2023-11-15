@@ -342,7 +342,7 @@ class TaskSubmissionExecutor {
 
         let worstRate = 1;
         for (let result of testResults) {
-            worstRate = Math.min(worstRate, result.successRate);
+            worstRate = Math.min(worstRate, result.successRate ?? 0);
         }
 
         return {
