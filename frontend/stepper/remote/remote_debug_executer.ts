@@ -16,8 +16,8 @@ import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 
 export type RemoteDebugListener = (message: RemoteDebugPayload) => void;
 
-const CONNECTION_TIMEOUT = 5000;
-const MESSAGE_TIMEOUT = 2000;
+const CONNECTION_TIMEOUT = 50000;
+const MESSAGE_TIMEOUT = 20000;
 
 export interface RemoteDebugMessage {
     messageId: number,
@@ -207,6 +207,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
 
         if (context === ContextEnrichingTypes.StepperProgress || context === ContextEnrichingTypes.StepperRestart) {
             stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
+            console.log('new codecast analysis', stepperState.codecastAnalysis)
         }
     }
 }
