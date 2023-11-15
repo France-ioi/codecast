@@ -428,6 +428,8 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             if (!silent) {
                 yield* put(platformAnswerGraded({score: currentScore, message: currentMessage}));
             }
+
+            log.getLogger('tests').debug('[Tests] Evaluation result', {scoreWithPlatformParameters, currentMessage});
             yield* call(success, scoreWithPlatformParameters, currentMessage, currentScoreToken);
         } else {
             // if (!answerToken) {
@@ -442,6 +444,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             const scoreWithPlatformParameters = minScore + (maxScore - minScore) * score;
 
             yield* put(platformAnswerGraded({score, message}));
+            log.getLogger('tests').debug('[Tests] Evaluation result', {scoreWithPlatformParameters, message});
             yield* call(success, scoreWithPlatformParameters, message, scoreToken);
         }
     } catch (ex: any) {
