@@ -6,7 +6,7 @@ import {ActionTypes as StepperActionTypes, ActionTypes, ContextEnrichingTypes} f
 import log from 'loglevel';
 import {AnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
-import {StepperContext} from '../api';
+import {StepperContext, StepperError} from '../api';
 import AbstractRunner from '../abstract_runner';
 import {StepperState} from '../index';
 import {DeferredPromise} from '../../utils/app';
@@ -145,8 +145,8 @@ export class RemoteDebugExecutor extends AbstractRunner {
             action: mode,
         });
 
-        if (!response.success) {
-            throw new Error(response?.error?.message ?? response?.snapshot?.terminatedReason);
+        if (response?.error?.message || response?.snapshot?.terminatedReason) {
+            throw new StepperError('error', response?.error?.message ?? response?.snapshot?.terminatedReason);
         }
 
         this.currentAnalysis = response.snapshot;
@@ -208,7 +208,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
             stepperState.lastAnalysis = this.currentAnalysis;
         }
 
-        if (stepperState.analysis.stackFrames && (context === ContextEnrichingTypes.StepperProgress || context === ContextEnrichingTypes.StepperRestart)) {
+        if (stepperState.analysis.stackFrames?.length && (context === ContextEnrichingTypes.StepperProgress || context === ContextEnrichingTypes.StepperRestart)) {
             stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
             console.log('new codecast analysis', stepperState.codecastAnalysis)
         }
