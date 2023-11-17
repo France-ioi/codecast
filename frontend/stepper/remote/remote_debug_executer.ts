@@ -62,8 +62,8 @@ export class RemoteDebugExecutor extends AbstractRunner {
             });
             log.getLogger('remote_execution').debug('[Remote] Compilation made', response);
 
-            if (!response.success) {
-                throw new Error(response?.error?.message);
+            if (response?.error?.message || response?.snapshot?.terminatedReason) {
+                throw new Error(response?.error?.message ?? response?.snapshot?.terminatedReason);
             }
 
             this.currentAnalysis = response.snapshot;
