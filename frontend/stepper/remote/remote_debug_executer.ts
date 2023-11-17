@@ -92,7 +92,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
 
     private *connectToServer(): Generator<any, WebSocket> {
         const state = yield* appSelect();
-        const remoteExecutionWebSocketUrl = state.options.taskPlatformUrl.replace(/https?/g, 'ws') + '/remote-execution';
+        const remoteExecutionWebSocketUrl = state.options.taskPlatformUrl.replace(/http(s)?/g, 'ws$1') + '/remote-execution';
         const ws = new WebSocket(remoteExecutionWebSocketUrl);
 
         const promise = () => new Promise<void>((resolve, reject) => {
