@@ -140,8 +140,6 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
     canGoToEnd = canGoToEnd && !processRunning;
     canRestart = canRestart || processRunning;
 
-    console.log('controls', {compileStatus, status: stepper.status, canStep, canGoToEnd});
-
     return {
         showStepper, showControls, controls,
         showEdit, canExit,

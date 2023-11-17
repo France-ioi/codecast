@@ -12,8 +12,6 @@ import {StepperState} from '../index';
 import {DeferredPromise} from '../../utils/app';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 
-// TODO: add error handling
-
 export type RemoteDebugListener = (message: RemoteDebugPayload) => void;
 
 const CONNECTION_TIMEOUT = 50000;
@@ -62,14 +60,18 @@ export class RemoteDebugExecutor extends AbstractRunner {
             });
             log.getLogger('remote_execution').debug('[Remote] Compilation made', response);
 
-            if (response?.error?.message || response?.snapshot?.terminatedReason) {
-                throw new Error(response?.error?.message ?? response?.snapshot?.terminatedReason);
+            if (response?.error?.message) {
+                throw new Error(response?.error?.message);
+            }
+            if (response?.snapshot?.terminatedReason) {
+                throw new LibraryTestResult(null, 'compilation', {content: response?.snapshot?.terminatedReason})
             }
 
             this.currentAnalysis = response.snapshot;
             yield* put({type: ActionTypes.CompileSucceeded});
         } catch (ex) {
-            yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
+            const testResult = ex instanceof LibraryTestResult ? ex : LibraryTestResult.fromString(String(ex));
+            yield* put({type: ActionTypes.CompileFailed, payload: {testResult}});
         }
     }
 
@@ -210,7 +212,6 @@ export class RemoteDebugExecutor extends AbstractRunner {
 
         if (stepperState.analysis.stackFrames?.length && (context === ContextEnrichingTypes.StepperProgress || context === ContextEnrichingTypes.StepperRestart)) {
             stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
-            console.log('new codecast analysis', stepperState.codecastAnalysis)
         }
     }
 }
