@@ -67,6 +67,8 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
 
+    const processRunning = CompileStatus.Running === compileStatus || runningBackground;
+
     if (state.player && state.player.data && state.player.data.version) {
         let versionComponents = state.player.data.version.split('.').map(Number);
         if (versionComponents[0] < 7) {
@@ -107,6 +109,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
                 // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
                 canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
                 canStep = !currentStepperState.isFinished;
+                canGoToEnd = !currentStepperState.isFinished;
                 canStepOver = canStep;
                 canUndo = enabled && (stepper.undo.length > 0);
                 canRedo = enabled && (stepper.redo.length > 0);
@@ -133,9 +136,11 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         }
     }
 
-    canStep = canStep && !runningBackground;
-    canRestart = canRestart || runningBackground;
-    canGoToEnd = canGoToEnd && !runningBackground;
+    canStep = canStep && !processRunning;
+    canGoToEnd = canGoToEnd && !processRunning;
+    canRestart = canRestart || processRunning;
+
+    console.log('controls', {compileStatus, status: stepper.status, canStep, canGoToEnd});
 
     return {
         showStepper, showControls, controls,

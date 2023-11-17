@@ -151,7 +151,7 @@ const initialStateStepperState = {
     selectedPort: {} as any, // Only used for arduino
     controls: initialStepperStateControls, // Only used for c
     codecastAnalysis: null as CodecastAnalysisSnapshot,
-    analysis: null as AnalysisSnapshot,
+    analysis: null as any,
     lastAnalysis: null as AnalysisSnapshot, // Only used for python
     directives: {
         ordered: [],
@@ -323,6 +323,9 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.StepperExecutionError);
     bundle.addReducer(ActionTypes.StepperExecutionError, stepperExecutionErrorReducer);
+
+    bundle.defineAction(ActionTypes.StepperExecutionEnd);
+    bundle.addReducer(ActionTypes.StepperExecutionEnd, stepperExecutionEndReducer);
 
     bundle.defineAction(ActionTypes.StepperDisplayError);
     bundle.addReducer(ActionTypes.StepperDisplayError, stepperDisplayErrorReducer);
@@ -628,6 +631,10 @@ function stepperSynchronizingAnalysisChangedReducer(state: AppStoreReplay, {payl
 
 export function stepperExecutionErrorReducer(state: AppStoreReplay): void {
     clearStepper(state.stepper);
+}
+
+export function stepperExecutionEndReducer(state: AppStoreReplay): void {
+    state.stepper.status = StepperStatus.Idle;
 }
 
 export function stepperDisplayErrorReducer(state: AppStoreReplay, {payload}): void {
