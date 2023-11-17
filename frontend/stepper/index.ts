@@ -151,7 +151,7 @@ const initialStateStepperState = {
     selectedPort: {} as any, // Only used for arduino
     controls: initialStepperStateControls, // Only used for c
     codecastAnalysis: null as CodecastAnalysisSnapshot,
-    analysis: null as any,
+    analysis: null as AnalysisSnapshot,
     lastAnalysis: null as AnalysisSnapshot, // Only used for python
     directives: {
         ordered: [],

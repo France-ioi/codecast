@@ -141,7 +141,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
     }
 
     public *executeAction(stepperContext: StepperContext, mode) {
-        const response = yield* call([this, this.sendMessageAndWaitResponse], {
+        const response: RemoteDebugPayload = yield* call([this, this.sendMessageAndWaitResponse], {
             action: mode,
         });
 
@@ -201,11 +201,14 @@ export class RemoteDebugExecutor extends AbstractRunner {
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes) {
         stepperState.analysis = this.currentAnalysis;
+        if (stepperState.analysis.terminated) {
+            stepperState.isFinished = true;
+        }
         if (!stepperState.lastAnalysis) {
             stepperState.lastAnalysis = this.currentAnalysis;
         }
 
-        if (context === ContextEnrichingTypes.StepperProgress || context === ContextEnrichingTypes.StepperRestart) {
+        if (stepperState.analysis.stackFrames && (context === ContextEnrichingTypes.StepperProgress || context === ContextEnrichingTypes.StepperRestart)) {
             stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
             console.log('new codecast analysis', stepperState.codecastAnalysis)
         }
