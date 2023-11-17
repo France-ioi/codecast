@@ -44,6 +44,7 @@ setAutoFreeze(true);
 // log.getLogger("logger_name").setLevel('debug')
 // in your web console. It will be saved in the browser local storage
 log.setDefaultLevel('trace');
+log.getLogger('analysis').setDefaultLevel('info');
 log.getLogger('blockly_runner').setDefaultLevel('info');
 log.getLogger('editor').setDefaultLevel('info');
 log.getLogger('hints').setDefaultLevel('info');
