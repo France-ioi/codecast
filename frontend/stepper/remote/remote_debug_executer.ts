@@ -27,6 +27,10 @@ export interface RemoteDebugMessage {
 export interface RemoteDebugPayload {
     success: boolean,
     snapshot?: AnalysisSnapshot,
+    error?: {
+        type?: string,
+        message?: string,
+    },
 }
 
 export class RemoteDebugExecutor extends AbstractRunner {
@@ -59,7 +63,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
             log.getLogger('remote_execution').debug('[Remote] Compilation made', response);
 
             if (!response.success) {
-                throw new Error(response?.snapshot?.terminatedReason);
+                throw new Error(response?.error?.message);
             }
 
             this.currentAnalysis = response.snapshot;
@@ -142,7 +146,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
         });
 
         if (!response.success) {
-            throw new Error(response?.snapshot?.terminatedReason);
+            throw new Error(response?.error?.message ?? response?.snapshot?.terminatedReason);
         }
 
         this.currentAnalysis = response.snapshot;
