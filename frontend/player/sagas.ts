@@ -281,7 +281,7 @@ function ensureBackwardsCompatibility(events: any[], version?: string) {
          *   response: {
          *     ast,
          *     diagnotics,
-         *     platform: 'unix'
+         *     platform: CodecastPlatform.Unix,
          *   }
          * }
          */
@@ -289,7 +289,7 @@ function ensureBackwardsCompatibility(events: any[], version?: string) {
             params[0] = {
                 response: {
                     ...params[0],
-                    platform: 'unix'
+                    platform: CodecastPlatform.Unix,
                 }
             };
         }

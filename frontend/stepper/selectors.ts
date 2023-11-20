@@ -62,7 +62,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
     let canStepOver = false;
     let canInterrupt = false, canUndo = false, canRedo = false, canGoToEnd = false;
     let isFinished = false;
-    let showExpr = !!platformData.hasMicroSteps;
+    let showExpr = !!platformData.hasMicroSteps && !state.options.remoteExecution;
     let compileOrExecuteMessage = '';
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
@@ -103,27 +103,18 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
             showControls = true;
             canExit = enabled;
             canGoToEnd = !currentStepperState.isFinished;
-            if (hasBlockPlatform(platform)) {
-                canStep = !currentStepperState.isFinished;
-            } else if (platform === CodecastPlatform.Python) {
-                // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
-                canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
-                canStep = !currentStepperState.isFinished;
-                canGoToEnd = !currentStepperState.isFinished;
+            canStep = !currentStepperState.isFinished;
+            // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
+            canStepOut = !!(currentStepperState.codecastAnalysis && currentStepperState.codecastAnalysis?.stackFrames?.length > 1);
+            if (platform === CodecastPlatform.Python) {
                 canStepOver = canStep;
-                canUndo = enabled && (stepper.undo.length > 0);
-                canRedo = enabled && (stepper.redo.length > 0);
-            } else {
-                if (currentStepperState && currentStepperState.programState) {
-                    const {control, scope} = currentStepperState.programState;
-
-                    canStepOut = !!C.findClosestFunctionScope(scope);
-                    canStep = control && !!control.node;
-                    canStepOver = canStep;
-                    canRestart = enabled && (stepper.currentStepperState !== stepper.initialStepperState);
-                    canUndo = enabled && (stepper.undo.length > 0);
-                    canRedo = enabled && (stepper.redo.length > 0);
-                }
+            }
+            if (currentStepperState && currentStepperState.programState) {
+                const {control, scope} = currentStepperState.programState;
+                canStepOut = !!C.findClosestFunctionScope(scope);
+                canStep = control && !!control.node;
+                canStepOver = canStep;
+                canRestart = enabled && (stepper.currentStepperState !== stepper.initialStepperState);
             }
         } else if (status === 'starting') {
             showEdit = true;

@@ -1201,21 +1201,23 @@ function postLink(app: App) {
             case CodecastPlatform.Arduino:
             case CodecastPlatform.Unix:
                 const syntaxTree = state.compile.syntaxTree;
-                const options = stepperState.options = {
-                    memorySize: 0x10000,
-                    stackSize: 4096,
-                };
+                if (syntaxTree) {
+                    const options = stepperState.options = {
+                        memorySize: 0x10000,
+                        stackSize: 4096,
+                    };
 
-                /* Set up the programState. */
-                const emptyProgramState = stepperState.lastProgramState = C.makeCore(options.memorySize);
+                    /* Set up the programState. */
+                    const emptyProgramState = stepperState.lastProgramState = C.makeCore(options.memorySize);
 
-                /* Execute declarations and copy strings into memory */
-                const initialProgramState = stepperState.programState = {...emptyProgramState};
-                const decls = syntaxTree[2];
-                C.execDecls(initialProgramState, decls);
+                    /* Execute declarations and copy strings into memory */
+                    const initialProgramState = stepperState.programState = {...emptyProgramState};
+                    const decls = syntaxTree[2];
+                    C.execDecls(initialProgramState, decls);
 
-                /* Set up the call to the main function. */
-                C.setupCall(initialProgramState, 'main');
+                    /* Set up the call to the main function. */
+                    C.setupCall(initialProgramState, 'main');
+                }
 
                 break;
         }

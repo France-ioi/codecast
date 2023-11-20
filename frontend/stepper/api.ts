@@ -477,7 +477,7 @@ export function isStuck(stepperState: StepperState): boolean {
 }
 
 function inUserCode(stepperState: StepperState) {
-    if (stepperState.platform === CodecastPlatform.Python) {
+    if (stepperState.platform === CodecastPlatform.Python || !stepperState.programState?.control) {
         return true;
     } else {
         return !!stepperState.programState.control.node[1].begin;

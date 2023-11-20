@@ -241,7 +241,7 @@ function compileStartedReducer(state: AppStore, {payload}): void {
 
 function compileSucceededReducer(state: AppStore, action): void {
     const answer = state.compile.answer;
-    if (-1 !== [CodecastPlatform.Unix, CodecastPlatform.Arduino].indexOf(answer.platform)) {
+    if (-1 !== [CodecastPlatform.Unix, CodecastPlatform.Arduino].indexOf(answer.platform) && action.response) {
         const {ast, diagnostics} = action.response;
         state.compile.status = CompileStatus.Done;
         state.compile.syntaxTree = addNodeRanges(documentToString(answer.document), ast);

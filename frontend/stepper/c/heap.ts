@@ -18,6 +18,9 @@ export default function(bundle: Bundle) {
 
             if (platform === CodecastPlatform.Unix || platform === CodecastPlatform.Arduino) {
                 const {programState, options} = stepperState;
+                if (!programState) {
+                    return;
+                }
 
                 heapInit(programState, options.stackSize);
             }
