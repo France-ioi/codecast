@@ -11,11 +11,12 @@ export function LayoutStackView() {
 
     const analysis = currentStepperState ? currentStepperState.codecastAnalysis : null;
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
+    const remoteExecution = useAppSelector(state => state.options.remoteExecution);
 
     let stackView;
     if (currentStepperState) {
-        if (currentStepperState.platform === CodecastPlatform.Unix) {
-            //TODO: convert this to use AnalysisStackView like Python and Blockly
+        if (currentStepperState.platform === CodecastPlatform.Unix && !remoteExecution) {
+            // TODO: convert this to use AnalysisStackView like Python and Blockly
             stackView = <StackView/>
         } else {
             stackView = <AnalysisStackView analysis={analysis}/>
