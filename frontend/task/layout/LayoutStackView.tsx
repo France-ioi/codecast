@@ -15,7 +15,7 @@ export function LayoutStackView() {
 
     let stackView;
     if (currentStepperState) {
-        if (currentStepperState.platform === CodecastPlatform.Unix && !remoteExecution) {
+        if (currentStepperState.platform === CodecastPlatform.Cpp && !remoteExecution) {
             // TODO: convert this to use AnalysisStackView like Python and Blockly
             stackView = <StackView/>
         } else {

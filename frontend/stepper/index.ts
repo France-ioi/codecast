@@ -139,7 +139,7 @@ export type StepperControls = typeof initialStepperStateControls;
 
 // TODO: Separate the needs per platform (StepperStatePython, StepperStateC, etc)
 const initialStateStepperState = {
-    platform: CodecastPlatform.Unix,
+    platform: CodecastPlatform.Cpp,
     input: '',
     output: '', // Only used for python
     localVariables: {} as any, // Only used for blockly
@@ -215,7 +215,7 @@ export function getRunnerClassFromPlatform(platform: CodecastPlatform) {
     if (CodecastPlatform.Python === platform) {
         return PythonRunner;
     }
-    if (CodecastPlatform.Unix === platform) {
+    if (CodecastPlatform.Cpp === platform) {
         return UnixRunner;
     }
     if (hasBlockPlatform(platform)) {
@@ -1199,7 +1199,7 @@ function postLink(app: App) {
 
                 break;
             case CodecastPlatform.Arduino:
-            case CodecastPlatform.Unix:
+            case CodecastPlatform.Cpp:
                 const syntaxTree = state.compile.syntaxTree;
                 if (syntaxTree) {
                     const options = stepperState.options = {

@@ -77,7 +77,7 @@ export default class UnixRunner extends AbstractRunner {
     public *compileAnswer(answer: TaskAnswer) {
         let response;
         const state = yield* appSelect();
-        const platform = CodecastPlatform.Unix;
+        const platform = CodecastPlatform.Cpp;
         try {
             const logData = state.statistics.logData;
             const postData = {source: documentToString(answer.document), platform, logData};

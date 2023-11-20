@@ -1,6 +1,7 @@
 export enum CodecastPlatform {
     Python = 'python',
-    Unix = 'unix',
+    C = 'c',
+    Cpp = 'cpp',
     Arduino = 'arduino',
     Blockly = 'blockly',
     Scratch = 'scratch',

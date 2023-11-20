@@ -16,7 +16,7 @@ export default function(bundle: Bundle) {
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const {platform} = state.options;
 
-            if (platform === CodecastPlatform.Unix || platform === CodecastPlatform.Arduino) {
+            if (platform === CodecastPlatform.Cpp || platform === CodecastPlatform.Arduino) {
                 const {programState, options} = stepperState;
                 if (!programState) {
                     return;

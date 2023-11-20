@@ -318,7 +318,8 @@ export class PrinterLib extends QuickAlgoLibrary {
             CodecastPlatform.Blockly,
             CodecastPlatform.Scratch,
             CodecastPlatform.Python,
-            CodecastPlatform.Unix,
+            CodecastPlatform.C,
+            CodecastPlatform.Cpp,
         ];
     };
 

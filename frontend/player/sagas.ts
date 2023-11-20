@@ -152,7 +152,7 @@ function* playerPrepare(app: App, action) {
     /* Compute the future state after every event. */
     const chan = yield* call(requestAnimationFrames, 50);
 
-    let platform = CodecastPlatform.Unix;
+    let platform = CodecastPlatform.Cpp;
     if (data.options) {
         platform = data.options.platform;
     }
@@ -289,7 +289,7 @@ function ensureBackwardsCompatibility(events: any[], version?: string) {
             params[0] = {
                 response: {
                     ...params[0],
-                    platform: CodecastPlatform.Unix,
+                    platform: CodecastPlatform.Cpp,
                 }
             };
         }

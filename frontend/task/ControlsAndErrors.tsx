@@ -33,7 +33,7 @@ import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
     const layoutType = useAppSelector(state => state.layout.type);
-    const {showStepper} = useAppSelector(state => state.options);
+    const {showStepper, remoteExecution} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const taskTests = useAppSelector(selectTaskTests);
@@ -114,7 +114,7 @@ export function ControlsAndErrors() {
     };
 
     const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
-    const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
+    const platformHasClientRunner = doesPlatformHaveClientRunner(platform) || remoteExecution;
     const clientControlsEnabled = (!currentTask || currentTestPublic) && platformHasClientRunner;
     const serverTask = null !== currentTask && isServerTask(currentTask);
 

@@ -189,7 +189,7 @@ export default function(bundle: Bundle) {
             executeEffects,
         });
 
-        if (stepperContext.state.platform === CodecastPlatform.Unix || stepperContext.state.platform === CodecastPlatform.Arduino) {
+        if (stepperContext.state.platform === CodecastPlatform.Cpp || stepperContext.state.platform === CodecastPlatform.Arduino) {
             while (!inUserCode(stepperContext.state)) {
                 /* Mutate the stepper context to advance execution by a single step. */
                 const effects = C.step(stepperContext.state.programState);
@@ -383,7 +383,7 @@ async function stepInto(stepperContext: StepperContext) {
     // Take a first step.
     await executeSingleStep(stepperContext);
 
-    if (stepperContext.state.platform === CodecastPlatform.Unix || stepperContext.state.platform === CodecastPlatform.Arduino) {
+    if (stepperContext.state.platform === CodecastPlatform.Cpp || stepperContext.state.platform === CodecastPlatform.Arduino) {
         // Step out of the current statement.
         await stepUntil(stepperContext, C.outOfCurrentStmt);
         // Step into the next statement.
