@@ -48,7 +48,7 @@ interface StepperControlsStateToProps {
 }
 
 export const getStepperControlsSelector = memoize(({state, enabled}: {state: AppStore, enabled: boolean}): StepperControlsStateToProps => {
-    const {controls, showStepper, platform} = state.options;
+    const {showStepper, platform} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
     const inputNeeded = state.task.inputNeeded;
@@ -62,10 +62,22 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
     let canStepOver = false;
     let canInterrupt = false, canUndo = false, canRedo = false, canGoToEnd = false;
     let isFinished = false;
-    let showExpr = !!platformData.hasMicroSteps && !state.options.remoteExecution;
+    let showExpr = !!platformData.hasMicroSteps;
     let compileOrExecuteMessage = '';
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
+
+    let controls = state.options.controls;
+    if (state.options.remoteExecution) {
+        controls = {
+            ...controls,
+            gotoend: false,
+            speed: false,
+            run: false,
+            interrupt: false,
+            expr: false,
+        };
+    }
 
     const processRunning = CompileStatus.Running === compileStatus || runningBackground;
 
@@ -106,7 +118,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
             canStep = !currentStepperState.isFinished;
             // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
             canStepOut = !!(currentStepperState.codecastAnalysis && currentStepperState.codecastAnalysis?.stackFrames?.length > 1);
-            if (platform === CodecastPlatform.Python) {
+            if (!hasBlockPlatform(platform)) {
                 canStepOver = canStep;
             }
             if (currentStepperState && currentStepperState.programState) {
