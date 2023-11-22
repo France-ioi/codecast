@@ -4,9 +4,12 @@ import {AnalysisVariable} from "./AnalysisVariable";
 
 interface AnalysisFunctionHeaderProps {
     stackFrame: CodecastAnalysisStackFrame,
+    stackFrameName?: string,
 }
 
 export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.Element => {
+    const {stackFrameName} = props;
+
     const args = props.stackFrame.args && props.stackFrame.args.length ? props.stackFrame.args.map((name) => {
         const variable = props.stackFrame.variables.find(variable => name === variable.name);
 
@@ -19,9 +22,9 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
     return (
         <div className="scope-function-title">
             <span>
-                {props.stackFrame.name ? (
+                {stackFrameName ? (
                     <span>
-                        <span className="function-name">{props.stackFrame.name}</span>
+                        <span className="function-name">{stackFrameName}</span>
                         {'('}
                     </span>
                 ) : null}
@@ -38,7 +41,7 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
                             </span>
                         );
                     })}
-                </span>{props.stackFrame.name ? ')' : null}
+                </span>{stackFrameName ? ')' : null}
             </span>
         </div>
     );
