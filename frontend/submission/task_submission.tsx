@@ -44,6 +44,7 @@ import {documentToString} from '../buffers/document';
 import {murmurhash3_32_gc} from '../common/utils';
 import {bufferAssociateToSubmission} from '../buffers/buffers_slice';
 import {TaskLevelName} from '../task/platform/platform_slice';
+import {extractTestsFromTask} from './tests';
 
 const executionsCache = {};
 const submissionExecutionTasks = {};
@@ -304,12 +305,13 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswerClient(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
+        log.getLogger('tests').debug('[Tests] Client grade answer', parameters);
         const {level, answer} = parameters;
         const state = yield* appSelect();
         const environment = state.environment;
         let lastMessage = null;
         const currentTask = state.task.currentTask;
-        const tests = currentTask ? yield* appSelect(getTaskLevelTests) : state.task.taskTests;
+        const tests = currentTask ? getTaskLevelTests(state, level) : state.task.taskTests;
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,
@@ -340,7 +342,7 @@ class TaskSubmissionExecutor {
 
         let worstRate = 1;
         for (let result of testResults) {
-            worstRate = Math.min(worstRate, result.successRate);
+            worstRate = Math.min(worstRate, result.successRate ?? 0);
         }
 
         return {

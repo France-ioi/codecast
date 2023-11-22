@@ -110,7 +110,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
                 className="quickalgo-button mt-2"
                 onClick={toggleTaskInstructions}
                 icon={<FontAwesomeIcon icon={documentationOpen ? faMinus : faPlus}/>}
-            >{getMessage(documentationOpen ? 'TASK_INSTRUCTIONS_LESS' : 'TASK_INSTRUCTIONS_MORE')}</Button>}
+            >{getMessage(`TASK_INSTRUCTIONS_${documentationOpen ? 'LESS' : 'MORE'}`)}</Button>}
         </div>
     );
 }

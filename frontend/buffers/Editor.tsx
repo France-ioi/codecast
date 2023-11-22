@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
 import {Range, TextBufferState} from './buffer_types';
@@ -10,8 +10,9 @@ import log from 'loglevel';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {BlockType} from '../task/blocks/block_types';
 import {bufferClearBlocksToInsert, bufferClearDeltasToApply} from './buffers_slice';
-import {useDispatch} from 'react-redux';
+import {batch, useDispatch} from 'react-redux';
 import {documentToString} from './document';
+import debounce from 'lodash.debounce';
 
 const AceRange = window.ace.acequire('ace/range').Range;
 
@@ -87,6 +88,7 @@ export function Editor(props: EditorProps) {
     const contextStrings = useAppSelector(state => state.task.contextStrings);
 
     const refEditor = useRef();
+    const batchEdits = useRef([]);
 
     log.getLogger('editor').debug('[buffer] re-render editor', props.name, props.state);
 
@@ -126,13 +128,28 @@ export function Editor(props: EditorProps) {
         });
     };
 
+    const debouncedOnEdit = () => {
+        const editsToBatch = [...batchEdits.current];
+        batchEdits.current = [];
+        batch(() => {
+            for (let edit of editsToBatch) {
+                props.onEdit(edit);
+            }
+        });
+    }
+
+    // We want to batch all edits that happen during the same frame
+    // For example when we press enter, Ace auto-adds a tabulation if we were in a function or a condition
+    const doBatchEdits = useCallback(debounce(debouncedOnEdit, 0), []);
+
     const onTextChanged = (edit) => {
         if (mute.current || !props.onEdit) {
             return;
         }
         // The callback must not trigger a rendering of the Editor.
         log.getLogger('editor').debug('do edit', edit);
-        props.onEdit(edit)
+        batchEdits.current.push(edit);
+        doBatchEdits();
     };
 
     const onAfterRender = () => {
@@ -236,6 +253,7 @@ export function Editor(props: EditorProps) {
             if (sameSelection(selection.current, selection_)) {
                 return;
             }
+            log.getLogger('editor').debug('[buffer] selection changed, apply new selection', selection);
             selection.current = selection_;
             if (selection_ && selection_.start && selection_.end) {
                 editor.current.selection.setRange(toRange(selection_));
@@ -493,7 +511,6 @@ export function Editor(props: EditorProps) {
 
     useEffect(() => {
         const selection = props.state?.selection;
-        log.getLogger('editor').debug('[buffer] selection changed', selection);
         doSetSelection(selection);
     }, [props.state?.selection]);
 

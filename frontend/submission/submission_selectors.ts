@@ -3,6 +3,7 @@ import {isServerTask, TaskTest, TaskTestGroupType} from '../task/task_types';
 import {TaskSubmissionEvaluateOn, TaskSubmissionMode} from './submission_types';
 import {memoize} from 'proxy-memoize';
 import {mapServerTestToTaskTest} from './tests';
+import {TaskLevelName} from '../task/platform/platform_slice';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {doesPlatformHaveClientRunner} from '../stepper';
 
@@ -43,13 +44,14 @@ export const selectTaskTests = memoize<AppStore, TaskTest[]>((state: AppStore) =
     return taskLevelsTests;
 });
 
-export function getTaskLevelTests(state: AppStore) {
-    if (null === state.task.currentLevel) {
+export function getTaskLevelTests(state: AppStore, level?: TaskLevelName) {
+    const selectedLevel = level ?? state.task.currentLevel;
+    if (null === selectedLevel) {
         return state.task.taskTests;
     }
 
     return state.task.taskTests.filter(test => {
-        return state.task.currentLevel === test.level;
+        return selectedLevel === test.level;
     });
 }
 

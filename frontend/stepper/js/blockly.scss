@@ -1,6 +1,9 @@
 .blockly-editor {
     width: 100%;
     height: 100%;
+    // So that when moving very large blocks, they don't create scrollbars in Blockly container,
+    // which would trigger a buffer resize during Blocky block moving
+    overflow: hidden;
 }
 
 #blocklyContainer, #blocklyDiv {

@@ -7,7 +7,7 @@ import {
 } from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {all, call, cancel, cancelled, fork, put, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {all, call, cancel, cancelled, delay, fork, put, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {AppStore} from "../store";
 import QuickalgoLibsBundle, {
@@ -81,7 +81,7 @@ import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
 import {createEmptyBufferState, isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
-import {ActionTypes} from "../common/actionTypes";
+import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {convertServerTaskToCodecastFormat, getTaskFromId} from "../submission/task_platform";
 import {
@@ -116,6 +116,7 @@ import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
 import {submissionCancel} from '../submission/submission_actions';
 import {createSourceBufferFromDocument} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
+import {Screen} from '../common/screens';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -265,6 +266,10 @@ function* taskLoadSaga(app: App, action) {
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
     if (currentTask) {
+        if (currentTask?.gridInfos?.documentationOpenByDefault) {
+            yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
+        }
+
         const language = yield* appSelect(state => state.options.language.split('-')[0]);
         if (
             currentTask?.strings?.length
@@ -383,11 +388,13 @@ function* taskLoadSaga(app: App, action) {
     state = yield* appSelect();
     const sourceBuffers = selectSourceBuffers(state);
     if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state)?.document)) {
-        yield* put(bufferCreateSourceBuffer());
+        let newDocument = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
+        yield* call(createSourceBufferFromDocument, newDocument);
     }
 
     yield* call(taskLevelLoadedSaga);
 
+    yield* delay(0);
     log.getLogger('task').debug('task loaded', app.environment);
     yield* put(taskLoaded());
     if (action.payload.callback) {
@@ -868,6 +875,7 @@ export default function (bundle: Bundle) {
             if (Codecast.runner) {
                 Codecast.runner.stop();
             }
+            window.Blockly?.DropDownDiv?.hideWithoutAnimation();
             yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             log.getLogger('task').debug('put task reset done to true');
             yield* put(taskResetDone(true));

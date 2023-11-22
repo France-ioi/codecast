@@ -4,11 +4,15 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
-import {put, takeEvery} from "typed-redux-saga";
+import {call, put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {isLocalStorageEnabled} from "../common/utils";
 import {delay} from "../player/sagas";
 import {taskLoad} from '../task/task_actions';
+import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from '../task/task_slice';
+import {appSelect} from '../hooks';
+import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
+import {current, isDraft} from 'immer';
 
 export const Languages = {
     'en-US': require('./en-US.js'),
@@ -48,7 +52,12 @@ export default function(bundle: Bundle) {
 
             yield* delay(0);
             yield* put({type: StepperActionTypes.StepperExit});
-            yield* put(taskLoad({reloadContext: true}));
+            yield* call(createQuickalgoLibrary);
+        });
+
+        yield* takeEvery([currentTaskChange, currentTaskChangePredefined], function* () {
+            const state = yield* appSelect();
+            updateLanguageCalls(state);
         });
     });
 }
@@ -82,7 +91,23 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
         language = 'fr-FR';
     }
 
+    state.options.language = language;
+    updateLanguageCalls(state);
+
+    return state;
+}
+
+export function updateLanguageCalls(state: AppStore) {
+    const language = state.options.language;
     const familiarEnabled = 'tralalere' === state.options.app;
+    const currentTask = state.task.currentTask;
+    window.stringsLanguage = language.split('-')[0];
+
+    const taskStrings = isDraft(currentTask?.gridInfos?.taskStrings) ? current(currentTask?.gridInfos?.taskStrings) : currentTask?.gridInfos?.taskStrings;
+    const languageKeys = {
+        ...Languages[language],
+        ...(taskStrings ?? {}),
+    };
 
     const localizedMessage = Object.create(Message, {
         _l: {
@@ -92,8 +117,8 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
         }
     });
 
-    localGetMessage = memoize(function(message, defaultText) {
-        const value = Languages[language][message + (familiarEnabled ? '_FAMILIAR' : '')] || Languages[language][message] || defaultText || `L:${message}`;
+    localGetMessage = memoize(function (message, defaultText) {
+        const value = languageKeys[message + (familiarEnabled ? '_FAMILIAR' : '')] || languageKeys[message] || defaultText || `L:${message}`;
 
         return Object.create(localizedMessage, {
             _m: {
@@ -126,9 +151,6 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
 
         return localGetMessage(value.toString());
     }
-
-    state.options.language = language;
-    window.stringsLanguage = language.split('-')[0];
 }
 
 export const getMessage = (message, defaultText = null) => {

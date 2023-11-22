@@ -49,7 +49,7 @@ interface StepperControlsStateToProps {
 }
 
 export const getStepperControlsSelector = memoize(({state, enabled}: {state: AppStore, enabled: boolean}): StepperControlsStateToProps => {
-    const {showStepper, platform} = state.options;
+    let {showStepper, platform} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
     const inputNeeded = state.task.inputNeeded;
@@ -138,6 +138,14 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
             canInterrupt = enabled && !isStepperInterrupting(state) && !inputNeeded;
             canGoToEnd = true;
         }
+    }
+
+    if (hasBlockPlatform(platform)) {
+        controls = {
+            ...controls,
+            over: false,
+            out: false,
+        };
     }
 
     canStep = canStep && !processRunning;

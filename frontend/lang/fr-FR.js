@@ -193,6 +193,7 @@ module.exports = {
     TASK_DOCUMENTATION: 'Informations',
     TASK_INSTRUCTIONS_MORE: 'Plus de détails',
     TASK_INSTRUCTIONS_LESS: 'Masquer les détails',
+    TASK_INSTRUCTIONS_OK: "J'ai compris, je commence !",
     TASK_INSTRUCTIONS_FAMILIAR: 'Ta mission',
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Détails de la mission',
     TASK_DOCUMENTATION_CODE_EXAMPLES: 'Exemples de code',

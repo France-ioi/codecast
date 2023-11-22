@@ -55,6 +55,10 @@ export const documentationUseCodeExample = createAction('documentation/useCodeEx
     },
 }));
 
+export function selectShowDocumentation(state: AppStore): boolean {
+    return !!(state.options.showDocumentation && (!state.task.currentTask || state.task.currentTask?.gridInfos?.conceptViewer));
+}
+
 function getConceptsFromChannel() {
     return new Promise<ConceptViewerConfigs>((resolve, reject) => {
         if (!openerChannel) {

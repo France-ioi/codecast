@@ -1,10 +1,10 @@
-import {getPythonSpecificBlocks} from '../task/python_utils';
 import {QuickalgoTaskIncludeBlocks} from '../task/task_types';
 import {getCSpecificBlocks} from './views/c/utils';
 import {NotionsBag} from '../task/blocks/notions';
 import {smartContractPlatformsList} from '../task/libs/smart_contract/smart_contract_lib';
 import {CodecastPlatform} from './codecast_platform';
 import {Block} from '../task/blocks/block_types';
+import {getPythonSpecificBlocks} from '../task/blocks/python_blocks';
 
 export interface PlatformData {
     needsCompilation?: boolean,
