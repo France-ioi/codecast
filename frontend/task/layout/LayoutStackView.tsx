@@ -5,13 +5,14 @@ import {getMessage} from "../../lang";
 import {AnalysisStackView} from "../../stepper/analysis/AnalysisStackView";
 
 import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {TaskSubmissionEvaluateOn} from '../../submission/submission_types';
 
 export function LayoutStackView() {
     const currentStepperState = useAppSelector(state => state.stepper ? state.stepper.currentStepperState : null);
 
     const analysis = currentStepperState ? currentStepperState.codecastAnalysis : null;
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
-    const remoteExecution = useAppSelector(state => state.options.remoteExecution);
+    const remoteExecution = useAppSelector(state => TaskSubmissionEvaluateOn.RemoteDebugServer === state.submission.executionMode);
 
     let stackView;
     if (currentStepperState) {

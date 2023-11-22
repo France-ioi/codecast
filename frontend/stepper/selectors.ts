@@ -7,6 +7,7 @@ import {memoize} from 'proxy-memoize';
 import {hasBlockPlatform, platformsList} from './platforms';
 import {LayoutType} from '../task/layout/layout_types';
 import {CodecastPlatform} from './codecast_platform';
+import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;
@@ -68,7 +69,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
     let controlsType = StepperControlsType.Normal;
 
     let controls = state.options.controls;
-    if (state.options.remoteExecution) {
+    if (TaskSubmissionEvaluateOn.RemoteDebugServer === state.submission.executionMode) {
         controls = {
             ...controls,
             gotoend: false,

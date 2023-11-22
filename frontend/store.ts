@@ -95,7 +95,6 @@ export interface CodecastOptions {
     randomTaskVariants?: number,
     contextVisualizationDesiredSize?: string,
     tabsEnabled?: boolean,
-    remoteExecution?: boolean,
 }
 
 export interface Panes {

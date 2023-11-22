@@ -2,7 +2,7 @@ import {appSelect} from '../../hooks';
 import {quickAlgoLibraries} from './quick_algo_libraries_model';
 import log from 'loglevel';
 import {extractLevelSpecific, extractVariantSpecific} from '../utils';
-import {call, put} from 'typed-redux-saga';
+import {call, put, select} from 'typed-redux-saga';
 import {importModules, importPlatformModules, loadFonts} from './import_modules';
 import {SmartContractLib} from './smart_contract/smart_contract_lib';
 import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
@@ -27,6 +27,9 @@ import {QuickAlgoLibrary} from './quickalgo_library';
 import {DebugLib} from './debug/debug_lib';
 import {QuickalgoTaskGridInfos} from '../task_types';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
+import {TaskSubmissionEvaluateOn} from '../../submission/submission_types';
+import {selectAvailableExecutionModes} from '../../submission/submission_selectors';
+import {submissionChangeExecutionMode} from '../../submission/submission_slice';
 
 export function* createQuickalgoLibrary() {
     let state = yield* appSelect();
@@ -124,6 +127,12 @@ export function* createQuickalgoLibrary() {
     }
 
     yield* put(taskSetAvailablePlatforms(availablePlatforms));
+
+    // Set submission mode
+    const availableExecutionModes = yield* select(selectAvailableExecutionModes);
+    if (-1 === availableExecutionModes.indexOf(state.submission.executionMode) && availableExecutionModes.length) {
+        yield* put(submissionChangeExecutionMode(availableExecutionModes[0]));
+    }
 
     log.getLogger('libraries').debug('created context', context);
     context.iTestCase = state.task.currentTestId;

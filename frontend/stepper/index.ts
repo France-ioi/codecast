@@ -88,7 +88,7 @@ import {CodecastPlatform} from './codecast_platform';
 import {App, Codecast} from '../app_types';
 import {mainQuickAlgoLogger} from '../task/libs/quick_algo_logger';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
-import {TaskSubmissionResultPayload} from '../submission/submission_types';
+import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode} from '../task/layout/layout_types';
 import {shuffleArray} from '../utils/javascript';
 import {computeDelayForCurrentStep} from './speed';
@@ -199,7 +199,7 @@ export const initialStateStepper = {
 
 export function* createRunnerSaga(platform: CodecastPlatform): SagaIterator<AbstractRunner> {
     const environment = yield* appSelect(state => state.environment);
-    const remoteExecution = yield* appSelect(state => state.options.remoteExecution);
+    const remoteExecution = yield* appSelect(state => TaskSubmissionEvaluateOn.RemoteDebugServer === state.submission.executionMode);
     const context = quickAlgoLibraries.getContext(null, environment);
 
     if (remoteExecution) {
@@ -875,7 +875,7 @@ function* stepperStepSaga(app: App, action) {
             log.getLogger('stepper').debug('execution stepper context', stepperContext);
 
             let stepExecutor: any = performStep;
-            if (state.options.remoteExecution) {
+            if (TaskSubmissionEvaluateOn.RemoteDebugServer === state.submission.executionMode) {
                 stepExecutor = [Codecast.runner, (Codecast.runner as RemoteDebugExecutor).executeAction];
             }
 
@@ -1084,7 +1084,7 @@ function* stepperCompileFromControlsSaga(app: App) {
     const stepperStatus = state.stepper.status;
 
     let backgroundRunData: TaskSubmissionResultPayload = null;
-    if (StepperStatus.Clear === stepperStatus && !state.options.remoteExecution) {
+    if (StepperStatus.Clear === stepperStatus && TaskSubmissionEvaluateOn.RemoteDebugServer !== state.submission.executionMode) {
         let runBackgroundOver;
         const promise = new Promise((resolve) => {
             runBackgroundOver = resolve;
