@@ -166,6 +166,9 @@ function* showDifferentViews() {
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentTask = yield* select(state => state.task.currentTask);
+    if (!currentTask) {
+        return false;
+    }
     if (currentTask && 'showViews' in currentTask?.gridInfos) {
         return currentTask.gridInfos.showViews;
     }
