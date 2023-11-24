@@ -13,6 +13,8 @@ import {bufferClearBlocksToInsert, bufferClearDeltasToApply} from './buffers_sli
 import {batch, useDispatch} from 'react-redux';
 import {documentToString} from './document';
 import debounce from 'lodash.debounce';
+import {useCursorPositionTracking} from '../task/layout/cursor_tracking';
+import {CursorPoint} from '../task/layout/actionTypes';
 
 const AceRange = window.ace.acequire('ace/range').Range;
 
@@ -560,8 +562,14 @@ export function Editor(props: EditorProps) {
         },
     }));
 
+    useCursorPositionTracking(`editor:${props.name}`, (point: CursorPoint) => {
+        return {
+            editorPosition: editor.current.renderer.screenToTextCoordinates(point.x, point.y),
+        };
+    });
+
     return (
-        <div className="editor" style={{width: width, height: height}} ref={drop}>
+        <div className="editor cursor-main-zone" data-cursor-zone={`editor:${props.name}`} data-cursor-self-handling="" style={{width: width, height: height}} ref={drop}>
             <div className="editor-frame" ref={refEditor}/>
             <div
                 className={classnames(['editor-shield', shield && 'editor-shield-up'])}

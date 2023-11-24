@@ -140,7 +140,7 @@ export function ContextVisualization() {
     }
 
     return (
-        <div className="context-visualization">
+        <div className="context-visualization cursor-main-zone" data-cursor-zone="context-visualization">
             <div className="task-visualization-container">
                 {innerVisualization}
             </div>

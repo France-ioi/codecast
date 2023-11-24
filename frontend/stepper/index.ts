@@ -24,7 +24,7 @@ The stepper's state has the following shape:
 
 */
 
-import {apply, call, cancel, fork, put, race, select, take, takeEvery, takeLatest, throttle} from 'typed-redux-saga';
+import {apply, call, cancel, fork, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 
 import {
