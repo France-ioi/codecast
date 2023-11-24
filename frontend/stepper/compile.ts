@@ -36,6 +36,7 @@ import {App, Codecast} from '../app_types';
 import {documentToString, TextBufferHandler} from '../buffers/document';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {TaskAnswer} from '../task/task_types';
+import {RECORDING_FORMAT_VERSION} from '../version';
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -162,14 +163,23 @@ export default function(bundle: Bundle) {
         });
 
         recordApi.on(ActionTypes.CompileStarted, function* (addEvent, action) {
-            const {source} = action;
+            const {payload} = action;
 
-            yield* call(addEvent, 'compile.start', source); // XXX should also have platform
+            yield* call(addEvent, 'compile.start', payload.answer);
         });
         replayApi.on(['stepper.compile', 'compile.start'], function* (replayContext: ReplayContext, event) {
-            const answer = event[2];
+            let answer = event[2];
 
-            yield* put({type: ActionTypes.CompileStarted, answer});
+            // For backward-compatibility: before Codecast 7.4, this parameter was the source
+            if ('string' === typeof answer) {
+                const platform = yield* appSelect(state => state.options.platform);
+                answer = {
+                    document: TextBufferHandler.documentFromString(answer),
+                    platform,
+                };
+            }
+
+            yield* put({type: ActionTypes.CompileStarted, payload: {answer}});
         });
 
         recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {
