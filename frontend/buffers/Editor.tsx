@@ -437,12 +437,12 @@ export function Editor(props: EditorProps) {
     useEffect(() => {
         const deltasToApply = props.state?.actions?.deltasToApply;
         log.getLogger('editor').debug('[editor] new deltas to apply', deltasToApply);
-        if (!deltasToApply || !deltasToApply.length) {
+        if (!deltasToApply || !Object.keys(deltasToApply.elements).length) {
             return;
         }
 
-        dispatch(bufferClearDeltasToApply({buffer: props.name}));
-        applyDeltas(JSON.parse(JSON.stringify(deltasToApply)));
+        dispatch(bufferClearDeltasToApply({buffer: props.name, ids: Object.keys(deltasToApply.elements)}));
+        applyDeltas(JSON.parse(JSON.stringify(Object.values(deltasToApply.elements))));
     }, [props.state?.actions?.deltasToApply]);
 
     useEffect(() => {
@@ -481,12 +481,12 @@ export function Editor(props: EditorProps) {
 
     useEffect(() => {
         const blocksToInsert = props.state?.actions?.blocksToInsert;
-        if (!blocksToInsert || !blocksToInsert.length) {
+        if (!blocksToInsert || !Object.keys(blocksToInsert.elements).length) {
             return;
         }
 
-        dispatch(bufferClearBlocksToInsert({buffer: props.name}));
-        for (let {block, pos} of blocksToInsert) {
+        dispatch(bufferClearBlocksToInsert({buffer: props.name, ids: Object.keys(blocksToInsert.elements)}));
+        for (let {block, pos} of Object.values(blocksToInsert.elements)) {
             let insertNewLineBefore = false;
             let insertNewLineAfter = false;
             if ((BlockType.Function === block.type && block.category !== 'sensors') || BlockType.Directive === block.type) {
