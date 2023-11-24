@@ -37,7 +37,9 @@ import {TaskLevelName} from "./task/platform/platform_slice";
 import {SmartContractConfigType} from './task/libs/smart_contract/smart_contract_lib';
 import {App, CodecastType} from './app_types';
 
-setAutoFreeze(true);
+// Disabling auto-freeze is recommended by proxy-memoize, cf https://github.com/dai-shi/proxy-memoize
+// This is because JavaScript does not support nested proxies of frozen objects
+setAutoFreeze(false);
 
 // Define all loggers.
 // You can change the level of a specific logger by inputting
