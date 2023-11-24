@@ -33,7 +33,7 @@ import {appSelect} from '../hooks';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {CodecastPlatform} from './codecast_platform';
 import {App, Codecast} from '../app_types';
-import {documentToString, TextBufferHandler} from '../buffers/document';
+import {BlockBufferHandler, documentToString, TextBufferHandler} from '../buffers/document';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {TaskAnswer} from '../task/task_types';
 import {RECORDING_FORMAT_VERSION} from '../version';
@@ -175,6 +175,12 @@ export default function(bundle: Bundle) {
                 const platform = yield* appSelect(state => state.options.platform);
                 answer = {
                     document: TextBufferHandler.documentFromString(answer),
+                    platform,
+                };
+            } else if ('object' === typeof answer && answer.blockly) {
+                const platform = yield* appSelect(state => state.options.platform);
+                answer = {
+                    document: BlockBufferHandler.documentFromObject(answer),
                     platform,
                 };
             }
