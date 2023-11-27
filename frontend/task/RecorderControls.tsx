@@ -80,7 +80,7 @@ export function RecorderControls(props: RecorderControlsProps) {
     };
 
     return (
-        <div className="task-recorder-controls">
+        <div className="task-recorder-controls cursor-recording-disabled">
             <div className="controls-recorder">
                 <ButtonGroup>
                     <Button

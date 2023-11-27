@@ -563,15 +563,27 @@ export function Editor(props: EditorProps) {
     }));
 
     useCursorPositionTracking(`editor:${props.name}`, (absPoint: CursorPoint): Pick<CursorPosition, 'editorCaret' | 'posToEditorCaret'> => {
-        const editorPosition = editor.current.renderer.screenToTextCoordinates(absPoint.x, absPoint.y);
-        const realPosition = editor.current.renderer.textToScreenCoordinates(editorPosition.row, editorPosition.column);
+        const editorCaret = editor.current.renderer.screenToTextCoordinates(absPoint.x, absPoint.y);
+        const caretPosition = editor.current.renderer.textToScreenCoordinates(editorCaret.row, editorCaret.column);
 
         return {
-            editorCaret: editorPosition,
+            editorCaret: editorCaret,
             posToEditorCaret: {
-                x: absPoint.x - realPosition.pageX,
-                y: absPoint.y - realPosition.pageY,
+                x: Math.round(absPoint.x - caretPosition.pageX),
+                y: Math.round(absPoint.y - caretPosition.pageY),
             },
+        };
+    }, (cursorPosition: CursorPosition) => {
+        if (!cursorPosition.editorCaret) {
+            return null;
+        }
+
+        const editorCaret = cursorPosition.editorCaret;
+        const caretPosition = editor.current.renderer.textToScreenCoordinates(editorCaret.row, editorCaret.column);
+
+        return {
+            x: caretPosition.pageX + cursorPosition.posToEditorCaret.x,
+            y: caretPosition.pageY + cursorPosition.posToEditorCaret.y,
         };
     });
 

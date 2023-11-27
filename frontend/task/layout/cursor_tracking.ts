@@ -6,14 +6,28 @@ import {useAppSelector} from '../../hooks';
 import {getRecorderState} from '../../recorder/selectors';
 import {RecorderStatus} from '../../recorder/store';
 import log from 'loglevel';
+import {getPlayerState} from '../../player/selectors';
 
-export function useCursorPositionTracking(specialZoneName?: string, specialHandler?: (absPoint: CursorPoint) => object) {
+export type ScreenPointToRecordingTransformer = (point: CursorPoint) => Partial<CursorPosition>;
+export type RecordingToScreenPointTransformer = (data: Partial<CursorPosition>) => CursorPoint|null;
+
+const zonePointToScreenTransformers: {[zoneName: string]: RecordingToScreenPointTransformer} = {};
+
+export function useCursorPositionTracking(specialZoneName?: string, pointToRecording?: ScreenPointToRecordingTransformer, recordingToPoint?: RecordingToScreenPointTransformer) {
     const isRecording = useAppSelector(state => RecorderStatus.Recording === getRecorderState(state).status);
+    const isPlaying = useAppSelector(state => getPlayerState(state).isReady);
 
     const dispatch = useDispatch();
 
+    if (specialZoneName) {
+        zonePointToScreenTransformers[specialZoneName] = recordingToPoint;
+    }
+
     useEffect(() => {
         if (!isRecording) {
+            return null;
+        }
+        if (isPlaying) {
             return null;
         }
 
@@ -21,20 +35,24 @@ export function useCursorPositionTracking(specialZoneName?: string, specialHandl
             const point = {x: ev.clientX, y: ev.clientY};
             const element = document.elementFromPoint(point.x, point.y) as HTMLElement;
 
-            const mainZone = element.closest<HTMLElement>(".cursor-main-zone");
+            if (element.closest<HTMLElement>('.cursor-recording-disabled')) {
+                return;
+            }
+
+            const mainZone = element.closest<HTMLElement>('.cursor-main-zone');
 
             if (mainZone) {
                 const mainZoneName = mainZone.getAttribute('data-cursor-zone');
-                if (specialHandler && mainZoneName !== specialZoneName) {
+                if (pointToRecording && mainZoneName !== specialZoneName) {
                     return;
                 }
-                if (!specialHandler && mainZone.hasAttribute('data-cursor-self-handling')) {
+                if (!pointToRecording && mainZone.hasAttribute('data-cursor-self-handling')) {
                     return;
                 }
 
                 const positionRelativeToMainZone = extractRelativePosition(point, mainZone);
 
-                const additional = specialHandler ? specialHandler(point) : null;
+                const additional = pointToRecording ? pointToRecording(point) : null;
 
                 const cursorPosition: CursorPosition = {
                     zone: mainZoneName,
@@ -56,37 +74,15 @@ export function useCursorPositionTracking(specialZoneName?: string, specialHandl
 
         return () => {
             window.removeEventListener('mousemove', throttledUpdateMousePosition);
+
+            if (specialZoneName) {
+                delete zonePointToScreenTransformers[specialZoneName];
+            }
         };
-    }, [isRecording]);
+    }, [isRecording, isPlaying]);
 }
 
-
-
-export function cursorPositionToScreenCoordinates(position: CursorPosition): CursorPoint|null {
-    const zone = position.zone;
-    const point = position.posToZone;
-    const mainZone = document.querySelector<HTMLElement>(`[data-cursor-zone="${zone}"]`);
-    if (!mainZone) {
-        return null;
-    }
-
-    console.log('start calculating', performance.now());
-
-    if (position.domToElement) {
-        const domParts = position.domToElement.split(',');
-        const domElement = getDomElementFromDomTree(mainZone, domParts);
-        if (domElement) {
-            console.log('dom element strategy', domElement, position.posToElement);
-
-            return applyRelativePosition(position.posToElement, domElement);
-        }
-    }
-
-    console.log('main zone strategy');
-
-    return applyRelativePosition(point, mainZone);
-}
-
+// For recording
 function extractDomTreeToElement(child: HTMLElement, ancestor: HTMLElement) {
     if (child === ancestor) {
         return [];
@@ -98,6 +94,48 @@ function extractDomTreeToElement(child: HTMLElement, ancestor: HTMLElement) {
         ...extractDomTreeToElement(parentElement, ancestor),
         `${child.tagName.toLocaleLowerCase()}${child.getAttribute('id') ? '#' + child.getAttribute('id') : ''}(${Array.from(parentElement.children).indexOf(child)})`,
     ];
+}
+
+function extractRelativePosition(point: CursorPoint, element: HTMLElement): CursorPoint {
+    const boundingBox = element.getBoundingClientRect();
+
+    return {
+        x: Math.round(point.x - boundingBox.left),
+        y: Math.round(point.y - boundingBox.top),
+    };
+}
+
+// For replay
+export function cursorPositionToScreenCoordinates(position: CursorPosition): CursorPoint|null {
+    const zone = position.zone;
+    const point = position.posToZone;
+    const mainZone = document.querySelector<HTMLElement>(`[data-cursor-zone="${zone}"]`);
+    if (!mainZone) {
+        return null;
+    }
+
+    if (zonePointToScreenTransformers[zone]) {
+        const result = zonePointToScreenTransformers[zone](position);
+        if (result) {
+            log.getLogger('replay').debug('[Mouse] Specific handler for zone ' + zone, result);
+
+            return result;
+        }
+    }
+
+    if (position.domToElement) {
+        const domParts = position.domToElement.split(',');
+        const domElement = getDomElementFromDomTree(mainZone, domParts);
+        if (domElement) {
+            log.getLogger('replay').debug('[Mouse] DOM tree strategy for zone ' + zone, domElement, position.posToElement);
+
+            return applyRelativePosition(position.posToElement, domElement);
+        }
+    }
+
+    log.getLogger('replay').debug('[Mouse] Main zone strategy for zone ' + zone);
+
+    return applyRelativePosition(point, mainZone);
 }
 
 function getDomElementFromDomTree(ancestor: HTMLElement, domParts: string[]): HTMLElement|null {
@@ -117,24 +155,11 @@ function getDomElementFromDomTree(ancestor: HTMLElement, domParts: string[]): HT
     const childNumber = Number(matched[4]);
     const childs = [...ancestor.children] as HTMLElement[];
     const child = childs[childNumber];
-    console.log({ancestor, domParts, nextDomPart, tagName, elementId, childNumber, child});
     if (!child || tagName !== child.tagName.toLocaleLowerCase() || (elementId && elementId !== child.getAttribute('id'))) {
-        console.log('return null', tagName, child.tagName, elementId)
         return null;
     }
 
-    console.log('valid child');
-
     return getDomElementFromDomTree(child, domParts.slice(1));
-}
-
-function extractRelativePosition(point: CursorPoint, element: HTMLElement): CursorPoint {
-    const boundingBox = element.getBoundingClientRect();
-
-    return {
-        x: Math.round(point.x - boundingBox.left),
-        y: Math.round(point.y - boundingBox.top),
-    };
 }
 
 function applyRelativePosition(point: CursorPoint, element: HTMLElement) {
