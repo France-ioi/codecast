@@ -1216,6 +1216,10 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
         yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
     }
 
+    if (null !== state.screen) {
+        yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
+    }
+
     const stepperControlsState = getStepperControlsSelector({state, enabled: true});
     const stepper = getStepper(state);
     const mustCompile = StepperStatus.Clear === stepper.status;
