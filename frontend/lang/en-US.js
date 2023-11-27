@@ -265,6 +265,7 @@ module.exports = {
     CODE_CONSTRAINTS_LIMITED_USES: "You use too much a keyword with limited uses: {keyword}.",
     CODE_CONSTRAINTS_LIMITED_ASSIGN: "You are not allowed to reassign a keyword with limited uses: {keyword}.",
     CODE_CONSTRAINTS_EMPTY_PROGRAM: "You cannot submit an empty program.",
+    CODE_CONSTRAINTS_EMPTY_PROGRAM_BLOCKS: "The program is empty. Connect blocks!",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "You use the function \"{funcName}\" without the parentheses. Add the parentheses to call the function.",
 
     ABOUT_AUTHORS: "This task was created by:",

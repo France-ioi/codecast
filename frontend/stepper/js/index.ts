@@ -209,7 +209,7 @@ export const checkBlocklyCode = function (answer: BlockDocument, context: QuickA
     }
 
     if (-1 === disabledValidations.indexOf('empty') && totalCount <= 0) {
-        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
+        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM_BLOCKS');
     }
 }
 

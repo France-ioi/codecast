@@ -23,7 +23,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "../player";
-import {ReplayContext} from "../player/sagas";
+import {delay, ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -85,6 +85,9 @@ export default function(bundle: Bundle) {
             const answer = selectAnswer(state);
             const {allowExecutionOverBlocksLimit} = state.options;
             const platform = answer.platform;
+
+            // To make sure we have the time to conclude all Redux Saga actions triggered by the start of the compilation
+            yield* delay(0);
 
             yield* put({
                 type: ActionTypes.CompileStarted,
