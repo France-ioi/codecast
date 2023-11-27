@@ -19,8 +19,9 @@ export interface CursorPoint {
 
 export interface CursorPosition {
     zone?: string,
-    position?: CursorPoint,
-    domTree?: string,
-    positionToElement?: CursorPoint,
-    editorPosition?: {row: number, column: number},
+    posToZone?: CursorPoint,
+    domToElement?: string,
+    posToElement?: CursorPoint,
+    editorCaret?: {row: number, column: number},
+    posToEditorCaret?: CursorPoint,
 }

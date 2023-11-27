@@ -5,8 +5,9 @@ import {CursorPosition, ActionTypes as LayoutActionTypes, CursorPoint} from './a
 import {useAppSelector} from '../../hooks';
 import {getRecorderState} from '../../recorder/selectors';
 import {RecorderStatus} from '../../recorder/store';
+import log from 'loglevel';
 
-export function useCursorPositionTracking(specialZoneName?: string, specialHandler?: (point: CursorPoint) => object) {
+export function useCursorPositionTracking(specialZoneName?: string, specialHandler?: (absPoint: CursorPoint) => object) {
     const isRecording = useAppSelector(state => RecorderStatus.Recording === getRecorderState(state).status);
 
     const dispatch = useDispatch();
@@ -33,17 +34,17 @@ export function useCursorPositionTracking(specialZoneName?: string, specialHandl
 
                 const positionRelativeToMainZone = extractRelativePosition(point, mainZone);
 
-                const additional = specialHandler ? specialHandler(positionRelativeToMainZone) : null;
+                const additional = specialHandler ? specialHandler(point) : null;
 
                 const cursorPosition: CursorPosition = {
                     zone: mainZoneName,
-                    position: positionRelativeToMainZone,
-                    domTree: extractDomTreeToElement(element, mainZone).join(','),
-                    positionToElement: extractRelativePosition(point, element),
+                    posToZone: positionRelativeToMainZone,
+                    domToElement: extractDomTreeToElement(element, mainZone).join(','),
+                    posToElement: extractRelativePosition(point, element),
                     ...additional,
                 };
 
-                console.log(JSON.stringify(cursorPosition));
+                log.getLogger('recorder').debug('[Mouse] ' + JSON.stringify(cursorPosition));
 
                 dispatch({type: LayoutActionTypes.LayoutCursorPositionChanged, payload: {position: cursorPosition}});
             }
@@ -59,30 +60,31 @@ export function useCursorPositionTracking(specialZoneName?: string, specialHandl
     }, [isRecording]);
 }
 
+
+
 export function cursorPositionToScreenCoordinates(position: CursorPosition): CursorPoint|null {
     const zone = position.zone;
-    const point = position.position;
+    const point = position.posToZone;
     const mainZone = document.querySelector<HTMLElement>(`[data-cursor-zone="${zone}"]`);
     if (!mainZone) {
         return null;
     }
 
-    const mainZoneDimensions = {
-        height: mainZone.clientHeight,
-        width: mainZone.clientWidth,
-        top: mainZone.offsetTop,
-        left: mainZone.offsetLeft,
-    };
+    console.log('start calculating', performance.now());
 
-    const absoluteCoordinates = {
-        x: point.x + mainZoneDimensions.left,
-        y: point.y + mainZoneDimensions.top,
-    };
+    if (position.domToElement) {
+        const domParts = position.domToElement.split(',');
+        const domElement = getDomElementFromDomTree(mainZone, domParts);
+        if (domElement) {
+            console.log('dom element strategy', domElement, position.posToElement);
 
-    return {
-        x: absoluteCoordinates.x,
-        y: absoluteCoordinates.y,
-    };
+            return applyRelativePosition(position.posToElement, domElement);
+        }
+    }
+
+    console.log('main zone strategy');
+
+    return applyRelativePosition(point, mainZone);
 }
 
 function extractDomTreeToElement(child: HTMLElement, ancestor: HTMLElement) {
@@ -98,9 +100,48 @@ function extractDomTreeToElement(child: HTMLElement, ancestor: HTMLElement) {
     ];
 }
 
+function getDomElementFromDomTree(ancestor: HTMLElement, domParts: string[]): HTMLElement|null {
+    if (0 === domParts.length) {
+        return ancestor;
+    }
+
+    const nextDomPart = domParts[0];
+    const partsRegExp = new RegExp("^([a-z]+)(#([a-zA-Z\-\_]+))?\\(([0-9]+)\\)$");
+    const matched = nextDomPart.match(partsRegExp);
+    if (!matched) {
+        return null;
+    }
+
+    const tagName = matched[1];
+    const elementId = matched[3];
+    const childNumber = Number(matched[4]);
+    const childs = [...ancestor.children] as HTMLElement[];
+    const child = childs[childNumber];
+    console.log({ancestor, domParts, nextDomPart, tagName, elementId, childNumber, child});
+    if (!child || tagName !== child.tagName.toLocaleLowerCase() || (elementId && elementId !== child.getAttribute('id'))) {
+        console.log('return null', tagName, child.tagName, elementId)
+        return null;
+    }
+
+    console.log('valid child');
+
+    return getDomElementFromDomTree(child, domParts.slice(1));
+}
+
 function extractRelativePosition(point: CursorPoint, element: HTMLElement): CursorPoint {
+    const boundingBox = element.getBoundingClientRect();
+
     return {
-        x: point.x - element.offsetLeft,
-        y: point.y - element.offsetTop,
+        x: Math.round(point.x - boundingBox.left),
+        y: Math.round(point.y - boundingBox.top),
+    };
+}
+
+function applyRelativePosition(point: CursorPoint, element: HTMLElement) {
+    const boundingBox = element.getBoundingClientRect();
+
+    return {
+        x: Math.round(boundingBox.left + point.x),
+        y: Math.round(boundingBox.top + point.y),
     };
 }

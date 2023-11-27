@@ -144,11 +144,12 @@
 
 .cursor-shadow {
   position: fixed;
-  background: var(--primary-color);
+  background: #ffeb00;
   opacity: 0.7;
   border-radius: 500%;
   width: 26px;
   height: 26px;
   margin-left: -13px;
   margin-top: -13px;
+  z-index: 1000;
 }

@@ -14,7 +14,7 @@ import {batch, useDispatch} from 'react-redux';
 import {documentToString} from './document';
 import debounce from 'lodash.debounce';
 import {useCursorPositionTracking} from '../task/layout/cursor_tracking';
-import {CursorPoint} from '../task/layout/actionTypes';
+import {CursorPoint, CursorPosition} from '../task/layout/actionTypes';
 
 const AceRange = window.ace.acequire('ace/range').Range;
 
@@ -562,9 +562,16 @@ export function Editor(props: EditorProps) {
         },
     }));
 
-    useCursorPositionTracking(`editor:${props.name}`, (point: CursorPoint) => {
+    useCursorPositionTracking(`editor:${props.name}`, (absPoint: CursorPoint): Pick<CursorPosition, 'editorCaret' | 'posToEditorCaret'> => {
+        const editorPosition = editor.current.renderer.screenToTextCoordinates(absPoint.x, absPoint.y);
+        const realPosition = editor.current.renderer.textToScreenCoordinates(editorPosition.row, editorPosition.column);
+
         return {
-            editorPosition: editor.current.renderer.screenToTextCoordinates(point.x, point.y),
+            editorCaret: editorPosition,
+            posToEditorCaret: {
+                x: absPoint.x - realPosition.pageX,
+                y: absPoint.y - realPosition.pageY,
+            },
         };
     });
 

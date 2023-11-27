@@ -138,7 +138,7 @@ export function TaskApp() {
     }
 
     return (
-        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform}`}>
+        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform} cursor-main-zone`} data-cursor-zone="task-app">
             <div className="layout-general">
                 <div className={`task-section`}>
                     {LayoutView.Task !== activeView && <TestsPane
@@ -181,6 +181,8 @@ export function TaskApp() {
                         <RecorderControls/>
                     </div>
                 }
+
+                {/*<CursorPosition/>*/}
 
                 {playerEnabled && isPlayerReady &&
                     <div className="layout-footer">

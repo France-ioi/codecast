@@ -39,7 +39,7 @@ export function TaskLevelTabs() {
     };
 
     return (
-        <nav className="level-tabs">
+        <nav className="level-tabs cursor-main-zone" data-cursor-zone="task-levels">
             {Object.values(levels).map((levelData, index) =>
                 <div
                     key={levelData.level}
