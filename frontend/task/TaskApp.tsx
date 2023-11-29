@@ -182,7 +182,7 @@ export function TaskApp() {
                     </div>
                 }
 
-                {/*<CursorPosition/>*/}
+                {/*<CursorPosition offset={{x: 20, y: 20}}/>*/}
 
                 {playerEnabled && isPlayerReady &&
                     <div className="layout-footer">

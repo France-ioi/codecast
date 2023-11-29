@@ -1,21 +1,27 @@
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
 import {throttle} from 'lodash';
 import {useDispatch} from 'react-redux';
-import {CursorPosition, ActionTypes as LayoutActionTypes, CursorPoint} from './actionTypes';
+import {CursorPosition, ActionTypes as LayoutActionTypes, CursorPoint, CursorPointRelative} from './actionTypes';
 import {useAppSelector} from '../../hooks';
 import {getRecorderState} from '../../recorder/selectors';
 import {RecorderStatus} from '../../recorder/store';
 import log from 'loglevel';
 import {getPlayerState} from '../../player/selectors';
+import scrollIntoView from "scroll-into-view-if-needed";
 
 export type ScreenPointToRecordingTransformer = (point: CursorPoint) => Partial<CursorPosition>;
-export type RecordingToScreenPointTransformer = (data: Partial<CursorPosition>) => CursorPoint|null;
+export type RecordingToScreenPointTransformer = (data: Partial<CursorPosition>, mainZone?: HTMLElement) => CursorPoint|null;
 
 const zonePointToScreenTransformers: {[zoneName: string]: RecordingToScreenPointTransformer} = {};
+
+const THROTTLE_TIME_BETWEEN_POSITIONS = 75; // ms
+const DISTANCE_MIN_BETWEEN_POSITIONS = 15; // px
+
 
 export function useCursorPositionTracking(specialZoneName?: string, pointToRecording?: ScreenPointToRecordingTransformer, recordingToPoint?: RecordingToScreenPointTransformer) {
     const isRecording = useAppSelector(state => RecorderStatus.Recording === getRecorderState(state).status);
     const isPlaying = useAppSelector(state => getPlayerState(state).isReady);
+    const previousPoint = useRef<CursorPoint>(null);
 
     const dispatch = useDispatch();
 
@@ -33,16 +39,24 @@ export function useCursorPositionTracking(specialZoneName?: string, pointToRecor
 
         const updateMousePosition = ev => {
             const point = {x: ev.clientX, y: ev.clientY};
+            if (previousPoint.current) {
+                const distance = Math.sqrt(Math.pow(point.x - previousPoint.current.x, 2) + Math.pow(point.y - previousPoint.current.y, 2));
+                if (distance < DISTANCE_MIN_BETWEEN_POSITIONS) {
+                    return;
+                }
+            }
+
+            previousPoint.current = point;
             const element = document.elementFromPoint(point.x, point.y) as HTMLElement;
 
             if (element.closest<HTMLElement>('.cursor-recording-disabled')) {
                 return;
             }
 
-            const mainZone = element.closest<HTMLElement>('.cursor-main-zone');
+            const mainZone = element.closest<HTMLElement>('*:not(clipPath)[id],.cursor-main-zone');
 
             if (mainZone) {
-                const mainZoneName = mainZone.getAttribute('data-cursor-zone');
+                const mainZoneName = mainZone.getAttribute('data-cursor-zone') ?? '#' + mainZone.getAttribute('id');
                 if (pointToRecording && mainZoneName !== specialZoneName) {
                     return;
                 }
@@ -68,7 +82,7 @@ export function useCursorPositionTracking(specialZoneName?: string, pointToRecor
             }
         };
 
-        const throttledUpdateMousePosition = throttle(updateMousePosition, 100);
+        const throttledUpdateMousePosition = throttle(updateMousePosition, THROTTLE_TIME_BETWEEN_POSITIONS);
 
         window.addEventListener('mousemove', throttledUpdateMousePosition);
 
@@ -96,28 +110,35 @@ function extractDomTreeToElement(child: HTMLElement, ancestor: HTMLElement) {
     ];
 }
 
-function extractRelativePosition(point: CursorPoint, element: HTMLElement): CursorPoint {
+function extractRelativePosition(point: CursorPoint, element: HTMLElement): CursorPointRelative {
     const boundingBox = element.getBoundingClientRect();
 
     return {
         x: Math.round(point.x - boundingBox.left),
         y: Math.round(point.y - boundingBox.top),
+        h: boundingBox.height,
+        w: boundingBox.width,
     };
 }
 
 // For replay
 export function cursorPositionToScreenCoordinates(position: CursorPosition): CursorPoint|null {
-    const zone = position.zone;
+    const zoneName = position.zone;
     const point = position.posToZone;
-    const mainZone = document.querySelector<HTMLElement>(`[data-cursor-zone="${zone}"]`);
+    let mainZone = null;
+    if ('#' === zoneName.substring(0, 1)) {
+        mainZone = document.querySelector<HTMLElement>(`[id="${zoneName.substring(1)}"]`);
+    } else {
+        mainZone = document.querySelector<HTMLElement>(`[data-cursor-zone="${zoneName}"]`);
+    }
     if (!mainZone) {
         return null;
     }
 
-    if (zonePointToScreenTransformers[zone]) {
-        const result = zonePointToScreenTransformers[zone](position);
+    if (zonePointToScreenTransformers[zoneName]) {
+        const result = zonePointToScreenTransformers[zoneName](position, mainZone);
         if (result) {
-            log.getLogger('replay').debug('[Mouse] Specific handler for zone ' + zone, result);
+            log.getLogger('replay').debug('[Mouse] Specific handler for zoneName ' + zoneName, result);
 
             return result;
         }
@@ -127,18 +148,23 @@ export function cursorPositionToScreenCoordinates(position: CursorPosition): Cur
         const domParts = position.domToElement.split(',');
         const domElement = getDomElementFromDomTree(mainZone, domParts);
         if (domElement) {
-            log.getLogger('replay').debug('[Mouse] DOM tree strategy for zone ' + zone, domElement, position.posToElement);
+            log.getLogger('replay').debug('[Mouse] DOM tree strategy for zoneName ' + zoneName, domElement, position.posToElement);
+            console.log('scroll into view', mainZone);
+            scrollIntoView(domElement, {
+                block: 'center',
+                behavior: 'smooth'
+            });
 
             return applyRelativePosition(position.posToElement, domElement);
         }
     }
 
-    log.getLogger('replay').debug('[Mouse] Main zone strategy for zone ' + zone);
+    log.getLogger('replay').debug('[Mouse] Main zoneName strategy for zoneName ' + zoneName);
 
     return applyRelativePosition(point, mainZone);
 }
 
-function getDomElementFromDomTree(ancestor: HTMLElement, domParts: string[]): HTMLElement|null {
+export function getDomElementFromDomTree(ancestor: HTMLElement, domParts: string[]): HTMLElement|null {
     if (0 === domParts.length) {
         return ancestor;
     }
@@ -162,9 +188,16 @@ function getDomElementFromDomTree(ancestor: HTMLElement, domParts: string[]): HT
     return getDomElementFromDomTree(child, domParts.slice(1));
 }
 
-function applyRelativePosition(point: CursorPoint, element: HTMLElement) {
+function applyRelativePosition(point: CursorPointRelative, element: HTMLElement) {
     const boundingBox = element.getBoundingClientRect();
 
+    // Relative
+    return {
+        x: Math.round(boundingBox.left + (point.x * boundingBox.width / point.w)),
+        y: Math.round(boundingBox.top + (point.y * boundingBox.height / point.h)),
+    };
+
+    // Absolute
     return {
         x: Math.round(boundingBox.left + point.x),
         y: Math.round(boundingBox.top + point.y),

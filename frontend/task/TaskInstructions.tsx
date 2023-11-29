@@ -16,6 +16,8 @@ import {
     getInstructionsForLevelSelector
 } from './instructions/instructions';
 import {memoize} from 'proxy-memoize';
+import {getDomElementFromDomTree, useCursorPositionTracking} from './layout/cursor_tracking';
+import {CursorPoint, CursorPosition} from './layout/actionTypes';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -89,12 +91,66 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         });
     }, [contextId]);
 
+
+    useCursorPositionTracking('instructions', (absPoint: CursorPoint): Pick<CursorPosition, 'textOffset'> => {
+        let range, offset;
+
+        // @ts-ignore
+        if (document.caretPositionFromPoint) {    // Firefox
+            // @ts-ignore
+            range = document.caretPositionFromPoint(absPoint.x, absPoint.y);
+            offset = range.offset;
+        } else if (document.caretRangeFromPoint) {     // Chrome
+            range = document.caretRangeFromPoint(absPoint.x, absPoint.y);
+            offset = range.startOffset;
+        }
+
+        if (!range) {
+            return null;
+        }
+
+        return {
+            textOffset: offset,
+        };
+    }, (cursorPosition: CursorPosition, mainZone: HTMLElement) => {
+        if (!cursorPosition.textOffset) {
+            return null;
+        }
+
+        const domParts = cursorPosition.domToElement.split(',');
+        let mainDomElement = getDomElementFromDomTree(mainZone, domParts);
+        if (!mainDomElement) {
+            return null;
+        }
+        const domElement = [...mainDomElement.childNodes].find(child => child.nodeType === Node.TEXT_NODE) as HTMLElement;
+        if (!domElement) {
+            return null;
+        }
+
+        console.log('dom element', domElement);
+
+        const range = document.createRange();
+        try {
+            range.setStart(domElement, cursorPosition.textOffset);
+            range.setEnd(domElement, cursorPosition.textOffset);
+        } catch (e) {
+            return null;
+        }
+
+        const boundingBox = range.getBoundingClientRect();
+
+        return {
+            x: boundingBox.x,
+            y: boundingBox.y + boundingBox.height / 2,
+        };
+    });
+
     if (!instructionsHtml && !isBackend) {
         return null;
     }
 
     return (
-        <div ref={instructionsRef} className={`task-mission ${props.expanded ? 'is-expanded' : ''} cursor-main-zone`} style={{fontSize: `${zoomLevel}rem`}} data-cursor-zone="instructions">
+        <div ref={instructionsRef} className={`task-mission ${props.expanded ? 'is-expanded' : ''} cursor-main-zone`} data-cursor-self-handling="" style={{fontSize: `${zoomLevel}rem`}} data-cursor-zone="instructions">
             {props.missionRightSlot}
 
             {instructionsTabs ?

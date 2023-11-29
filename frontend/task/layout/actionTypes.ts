@@ -17,11 +17,17 @@ export interface CursorPoint {
     y: number,
 }
 
+export interface CursorPointRelative extends CursorPoint {
+    w: number,
+    h: number,
+}
+
 export interface CursorPosition {
     zone?: string,
-    posToZone?: CursorPoint,
+    posToZone?: CursorPointRelative,
     domToElement?: string,
-    posToElement?: CursorPoint,
+    posToElement?: CursorPointRelative,
     editorCaret?: {row: number, column: number},
     posToEditorCaret?: CursorPoint,
+    textOffset?: number,
 }
