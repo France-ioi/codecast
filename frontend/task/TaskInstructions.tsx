@@ -127,8 +127,6 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             return null;
         }
 
-        console.log('dom element', domElement);
-
         const range = document.createRange();
         try {
             range.setStart(domElement, cursorPosition.textOffset);

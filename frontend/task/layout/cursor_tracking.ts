@@ -37,7 +37,7 @@ export function useCursorPositionTracking(specialZoneName?: string, pointToRecor
             return null;
         }
 
-        const updateMousePosition = ev => {
+        const updateMousePosition = (ev) => {
             const point = {x: ev.clientX, y: ev.clientY};
             if (previousPoint.current) {
                 const distance = Math.sqrt(Math.pow(point.x - previousPoint.current.x, 2) + Math.pow(point.y - previousPoint.current.y, 2));
@@ -149,7 +149,6 @@ export function cursorPositionToScreenCoordinates(position: CursorPosition): Cur
         const domElement = getDomElementFromDomTree(mainZone, domParts);
         if (domElement) {
             log.getLogger('replay').debug('[Mouse] DOM tree strategy for zoneName ' + zoneName, domElement, position.posToElement);
-            console.log('scroll into view', mainZone);
             scrollIntoView(domElement, {
                 block: 'center',
                 behavior: 'smooth'
@@ -198,8 +197,8 @@ function applyRelativePosition(point: CursorPointRelative, element: HTMLElement)
     };
 
     // Absolute
-    return {
-        x: Math.round(boundingBox.left + point.x),
-        y: Math.round(boundingBox.top + point.y),
-    };
+    // return {
+    //     x: Math.round(boundingBox.left + point.x),
+    //     y: Math.round(boundingBox.top + point.y),
+    // };
 }
