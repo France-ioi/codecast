@@ -1006,6 +1006,9 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(platformAnswerLoaded, function*({payload: {answer}}) {
             log.getLogger('task').debug('Platform answer loaded', answer);
+            if (!answer) {
+                return;
+            }
             const state = yield* appSelect();
             const currentBuffer = state.buffers.activeBufferName;
             const bufferParameters = yield* call(denormalizeBufferFromAnswer, answer);
