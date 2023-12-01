@@ -11,7 +11,6 @@ const localLanguageStrings = {
         description: {
             log: "log(texte) ajoute une ligne de debug sur le terminal",
         },
-        startingBlockName: "Programme",
     },
 };
 
@@ -26,7 +25,7 @@ export class DebugLib extends QuickAlgoLibrary {
     constructor (display, infos) {
         super(display, infos);
 
-        this.setLocalLanguageStrings(localLanguageStrings, true);
+        this.setLocalLanguageStrings(localLanguageStrings);
 
         this.debug = {
             log: this.log,
