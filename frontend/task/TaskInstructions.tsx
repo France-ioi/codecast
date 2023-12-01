@@ -92,16 +92,18 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     }, [contextId]);
 
 
-    useCursorPositionTracking('instructions', (absPoint: CursorPoint): Pick<CursorPosition, 'textOffset'> => {
-        let range, offset;
+    useCursorPositionTracking('instructions', (absPoint: CursorPoint): Pick<CursorPosition, 'textOffset'|'element'> => {
+        let range, offset, textNode: HTMLElement;
 
         // @ts-ignore
         if (document.caretPositionFromPoint) {    // Firefox
             // @ts-ignore
             range = document.caretPositionFromPoint(absPoint.x, absPoint.y);
+            textNode = range.offsetNode;
             offset = range.offset;
         } else if (document.caretRangeFromPoint) {     // Chrome
             range = document.caretRangeFromPoint(absPoint.x, absPoint.y);
+            textNode = range.startContainer;
             offset = range.startOffset;
         }
 
@@ -110,6 +112,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         }
 
         return {
+            element: Node.TEXT_NODE === textNode.nodeType ? textNode.parentElement : textNode,
             textOffset: offset,
         };
     }, (cursorPosition: CursorPosition, mainZone: HTMLElement) => {
