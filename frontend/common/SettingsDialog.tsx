@@ -12,9 +12,9 @@ import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {IoMode} from "../stepper/io";
 import {getMessage} from "../lang";
 import {PlatformSelection} from './PlatformSelection';
-import {hasBlockPlatform} from '../stepper/js';
 import {getJsLibLoaded} from '../task/libs/import_modules';
-import {CodecastPlatform} from '../stepper/platforms';
+import {hasBlockPlatform} from '../stepper/platforms';
+import {CodecastPlatform} from '../stepper/codecast_platform';
 
 interface SettingsDialogProps {
     open: boolean,

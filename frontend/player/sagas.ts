@@ -15,26 +15,26 @@ import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
-import {App, Codecast} from "../index";
 import {ReplayApi} from "./replay";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {taskLoad} from "../task";
 import {inputBufferLibTest, PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
 import {currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
-import {LayoutPlayerMode} from "../task/layout/layout";
 import {isTaskPlatformLinked, setTaskEventsEnvironment} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
 import {delay as delay$1} from 'typed-redux-saga';
 import {platformTaskLink} from '../task/platform/actionTypes';
 import log from 'loglevel';
 import {appSelect} from '../hooks';
-import {CodecastPlatform} from '../stepper/platforms';
 import {DeferredPromise} from '../utils/app';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {taskLoad} from '../task/task_actions';
+import {App, Codecast} from '../app_types';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {LayoutPlayerMode} from '../task/layout/layout_types';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -592,7 +592,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
             const stepperState = instants[instantIndex-1].state.stepper;
             if (context) {
                 if (!Codecast.runner) {
-                    Codecast.runner = yield* call(createRunnerSaga);
+                    Codecast.runner = yield* call(createRunnerSaga, stepperState?.currentStepperState?.platform);
                 }
                 context.runner = Codecast.runner;
 

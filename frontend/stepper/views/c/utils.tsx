@@ -8,8 +8,8 @@ import classnames from 'classnames';
 import * as C from '@france-ioi/persistent-c';
 
 import {LocalizedError} from '../../../lang';
-import {Block, BlockType} from "../../../task/blocks/blocks";
 import {C_directiveViewDict} from "../index";
+import {Block, BlockType} from '../../../task/blocks/block_types';
 
 interface ViewElement {
     kind: any,

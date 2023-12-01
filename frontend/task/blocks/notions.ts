@@ -1,5 +1,6 @@
-import {QuickalgoTaskIncludeBlocks} from '../task_slice';
-import {Block} from './blocks';
+import {QuickalgoTaskIncludeBlocks} from '../task_types';
+
+import {Block} from './block_types';
 
 export type NotionArborescence = {[category: string]: string[]};
 

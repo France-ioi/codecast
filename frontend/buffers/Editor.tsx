@@ -1,36 +1,44 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
-import {Document, documentFromString} from "./document";
+import {Range, TextBufferState} from './buffer_types';
 import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
-import {DocumentModel} from "./index";
 import log from 'loglevel';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {BlockType} from '../task/blocks/block_types';
+import {bufferClearBlocksToInsert, bufferClearDeltasToApply} from './buffers_slice';
+import {batch, useDispatch} from 'react-redux';
+import {documentToString} from './document';
+import debounce from 'lodash.debounce';
 
-const Range = window.ace.acequire('ace/range').Range;
+const AceRange = window.ace.acequire('ace/range').Range;
 
 export interface EditorProps {
     name?: string,
+    state?: TextBufferState,
     readOnly?: boolean,
     shield?: boolean,
     theme?: string,
     mode?: string,
     width?: any,
     height?: any,
+    highlight?: Range|null,
     hasAutocompletion?: boolean,
     hasScrollMargin?: boolean,
     onInit?: Function,
     onSelect?: Function,
     onEdit?: Function,
+    onEditPlain?: Function,
     onScroll?: Function,
     onDropBlock?: Function,
     content?: string,
-    errorHighlight?: object,
+    errorHighlight?: Range|null,
+    infoHighlight?: Range|null,
     hideGutter?: boolean,
-    printMarginColumn?: boolean,
+    showPrintMargin?: boolean,
     highlightActiveLine?: boolean,
     maxLines?: number,
     dragEnabled?: boolean,
@@ -38,7 +46,7 @@ export interface EditorProps {
 }
 
 function toRange(selection) {
-    return new Range(
+    return new AceRange(
         selection.start.row, selection.start.column,
         selection.end.row, selection.end.column
     );
@@ -62,14 +70,16 @@ function sameSelection(s1, s2) {
 }
 
 export function Editor(props: EditorProps) {
-    const [scrollTop, setScrollTop] = useState(0);
-    const [firstVisibleRow, setFirstVisibleRow] = useState(0);
     const [willUpdateSelection, setWillUpdateSelection] = useState(false);
 
     const editor = useRef(null);
     const mute = useRef(false);
     const selection = useRef(null);
-    const marker = useRef();
+    const markers = useRef({});
+    const scrollTop = useRef(0);
+    const firstVisibleRow = useRef(0);
+
+    const dispatch = useDispatch();
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector({state, context}) : null);
@@ -77,6 +87,9 @@ export function Editor(props: EditorProps) {
     const contextStrings = useAppSelector(state => state.task.contextStrings);
 
     const refEditor = useRef();
+    const batchEdits = useRef([]);
+
+    log.getLogger('editor').debug('[buffer] re-render editor', props.name, props.state);
 
     const scrollOnLastLines = () => {
         const ace = editor.current;
@@ -114,12 +127,28 @@ export function Editor(props: EditorProps) {
         });
     };
 
+    const debouncedOnEdit = () => {
+        const editsToBatch = [...batchEdits.current];
+        batchEdits.current = [];
+        batch(() => {
+            for (let edit of editsToBatch) {
+                props.onEdit(edit);
+            }
+        });
+    }
+
+    // We want to batch all edits that happen during the same frame
+    // For example when we press enter, Ace auto-adds a tabulation if we were in a function or a condition
+    const doBatchEdits = useCallback(debounce(debouncedOnEdit, 0), []);
+
     const onTextChanged = (edit) => {
         if (mute.current || !props.onEdit) {
             return;
         }
         // The callback must not trigger a rendering of the Editor.
-        props.onEdit(edit)
+        log.getLogger('editor').debug('do edit', edit);
+        batchEdits.current.push(edit);
+        doBatchEdits();
     };
 
     const onAfterRender = () => {
@@ -127,13 +156,14 @@ export function Editor(props: EditorProps) {
             return;
         }
         const scrollTop_ = editor.current.getSession().getScrollTop();
-        if (scrollTop !== scrollTop_) {
-            setScrollTop(scrollTop_);
+        if (scrollTop.current !== scrollTop_) {
+            log.getLogger('editor').debug('buffer after render', props.name, {scrollTop: scrollTop.current, scrollTop_});
+            scrollTop.current = scrollTop_;
             const {onScroll} = props;
             if (typeof onScroll === 'function') {
                 const firstVisibleRow_ = editor.current.getFirstVisibleRow();
-                if (firstVisibleRow !== firstVisibleRow_) {
-                    setFirstVisibleRow(firstVisibleRow_);
+                if (firstVisibleRow.current !== firstVisibleRow_) {
+                    firstVisibleRow.current = firstVisibleRow_;
                     onScroll(firstVisibleRow_);
                 }
             }
@@ -152,51 +182,28 @@ export function Editor(props: EditorProps) {
         }
     };
 
-    const reset = (value: Document, newSelection = null, firstVisibleRow = null) => {
-        wrapModelToEditor(() => {
-            if (undefined !== props.content) {
-                value = documentFromString(String(null !== props.content ? props.content : ''));
-            }
-
-            editor.current.getSession().setValue(null === value ? '' : value.toString());
-            editor.current.resize(true);
-            selection.current = null;
-            doSetSelection(newSelection);
-            setFirstVisibleRow(firstVisibleRow);
-            editor.current.scrollToLine(firstVisibleRow);
-            setScrollTop(editor.current.getSession().getScrollTop());
-            // Clear a previously set marker, if any.
-            if (marker.current) {
-                editor.current.session.removeMarker(marker.current);
-                marker.current = null;
-            }
-        });
-    };
-
     const applyDeltas = (deltas) => {
         wrapModelToEditor(() => {
             editor.current.session.doc.applyDeltas(deltas);
         });
     };
 
-    const focus = () => {
-        if (!editor.current) {
-            return;
-        }
-
-        editor.current.focus();
-    };
-
-    const scrollToLine = (firstVisibleRow) => {
+    const scrollToLine = (newFirstVisibleRow) => {
         wrapModelToEditor(() => {
+            if (newFirstVisibleRow === firstVisibleRow.current) {
+                return;
+            }
+
+            newFirstVisibleRow = newFirstVisibleRow ?? 0;
             editor.current.resize(true);
-            setFirstVisibleRow(firstVisibleRow);
-            editor.current.scrollToLine(firstVisibleRow);
-            setScrollTop(editor.current.getSession().getScrollTop());
+            firstVisibleRow.current = newFirstVisibleRow;
+            editor.current.scrollToLine(newFirstVisibleRow);
+            scrollTop.current = editor.current.getSession().getScrollTop();
         });
     };
 
     const goToEnd = () => {
+        log.getLogger('editor').debug('do go to end', props.name);
         if (!editor.current) {
             return;
         }
@@ -212,7 +219,7 @@ export function Editor(props: EditorProps) {
         let cursorPosition = pos ? pos : editor.current.getCursorPosition();
         // const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
         const indentationCurrentLine = editor.current.session.doc.getLine(cursorPosition.row).search(/\S|$/);
-        const textBeforeOnLine = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, 0, cursorPosition.row, cursorPosition.column));
+        const textBeforeOnLine = editor.current.session.doc.getTextRange(new AceRange(cursorPosition.row, 0, cursorPosition.row, cursorPosition.column));
         const hasTextBeforeOnLine = textBeforeOnLine && textBeforeOnLine.trim().length;
 
         if (snippet) {
@@ -245,26 +252,27 @@ export function Editor(props: EditorProps) {
             if (sameSelection(selection.current, selection_)) {
                 return;
             }
+            log.getLogger('editor').debug('[buffer] selection changed, apply new selection', selection);
             selection.current = selection_;
             if (selection_ && selection_.start && selection_.end) {
                 editor.current.selection.setRange(toRange(selection_));
             } else {
-                editor.current.selection.setRange(new Range(0, 0, 0, 0));
+                editor.current.selection.setRange(new AceRange(0, 0, 0, 0));
             }
         });
     };
 
-    const highlight = (range, className = 'code-highlight') => {
-        log.getLogger('editor').debug('make highlight', range, className);
+    const highlight = (range: Range|null, className = 'code-highlight') => {
+        log.getLogger('editor').debug('[editor] make highlight', {name: props.name, range, className});
         wrapModelToEditor(() => {
             const session = editor.current.session;
-            if (marker.current) {
-                session.removeMarker(marker.current);
-                marker.current = null;
+            if (markers.current && className in markers.current) {
+                session.removeMarker(markers.current[className]);
+                delete markers.current[className];
             }
             if (range && range.start && range.end) {
                 // Add (and save) the marker.
-                marker.current = session.addMarker(toRange(range), className, 'text');
+                markers.current[className] = session.addMarker(toRange(range), className, 'text');
                 if (!props.shield) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
@@ -273,10 +281,6 @@ export function Editor(props: EditorProps) {
                 }
             }
         });
-    };
-
-    const getSelectionRange = () => {
-        return editor.current && editor.current.getSelectionRange();
     };
 
     const initEditor = () => {
@@ -305,35 +309,11 @@ export function Editor(props: EditorProps) {
         if (props.hideGutter) {
             editor.current.renderer.setShowGutter(false);
         }
-        if (false === props.highlightActiveLine) {
-            editor.current.setHighlightActiveLine(false);
-        }
-        if (false === props.printMarginColumn) {
-            editor.current.renderer.setPrintMarginColumn(false);
-        }
-        if (props.hideCursor) {
-            editor.current.renderer.$cursorLayer.element.style.display = "none";
-        }
 
         const {onInit, onSelect, onEdit} = props;
 
         if (typeof onInit === 'function') {
-            const api = {
-                reset,
-                applyDeltas,
-                setSelection: doSetSelection,
-                focus,
-                scrollToLine,
-                getSelectionRange,
-                highlight,
-                resize,
-                goToEnd,
-                insert,
-                getEmptyModel() {
-                    return new DocumentModel();
-                },
-            };
-            onInit(api);
+            onInit();
         }
 
         if (typeof onSelect === 'function') {
@@ -344,9 +324,9 @@ export function Editor(props: EditorProps) {
             session.on("change", onTextChanged);
         }
 
-        if (undefined !== props.content) {
-            reset(documentFromString(String(null !== props.content ? props.content : '')));
-        }
+        // if (undefined !== props.content) {
+        //     reset(TextBufferHandler.documentFromString(String(null !== props.content ? props.content : '')));
+        // }
 
         // @ts-ignore
         editor.current.renderer.on("afterRender", onAfterRender);
@@ -371,14 +351,14 @@ export function Editor(props: EditorProps) {
                 editor.current.execCommand("startAutocomplete");
                 // @ts-ignore
                 completer = editor.current.completer;
-                completer.detach();
+                completer?.detach();
             }
             if (completer && completer.popup) {
                 completer.popup.container.style.width = "22%";
             }
 
             // removal of return for autocomplete
-            if (completer.keyboardHandler.commandKeyBinding.return)
+            if (completer && completer.keyboardHandler.commandKeyBinding.return)
                 delete completer.keyboardHandler.commandKeyBinding.return;
         }
 
@@ -397,12 +377,6 @@ export function Editor(props: EditorProps) {
         log.getLogger('editor').debug('create editor', editorObject);
         editor.current = editorObject;
         initEditor();
-
-        return () => {
-            if (typeof props.onInit === 'function') {
-                props.onInit(null);
-            }
-        }
     }, []);
 
     useEffect(() => {
@@ -437,33 +411,133 @@ export function Editor(props: EditorProps) {
     }, [props.theme]);
 
     useEffect(() => {
+        if (editor.current) {
+            editor.current.setHighlightActiveLine(false !== props.highlightActiveLine);
+        }
+    }, [props.highlightActiveLine]);
+
+    useEffect(() => {
+        if (editor.current) {
+            editor.current.setShowPrintMargin(false !== props.showPrintMargin);
+        }
+    }, [props.showPrintMargin]);
+
+    useEffect(() => {
+        if (editor.current) {
+            editor.current.renderer.$cursorLayer.element.style.display = props.hideCursor ? "none" : 'block';
+        }
+    }, [props.hideCursor]);
+
+    useEffect(() => {
         if (editor.current && availableBlocks) {
             addAutocompletion(availableBlocks, contextStrings);
         }
     }, [availableBlocks, contextStrings]);
 
     useEffect(() => {
-        if ('source' === props.name) {
-            // Don't use content for source buffer (for now)
+        const deltasToApply = props.state?.actions?.deltasToApply;
+        log.getLogger('editor').debug('[editor] new deltas to apply', deltasToApply);
+        if (!deltasToApply || !Object.keys(deltasToApply.elements).length) {
             return;
         }
 
-        const value = props.content ? props.content : '';
+        dispatch(bufferClearDeltasToApply({buffer: props.name, ids: Object.keys(deltasToApply.elements)}));
+        applyDeltas(JSON.parse(JSON.stringify(Object.values(deltasToApply.elements))));
+    }, [props.state?.actions?.deltasToApply]);
+
+    useEffect(() => {
+        log.getLogger('editor').debug('[buffer] update props content', {name: props.name, content: props.content});
+
+        const newDocument = props.state?.document;
+        let value = documentToString(newDocument);
+        if (undefined !== props.content) {
+            value = props.content;
+        }
         if (value === editor.current.getSession().getValue()) {
             return;
         }
 
+        log.getLogger('editor').debug('[buffer] document update', {value, oldValue: editor.current.getSession().getValue()});
+
         wrapModelToEditor(() => {
+            // if (props.onEditPlain) {
+            //     props.onEditPlain(TextBufferHandler.documentFromString(value));
+            // }
             editor.current.getSession().setValue(value);
             editor.current.resize(true);
+            firstVisibleRow.current = props.state?.firstVisibleRow;
+            editor.current.scrollToLine(props.state?.firstVisibleRow ?? 0);
+            scrollTop.current = editor.current.getSession().getScrollTop();
+            log.getLogger('editor').debug('[buffer] done reset', {name: props.name, firstVisibleRow: firstVisibleRow.current, scrollTop: editor.current.getSession().getScrollTop()})
+            // Clear a previously set marker, if any.
+            if (markers.current && Object.keys(markers.current).length) {
+                for (let [className, marker] of Object.entries<any>(markers.current)) {
+                    editor.current.session.removeMarker(marker);
+                    delete(markers.current[className]);
+                }
+            }
         });
-    }, [props.content]);
+    }, [props.content, props.state?.document]);
 
     useEffect(() => {
-        if (undefined !== props.errorHighlight) {
-            highlight(props.errorHighlight, 'error-highlight');
+        const blocksToInsert = props.state?.actions?.blocksToInsert;
+        if (!blocksToInsert || !Object.keys(blocksToInsert.elements).length) {
+            return;
         }
+
+        dispatch(bufferClearBlocksToInsert({buffer: props.name, ids: Object.keys(blocksToInsert.elements)}));
+        for (let {block, pos} of Object.values(blocksToInsert.elements)) {
+            let insertNewLineBefore = false;
+            let insertNewLineAfter = false;
+            if ((BlockType.Function === block.type && block.category !== 'sensors') || BlockType.Directive === block.type) {
+                insertNewLineBefore = insertNewLineAfter = true;
+            }
+            if (BlockType.Token === block.type && block.snippet && -1 !== block.snippet.indexOf('${')) {
+                insertNewLineBefore = true;
+            }
+
+            if (block.snippet) {
+                insert(block.snippet, pos ? pos : null, true, insertNewLineBefore, insertNewLineAfter);
+            } else {
+                insert(block.code, pos ? pos : null, false, insertNewLineBefore, insertNewLineAfter);
+            }
+        }
+    }, [props.state?.actions?.blocksToInsert]);
+
+    useEffect(() => {
+        const selection = props.state?.selection;
+        doSetSelection(selection);
+    }, [props.state?.selection]);
+
+    useEffect(() => {
+        highlight(props.highlight);
+    }, [props.highlight]);
+
+    useEffect(() => {
+        highlight(props.errorHighlight, 'error-highlight');
     }, [props.errorHighlight]);
+
+    useEffect(() => {
+        highlight(props.infoHighlight, 'info-highlight');
+    }, [props.infoHighlight]);
+
+    useEffect(() => {
+        if (0 < props.state?.actions?.goToEnd) {
+            goToEnd();
+            return;
+        }
+    }, [props.state?.actions?.goToEnd]);
+
+    useEffect(() => {
+        if (0 < props.state?.actions?.resize) {
+            resize();
+            return;
+        }
+    }, [props.state?.actions?.resize]);
+
+    useEffect(() => {
+        scrollToLine(props.state?.firstVisibleRow);
+    }, [props.state?.firstVisibleRow]);
 
     const {width, height, shield} = props;
 

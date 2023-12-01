@@ -1,5 +1,6 @@
 import {getMessage} from "../lang";
-import {Block, BlockType} from "../task/blocks/blocks";
+
+import {Block, BlockType} from '../task/blocks/block_types';
 
 export const addAutocompletion = function (blocks: Block[], strings: any) {
     let langTools = window.ace.acequire("ace/ext/language_tools");
@@ -46,6 +47,7 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
 
     // creating the completer
     let completer = {
+        identifierRegexps: [/[a-zA-Z_0-9.$@\-\u00A2-\uFFFF]/],
         getCompletions: function (editor, session, pos, prefix, callback) {
             const validCompletions = completions.filter(completion => {
                 if (!completion.name && !completion.caption) {

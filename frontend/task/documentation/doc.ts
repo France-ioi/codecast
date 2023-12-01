@@ -1,33 +1,33 @@
 import {Bundle} from "../../linker";
 import {call, put, takeEvery} from "typed-redux-saga";
-import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {
     DocumentationConcept,
     documentationConceptSelected,
     documentationConceptsLoaded,
     DocumentationLanguage,
-    documentationLanguageChanged, documentationSlice
+    documentationLanguages,
+    documentationLanguageChanged,
 } from "./documentation_slice";
 import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
-import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
-import {CodecastPlatform} from '../../stepper/platforms';
-import taskSlice, {
-    QuickalgoTaskIncludeBlocks,
-    Task,
+import {
     TaskActionTypes,
-    taskRecordableActions,
     taskSetAvailablePlatforms
 } from '../task_slice';
 import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
 import {createAction} from '@reduxjs/toolkit';
-import {documentModelFromString} from '../../buffers';
-import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {addAutoRecordingBehaviour} from '../../recorder/record';
-import {documentFromString} from '../../buffers/document';
+import {TextBufferHandler} from '../../buffers/document';
+import {QuickalgoTaskIncludeBlocks, Task} from '../task_types';
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {App} from '../../app_types';
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {bufferEditPlain, bufferResetDocument} from '../../buffers/buffers_slice';
 import {AppStore} from '../../store';
+import { smartContractPlatforms } from "../libs/smart_contract/smart_contract_blocks";
+import {bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
 
 let openerChannel;
 
@@ -54,6 +54,10 @@ export const documentationUseCodeExample = createAction('documentation/useCodeEx
         language,
     },
 }));
+
+export function selectShowDocumentation(state: AppStore): boolean {
+    return !!(state.options.showDocumentation && (!state.task.currentTask || state.task.currentTask?.gridInfos?.conceptViewer));
+}
 
 function getConceptsFromChannel() {
     return new Promise<ConceptViewerConfigs>((resolve, reject) => {
@@ -231,7 +235,12 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
             }])
         }
 
-        const newConcepts = window.conceptsFill(concepts, allConcepts);
+        let newConcepts = window.conceptsFill(concepts, allConcepts);
+
+        if (!documentationLanguages.includes(language)) {
+            newConcepts = newConcepts.filter(concept => concept.id !== 'language');
+        }
+
         documentationConcepts = [...documentationConcepts, ...newConcepts];
     }
 
@@ -295,22 +304,26 @@ export default function (bundle: Bundle) {
     bundle.addSaga(function* (app: App) {
         yield* takeEvery(documentationUseCodeExample, function* (action) {
             const {code, language} = action.payload;
+            const document = TextBufferHandler.documentFromString(code);
+            const newPlatform = ('c' === language ? CodecastPlatform.Unix : language) as CodecastPlatform;
+            const state = yield* appSelect();
+            if (state.options.tabsEnabled) {
+                yield* put(bufferCreateSourceBuffer(document, newPlatform));
+            } else {
+                const activeBuffer = state.buffers.activeBufferName;
+                yield* put(bufferResetDocument({buffer: activeBuffer, document}));
 
-            yield* put({
-                type: BufferActionTypes.BufferEditPlain,
-                buffer: 'source',
-                document: documentFromString(code),
-            });
-            const newPlatform = 'c' === language ? CodecastPlatform.Unix : language;
-            const currentPlatform = yield* appSelect(state => state.options.platform);
-            if (newPlatform !== currentPlatform) {
-                yield* put({
-                    type: CommonActionTypes.PlatformChanged,
-                    payload: {
-                        platform: newPlatform,
-                    },
-                });
+                const currentPlatform = yield* appSelect(state => state.options.platform);
+                if (newPlatform !== currentPlatform) {
+                    yield* put({
+                        type: CommonActionTypes.PlatformChanged,
+                        payload: {
+                            platform: newPlatform,
+                        },
+                    });
+                }
             }
+
             yield* put({
                 type: CommonActionTypes.AppSwitchToScreen,
                 payload: {screen: null},

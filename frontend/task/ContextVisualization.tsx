@@ -1,15 +1,13 @@
-import React, {useEffect} from "react";
-import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
+import React, {useEffect, useRef, useState} from "react";
+import {QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
 import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
 import {useDispatch} from "react-redux";
-import {isTestPublic} from './task_slice';
+import {isTestPublic, TaskTestGroupType} from './task_types';
 import {getMessage} from '../lang';
 import {
-    isServerSubmission,
-    selectSubmissionsPaneEnabled,
-    TaskSubmissionServerTestResult
+    isServerSubmission
 } from '../submission/submission';
 import {submissionChangeDisplayedError, SubmissionErrorType} from '../submission/submission_slice';
 import {Alert} from "react-bootstrap";
@@ -18,12 +16,17 @@ import {nl2br} from '../common/utils';
 import {Button} from '@blueprintjs/core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
+import {selectSubmissionsPaneEnabled, selectTaskTests} from '../submission/submission_selectors';
+import {TaskSubmissionServerTestResult} from '../submission/submission_types';
+import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
+import {TestResultVisualization} from '../submission/TestResultVisualization';
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
-    const taskTests = useAppSelector(state => state.task.taskTests);
+    const taskTests = useAppSelector(selectTaskTests);
+    const taskState = useAppSelector(state => state.task.state);
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const {width, height, ref} = useResizeDetector();
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
@@ -32,6 +35,7 @@ export function ContextVisualization() {
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
+    const [hasNoFeedback, setHasNoFeedback] = useState(false);
 
     useEffect(() => {
         if (context) {
@@ -45,6 +49,10 @@ export function ContextVisualization() {
         }
     }, [width, height]);
 
+    useEffect(() => {
+        setHasNoFeedback(context && context.hasFeedback && !context.hasFeedback());
+    }, [taskState]);
+
     const dismissSubmissionError = () => {
         dispatch(submissionChangeDisplayedError(null));
     };
@@ -54,7 +62,7 @@ export function ContextVisualization() {
     };
 
     const testsSelectorEnabled = submissionPaneEnabled;
-    const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
+    const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
 
     const submission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
     let currentTestResult: TaskSubmissionServerTestResult|null = null;
@@ -67,7 +75,8 @@ export function ContextVisualization() {
             <Alert.Heading>{getMessage('SUBMISSION_VIEW_ALERT_HEADER')}</Alert.Heading>
             <div className="error-content">{content}</div>
         </Alert></div>
-    }
+    };
+
     let innerVisualization;
     if (submission && SubmissionErrorType.CompilationError === submissionDisplayedError && submission.result && submission.result.compilationError) {
         innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(submission.result.compilationMessage)}></div>);
@@ -96,10 +105,24 @@ export function ContextVisualization() {
                 </p>
             </div>
         </div>;
-    } else if (currentTestResult && currentTestResult.noFeedback) {
-        innerVisualization = <div className="task-visualization-not-public">
-            {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
-        </div>;
+    } else if (submission && submission.result && isServerSubmission(submission) && null !== currentTestId && !currentTestResult) {
+        if (TaskTestGroupType.User === taskTests[currentTestId].groupType) {
+            innerVisualization = <div className="task-visualization-not-public">
+                {getMessage('TASK_VISUALIZATION_NOT_EVALUATED_USER')}
+            </div>;
+        } else {
+            innerVisualization = <div className="task-visualization-not-public">
+                {getMessage('TASK_VISUALIZATION_NOT_EVALUATED_EVALUATION')}
+            </div>;
+        }
+    // } else if (currentTestResult && currentTestResult.noFeedback) {
+    //     innerVisualization = <div className="task-visualization-not-public">
+    //         {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
+    //     </div>;
+    } else if (currentTestResult && hasNoFeedback) {
+        innerVisualization = <TestResultVisualization
+            testResult={currentTestResult}
+        />;
     } else if (!currentTask || currentTestPublic || (currentTestResult && !currentTestResult.noFeedback)) {
         innerVisualization = <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
             {Visualization ? <Visualization/> :
@@ -122,7 +145,7 @@ export function ContextVisualization() {
                 {innerVisualization}
             </div>
 
-            {testsSelectorEnabled && <TaskTestsSelector/>}
+            {testsSelectorEnabled && <div><TaskTestsSelector/></div>}
         </div>
     );
 }

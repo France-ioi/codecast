@@ -1,12 +1,12 @@
 import {AppStore, AppStoreReplay} from '../store';
 import {Stepper, StepperControlsType, StepperState} from "./index";
 import {getMessage} from "../lang";
-import {hasBlockPlatform} from "./js";
 import {CompileStatus} from "./compile";
-import {LayoutType} from "../task/layout/layout";
 import * as C from '@france-ioi/persistent-c';
-import {CodecastPlatform, platformsList} from './platforms';
 import {memoize} from 'proxy-memoize';
+import {hasBlockPlatform, platformsList} from './platforms';
+import {LayoutType} from '../task/layout/layout_types';
+import {CodecastPlatform} from './codecast_platform';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;
@@ -48,7 +48,7 @@ interface StepperControlsStateToProps {
 }
 
 export const getStepperControlsSelector = memoize(({state, enabled}: {state: AppStore, enabled: boolean}): StepperControlsStateToProps => {
-    const {controls, showStepper, platform} = state.options;
+    let {controls, showStepper, platform} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
     const inputNeeded = state.task.inputNeeded;
@@ -131,6 +131,14 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
             canInterrupt = enabled && !isStepperInterrupting(state) && !inputNeeded;
             canGoToEnd = true;
         }
+    }
+
+    if (hasBlockPlatform(platform)) {
+        controls = {
+            ...controls,
+            over: false,
+            out: false,
+        };
     }
 
     canStep = canStep && !runningBackground;

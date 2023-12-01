@@ -1,8 +1,6 @@
-import {apply, call, put, race, spawn} from "typed-redux-saga";
-import {Codecast} from "../index";
+import {apply, call, cancel, cancelled, fork, put, race, spawn} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
-import React from "react";
 import {
     platformApi,
     PlatformTaskGradingParameters,
@@ -17,6 +15,7 @@ import {
     submissionChangeDisplayedError,
     submissionChangePaneOpen,
     SubmissionErrorType,
+    SubmissionExecutionScope,
     submissionSetTestResult,
     submissionStartExecutingTest,
     submissionUpdateTaskSubmission,
@@ -25,40 +24,30 @@ import {longPollServerSubmissionResults, makeServerSubmission} from "./task_plat
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
-import {extractTestsFromTask} from './tests';
+import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
+import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
+import {LibraryTestResult} from '../task/libs/library_test_result';
+import {DeferredPromise} from '../utils/app';
+import {getTaskLevelTests, selectSubmissionsPaneEnabled} from './submission_selectors';
+import {isServerTask, TaskAnswer, TaskTestGroupType} from '../task/task_types';
+import {platformAnswerGraded} from '../task/platform/actionTypes';
+import {getMessage} from '../lang';
 import {
-    selectSubmissionsPaneEnabled,
     TaskSubmissionEvaluateOn,
     TaskSubmissionResultPayload,
     TaskSubmissionServer,
     TaskSubmissionServerResult
-} from './submission';
-import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
-import {isServerTask, TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
-import {LibraryTestResult} from '../task/libs/library_test_result';
-import {DeferredPromise} from '../utils/app';
+} from './submission_types';
+import {Codecast} from '../app_types';
+import {Document} from '../buffers/buffer_types';
+import {documentToString} from '../buffers/document';
 import {murmurhash3_32_gc} from '../common/utils';
+import {bufferAssociateToSubmission} from '../buffers/buffers_slice';
+import {TaskLevelName} from '../task/platform/platform_slice';
+import {extractTestsFromTask} from './tests';
 
-export const levelScoringData = {
-    basic: {
-        stars: 1,
-        scoreCoefficient: 0.25,
-    },
-    easy: {
-        stars: 2,
-        scoreCoefficient: 0.5,
-    },
-    medium: {
-        stars: 3,
-        scoreCoefficient: 0.75,
-    },
-    hard: {
-        stars: 4,
-        scoreCoefficient: 1,
-    },
-}
-
-let executionsCache = {};
+const executionsCache = {};
+const submissionExecutionTasks = {};
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
@@ -76,7 +65,7 @@ class TaskSubmissionExecutor {
         const environment = state.environment;
         const level = state.task.currentLevel;
         const answer = selectAnswer(state);
-        const tests = yield* appSelect(state => state.task.taskTests);
+        const tests = yield* appSelect(getTaskLevelTests);
         if (!tests || 0 === Object.values(tests).length || result.noGrading) {
             return;
         }
@@ -88,7 +77,7 @@ class TaskSubmissionExecutor {
             yield* put(submissionAddNewTaskSubmission({
                 evaluated: false,
                 date: new Date().toISOString(),
-                platform: state.options.platform,
+                platform: answer.platform,
                 type: TaskSubmissionEvaluateOn.Client,
                 result: {
                     tests: tests.map((test, testIndex) => ({executing: false, score: 0, testId: test.id ? test.id : String(testIndex), errorCode: null})),
@@ -100,19 +89,20 @@ class TaskSubmissionExecutor {
             }));
 
             currentSubmissionId = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
-            yield* put(submissionChangeCurrentSubmissionId(currentSubmissionId));
+            yield* put(submissionChangeCurrentSubmissionId({submissionId: currentSubmissionId, withoutTestChange: true}));
 
             if (hasCompilationError) {
                 yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
             }
         }
+
         yield* put(submissionSetTestResult({submissionId: currentSubmissionId, testId: result.testId, result}));
         log.getLogger('submission').log('[submission] Set first test result');
 
         if (!result.result) {
             // We execute other tests only if the current one has succeeded
             const currentSubmission = yield* appSelect(state => state.submission.taskSubmissions[currentSubmissionId]);
-            yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}}));
+            yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}, withoutTestChange: true}));
 
             return;
         }
@@ -151,7 +141,7 @@ class TaskSubmissionExecutor {
             worstRate = Math.min(worstRate, testResult.score);
         }
 
-        yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}}));
+        yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}, withoutTestChange: true}));
 
         const finalScore = worstRate;
         if (finalScore > 0) {
@@ -173,12 +163,11 @@ class TaskSubmissionExecutor {
         }
     }
 
-    *makeBackgroundExecution(level, testId, answer) {
+    *makeBackgroundExecution(level: TaskLevelName, testId: number, answer: TaskAnswer) {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
-        const currentTask = state.task.currentTask;
+        const tests = state.task.taskTests;
         const taskVariant = state.options.taskVariant;
-        const tests = currentTask ? extractTestsFromTask(currentTask, level, taskVariant) : state.task.taskTests;
 
         const serialized = [JSON.stringify(answer), level, testId, taskVariant, JSON.stringify(tests[testId])].join('§');
         let h1 = murmurhash3_32_gc(serialized, 0);
@@ -220,32 +209,32 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {level, answer} = parameters;
+        const {level, answer, scope} = parameters;
         const state = yield* appSelect();
-
-        const randomSeed = state.platform.taskRandomSeed;
-        const newTaskToken = getTaskTokenForLevel(level, randomSeed);
-        const answerToken = getAnswerTokenForLevel(stringify(answer), level, randomSeed);
-        const platform = state.options.platform;
+        const platform = answer.platform;
+        const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
 
         const serverSubmission: TaskSubmissionServer = {
             evaluated: false,
             date: new Date().toISOString(),
             platform,
             type: TaskSubmissionEvaluateOn.Server,
+            scope: scope ?? SubmissionExecutionScope.Submit,
         };
         yield* put(submissionAddNewTaskSubmission(serverSubmission));
 
         const submissionIndex = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
+        const activeBufferName = state.buffers.activeBufferName;
+        yield* put(bufferAssociateToSubmission({buffer: activeBufferName, submissionIndex}));
 
         const submissionsPaneEnabled = yield* appSelect(selectSubmissionsPaneEnabled);
         if (submissionsPaneEnabled) {
             yield* put(submissionChangePaneOpen(true));
         }
 
-        yield* put(submissionChangeCurrentSubmissionId(submissionIndex));
+        yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
 
-        const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken, platform);
+        const submissionData = yield* makeServerSubmission(answer, level, platform, userTests);
         if (!submissionData.success) {
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 
@@ -253,47 +242,76 @@ class TaskSubmissionExecutor {
         }
 
         const submissionId = submissionData.submissionId;
+        submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId);
+        yield submissionExecutionTasks[submissionIndex].toPromise();
 
-        const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
-        yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
+        return submissionExecutionTasks[submissionIndex].result();
+    }
 
-        const outcome = yield* race({
-            result: call(() => deferredPromise.promise),
-            timeout: delay(10*60*1000), // 10 min
-        });
+    *gradeAnswerLongPolling(submissionIndex: number, serverSubmission: TaskSubmissionServer, submissionId: string) {
+        let longPollingTask;
+        try {
+            const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
+            longPollingTask = yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
 
-        if (outcome.result) {
-            const submissionResult = outcome.result;
-            if (submissionResult.compilationError) {
-                yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
-            } else {
-                const tests = submissionResult.tests;
-                if (tests.length) {
-                    yield* put(updateCurrentTestId({testId: 0}));
+            const outcome = yield* race({
+                result: call(() => deferredPromise.promise),
+                timeout: delay(10*60*1000), // 10 min
+            });
+
+            if (outcome.result) {
+                const submissionResult = outcome.result;
+                if (submissionResult.compilationError) {
+                    yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
+                } else {
+                    const selectedTestId = yield* appSelect(state => state.task.currentTestId);
+                    // Refresh display by showing the test id that was previously selected
+                    if (null !== selectedTestId) {
+                        yield* put(updateCurrentTestId({testId: selectedTestId}));
+                    }
                 }
-            }
 
-            return {
-                score: outcome.result.score / 100,
-                message: outcome.result.errorMessage,
-            };
-        } else {
+                return {
+                    score: outcome.result.score / 100,
+                    message: outcome.result.errorMessage,
+                };
+            } else {
+                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
+
+                return {
+                    score: 0,
+                };
+            }
+        } catch (ex: any) {
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 
+            console.error(ex);
+
+            const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
+                : (ex.res?.body?.error ?? ex.message ?? ex.toString());
+            yield* put(platformAnswerGraded({error: message}));
+
             return {
-                score: 0,
-            };
+                error: message,
+            }
+        } finally {
+            if (yield* cancelled()) {
+                if (longPollingTask) {
+                    yield* cancel(longPollingTask);
+                }
+                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true, cancelled: true}}));
+            }
         }
     }
 
     *gradeAnswerClient(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
+        log.getLogger('tests').debug('[Tests] Client grade answer', parameters);
         const {level, answer} = parameters;
         const state = yield* appSelect();
         const environment = state.environment;
         let lastMessage = null;
         const currentTask = state.task.currentTask;
-        const taskVariant = state.options.taskVariant;
-        const tests = currentTask ? extractTestsFromTask(currentTask, level, taskVariant) : state.task.taskTests;
+        const tests = currentTask ? getTaskLevelTests(state, level) : state.task.taskTests;
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,
@@ -324,13 +342,19 @@ class TaskSubmissionExecutor {
 
         let worstRate = 1;
         for (let result of testResults) {
-            worstRate = Math.min(worstRate, result.successRate);
+            worstRate = Math.min(worstRate, result.successRate ?? 0);
         }
 
         return {
             score: worstRate,
             message: lastMessage,
         };
+    }
+
+    *cancelSubmission(submissionIndex: number) {
+        if (submissionIndex in submissionExecutionTasks) {
+            yield* cancel(submissionExecutionTasks[submissionIndex]);
+        }
     }
 
     setAfterExecutionCallback(callback) {

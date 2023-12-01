@@ -3,9 +3,10 @@ import React from "react";
 import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
 import {getMessage} from "../../lang";
-import {taskChangeLevel} from "../index";
 import {taskLevelsList} from "../platform/platform_slice";
-import {callPlatformValidate} from '../../submission/submission';
+
+import {callPlatformValidate} from '../../submission/submission_actions';
+import {taskChangeLevel} from '../task_actions';
 
 export interface TaskSuccessDialogProps {
     onClose: () => void,

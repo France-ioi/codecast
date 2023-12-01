@@ -13,11 +13,11 @@ import {getRecorderState} from "./selectors";
 import {AppStore} from "../store";
 import {RecorderStatus} from "./store";
 import {ReplayContext} from "../player/sagas";
-import {App} from "../index";
 import {Screen} from "../common/screens";
 import {StepperStatus} from "../stepper";
 import log from 'loglevel';
 import {appSelect} from '../hooks';
+import {App} from '../app_types';
 
 export default function(bundle, deps) {
     bundle.use('recordApi');

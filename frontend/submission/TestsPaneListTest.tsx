@@ -1,8 +1,4 @@
 import React from "react";
-import {
-    SubmissionTestErrorCode,
-    TaskTestGroupType
-} from './task_platform';
 import {getMessage} from '../lang';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
@@ -10,10 +6,18 @@ import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclama
 import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf';
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {isServerSubmission, TaskSubmission, TaskSubmissionServerTestResult} from './submission';
-import {TaskTest, updateCurrentTestId} from '../task/task_slice';
+import {isServerSubmission} from './submission';
+import {updateCurrentTestId} from '../task/task_slice';
 import {useDispatch} from 'react-redux';
 import {useAppSelector} from '../hooks';
+import {faTrash} from '@fortawesome/free-solid-svg-icons/faTrash';
+import {selectTaskTests} from './submission_selectors';
+import {TaskTest, TaskTestGroupType} from '../task/task_types';
+import {SubmissionTestErrorCode, TaskSubmission, TaskSubmissionServerTestResult} from './submission_types';
+import {submissionRemoveTest} from './submission_actions';
+import {call} from 'typed-redux-saga';
+import {askConfirmation} from '../alert';
+import {getTestResultMessage} from './tests';
 
 export interface SubmissionResultTestProps {
     index: number,
@@ -71,8 +75,8 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
     },
     [SubmissionTestErrorCode.TimeLimitExceeded]: {
         icon: faHourglassHalf,
-        color: '#f5a523',
-        colorLight: '#f1e2cc',
+        color: '#0050ab',
+        colorLight: '#c0d1e7',
         message: 'SUBMISSION_RESULT_TIMEOUT',
     },
 }
@@ -80,28 +84,35 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
 export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const test = props.test;
     const currentTestId = useAppSelector(state => state.task.currentTestId);
-    const testResult = props.submission ? props.submission.result.tests.find(otherTest => otherTest.testId === test.id) : null;
-    const testIndex = useAppSelector(state => state.task.taskTests.findIndex(otherTest => otherTest.id === test.id));
+    const testResult = props.submission && props.submission.result ? props.submission.result.tests.find(otherTest => otherTest.testId === test.id) : null;
+    const testIndex = useAppSelector(state => selectTaskTests(state).findIndex(otherTest => otherTest.id === test.id));
 
-    const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;
     const submissionDisplayError = useAppSelector(state => state.submission.submissionDisplayedError);
 
-    const errorCodeData = testResult? testErrorCodeData[testResult.errorCode] : null;
+    const errorCodeData = testResult ? testErrorCodeData[testResult.errorCode] : null;
 
     let message;
-    if (testResult && isServerSubmission(props.submission)) {
-        message = errorCodeData.message;
-        const time = Math.floor((testResult as TaskSubmissionServerTestResult).timeMs/10)/100;
-        if (hasRelativeScore) {
-            message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
-        } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
-            message = getMessage('SUBMISSION_RESULT_VALIDATED').format({time});
-        } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
-            message = getMessage('SUBMISSION_RESULT_INCORRECT').format({time});
-        } else if (message) {
-            message = getMessage(message);
+    if (props.submission && isServerSubmission(props.submission)) {
+        if (testResult) {
+            message = getTestResultMessage(testResult);
+        } else {
+            message = getMessage('SUBMISSION_RESULT_NOT_EVALUATED');
         }
     }
+
+    const deleteTest = (e) => {
+        askConfirmation({
+            text: getMessage('SUBMISSION_REMOVE_TEST_CONFIRM'),
+            confirmText: getMessage('CONFIRM'),
+            cancelText: getMessage('CANCEL'),
+        }).then((confirmed) => {
+            if (confirmed) {
+                dispatch(submissionRemoveTest(testIndex));
+            }
+        });
+
+        e.stopPropagation();
+    };
 
     const dispatch = useDispatch();
 
@@ -114,8 +125,11 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
             {testResult && errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
                 <FontAwesomeIcon icon={errorCodeData.icon}/>
             </div>}
-            <span className="submission-result-test-title">{test.name}</span>
-            {testResult && <span className="submission-result-test-result">{message}</span>}
+            <span className="submission-result-test-title">{test.shortName ?? test.name}</span>
+            {!!(props.submission && props.submission.result) && <span className="submission-result-test-result">{message}</span>}
+            {TaskTestGroupType.User === test.groupType && <span className="submission-result-test-delete" onClick={deleteTest}>
+                <FontAwesomeIcon icon={faTrash}/>
+            </span>}
         </div>
     )
 }

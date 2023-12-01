@@ -1,4 +1,6 @@
 import {createAction} from "@reduxjs/toolkit";
+import {Document} from '../../buffers/buffer_types';
+import {TaskAnswer} from '../task_types';
 
 const successErrorPayload = (success, error) => ({
     payload: {
@@ -10,7 +12,7 @@ const successErrorPayload = (success, error) => ({
 export const platformTaskRefresh = createAction('platformTaskRefresh');
 export const platformTaskLink = createAction('platformTaskLink');
 
-export const platformAnswerLoaded = createAction('platformAnswerLoaded', (answer) => ({
+export const platformAnswerLoaded = createAction('platformAnswerLoaded', (answer: TaskAnswer|null) => ({
     payload: {
         answer,
     },

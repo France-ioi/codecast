@@ -16,9 +16,8 @@ import MapFixture from './fixtures/test_map';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
-import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
-import {QuickAlgoLibrary} from './libs/quickalgo_library';
-import {TaskHint} from './hints/hints_slice';
+import {selectTaskTests} from '../submission/submission_selectors';
+import {BlocksUsage, QuickalgoTaskIncludeBlocks, Task, TaskState, TaskTest} from './task_types';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -40,162 +39,6 @@ const availableTasks = {
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskRunExecution = 'task/runExecution',
-}
-
-export interface BlocksUsage {
-    error?: string,
-    blocksLimit?: number,
-    blocksCurrent?: number,
-    limitations?: {name: string, current: number, limit: number}[],
-}
-
-export interface TaskState {
-    currentTask?: Task|null,
-    currentLevel?: TaskLevelName|null,
-    recordingEnabled?: boolean,
-    resetDone?: boolean,
-    loaded?: boolean,
-    state?: any,
-    success?: boolean,
-    successMessage?: string,
-    taskTests: TaskTest[],
-    currentTestId?: number,
-    previousTestId?: number,
-    inputNeeded?: boolean,
-    inputs?: any[],
-    contextId: number,
-    contextStrings: any,
-    contextIncludeBlocks: QuickalgoTaskIncludeBlocks,
-    availablePlatforms: string[],
-    blocksPanelCollapsed?: boolean,
-    blocksPanelWasOpen?: boolean,
-    blocksUsage?: BlocksUsage,
-    soundEnabled?: boolean,
-    menuHelpsOpen?: boolean,
-}
-
-export interface TaskInputEnteredPayload {
-    input: string,
-    clearInput?: boolean,
-}
-
-export interface TaskTest {
-    id?: string,
-    subtaskId?: string|null,
-    groupType?: TaskTestGroupType,
-    active?: boolean,
-    name?: string,
-    data: any,
-    contextState: any,
-}
-
-export interface QuickalgoTaskIncludeBlocks {
-    groupByCategory?: boolean,
-    originalGroupByCategory?: boolean,
-    generatedBlocks?: {[context: string]: string[]},
-    standardBlocks?: {
-        includeAll?: boolean,
-        includeAllPython?: boolean,
-        wholeCategories?: string[],
-        singleBlocks?: string[],
-    },
-    variables?: string[],
-    pythonAdditionalFunctions?: string[],
-    procedures?: {ret: boolean, noret: boolean, disableArgs?: boolean},
-    pythonForceAllowed?: string[],
-    pythonForceForbidden?: string[],
-}
-
-// We can customize the option for each level in the task definition
-export interface QuickalgoTaskIncludeBlocksAllLevels {
-    groupByCategory?: boolean|{[level: string]: boolean},
-    generatedBlocks?: {[context: string]: string[]}|{[context: string]: {[level: string]: string[]}},
-    standardBlocks?: {
-        includeAll?: boolean,
-        wholeCategories?: string[]|{[level: string]: string[]},
-        singleBlocks?: string[]|{[level: string]: string[]},
-    },
-    variables?: string[]|{[level: string]: string[]},
-    pythonAdditionalFunctions?: string[],
-}
-
-export interface QuickalgoTaskGridInfosNotLevelDependent {
-    context?: string,
-    contextType?: string,
-    images?: {id?: string, path: {default: string}}[],
-    importModules?: string[],
-    conceptViewer?: boolean|string[],
-    conceptViewerBaseUrl?: string|null,
-    backgroundColor?: string,
-    backgroundSrc?: string,
-    borderColor?: string,
-    showLabels?: boolean,
-    logOption?: boolean,
-    unlockedLevels?: number,
-    blocklyColourTheme?: string,
-    zoom?: {wheel?: boolean, controls?: boolean, scale?: number},
-    scrollbars?: boolean,
-    intro?: any,
-    hideSaveOrLoad?: boolean,
-    actionDelay?: number,
-    panelCollapsed?: boolean,
-    checkEndCondition?: (context: QuickAlgoLibrary, lastTurn: any) => void,
-    computeGrade?: (context: QuickAlgoLibrary, message: unknown) => {successRate: number, message: string},
-    checkEndEveryTurn?: boolean,
-    hiddenTests?: boolean,
-    maxListSize?: number,
-    placeholderBlocks?: any,
-    usedSkills?: string[],
-    targetNbInstructions?: number,
-    forceNextTaskAfter?: number,
-    defaultLevel?: TaskLevelName,
-    expectedStorage?: string,
-    initActionDelay?: number,
-    hints?: TaskHint[],
-    taskStrings?: any,
-    showViews?: boolean,
-}
-
-export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
-    maxInstructions?: number|{[level: string]: number},
-    startingExample?: any,
-    limitedUses?: {[level: string]: {blocks: string[], nbUses: number}[]},
-    includeBlocks?: QuickalgoTaskIncludeBlocksAllLevels,
-}
-
-export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDependent {
-    maxInstructions?: number,
-    startingExample: any,
-    limitedUses?: {blocks: string[], nbUses: number}[],
-    includeBlocks?: QuickalgoTaskIncludeBlocks,
-}
-
-export interface QuickalgoTask {
-    gridInfos: QuickalgoTaskGridInfos,
-    data?: any,
-}
-
-export type Task = QuickalgoTask & Partial<TaskServer>;
-
-export function isServerTask(object: Task): boolean {
-    return null !== object.id && undefined !== object.id;
-}
-
-export function isServerTest(object: TaskTest): boolean {
-    return null !== object.groupType && undefined !== object.groupType;
-}
-
-// TODO: update this function when we will have a "public" field in tm_task_tests
-export function isTestPublic(task: Task, test: TaskTest|null): boolean {
-    if (!test || !isServerTest(test)) {
-        return true;
-    }
-
-    if (task && task.gridInfos && 'printer' === task.gridInfos.context) {
-        return !(test && test.data && !test.data.input);
-    }
-
-    return true;
 }
 
 export const taskInitialState = {
@@ -229,11 +72,18 @@ export const selectCurrentTestData = (state: AppStore) => {
 }
 
 export const selectCurrentTest = (state: AppStore): TaskTest|null => {
-    if (null == state.task.currentTestId || !(state.task.currentTestId in state.task.taskTests)) {
+    const taskTests = selectTaskTests(state);
+
+    if (null == state.task.currentTestId || !(state.task.currentTestId in taskTests)) {
         return null;
     }
 
-    return state.task.taskTests[state.task.currentTestId];
+    return taskTests[state.task.currentTestId];
+}
+
+export interface TaskInputEnteredPayload {
+    input: string,
+    clearInput?: boolean,
 }
 
 export const taskSlice = createSlice({
@@ -277,29 +127,29 @@ export const taskSlice = createSlice({
             state.previousTestId = null;
             state.currentTestId = null;
         },
+        addNewTaskTest(state: TaskState, action: PayloadAction<TaskTest>) {
+            state.taskTests.push(action.payload);
+        },
+        removeTaskTest(state: TaskState, action: PayloadAction<{testToRemoveIndex: number, newTestId: number}>) {
+            state.taskTests.splice(action.payload.testToRemoveIndex, 1);
+            state.previousTestId = state.currentTestId;
+            state.currentTestId = action.payload.newTestId;
+        },
         updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean, withoutContextState?: boolean}>) {
             state.previousTestId = state.currentTestId;
             state.currentTestId = action.payload.testId;
         },
-        updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
-            if (null === state.currentTestId || !(state.currentTestId in state.taskTests)) {
-                // Create a new test
-                state.taskTests.push({
-                    data: action.payload,
-                    contextState: null,
-                } as TaskTest);
-                state.currentTestId = state.taskTests.length - 1;
-            } else {
-                let currentTest = state.taskTests[state.currentTestId].data;
+        updateTaskTest(state: TaskState, action: PayloadAction<{testIndex: number, data: object}>) {
+            let currentTest = state.taskTests[action.payload.testIndex].data;
 
-                state.taskTests[state.currentTestId].data = {
-                    ...currentTest,
-                    ...action.payload,
-                };
-            }
+            state.taskTests[action.payload.testIndex].data = {
+                ...currentTest,
+                ...action.payload.data,
+            };
         },
-        updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any}>) {
+        updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any, contextStateResetDone: boolean}>) {
             state.taskTests[action.payload.testId].contextState = action.payload.contextState;
+            state.taskTests[action.payload.testId].contextStateResetDone = action.payload.contextStateResetDone;
         },
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
             state.inputNeeded = action.payload;
@@ -368,7 +218,7 @@ export const {
     recordingEnabledChange,
     taskSuccess,
     taskSuccessClear,
-    updateCurrentTest,
+    updateTaskTest,
     updateTaskTests,
     updateCurrentTestId,
     taskInputNeeded,
@@ -390,15 +240,8 @@ export const {
     taskSetMenuHelpsOpen,
     taskSetAvailablePlatforms,
     taskUnload,
+    addNewTaskTest,
+    removeTaskTest,
 } = taskSlice.actions;
-
-export const taskRecordableActions = [
-    'taskSuccess',
-    'taskSuccessClear',
-    'taskInputNeeded',
-    'updateCurrentTestId',
-    'taskSetBlocksPanelCollapsed',
-    'taskChangeSoundEnabled',
-];
 
 export default taskSlice;

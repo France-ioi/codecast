@@ -1,6 +1,6 @@
 import React from "react";
 import {useAppSelector} from "../hooks";
-import {TaskTest, updateCurrentTestId} from "./task_slice";
+import {updateCurrentTestId} from "./task_slice";
 import {useDispatch} from "react-redux";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {Spinner} from "@blueprintjs/core";
@@ -11,6 +11,8 @@ import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
 import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
 import {memoize} from 'proxy-memoize';
 import {ErrorCodeData, testErrorCodeData} from '../submission/TestsPaneListTest';
+import {selectTaskTests} from '../submission/submission_selectors';
+import {TaskTest} from './task_types';
 
 const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: TaskTest} => {
     const getTaskTestsByIndex = {};
@@ -24,7 +26,7 @@ const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: Tas
 export function TaskTestsSelector() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
-    const taskTests = useAppSelector(state => state.task.taskTests);
+    const taskTests = useAppSelector(selectTaskTests);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);

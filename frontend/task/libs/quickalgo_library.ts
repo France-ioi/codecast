@@ -1,16 +1,16 @@
-import {App, Codecast} from "../../index";
 import {AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
 import merge from 'lodash.merge';
 import {getCurrentImmerState} from "../utils";
-import {mainQuickAlgoLogger} from "./quickalgo_libraries";
 import {stepperMaxSpeed} from "../../stepper";
 import log from 'loglevel';
-import {QuickalgoLibraryInfos} from '../task_slice';
-import {TaskSubmissionServerTestResult} from '../../submission/submission';
+import {QuickalgoLibraryInfos, TaskTest} from '../task_types';
 import {defaultNotions, NotionArborescence} from '../blocks/notions';
-import {CodecastPlatform} from '../../stepper/platforms';
 import {LibraryTestResult} from './library_test_result';
+import {TaskSubmissionServerTestResult} from '../../submission/submission_types';
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {App, Codecast} from '../../app_types';
+import {mainQuickAlgoLogger} from './quick_algo_logger';
 
 export abstract class QuickAlgoLibrary {
     display: boolean;
@@ -72,11 +72,6 @@ export abstract class QuickAlgoLibrary {
         this.raphaelFactory = new window.RaphaelFactory();
 
         this.setLocalLanguageStrings(window.quickAlgoLanguageStrings);
-
-        // this.blocklyHelper = {
-        //     updateSize: function () {
-        //     },
-        // }
     }
 
     // Set the localLanguageStrings for this context
@@ -146,7 +141,7 @@ export abstract class QuickAlgoLibrary {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
         let computedDelay = null !== delay ? delay : (this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed);
-        log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay);
+        log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay, delay, this.infos.actionDelay, stepperMaxSpeed);
         if (this.runner) {
             if (computedDelay > 0 && 'main' === this.environment) {
                 this.delaysStartedCount++;
@@ -337,6 +332,10 @@ export abstract class QuickAlgoLibrary {
 
     getErrorFromTestResult?(testResult: TaskSubmissionServerTestResult): LibraryTestResult;
 
+    getContextStateFromTestResult?(testResult: TaskSubmissionServerTestResult, test: TaskTest): any|null;
+
+    hasFeedback?(): boolean;
+
     getSupportedPlatforms(): string[] {
         return [
             CodecastPlatform.Blockly,
@@ -351,6 +350,14 @@ export abstract class QuickAlgoLibrary {
 
     showViews() {
         return false;
+    }
+
+    supportsCustomTests(): boolean {
+        return false;
+    }
+
+    getDefaultEmptyTest() {
+        return null;
     }
 }
 

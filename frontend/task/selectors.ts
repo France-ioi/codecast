@@ -1,10 +1,11 @@
 import {AppStoreReplay} from "../store";
-import {getBufferModel} from "../buffers/selectors";
-import log from 'loglevel';
+import {TaskAnswer} from './task_types';
+import {normalizeBufferToTaskAnswer} from '../buffers';
+import {memoize} from 'proxy-memoize';
 
-export function selectAnswer(state: AppStoreReplay): any {
-    const sourceModel = getBufferModel(state, 'source');
-    // log.getLogger('editor').debug('select current answer', sourceModel ? sourceModel.document.getContent() : null);
+export const selectAnswer = memoize((state: AppStoreReplay): TaskAnswer|null => {
+    const activeBufferName = state.buffers.activeBufferName;
+    const sourceBuffer = state.buffers.buffers[activeBufferName];
 
-    return sourceModel ? sourceModel.document.getContent() : null;
-}
+    return sourceBuffer ? normalizeBufferToTaskAnswer(sourceBuffer) : null;
+});

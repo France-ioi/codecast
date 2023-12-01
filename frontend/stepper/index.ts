@@ -44,7 +44,7 @@ import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
-import BlocklyBundle, {hasBlockPlatform} from './js';
+import BlocklyBundle from './js';
 import {analyseState, AnalysisC, collectDirectives} from './c/analysis';
 import {convertSkulptStateToAnalysisSnapshot, getSkulptSuspensionsCopy} from "./python/analysis";
 import {Directive, parseDirectives} from "./python/directives";
@@ -53,10 +53,9 @@ import {
     ActionTypes,
     stepperDisplayError, stepperExecutionEnd, stepperExecutionEndConditionReached,
     stepperExecutionError,
-    stepperExecutionSuccess, stepperRunBackground, stepperRunBackgroundFinished
+    stepperRunBackground, stepperRunBackgroundFinished
 } from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getCurrentStepperState, getStepper, getStepperControlsSelector, isStepperInterrupting} from "./selectors";
@@ -64,14 +63,10 @@ import {AppStore, AppStoreReplay} from "../store";
 import {TermBuffer} from "./io/terminal";
 import {delay} from "../player/sagas";
 import {Bundle} from "../linker";
-import {App, Codecast} from "../index";
-import {
-    mainQuickAlgoLogger,
-    quickAlgoLibraries,
-    QuickAlgoLibrariesActionType,
+import {QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from "../task/libs/quickalgo_libraries";
-import {selectCurrentTestData, taskResetDone, updateCurrentTestId} from "../task/task_slice";
+import {selectCurrentTestData, taskResetDone, taskUpdateState, updateCurrentTestId} from "../task/task_slice";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
@@ -84,16 +79,23 @@ import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecast
 import log from "loglevel";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
-import {LayoutMobileMode} from "../task/layout/layout";
 import {DeferredPromise} from "../utils/app";
 import {addStepperRecordAndReplayHooks} from './replay';
 import {appSelect} from '../hooks';
-import {TaskSubmissionResultPayload} from '../submission/submission';
-import {CodecastPlatform} from './platforms';
+import {hasBlockPlatform} from './platforms';
 import {LibraryTestResult} from '../task/libs/library_test_result';
-import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
+import {selectTaskTests} from '../submission/submission_selectors';
+import {CodecastPlatform} from './codecast_platform';
+import {App, Codecast} from '../app_types';
+import {mainQuickAlgoLogger} from '../task/libs/quick_algo_logger';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {TaskSubmissionResultPayload} from '../submission/submission_types';
+import {LayoutMobileMode} from '../task/layout/layout_types';
 import {shuffleArray} from '../utils/javascript';
 import {computeDelayForCurrentStep} from './speed';
+import {memoize} from 'proxy-memoize';
+import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
+import debounce from 'lodash.debounce';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -167,7 +169,7 @@ const initialStateStepperState = {
         stackSize: 4096
     },
     isFinished: false, // Only used for python
-    currentBlockId: null, // Only used for Blockly
+    currentBlockId: null as string|null, // Only used for Blockly
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -196,9 +198,8 @@ export const initialStateStepper = {
     backgroundRunData: null as TaskSubmissionResultPayload,
 };
 
-export function* createRunnerSaga(): SagaIterator<AbstractRunner> {
+export function* createRunnerSaga(platform: CodecastPlatform): SagaIterator<AbstractRunner> {
     const environment = yield* appSelect(state => state.environment);
-    const platform = yield* appSelect(state => state.options.platform);
     const context = quickAlgoLibraries.getContext(null, environment);
     const runnerClass = getRunnerClassFromPlatform(platform);
 
@@ -442,7 +443,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
     }
 }
 
-export function clearStepper(stepper: Stepper) {
+export function clearStepper(stepper: Stepper, withCurrentState = false) {
     stepper.status = StepperStatus.Clear;
     stepper.runningBackground = false;
     stepper.backgroundRunData = null;
@@ -450,7 +451,9 @@ export function clearStepper(stepper: Stepper) {
     stepper.redo = [];
     stepper.interrupting = false;
     stepper.initialStepperState = null;
-    stepper.currentStepperState = null;
+    if (withCurrentState) {
+        stepper.currentStepperState = null;
+    }
 }
 
 export function getNodeRange(stepperState?: StepperState) {
@@ -512,7 +515,7 @@ function stringifyError(error) {
 
 /* Reducers */
 
-function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}}): void {
+function stepperRestartReducer(state: AppStore, {payload: {stepperState}}): void {
     const {platform} = state.options;
 
     if (stepperState) {
@@ -599,7 +602,11 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 }
 
-function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
+const debounceHideBlocklyDropdown = debounce(() => {
+    window.Blockly?.DropDownDiv?.hideWithoutAnimation();
+}, 1000);
+
+function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
     enrichStepperState(stepperContext.state, 'Stepper.Idle', stepperContext);
@@ -612,16 +619,16 @@ function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}):
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;
 
-    if (hasBlockPlatform(state.options.platform) && 'main' === state.environment) {
+    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && 'main' === state.environment) {
         // Cancel reported value because in Scratch, as long as there's a reported value,
         // the first click on the workspace only removes the reported value, and therefore
         // it prevents moving a block. One would have to make two clicks to move a block in this case.
-        window.Blockly?.DropDownDiv?.hideWithoutAnimation();
+        debounceHideBlocklyDropdown();
     }
 }
 
 export function stepperExitReducer(state: AppStoreReplay): void {
-    clearStepper(state.stepper);
+    clearStepper(state.stepper, true);
     state.task.inputNeeded = false;
 }
 
@@ -743,11 +750,11 @@ function* compileSucceededSaga(app: App) {
     try {
         yield* put({type: ActionTypes.StepperDisabled});
 
-        // TODO: Check to see if we can move this into compilation step
-        Codecast.runner = yield* call(createRunnerSaga);
+        const platform = yield* appSelect(state => state.compile.answer.platform);
+        Codecast.runner = yield* call(createRunnerSaga, platform);
 
         /* Build the stepper state. This automatically runs into user source code. */
-        let stepperState = yield* call(app.stepperApi.buildState);
+        let stepperState = yield* call(app.stepperApi.buildState, platform);
         const state = yield* appSelect();
         log.getLogger('stepper').debug('[stepper init] new state', state.task.state);
         // buildState may have triggered an error.
@@ -772,17 +779,13 @@ function* stepperEnabledSaga(app: App) {
     currentStepperTask = yield* fork(app.stepperApi.rootStepperSaga, app);
 }
 
-export function* stepperDisabledSaga(action, leaveContext = false, clearSourceHighlight = true) {
+export function* stepperDisabledSaga(action, leaveContext = false) {
     /* Cancel the stepper task if still running. */
     const oldTask = currentStepperTask;
-    log.getLogger('stepper').debug('try to disable stepper', oldTask, action, leaveContext, clearSourceHighlight, arguments);
+    log.getLogger('stepper').debug('try to disable stepper', oldTask, action, leaveContext, arguments);
 
     if (leaveContext) {
         yield* put(taskResetDone(false));
-    }
-
-    if (clearSourceHighlight) {
-        yield* call(clearSourceHighlightSaga);
     }
 
     if (oldTask) {
@@ -981,7 +984,7 @@ function* stepperStepSaga(app: App, action) {
                         yield* put({type: ActionTypes.StepperInterrupted});
                     }
                     if (ex.condition === 'error') {
-                        yield* put(stepperExecutionError(LibraryTestResult.fromString(ex.message), false));
+                        yield* put(stepperExecutionError(LibraryTestResult.fromString(ex.message)));
                     }
                 }
             }
@@ -1014,6 +1017,10 @@ function* stepperStepSaga(app: App, action) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
                     } catch (executionResult: unknown) {
+                        // Update test context state with latest data from checkEndCondition
+                        const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
+                        yield* put(taskUpdateState(contextState));
+
                         endConditionReached = true;
                         yield* put(stepperExecutionEndConditionReached(executionResult));
                     }
@@ -1022,12 +1029,12 @@ function* stepperStepSaga(app: App, action) {
                 if (!endConditionReached) {
                     yield* put(stepperExecutionEnd());
                 }
-            }
-
-            const newState = yield* appSelect();
-            const newStepper = getStepper(newState);
-            if (StepperStatus.Clear !== newStepper.status) {
-                yield* put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
+            } else {
+                const newState = yield* appSelect();
+                const newStepper = getStepper(newState);
+                if (StepperStatus.Clear !== newStepper.status) {
+                    yield* put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
+                }
             }
         }
     } finally {
@@ -1064,7 +1071,7 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         yield* call(quickAlgoLibraryResetAndReloadStateSaga);
 
         if (!Codecast.runner) {
-            Codecast.runner = yield* call(createRunnerSaga);
+            Codecast.runner = yield* call(createRunnerSaga, stepperContext.state.platform);
         }
         taskContext.runner = Codecast.runner;
 
@@ -1098,40 +1105,19 @@ function* stepperExitSaga() {
     yield* put({type: ActionTypes.CompileClear});
 }
 
-export function* updateSourceHighlightSaga(state: AppStoreReplay) {
+export const getSourceHighlightFromStateSelector = memoize((state: AppStore) => {
     const stepperState = state.stepper.currentStepperState;
     log.getLogger('stepper').debug('update source highlight', stepperState);
     if (!stepperState) {
-        yield* call(clearSourceHighlightSaga);
-        return;
+        return null;
     }
 
-    if (hasBlockPlatform(state.options.platform)) {
-        yield* put({
-            type: BufferActionTypes.BufferHighlight,
-            buffer: 'source',
-            range: stepperState.currentBlockId,
-        });
+    if (hasBlockPlatform(selectActiveBufferPlatform(state))) {
+        return stepperState.currentBlockId;
     } else {
-        const range = getNodeRange(stepperState);
-
-        yield* put({
-            type: BufferActionTypes.BufferHighlight,
-            buffer: 'source',
-            range
-        });
+        return getNodeRange(stepperState);
     }
-}
-
-export function* clearSourceHighlightSaga() {
-    const state = yield* appSelect();
-
-    if (hasBlockPlatform(state.options.platform)) {
-        yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: null});
-    } else {
-        yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: null});
-    }
-}
+});
 
 function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     const state = yield* appSelect();
@@ -1139,7 +1125,7 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     const level = state.task.currentLevel;
     const testId = state.task.currentTestId;
 
-    const tests = yield* appSelect(state => state.task.taskTests);
+    const tests = yield* appSelect(selectTaskTests);
 
     let preExecutionTests: number[] = [];
     if (null !== testId) {
@@ -1228,6 +1214,10 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
     const state = yield* appSelect();
     if ('tralalere' === state.options.app) {
         yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
+    }
+
+    if (null !== state.screen) {
+        yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
     }
 
     const stepperControlsState = getStepperControlsSelector({state, enabled: true});
@@ -1341,27 +1331,13 @@ function postLink(app: App) {
             StepperActionTypes.StepperExecutionEnd,
             StepperActionTypes.CompileFailed,
         // @ts-ignore
-        ], function*({payload}) {
+        ], function*() {
             let state = yield* appSelect();
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
                 yield* put({type: ActionTypes.StepperInterrupting, payload: {}});
             }
             // yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-            yield* call(stepperDisabledSaga, null, true, false !== payload?.clearHighlight);
-        });
-
-        /* Highlight the range of the current source fragment. */
-        yield* throttle(stepperThrottleDisplayDelay, [
-            ActionTypes.StepperProgress,
-            ActionTypes.StepperIdle,
-            ActionTypes.StepperRestart,
-            ActionTypes.StepperUndo,
-            ActionTypes.StepperRedo,
-            ActionTypes.StepperStackUp,
-            ActionTypes.StepperStackDown
-        ], function* () {
-            const state = yield* appSelect();
-            yield* call(updateSourceHighlightSaga, state);
+            yield* call(stepperDisabledSaga, null, true);
         });
     });
 }

@@ -1,0 +1,259 @@
+.layout-editor-tabs {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: #4a4a4a;
+
+  .layout-editor-tab {
+    padding: 5px 30px 5px 15px;
+    background: #bfbfbf;
+    color: #666;
+    display: block;
+    text-align: center;
+    position: relative;
+    font-weight: 600;
+    white-space: nowrap;
+    &.is-active {
+      background: var(--primary-color);
+      color: white;
+    }
+    &.is-flashing {
+      animation: blinking-color 1s 5;
+    }
+    &:not(.is-active) {
+      cursor: pointer;
+    }
+    svg {
+      width: .7em;
+    }
+    .layout-editor-tab-close {
+      position: absolute;
+      top: calc(50% - 12px);
+      right: 10px;
+      cursor: pointer;
+      display: none;
+    }
+
+    &:hover .layout-editor-tab-close, &.is-active .layout-editor-tab-close {
+      display: inline-block;
+    }
+
+    .layout-editor-tab-pen {
+      padding: 0 10px;
+      display: inline-block;
+    }
+  }
+  .layout-editor-tabs-section {
+    flex: 1 0;
+    min-width: 0;
+    position: relative;
+  }
+  .layout-editor-tabs-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    gap: 1px;
+    &.has-arrows {
+      margin-left: 44px;
+      margin-right: 44px;
+    }
+  }
+  .layout-editor-tabs-end {
+    flex: 0 1;
+    display: flex;
+    align-items: center;
+    .layout-editor-tabs-option {
+      padding: 0 10px;
+      color: white;
+      cursor: pointer;
+    }
+  }
+}
+
+@keyframes blinking-color {
+  0%		{ background-color: #bfbfbf;}
+  50%		{ background-color: #f1ab27;}
+  100%	{ background-color: #bfbfbf;}
+}
+
+.layout-editor-tab-edit {
+  padding: 10px;
+  border-radius: 8px;
+  label {
+    font-weight: bold;
+  }
+}
+
+.layout-editor-read-only {
+  margin: 10px 40px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  background: #e0e8f5;
+  border-radius: 500px;
+  color: var(--primary-color);
+  .layout-editor-read-only-icon {
+    background: var(--primary-color);
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    color: white;
+    svg {
+      width: 0.7em;
+    }
+  }
+  .layout-editor-read-only-link {
+    font-weight: 600;
+    text-decoration: underline;
+    color: var(--primary-color);
+  }
+}
+
+.submission-results__selector {
+  .no-recent-submission {
+    color: white;
+    padding: 0 10px;
+  }
+
+  .dropdown {
+    cursor: auto;
+    @include codecast-dropdown;
+    .dropdown-menu {
+      background: #4a4a4a;
+      border-radius: 0;
+      border: 0;
+      width: 300px;
+    }
+    .dropdown-toggle {
+      background: transparent !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      &:after {
+        display: none;
+      }
+    }
+    .dropdown-item {
+      color: white !important;
+      &:hover, &:focus, &:active {
+        background: #636363 !important;
+      }
+    }
+  }
+}
+
+// Originally from https://github.com/Mood-al/react-tabs-scrollable/blob/main/package/src/lib/rts.css
+// TODO: refacto
+.rts___tabs {
+  display: flex;
+  overflow: auto;
+}
+.rts___tabs.hide___rts___tabs___scroll {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.rts___tabs.hide___rts___tabs___scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.rts___nav___btn___container {
+  display: flex;
+  z-index: 1;
+}
+
+.rts___btn {
+  cursor: pointer;
+  background-color: transparent;
+}
+.rts___nav___btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  top: 50%;
+  transform: translate(0, -50%);
+  background-color: black;
+  border-radius: 50%;
+  z-index: 1;
+  color: white;
+}
+@media (max-width: 767.98px) {
+  .rts___nav___btn > svg {
+    width: 15px;
+  }
+}
+.rts___svg___icon {
+  color: gray;
+}
+button:disabled.rts___btn,
+.rts___nav___btn:disabled,
+button[disabled].rts___btn {
+  cursor: not-allowed;
+  color: gray;
+  pointer-events: none;
+}
+.rts button:disabled.rts___btn,
+.rts___nav___btn:disabled,
+button[disabled].rts___btn {
+  color: gray;
+}
+
+.rts___nav___btn > svg {
+  stroke: #fff;
+}
+.rts___right___nav___btn {
+  right: 6px;
+}
+.rts___left___nav___btn {
+  left: 6px;
+}
+
+.icon-bell.is-animated {
+  animation: ring 1s ease 5;
+  transform-origin-x: 50%;
+  transform-origin-y: 0px;
+  transform-origin-z: initial;
+}
+
+@keyframes ring {
+  0% {
+    transform: rotate(-15deg);
+  }
+  8% {
+    transform: rotate(15deg);
+  }
+  16% {
+    transform: rotate(-18deg);
+  }
+  24% {
+    transform: rotate(18deg);
+  }
+  32% {
+    transform: rotate(-22deg);
+  }
+  40% {
+    transform: rotate(22deg);
+  }
+  48% {
+    transform: rotate(-18deg);
+  }
+  56% {
+    transform: rotate(18deg);
+  }
+  64% {
+    transform: rotate(-12deg);
+  }
+  72% {
+    transform: rotate(12deg);
+  }
+  80% {
+    transform: rotate(0deg);
+  }
+}

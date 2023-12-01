@@ -1,6 +1,6 @@
 import request from 'superagent';
 import audioDecode from 'audio-decode';
-import {eventChannel} from 'redux-saga'
+import {eventChannel} from 'redux-saga';
 
 export function readFileAsText(file) {
     return new Promise<string>(function(resolve, reject) {
@@ -70,7 +70,7 @@ export function isLocalStorageEnabled() {
 }
 
 export function capitalizeFirstLetter(string: string): string {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+    return string && (string.charAt(0).toUpperCase() + string.slice(1));
 }
 
 export function nl2br(string: string): string {

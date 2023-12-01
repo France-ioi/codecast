@@ -1,8 +1,6 @@
 import {AppStore} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
-import {App, Codecast} from "../../index";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {selectAnswer} from "../../task/selectors";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {TaskLevelName} from "../../task/platform/platform_slice";
@@ -10,19 +8,22 @@ import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
 import {put} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
-import {LayoutType} from "../../task/layout/layout";
 import {taskIncreaseContextId} from "../../task/task_slice";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
-import {CodecastPlatform} from '../platforms';
+import {hasBlockPlatform} from '../platforms';
+import {App, Codecast} from '../../app_types';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {LayoutType} from '../../task/layout/layout_types';
+import {BlockDocument} from '../../buffers/buffer_types';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
 
-export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
+export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     let blocklyHelper;
 
-    if (context && context.blocklyHelper) {
+    if (context && context.blocklyHelper && !context.blocklyHelper.fake) {
         context.blocklyHelper.unloadLevel();
     }
 
@@ -71,8 +72,8 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
         };
     }
 
-    log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context);
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
+    log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
     // during loadPrograms at the start of the program execution
     blocklyHelper.onChangeResetDisplay = () => {
@@ -179,14 +180,14 @@ export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     };
 };
 
-export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
+export const checkBlocklyCode = function (answer: BlockDocument, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
     log.getLogger('blockly_runner').debug('check blockly code', answer, context.strings.code);
 
-    if (!answer || !answer.blockly) {
+    if (!answer || !answer.content?.blockly) {
         return;
     }
 
-    const blocks = getBlocksFromXml(answer.blockly);
+    const blocks = getBlocksFromXml(answer.content.blockly);
 
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
     const totalCount = blocklyCount(blocks, context);
@@ -208,13 +209,9 @@ export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, sta
     }
 
     if (-1 === disabledValidations.indexOf('empty') && totalCount <= 0) {
-        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
+        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM_BLOCKS');
     }
 }
-
-export const hasBlockPlatform = (platform: CodecastPlatform) => {
-    return CodecastPlatform.Blockly === platform || CodecastPlatform.Scratch === platform;
-};
 
 const getBlockCount = function (block, context: QuickAlgoLibrary) {
     // How many "blocks" a specific block counts towards the total
@@ -262,10 +259,10 @@ const getBlockCount = function (block, context: QuickAlgoLibrary) {
     return 1;
 }
 
-export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary) {
+export const getBlocklyBlocksUsage = function (answer: BlockDocument, context: QuickAlgoLibrary) {
     // We cannot evaluate blocks as long as the answer has not been loaded into Blockly
     // Thus we wait that context.blocklyHelper.programs is filled (by BlocklyEditor)
-    if (!answer || !answer.blockly || !context.blocklyHelper?.programs?.length) {
+    if (!answer || !answer.content?.blockly || !context.blocklyHelper?.programs?.length) {
         return {
             blocksCurrent: 0,
             limitations: [],
@@ -274,7 +271,7 @@ export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary
 
     log.getLogger('blockly_runner').debug('blocks usage', answer);
 
-    const blocks = getBlocksFromXml(answer.blockly);
+    const blocks = getBlocksFromXml(answer.content.blockly);
     const blocksUsed = blocklyCount(blocks, context);
     const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
 
@@ -352,12 +349,12 @@ export const blocklyFindLimited = (blocks, limitedUses, context) => {
 export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {
         stepperApi.onInit(async function(stepperState: StepperState, state: AppStore, environment: string) {
-            const {platform} = state.options;
             const answer = selectAnswer(state);
-            const context = quickAlgoLibraries.getContext(null, environment);
-            const language = state.options.language.split('-')[0];
+            if (hasBlockPlatform(answer.platform)) {
+                const document = answer.document as BlockDocument;
+                const context = quickAlgoLibraries.getContext(null, environment);
+                const language = state.options.language.split('-')[0];
 
-            if (hasBlockPlatform(platform)) {
                 log.getLogger('blockly_runner').debug('init stepper js', environment);
                 context.onError = (diagnostics) => {
                     log.getLogger('blockly_runner').debug('context error', diagnostics);
@@ -372,7 +369,7 @@ export default function(bundle: Bundle) {
                 const blocklyHelper = context.blocklyHelper;
                 log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);
                 log.getLogger('blockly_runner').debug('display', context.display);
-                const blocklyXmlCode = answer.blockly;
+                const blocklyXmlCode = document.content.blockly;
                 if (!blocklyHelper.workspace) {
                     blocklyHelper.load(language, context.display, 1, {});
                 }

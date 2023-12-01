@@ -1,14 +1,14 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {Collapse} from 'react-bootstrap';
-import {
-    TaskSubtaskNormalized
-} from './task_platform';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCaretUp} from '@fortawesome/free-solid-svg-icons/faCaretUp';
 import {faCaretDown} from '@fortawesome/free-solid-svg-icons/faCaretDown';
 import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneListTest';
-import {TaskSubmissionServer} from './submission';
+import {selectTaskTests} from './submission_selectors';
+import {SubmissionTestErrorCode, TaskSubmissionServer} from './submission_types';
+import {TaskSubtaskNormalized} from '../task/task_types';
+import {selectCurrentTest} from '../task/task_slice';
 
 export interface SubmissionResultSubTaskProps {
     submission: TaskSubmissionServer,
@@ -16,32 +16,32 @@ export interface SubmissionResultSubTaskProps {
 }
 
 export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
-    const taskTests = useAppSelector(state => state.task.taskTests);
+    const taskTests = useAppSelector(selectTaskTests);
+    const currentTest = useAppSelector(selectCurrentTest);
+
     const subTask = props.subTask;
-    const subTaskResult = props.submission && props.submission.result.subTasks ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
-    const [open, setOpen] = useState(false);
+    const subTaskResult = props.submission && props.submission.result?.subTasks ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
 
     const testsOrdered = [...taskTests.filter(test => test.subtaskId === subTask.id)];
+    const subTaskHasTest = -1 !== testsOrdered.indexOf(currentTest);
+    const [open, setOpen] = useState(subTaskHasTest);
 
-    let scoreClass = '';
-    if (subTaskResult && subTaskResult.score >= subTask.pointsMax) {
-        scoreClass = 'is-success';
-    } else if (subTaskResult && subTaskResult.score > 0) {
-        scoreClass = 'is-partial';
-    }
+    useEffect(() => {
+        if (subTaskHasTest && !open) {
+            setOpen(true);
+        }
+    }, [subTaskHasTest, props.submission]);
 
+    const testsByIcon: {[key: number]: number} = {};
     let testsByIconValues: {errorCodeData: ErrorCodeData, count: number}[];
-    if (props.submission) {
-        const testsByIcon: {[key: number]: number} = {};
+    if (props.submission && props.submission.result) {
         for (let test of testsOrdered) {
             const testResult = props.submission.result.tests.find(submissionTest => submissionTest.testId === test.id);
-            if (testResult) {
+            if (testResult && null !== testResult.errorCode && undefined !== testResult.errorCode) {
                 if (!(testResult.errorCode in testsByIcon)) {
                     testsByIcon[testResult.errorCode] = 0;
                 }
                 testsByIcon[testResult.errorCode]++;
-            } else {
-                console.error('Test result not found', test, props.submission.result.tests);
             }
         }
 
@@ -54,6 +54,13 @@ export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
             };
         });
         testsByIconValues.sort((a, b) => a.count - b.count);
+    }
+
+    let scoreClass = '';
+    if (subTaskResult && subTaskResult.score >= subTask.pointsMax && (0 < subTask.pointsMax || testsByIcon[SubmissionTestErrorCode.NoError] === testsOrdered.length)) {
+        scoreClass = 'is-success';
+    } else if (subTaskResult && subTaskResult.score > 0) {
+        scoreClass = 'is-partial';
     }
 
     return (

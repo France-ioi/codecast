@@ -101,6 +101,7 @@ html:not([active-view="task"]) {
   z-index: 50;
   background: white;
   top: 0;
+  box-shadow: inset 0px -1px 1px 0px #ccc;
   > * {
     margin: 3px 3px;
   }
@@ -134,6 +135,7 @@ html:not([active-view="task"]) {
     background: #f1f2f7;
     flex: 1 0;
     min-height: 0;
+    min-width: 0;
   }
 
   &.container-fluid {
@@ -227,9 +229,10 @@ html:not([active-view="task"]) {
 
   .task-visualization {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 10px);
     position: relative;
     min-height: 150px;
+    margin-bottom: 10px;
     #taskContent {
       position: absolute;
       width: 100%;
@@ -291,7 +294,7 @@ html:not([active-view="task"]) {
 
   .menu-icons {
     position: absolute;
-    top: 80px;
+    top: 90px;
     right: 200px;
     z-index: 10;
     display: flex;
@@ -695,10 +698,21 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 }
 
 .layout-editor {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+}
+
+.layout-editor-section {
+  flex: 1 0;
   display: flex;
   width: 100%;
   height: 100%;
   position: relative;
+  min-height: 0;
 }
 
 .error-message {
@@ -876,7 +890,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   cursor: pointer;
   &.is-medium {
     font-size: 1rem !important;
-    padding: 0.375rem 0.75rem !important;
+    padding: 0.375rem 1rem !important;
   }
   .bp3-icon {
     color: #fff;
@@ -902,6 +916,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   align-items: center;
   justify-content: center;
   height: 100%;
+  text-align: center;
   > div {
     text-align: center;
   }

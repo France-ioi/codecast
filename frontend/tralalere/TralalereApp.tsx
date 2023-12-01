@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
-import {taskChangeLevel, taskLoad} from "../task";
 import {useAppSelector} from "../hooks";
 import {TaskLevelName, taskLevelsList} from "../task/platform/platform_slice";
 import {PromptModalDialog} from "../task/dialog/PromptModalDialog";
@@ -15,23 +14,27 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPlay, faTimes} from "@fortawesome/free-solid-svg-icons";
 import {TralalereBox} from "./TralalereBox";
 import {TralalereInstructions} from "./TralalereInstructions";
-import {LayoutMobileMode, LayoutType} from "../task/layout/layout";
 import {ActionTypes} from "../task/layout/actionTypes";
 import {TralalereFooter} from "./TralalereFooter";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 import {StepperStatus} from "../stepper";
 import {selectAnswer} from "../task/selectors";
 import {taskSuccessClear} from "../task/task_slice";
-import {hasBlockPlatform} from "../stepper/js";
 import {getMessage} from '../lang';
 import {platformTaskLink} from '../task/platform/actionTypes';
 import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
-import {selectAvailableHints} from '../task/hints/hints_slice';
+
+import {selectAvailableHints} from '../task/hints/hints_selectors';
+import {hasBlockPlatform} from '../stepper/platforms';
+import {taskChangeLevel} from '../task/task_actions';
+import {LayoutMobileMode, LayoutType} from '../task/layout/layout_types';
 import {DebugLibView} from '../task/libs/debug/DebugLibView';
 import {toHtml} from '../utils/sanitize';
 import {getTaskSuccessMessageSelector} from '../task/instructions/instructions';
 import {InstructionsContext} from '../contexts';
 import {DebugDialog} from '../task/dialog/DebugDialog';
+
+const layoutEditorStyle = {backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`};
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -55,7 +58,7 @@ export function TralalereApp() {
 
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(selectAvailableHints);
-    const answer = useAppSelector(state => selectAnswer(state));
+    const answer = useAppSelector(selectAnswer);
     const compileStatus = useAppSelector(state => state.compile.status);
     const taskSuccess = useAppSelector(state => state.task.success);
     const currentTask = useAppSelector(state => state.task.currentTask);
@@ -181,7 +184,7 @@ export function TralalereApp() {
 
     const closeNextLevelOpen = () => {
         dispatch(taskSuccessClear({}));
-    }
+    };
 
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere platform-${options.platform}`}>
@@ -255,7 +258,7 @@ export function TralalereApp() {
                         <ContextVisualization/>
                     </div>}
                     {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className="blockly-editor">
-                        <LayoutEditor style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`}}/>
+                        <LayoutEditor style={layoutEditorStyle}/>
 
                         {hasBlockPlatform(platform) && <div className="blockly-flyout-wrapper">
                             <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>

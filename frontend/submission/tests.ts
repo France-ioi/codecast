@@ -1,25 +1,36 @@
-import {Task, TaskTest} from '../task/task_slice';
-import {TaskLevelName} from '../task/platform/platform_slice';
-import {TaskTestServer} from './task_platform';
+import {Task, TaskTest, TaskTestServer} from '../task/task_types';
 import {getMessage} from '../lang';
 import {extractVariantSpecific} from '../task/utils';
+import {TaskLevelName} from '../task/platform/platform_slice';
+import {SubmissionTestErrorCode, TaskSubmissionServerTestResult, TaskSubmissionTestResult} from './submission_types';
+import {testErrorCodeData} from './TestsPaneListTest';
 
-export function extractTestsFromTask(task: Task, level: TaskLevelName, variant: number = null): TaskTest[] {
-    const tests = getTestsFromTask(task, level, variant);
+export function extractTestsFromTask(task: Task, variant: number = null): TaskTest[] {
+    const tests = getTestsFromTask(task, variant);
     nameTaskTests(tests, task);
 
     return tests;
 }
 
-function getTestsFromTask(task: Task, level: TaskLevelName, taskVariant: number = null): TaskTest[] {
+function getTestsFromTask(task: Task, taskVariant: number = null): TaskTest[] {
     if (task.data) {
-        const taskData = null !== taskVariant && undefined !== taskVariant ? extractVariantSpecific(task.data[level], taskVariant, level) : task.data[level];
+        let tests = [];
+        let testId = 0;
+        for (let [level, levelTests] of Object.entries<any>(task.data)) {
+            const realLevelTests = null !== taskVariant && undefined !== taskVariant ? extractVariantSpecific(levelTests, taskVariant, level as TaskLevelName) : levelTests;
 
-        return taskData.map((data, testId) => ({
-            data,
-            contextState: null,
-            id: String(testId),
-        }));
+            for (let data of realLevelTests) {
+                tests.push({
+                    data,
+                    level,
+                    contextState: null,
+                    id: String(testId),
+                });
+                testId++;
+            }
+        }
+
+        return tests;
     }
 
     if (task.tests) {
@@ -34,20 +45,22 @@ function getTestsFromTask(task: Task, level: TaskLevelName, taskVariant: number 
         const testsOrdered = [...task.tests.filter(a => a.active)];
         testsOrdered.sort((a, b) => getTestRank(a) - getTestRank(b));
 
-        return testsOrdered.map(test => {
-            return {
-                ...test,
-                data: {
-                    input: test.input,
-                    output: test.output,
-                },
-                contextState: null,
-                groupType: test.groupType,
-            };
-        });
+        return testsOrdered.map(mapServerTestToTaskTest);
     }
 
     return [];
+}
+
+export function mapServerTestToTaskTest(test: TaskTestServer) {
+    return {
+        ...test,
+        data: {
+            input: test.input,
+            output: test.output,
+        },
+        contextState: null,
+        groupType: test.groupType,
+    };
 }
 
 function nameTaskTests(taskTests: TaskTest[], task: Task): void {
@@ -64,6 +77,8 @@ function nameTaskTests(taskTests: TaskTest[], task: Task): void {
             let testNumber;
             if (null !== subTask) {
                 testNumber = taskTests.filter(otherTest => otherTest.subtaskId === subTask.id).findIndex(otherTest => otherTest.id === test.id);
+            } else if (test.level) {
+                testNumber = taskTests.filter(otherTest => otherTest.level === test.level).findIndex(otherTest => otherTest.id === test.id);
             } else {
                 testNumber = index;
             }
@@ -78,7 +93,25 @@ function nameTaskTests(taskTests: TaskTest[], task: Task): void {
         taskTests[index] = {
             ...taskTests[index],
             name: totalTestName,
+            shortName: testName,
         };
     }
 }
 
+export function getTestResultMessage(testResult: TaskSubmissionTestResult) {
+    const errorCodeData = testResult ? testErrorCodeData[testResult.errorCode] : null;
+    const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;
+    let message = errorCodeData.message;
+    const time = Math.floor((testResult as TaskSubmissionServerTestResult).timeMs / 10) / 100;
+    if (hasRelativeScore) {
+        message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
+    } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
+        message = getMessage('SUBMISSION_RESULT_VALIDATED').format({time});
+    } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
+        message = getMessage('SUBMISSION_RESULT_INCORRECT').format({time});
+    } else if (message) {
+        message = getMessage(message);
+    }
+
+    return message;
+}

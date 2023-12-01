@@ -1,8 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {AppStore} from '../../store';
-import {useAppSelector} from '../../hooks';
-import {useDispatch} from 'react-redux';
-import {taskLevelsList} from '../platform/platform_slice';
 import {memoize} from 'proxy-memoize';
 
 export interface TaskHint {

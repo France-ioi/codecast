@@ -2,20 +2,24 @@ import {initialStateCompile} from "../stepper/compile";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
-import {ActionTypes as BufferActionTypes} from '../buffers/actionTypes';
 import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
 import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
-import {taskLoad} from "../task";
 import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
-import {CodecastPlatform, platformsList} from '../stepper/platforms';
-import {BlockDocumentModel, DocumentModel} from '../buffers';
-import {hasBlockPlatform} from '../stepper/js';
+import {platformsList} from '../stepper/platforms';
 import {IoMode} from '../stepper/io';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {taskLoad} from '../task/task_actions';
+import {
+    createEmptyBufferState,
+    getBufferTypeFromPlatform
+} from '../buffers/document';
+import {bufferReset} from '../buffers/buffers_slice';
+import {bufferChangePlatform} from '../buffers/buffer_actions';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -136,7 +140,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
         return;
     }
 
-    if (isLocalStorageEnabled() && window.localStorage.getItem('platform')) {
+    if (isLocalStorageEnabled() && window.localStorage.getItem('platform') && window.localStorage.getItem('platform') in platformsList) {
         state.options.platform = window.localStorage.getItem('platform') as CodecastPlatform;
     }
 
@@ -168,34 +172,30 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defineAction(ActionTypes.TaskVariantChanged);
-    bundle.addReducer(ActionTypes.TaskVariantChanged, (state, { payload: { variant } }) => {
+    bundle.addReducer(ActionTypes.TaskVariantChanged, (state, {payload: {variant}}) => {
         state.options.taskVariant = variant;
+    });
+
+    bundle.defineAction(ActionTypes.TabsEnabledChanged);
+    bundle.addReducer(ActionTypes.TabsEnabledChanged, (state, {payload: {tabsEnabled}}) => {
+        state.options.tabsEnabled = tabsEnabled;
     });
 
     bundle.addSaga(function* () {
         // @ts-ignore
         yield* takeEvery(ActionTypes.PlatformChanged, function* ({payload: {reloadTask}}) {
-            const newPlatform = yield* appSelect(state => state.options.platform);
+            const state = yield* appSelect();
+            const newPlatform = state.options.platform;
             if (isLocalStorageEnabled()) {
                 window.localStorage.setItem('platform', newPlatform);
             }
             if (false !== reloadTask) {
                 yield* put({type: StepperActionTypes.StepperExit});
 
-                // Reset source if we change from a block platform to a non-block platform
-                const currentModel = yield* appSelect(state => state.buffers['source']?.model);
-                if (
-                    (currentModel instanceof BlockDocumentModel && !hasBlockPlatform(newPlatform))
-                    || (currentModel instanceof DocumentModel && hasBlockPlatform(newPlatform))
-                ) {
-                    yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
+                if (!state.options.tabsEnabled) {
+                    const activeBufferName = state.buffers.activeBufferName;
+                    yield* put(bufferChangePlatform(activeBufferName, newPlatform));
                 }
-
-                const levels = yield* appSelect(state => state.platform.levels);
-                for (let level of Object.keys(levels)) {
-                    yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
-                }
-                yield* put(taskLoad({reloadContext: true}));
             }
         });
     });

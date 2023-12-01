@@ -7,7 +7,8 @@ import {useDispatch} from "react-redux";
 import {getMessage} from "../lang";
 import {SubtitlesPopup} from "../subtitles/SubtitlesPopup";
 import {useAppSelector} from "../hooks";
-import {LayoutPlayerMode} from "./layout/layout";
+
+import {LayoutPlayerMode} from './layout/layout_types';
 
 export function PlayerControls() {
     const player = useAppSelector(state => state.player);

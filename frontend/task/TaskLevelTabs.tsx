@@ -3,12 +3,12 @@ import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import {Stars} from "./Stars";
 import {getMessage} from "../lang";
-import {levelScoringData} from "../submission/task_submission";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {taskChangeLevel} from "./index";
 import {TaskLevelName} from "./platform/platform_slice";
 import {Button, Dialog} from '@blueprintjs/core';
+import {taskChangeLevel} from './task_actions';
+import {levelScoringData} from '../submission/scoring';
 
 export function TaskLevelTabs() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);

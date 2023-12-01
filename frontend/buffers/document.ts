@@ -1,156 +1,179 @@
-import {List} from 'immutable';
-import {immerable} from "immer";
-import {BlockDocumentModel, DocumentModel, documentModelFromString} from "./index";
+import {
+    BlockBufferState,
+    BlockDocument,
+    BlockDocumentContent,
+    BufferState,
+    BufferType,
+    Document,
+    TextBufferState,
+    TextDocument,
+    Range, TextDocumentDelta, TextDocumentDeltaAction,
+} from './buffer_types';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {hasBlockPlatform} from '../stepper/platforms';
+import log from 'loglevel';
 
-interface Range {
-    row: number,
-    column: number
+export function getBufferTypeFromPlatform(platform: CodecastPlatform) {
+    return hasBlockPlatform(platform) ? BufferType.Block : BufferType.Text;
 }
 
-export class Selection {
-    [immerable] = true;
-
-    public constructor(
-        public start: Range = {
-            row: 0,
-            column: 0
-        },
-        public end: Range = {
-            row: 0,
-            column: 0
+export function createEmptyBufferState(type: BufferType): BufferState {
+    if (BufferType.Text === type) {
+        return {
+            type: BufferType.Text,
+            document: TextBufferHandler.getEmptyDocument(),
+            submissionIndex: null,
+            actions: {},
         }
-    ) {
-
+    } else if (BufferType.Block === type) {
+        return {
+            type: BufferType.Block,
+            document: BlockBufferHandler.getEmptyDocument(),
+            submissionIndex: null,
+            actions: {},
+        }
+    } else {
+        throw new Error("Unknown buffer type: " + type);
     }
 }
 
-export class Document {
-    [immerable] = true;
+export function getBufferHandler(buffer: BufferState) {
+    if (BufferType.Text === buffer.type) {
+        return new TextBufferHandler(buffer as TextBufferState);
+    } else if (BufferType.Block === buffer.type) {
+        return new BlockBufferHandler(buffer as BlockBufferState);
+    } else {
+        throw new Error("Unknown buffer type: " + buffer.type);
+    }
+}
 
-    constructor(public lines: List<string>) {
-        this.lines = lines;
+export abstract class BufferHandler {
+    buffer: BufferState;
+
+    documentToString() {
+        return this.buffer.document ? documentToString(this.buffer.document) : null;
+    }
+}
+
+export class TextBufferHandler extends BufferHandler {
+    buffer: TextBufferState;
+
+    constructor(buffer: TextBufferState) {
+        super();
+        this.buffer = buffer;
     }
 
-    size(): number {
-        if (this.lines.size === 0) {
-            return 0;
-        }
-
-        return this.lines.reduce(function(a, v) {
-            return (a + v.length + 1);
-        }, 0) - 1;
+    static getEmptyDocument(): TextDocument {
+        return {
+            type: BufferType.Text,
+            lines: [''],
+        };
     }
 
-    toString(): string {
-        return this.lines.toJS().join('\n');
+    static documentFromString(content: string|null): TextDocument {
+        return {
+            type: BufferType.Text,
+            lines: (content ? content : '').split("\n"),
+        };
     }
 
-    getContent(): string {
-        return this.toString();
-    }
-
-    applyDelta(delta): Document {
-        const docLines = this.lines;
+    static applyDelta(document: TextDocument, delta: TextDocumentDelta): TextDocument {
+        const docLines = [...document.lines];
         const row = delta.start.row;
         const startColumn = delta.start.column;
-        const line = docLines.get(row, "");
+        const line = row < docLines.length ? docLines[row] : '';
 
-        if (delta.action === 'insert') {
+        if (TextDocumentDeltaAction.Insert === delta.action) {
             const lines = delta.lines;
             const nLines = lines.length;
             if (nLines === 1) {
-                return new Document(docLines.set(row, line.substring(0, startColumn) + lines[0] + line.substring(startColumn)));
+                docLines[row] = line.substring(0, startColumn) + lines[0] + line.substring(startColumn);
             } else {
-                const args = [row, 1, ...delta.lines] as [number, number, ...string[]];
-
-                docLines.splice.apply(docLines, args);
+                docLines.splice(row, 1, ...delta.lines);
                 docLines[row] = line.substring(0, startColumn) + docLines[row];
                 docLines[row + delta.lines.length - 1] += line.substring(startColumn);
-
-                return new Document(
-                    docLines.splice.apply(docLines, args)
-                        .update(row, firstLine => line.substring(0, startColumn) + firstLine)
-                        .update(row + nLines - 1, lastLine => lastLine + line.substring(startColumn))
-                );
             }
         }
 
-        if (delta.action === "remove") {
+        if (TextDocumentDeltaAction.Remove === delta.action) {
             const endColumn = delta.end.column;
             const endRow = delta.end.row;
             if (row === endRow) {
-                return new Document(
-                    docLines.set(row, line.substring(0, startColumn) + line.substring(endColumn)));
+                docLines[row] = line.substring(0, startColumn) + line.substring(endColumn);
             } else {
-                return new Document(
-                    docLines.splice(
-                        row,
-                        endRow - row + 1,
-                        line.substring(0, startColumn) + docLines.get(endRow).substring(endColumn)
-                    )
+                const endRowContent = endRow < docLines.length ? docLines[endRow] : '';
+                docLines.splice(
+                    row,
+                    endRow - row + 1,
+                    line.substring(0, startColumn) + endRowContent.substring(endColumn)
                 );
             }
         }
 
-        return this;
+        return TextBufferHandler.documentFromString(docLines.join("\n"));
+    }
+}
+
+export class BlockBufferHandler extends BufferHandler {
+    buffer: BlockBufferState;
+
+    constructor(buffer: BlockBufferState) {
+        super();
+        this.buffer = buffer;
     }
 
-    endCursor() {
-        if (this.lines.size === 0) {
-            return {row: 0, column: 0};
+    static getEmptyDocument(): BlockDocument {
+        return {
+            type: BufferType.Block,
+            content: null,
+        };
+    }
+
+    static documentFromObject(content: BlockDocumentContent): BlockDocument {
+        return {
+            type: BufferType.Block,
+            content,
         }
-
-        const row = this.lines.size - 1;
-        const column = this.lines.get(row).length;
-
-        return {row, column};
     }
 }
 
-export class ObjectDocument {
-    [immerable] = true;
-
-    constructor(public content: any) {
-        this.content = content;
+export function documentToString(document: Document): string {
+    if (!document) {
+        return '';
     }
 
-    getContent(): string {
-        return this.content;
+    if (BufferType.Text === document.type) {
+        return (document as TextDocument).lines.join("\n");
+    } else if (BufferType.Block === document.type) {
+        return (document as BlockDocument).content?.blockly;
+    } else {
+        throw new Error("Unknown buffer type: " + document.type);
     }
 }
 
-export const documentFromString = function(text: string): Document {
-    return new Document(List<string>(text.split('\n')));
-};
-
-export const emptyDocument = documentFromString('');
-
-export const compressDocument = function (document) {
-    const content = document.getContent();
-    if (document instanceof ObjectDocument) {
-        return content && content.blockly ? content.blockly : null;
+export function isEmptyDocument(document: Document|null) {
+    if (!document) {
+        return true;
     }
 
-    return content;
+    if (BufferType.Text === document.type) {
+        return 0 === (document as TextDocument).lines.join("\n").trim().length;
+    } else if (BufferType.Block === document.type) {
+        return !(document as BlockDocument).content?.blockly;
+    } else {
+        throw new Error("Unknown buffer type: " + document.type);
+    }
 }
 
-export const uncompressIntoDocument = function (content) {
+export function uncompressIntoDocument(content: string): Document {
     if (content.substring(0, 4) === '<xml') {
-        return new ObjectDocument({blockly: content});
+        return BlockBufferHandler.documentFromObject({blockly: content});
     } else {
-        return documentFromString(content);
+        return TextBufferHandler.documentFromString(content);
     }
 }
 
-export const modelFromDocument = function (document) {
-    if (document instanceof ObjectDocument) {
-        return new BlockDocumentModel(document);
-    } else {
-        return new DocumentModel(document);
-    }
-}
-
-export const compressRange = function(range) {
+export function compressRange(range: Range) {
     if ('object' === typeof range && null !== range) {
         const {start, end} = range;
         if (start.row === end.row && start.column === end.column) {
@@ -161,9 +184,9 @@ export const compressRange = function(range) {
     } else {
         return range;
     }
-};
+}
 
-export const expandRange = function(range): Selection {
+export function expandRange(range): Range {
     if (!Array.isArray(range)) {
         return range;
     }
@@ -171,11 +194,14 @@ export const expandRange = function(range): Selection {
     if (range.length === 2) {
         const pos = {row: range[0], column: range[1]};
 
-        return new Selection(pos, pos);
+        return {
+            start: pos,
+            end: pos,
+        }
     } else {
         const start = {row: range[0], column: range[1]};
         const end = {row: range[2], column: range[3]};
 
-        return new Selection(start, end);
+        return {start, end};
     }
-};
+}

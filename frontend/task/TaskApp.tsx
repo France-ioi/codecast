@@ -17,7 +17,7 @@ import {SubtitlesEditorPane} from "../subtitles/views/SubtitlesEditorPane";
 import {ActionTypes} from "../subtitles/actionTypes";
 import {SubtitlesEditor} from "../subtitles/SubtitlesEditor";
 import {LoginScreen} from "../common/LoginScreen";
-import {LayoutView, selectActiveView, ZOOM_LEVEL_LOW} from "./layout/layout";
+import {selectActiveView, ZOOM_LEVEL_LOW} from "./layout/layout";
 import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
@@ -30,13 +30,14 @@ import {ContextVisualizationImages} from './ContextVisualizationImages';
 import {TestsPane} from '../submission/TestsPane';
 import {TaskHintsDialog} from './dialog/TaskHintsDialog';
 import {DebugDialog} from './dialog/DebugDialog';
+import {LayoutPlayerMode, LayoutView} from './layout/layout_types';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const playerEnabled = !!useAppSelector(state => state.options.audioUrl);
-    const player = useAppSelector(state => state.player);
-    const isPlayerReady = player.isReady;
+    const playerProgress = useAppSelector(state => state.player.progress);
+    const isPlayerReady = useAppSelector(state => state.player.isReady);
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
     const layoutPlayerMode = useAppSelector(state => state.layout.playerMode);
@@ -59,7 +60,7 @@ export function TaskApp() {
         progress = editor.audioLoadProgress;
         progressMessage = getMessage('PLAYER_LOADING_AUDIO');
     } else if (playerEnabled && !isPlayerReady) {
-        progress = player.progress;
+        progress = playerProgress;
         progressMessage = getMessage('PLAYER_PREPARING');
     }
 
@@ -136,7 +137,10 @@ export function TaskApp() {
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform}`}>
             <div className="layout-general">
                 <div className={`task-section`}>
-                    {submissionsPaneOpen && <TestsPane/>}
+                    {LayoutView.Task !== activeView && <TestsPane
+                        open={submissionsPaneOpen}
+                    />}
+
                     <div className="task-section-container">
                         <div className="task-header">
                             <span className="task-header__quick">QUICK</span>
@@ -177,7 +181,7 @@ export function TaskApp() {
                 {playerEnabled && isPlayerReady &&
                     <div className="layout-footer">
                         <PlayerControls/>
-                        <SubtitlesBand/>
+                        {LayoutPlayerMode.Replay === layoutPlayerMode && <SubtitlesBand/>}
                     </div>
                 }
 

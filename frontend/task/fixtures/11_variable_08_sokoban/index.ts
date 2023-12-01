@@ -1,4 +1,4 @@
-import {QuickalgoTask} from '../../task_slice';
+import {QuickalgoTask} from '../../task_types';
 
 const images = [
     {path: require('./box.png')},
@@ -34,9 +34,11 @@ export default {
             hard: 40
         },
         unlockedLevels: 2,
+        tabsEnabled: false,
         zoom: {
             wheel: true,
         },
+        // documentationOpenByDefault: true,
         // hiddenTests: true,
         includeBlocks: {
             groupByCategory: {

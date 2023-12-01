@@ -9,11 +9,11 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getRecorderState} from "./selectors";
 import {AppStore, CodecastOptions} from "../store";
 import {Bundle} from "../linker";
-import {App} from "../index";
 import {Screen} from "../common/screens";
 import {isLocalStorageEnabled} from "../common/utils";
 import {appSelect} from '../hooks';
 import log from 'loglevel';
+import {App} from '../app_types';
 
 export type CodecastRecord = {
     version: string,

@@ -1,16 +1,18 @@
 import convertHtmlToReact, {processNodes} from '@hedgedoc/html-to-react';
-import {CodecastPlatform, platformsList} from '../../stepper/platforms';
+import {platformsList} from '../../stepper/platforms';
 import {PlatformSelection} from '../../common/PlatformSelection';
 import {SmartContractStorage} from '../libs/smart_contract/SmartContractStorage';
 import {Editor} from '../../buffers/Editor';
 import {generatePropsFromAttributes} from '@hedgedoc/html-to-react/dist/utils/generatePropsFromAttributes';
 import {VOID_ELEMENTS} from '@hedgedoc/html-to-react/dist/dom/elements/VoidElements';
 import React from 'react';
-import {quickAlgoLibraries} from '../libs/quickalgo_libraries';
 import {AppStore} from '../../store';
 import {formatTaskInstructions} from '../utils';
 import {TaskLevelName} from '../platform/platform_slice';
 import {memoize} from 'proxy-memoize';
+import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {TaskInstructionsVideo} from './TaskInstructionsVideo';
 
 function findStringForLanguage(taskStrings: any[], languages: string[]) {
     for (let language of languages) {
@@ -209,7 +211,7 @@ export const getTaskHintsSelector = memoize((state: AppStore) => {
     return hints.length ? hints : null;
 });
 
-function transformNode(node, index: string | number, context: { platform: CodecastPlatform }) {
+function transformNode(node, index: string|number, context: {platform: CodecastPlatform}) {
     if (node.attribs && 'select-lang-selector' in node.attribs) {
         return <PlatformSelection key="platform-selection" withoutLabel/>;
     } else if (node.attribs && 'smart-contract-storage' in node.attribs) {
@@ -231,7 +233,7 @@ function transformNode(node, index: string | number, context: { platform: Codeca
             width="100%"
             hideGutter
             hideCursor
-            printMarginColumn={false}
+            showPrintMargin={false}
             highlightActiveLine={false}
             dragEnabled={false}
             maxLines={Infinity}
@@ -251,6 +253,18 @@ function transformNode(node, index: string | number, context: { platform: Codeca
         }
 
         return React.createElement(tagName, props, children)
+    } else if (node.attribs && 'class' in node.attribs && -1 !== node.attribs['class'].split(' ').indexOf('videoBtn')) {
+        let children = processNodes(node.children, (node, index) => transformNode(node, index, context));
+        const props = generatePropsFromAttributes({
+            style: 'data-style' in node.attribs ? node.attribs['data-style'] : null,
+        }, index);
+
+        return <TaskInstructionsVideo
+            url={node.attribs['data-video']}
+            style={props['style'] as React.CSSProperties}
+        >
+            {React.createElement('div', props, children)}
+        </TaskInstructionsVideo>
     }
 
     return undefined;

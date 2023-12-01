@@ -5,11 +5,11 @@ import {
     stepperExecutionEndConditionReached,
     stepperExecutionError
 } from './actionTypes';
-import {Codecast} from '../index';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {getCurrentImmerState} from '../task/utils';
 import {QuickalgoLibraryCall, StepperContext} from './api';
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
+import {Codecast} from '../app_types';
 
 class QuickalgoExecutor {
     private stepperContext;
@@ -107,13 +107,10 @@ class QuickalgoExecutor {
 
             Codecast.runner?.stop();
 
-            await this.stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(String(e)), false));
+            await this.stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(String(e))));
         }
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async library call', libraryCallResult);
-
-        const newState = getCurrentImmerState(context.getInnerState());
-        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] NEW LIBRARY STATE', newState);
 
         if (context.callsToExecute.length) {
             const newCall = context.callsToExecute.pop();

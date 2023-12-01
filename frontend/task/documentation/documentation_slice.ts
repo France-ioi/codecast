@@ -18,6 +18,13 @@ export enum DocumentationLanguage {
     Scratch = 'scratch',
 }
 
+export const documentationLanguages = [
+    DocumentationLanguage.Python,
+    DocumentationLanguage.C,
+    DocumentationLanguage.Blockly,
+    DocumentationLanguage.Scratch,
+];
+
 export interface DocumentationState {
     concepts?: DocumentationConcept[],
     selectedConceptId?: string,

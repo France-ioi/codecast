@@ -9,11 +9,11 @@ import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
-import {App} from "../index";
 import {Screen} from "../common/screens";
 import intervalTree from "./interval_tree";
 import {SaveStep} from "../recorder/save_screen";
 import {appSelect} from '../hooks';
+import {App} from '../app_types';
 
 export type EditorControl = 'none' | 'trim' | 'subtitles';
 

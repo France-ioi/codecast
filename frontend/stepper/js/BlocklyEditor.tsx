@@ -1,17 +1,21 @@
 import React, {useEffect, useRef} from "react";
 import {useAppSelector} from "../../hooks";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
-import {ObjectDocument} from "../../buffers/document";
-import {BlockDocumentModel} from "../../buffers";
+import {BlockBufferHandler, documentToString} from "../../buffers/document";
 import log from 'loglevel';
 import {stepperDisplayError} from '../actionTypes';
 import {useDispatch} from 'react-redux';
 import {getMessage} from '../../lang';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {BlockBufferState, BlockDocument} from '../../buffers/buffer_types';
 
 export interface BlocklyEditorProps {
+    name?: string,
+    highlight?: string,
+    state?: BlockBufferState,
     onInit: Function,
     onEditPlain: Function,
     onSelect: Function,
+    readOnly?: boolean,
 }
 
 export const BlocklyEditor = (props: BlocklyEditorProps) => {
@@ -22,20 +26,26 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const previousValue = useRef(null);
+    const highlightedBlock = useRef(null);
     const loaded = useRef(false);
-    const resetDisplayTimeout = useRef(null);
     const dispatch = useDispatch();
 
-    const reset = (value, selection, firstVisibleRow, alreadyReset = false) => {
-        log.getLogger('editor').debug('[blockly.editor] reset', value);
+    log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlight: props.highlight});
 
-        if (null === value || null === value.getContent()) {
+    const reset = (document: BlockDocument, alreadyReset = false) => {
+        if (!context?.blocklyHelper) {
+            return;
+        }
+
+        log.getLogger('editor').debug('[blockly.editor] reset', document);
+
+        if (!document || null === document.content) {
             let defaultBlockly = context.blocklyHelper.getDefaultContent();
             log.getLogger('editor').debug('get default', defaultBlockly);
             context.blocklyHelper.programs = [{javascript:"", blockly: defaultBlockly, blocklyJS: ""}];
             context.blocklyHelper.languages[0] = "blockly";
         } else {
-            context.blocklyHelper.programs[0].blockly = value.getContent().blockly;
+            context.blocklyHelper.programs[0].blockly = document.content.blockly;
             context.blocklyHelper.languages[0] = "blockly";
         }
 
@@ -43,13 +53,13 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         context.blocklyHelper.reloading = true;
         context.blocklyHelper.loadPrograms();
 
-        // Check that all blocks exist and program is valid. Otherwide, reload default answer and cancel
+        // Check that all blocks exist and program is valid. Otherwise, reload default answer and cancel
         try {
             context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
         } catch (e) {
             console.error(e);
             if (!alreadyReset) {
-                reset(null, selection, firstVisibleRow, true);
+                reset(null, true);
                 dispatch(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE')));
             }
         }
@@ -57,13 +67,15 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const highlight = (range) => {
         log.getLogger('editor').debug('[blockly.editor] highlight', range);
-        if (!context.blocklyHelper.workspace) {
+        if (!context?.blocklyHelper?.workspace) {
             return;
         }
         // Fix of a code in blockly_interface.js making double consecutive highlight for the same block not working
         if (null !== range) {
             window.Blockly.selected = null;
         }
+
+        highlightedBlock.current = range;
 
         try {
             context.blocklyHelper.highlightBlock(range);
@@ -91,8 +103,12 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             eventType === window.Blockly.Events.Change) : true;
 
         if ('selected' === event.element) {
-            log.getLogger('editor').debug('is selected');
-            props.onSelect(event.newValue);
+            if (event.newValue !== highlightedBlock.current) {
+                log.getLogger('editor').debug('is selected');
+                highlightedBlock.current = event.newValue;
+                props.onSelect(event.newValue);
+            }
+            return;
         }
 
         if (isBlockEvent) {
@@ -102,18 +118,18 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                 blocklyHelper.savePrograms();
                 const answer = {...blocklyHelper.programs[0]};
                 if (answer.blockly !== previousValue.current) {
-                    const document = new ObjectDocument(answer);
+                    const document = BlockBufferHandler.documentFromObject(answer);
                     previousValue.current = answer.blockly;
                     log.getLogger('editor').debug('new value', answer);
                     props.onEditPlain(document);
-                    log.getLogger('editor').debug('timeout before removing highlight');
-                    if (resetDisplayTimeout.current) {
-                        clearTimeout(resetDisplayTimeout.current);
-                        resetDisplayTimeout.current = null;
-                    }
-                    resetDisplayTimeout.current = setTimeout(() => {
-                        blocklyHelper.onChangeResetDisplayFct();
-                    }, 500);
+                    // log.getLogger('editor').debug('timeout before removing highlight');
+                    // if (resetDisplayTimeout.current) {
+                    //     clearTimeout(resetDisplayTimeout.current);
+                    //     resetDisplayTimeout.current = null;
+                    // }
+                    // resetDisplayTimeout.current = setTimeout(() => {
+                    //     blocklyHelper.onChangeResetDisplayFct();
+                    // }, 2000);
                 }
             }
         }
@@ -132,10 +148,11 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             // readOnly: !!subTask.taskParams.readOnly,
             // defaultCode: subTask.defaultCode,
             maxListSize: context.infos.maxListSize,
-            // startingExample: context.infos.startingExample,
+            startingExample: context.infos.startingExample,
             placeholderBlocks: !!(context.placeholderBlocks || context.infos.placeholderBlocks),
             zoom: null,
             scrollbars: false,
+            readOnly: props.readOnly,
         };
 
         // Handle zoom options
@@ -158,29 +175,13 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             blocklyOptions.scrollbars = context.infos.scrollbars;
         }
 
-        log.getLogger('editor').debug('[blockly.editor] load blockly editor', blocklyHelper, blocklyHelper.load);
+        log.getLogger('editor').debug('[blockly.editor] load blockly editor', blocklyHelper, blocklyHelper.load, props.state?.document);
         blocklyHelper.load(language, true, 1, blocklyOptions);
 
         blocklyHelper.workspace.addChangeListener(onBlocklyEvent);
 
         if (typeof props.onInit === 'function') {
-            const api = {
-                reset,
-                // applyDeltas,
-                setSelection: highlight,
-                // focus,
-                // scrollToLine,
-                // getSelectionRange,
-                highlight,
-                resize,
-                // goToEnd,
-                // insert,
-                // insertSnippet,
-                getEmptyModel() {
-                    return new BlockDocumentModel();
-                },
-            };
-            props.onInit(api);
+            props.onInit();
         }
 
         const treeRows = document.getElementsByClassName('blocklyTreeRow');
@@ -191,6 +192,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             treeRow.style.setProperty('--color', color);
         }
 
+        reset(props.state?.document);
         loaded.current = true;
     }
 
@@ -204,7 +206,45 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                 context.blocklyHelper.unloadLevel();
             }
         };
-    }, [currentTask, currentLevel, contextId]);
+    }, [currentTask, currentLevel, contextId, props.readOnly]);
+
+    useEffect(() => {
+        const newDocument = props.state?.document ?? BlockBufferHandler.getEmptyDocument();
+        log.getLogger('editor').debug('[blockly.editor] load document', {newDocument, previousValue: previousValue.current});
+
+        if (previousValue.current === newDocument?.content?.blockly) {
+            return;
+        }
+
+        reset(newDocument);
+    }, [props.state?.document]);
+
+    useEffect(() => {
+        const selection = props.highlight;
+        log.getLogger('editor').debug('[blockly.editor] highlight changed', selection, props, highlightedBlock.current);
+        if (selection === highlightedBlock.current) {
+            return;
+        }
+
+        highlight(selection);
+    }, [props.highlight]);
+
+    useEffect(() => {
+        const selection = props.state?.selection;
+        log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, highlightedBlock.current);
+        if (selection === highlightedBlock.current) {
+            return;
+        }
+
+        highlight(selection);
+    }, [props.state?.selection]);
+
+    useEffect(() => {
+        if (0 < props.state?.actions?.resize) {
+            resize();
+            return;
+        }
+    }, [props.state?.actions?.resize]);
 
     const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
 

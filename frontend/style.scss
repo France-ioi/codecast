@@ -30,8 +30,13 @@ $alert-padding-x: 10px !default;
 @import "python";
 @import "subtitles";
 @import "controls";
+@import "./buffers/buffers.scss";
 @import "./tralalere/tralalere.scss";
 @import "./submission/submission.scss";
+
+input {
+  padding: 0;
+}
 
 html {
   margin-left: calc(100vw - 100%);
@@ -196,6 +201,24 @@ body#app, #app h1, #app h2, #app h3 {
     margin-left: 5px;
   }
 }
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 100px;
+  padding: 15px;
+  .empty-state-icon {
+    svg {
+      width: 40px;
+      height: 40px;
+      color: var(--primary-color);
+    }
+  }
+  .empty-state-text {
+    text-align: center;
+  }
+}
 
 #vumeter {
   position: fixed;
@@ -317,6 +340,12 @@ span + .value-previous {
 .error-highlight {
   position: absolute;
   background-color: rgba(255, 18, 18, 0.25);
+  z-index: 20;
+}
+
+.info-highlight {
+  position: absolute;
+  background-color: rgba(201, 201, 201, 0.5);
   z-index: 20;
 }
 
@@ -714,4 +743,16 @@ button.btn-cc {
 
 .has-text-centered {
   text-align: center;
+}
+
+.has-pointer {
+  cursor: pointer;
+}
+
+.is-fullwidth {
+  width: 100%;
+}
+
+.bp3-dialog {
+  padding-bottom: 0;
 }

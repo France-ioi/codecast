@@ -17,7 +17,8 @@ export enum ActionTypes {
     PlatformChanged = 'Platform.Changed',
     CanChangePlatformChanged = 'CanChangePlatform.Changed',
 
-    TaskVariantChanged = 'TaskVariant.Changed',
+    TaskVariantChanged = 'Task.Variant.Changed',
+    TabsEnabledChanged = 'Task.TabsEnabled.Changed',
 
     WindowResized = 'Window.Resized'
 }

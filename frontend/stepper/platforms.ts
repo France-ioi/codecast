@@ -1,29 +1,22 @@
-import {getPythonSpecificBlocks} from '../task/python_utils';
-import {QuickalgoTaskIncludeBlocks} from '../task/task_slice';
-import {Block} from '../task/blocks/blocks';
+import {QuickalgoTaskIncludeBlocks} from '../task/task_types';
 import {getCSpecificBlocks} from './views/c/utils';
 import {NotionsBag} from '../task/blocks/notions';
 import {smartContractPlatformsList} from '../task/libs/smart_contract/smart_contract_lib';
-import {SmartContractPlatform} from '../task/libs/smart_contract/smart_contract_blocks';
-
-export enum CodecastPlatform {
-    Python = 'python',
-    Unix = 'unix',
-    Arduino = 'arduino',
-    Blockly = 'blockly',
-    Scratch = 'scratch',
-}
+import {CodecastPlatform} from './codecast_platform';
+import {Block} from '../task/blocks/block_types';
+import {getPythonSpecificBlocks} from '../task/blocks/python_blocks';
 
 export interface PlatformData {
     needsCompilation?: boolean,
     hasMicroSteps?: boolean,
     aceSourceMode?: string,
     displayBlocks?: boolean,
+    extension?: string,
     getSpecificBlocks?: (notionsBag: NotionsBag, includeBlocks?: QuickalgoTaskIncludeBlocks) => Block[],
 }
 
 const platformBundles = {
-    'smartpy': [SmartContractPlatform.SmartPy, SmartContractPlatform.SmartPy019],
+    // 'smartpy': [SmartContractPlatform.SmartPy, SmartContractPlatform.SmartPy019],
 };
 
 export function getAvailablePlatformsFromSupportedLanguages(supportedLanguages: string): string[] {
@@ -43,10 +36,14 @@ export function getAvailablePlatformsFromSupportedLanguages(supportedLanguages: 
 }
 
 export const platformsList: {[key: string]: PlatformData} = {
-    [CodecastPlatform.Python]: {aceSourceMode: 'python', displayBlocks: true, getSpecificBlocks: getPythonSpecificBlocks},
-    [CodecastPlatform.Unix]: {needsCompilation: true, hasMicroSteps: true, aceSourceMode: 'c_cpp', getSpecificBlocks: getCSpecificBlocks},
-    [CodecastPlatform.Arduino]: {needsCompilation: true, hasMicroSteps: true, aceSourceMode: 'arduino', getSpecificBlocks: getCSpecificBlocks},
-    [CodecastPlatform.Blockly]: {aceSourceMode: 'text'},
-    [CodecastPlatform.Scratch]: {aceSourceMode: 'text'},
+    [CodecastPlatform.Python]: {aceSourceMode: 'python', displayBlocks: true, extension: 'py', getSpecificBlocks: getPythonSpecificBlocks},
+    [CodecastPlatform.Unix]: {needsCompilation: true, hasMicroSteps: true, extension: 'cpp', aceSourceMode: 'c_cpp', getSpecificBlocks: getCSpecificBlocks},
+    [CodecastPlatform.Arduino]: {needsCompilation: true, hasMicroSteps: true, extension: 'cpp', aceSourceMode: 'arduino', getSpecificBlocks: getCSpecificBlocks},
+    [CodecastPlatform.Blockly]: {aceSourceMode: 'text', extension: 'blockly'},
+    [CodecastPlatform.Scratch]: {aceSourceMode: 'text', extension: 'scratch'},
     ...smartContractPlatformsList,
+};
+
+export const hasBlockPlatform = (platform: CodecastPlatform) => {
+    return CodecastPlatform.Blockly === platform || CodecastPlatform.Scratch === platform;
 };

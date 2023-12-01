@@ -4,15 +4,16 @@ import {ActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {Screen} from "../common/screens";
 import {StepperStepMode} from "../stepper";
-import {App} from "../index";
-import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
 import {taskReloadStateEvent} from "./platform/actionTypes";
 import {hintUnlocked} from "./hints/hints_slice";
 import {AppStore} from "../store";
 import {taskSetBlocksUsage, taskSuccess} from "./task_slice";
 import log from 'loglevel';
 import {appSelect} from '../hooks';
-import {callPlatformValidate} from '../submission/submission';
+
+import {callPlatformValidate} from '../submission/submission_actions';
+import {App} from '../app_types';
+import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 
 export interface StatsState {
     timeSpentSeconds?: number,
