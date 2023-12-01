@@ -7,7 +7,7 @@ import React, {createElement, ReactElement, ReactNode} from 'react';
 import {AppStore, CodecastOptions} from "../../store";
 import {ControlsAndErrors} from "../ControlsAndErrors";
 import {Bundle} from "../../linker";
-import {ActionTypes as LayoutActionTypes, ActionTypes} from "./actionTypes";
+import {ActionTypes as LayoutActionTypes, ActionTypes, CursorPosition} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
@@ -33,6 +33,7 @@ import {submissionChangePaneOpen} from '../../submission/submission_slice';
 import {LayoutMobileMode, LayoutPlayerMode, LayoutType, LayoutView} from './layout_types';
 import {App} from '../../app_types';
 import {quickAlgoLibraries, QuickAlgoLibraries} from '../libs/quick_algo_libraries_model';
+import {ReplayContext} from '../../player/sagas';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -760,6 +761,10 @@ function layoutViewsChangedReducer(state: AppStore, {payload: {views}}) {
     state.layout.views = views;
 }
 
+function layoutCursorPositionChangedReducer(state: AppStore, {payload: {position}}) {
+    state.layout.cursorPosition = position;
+}
+
 function layoutInstructionsIndexChangedReducer(state: AppStore, {payload}) {
     state.layout.instructions = {
         ...state.layout.instructions,
@@ -804,6 +809,7 @@ export interface LayoutState {
     playerModeResumeImmediately?: boolean,
     views: {[view: string]: boolean},
     instructions: {tabIndex: number, pageIndex: number, maxHeight: number},
+    cursorPosition?: CursorPosition,
 }
 
 function* layoutSaga({replayApi}: App) {
@@ -902,12 +908,29 @@ export default function (bundle: Bundle) {
     bundle.defineAction(ActionTypes.LayoutInstructionsIndexChanged);
     bundle.addReducer(ActionTypes.LayoutInstructionsIndexChanged, layoutInstructionsIndexChangedReducer);
 
+    bundle.defineAction(ActionTypes.LayoutCursorPositionChanged);
+    bundle.addReducer(ActionTypes.LayoutCursorPositionChanged, layoutCursorPositionChangedReducer);
+
     bundle.addSaga(layoutSaga);
 
-    bundle.defer(function ({replayApi}: App) {
+    bundle.defer(function ({recordApi, replayApi}: App) {
         replayApi.onReset(function* (instant: PlayerInstant) {
             const mobileMode = instant.state.layout.mobileMode;
             yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
+
+            const position = instant.state.layout.cursorPosition;
+            yield* put({type: ActionTypes.LayoutCursorPositionChanged, payload: {position}});
+        });
+
+        recordApi.on(ActionTypes.LayoutCursorPositionChanged, function* (addEvent, action) {
+            const position = action.payload.position;
+
+            yield* call(addEvent, 'cursor.move', position);
+        });
+
+        replayApi.on('cursor.move', function* (replayContext: ReplayContext, event) {
+            const position = event[2];
+            yield* put({type: ActionTypes.LayoutCursorPositionChanged, payload: {position}});
         });
     });
 }
