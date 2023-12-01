@@ -197,6 +197,8 @@ export function* mergeQuickalgoLibrary(libName: string, parentContext: QuickAlgo
         ...childContext.notionsList,
     };
 
+    parentContext.strings = window.languageStrings;
+
     // Copy handlers
     for (let generatorName in childContext.customBlocks) {
         // Execute function in the context of the child
