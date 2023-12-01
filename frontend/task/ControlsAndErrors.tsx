@@ -116,7 +116,7 @@ export function ControlsAndErrors() {
     const serverTask = null !== currentTask && isServerTask(currentTask);
 
     return (
-        <div className="controls-and-errors">
+        <div className="controls-and-errors cursor-main-zone" data-cursor-zone="controls-and-errors">
             {(showStepper || hasModes) && <div className="mode-selector">
                 {hasModes &&
                     <React.Fragment>

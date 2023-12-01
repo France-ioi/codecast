@@ -71,7 +71,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     );
 
     return (
-        <div className="layout-editor" style={props.style}>
+        <div className="layout-editor cursor-main-zone" data-cursor-zone="layout-editor" style={props.style}>
             {editorTabsEnabled && <BufferEditorTabs/>}
 
             {null !== activeBufferPendingSubmissionIndex && <div className="layout-editor-read-only">
