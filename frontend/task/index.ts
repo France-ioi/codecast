@@ -933,6 +933,9 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(platformAnswerLoaded, function*({payload: {answer}}) {
             log.getLogger('task').debug('Platform answer loaded', answer);
+            if(!answer) {
+                return;
+            }
             const state = yield* appSelect();
             if (state.options.tabsEnabled) {
                 yield* call(createSourceBufferFromDocument, answer.document);
