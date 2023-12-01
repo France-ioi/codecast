@@ -14,9 +14,8 @@ export type RecordingToScreenPointTransformer = (data: Partial<CursorPosition>, 
 
 const zonePointToScreenTransformers: {[zoneName: string]: RecordingToScreenPointTransformer} = {};
 
-const THROTTLE_TIME_BETWEEN_POSITIONS = 75; // ms
-const DISTANCE_MIN_BETWEEN_POSITIONS = 15; // px
-
+const THROTTLE_TIME_BETWEEN_POSITIONS = 100; // ms
+const DISTANCE_MIN_BETWEEN_POSITIONS = 10; // px
 
 export function useCursorPositionTracking(specialZoneName?: string, pointToRecording?: ScreenPointToRecordingTransformer, recordingToPoint?: RecordingToScreenPointTransformer) {
     const isRecording = useAppSelector(state => RecorderStatus.Recording === getRecorderState(state).status);
