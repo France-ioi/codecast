@@ -30,4 +30,5 @@ export interface CursorPosition {
     editorCaret?: {row: number, column: number},
     posToEditorCaret?: CursorPoint,
     textOffset?: number,
+    element?: HTMLElement,
 }

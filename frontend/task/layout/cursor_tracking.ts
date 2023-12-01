@@ -46,8 +46,7 @@ export function useCursorPositionTracking(specialZoneName?: string, pointToRecor
             }
 
             previousPoint.current = point;
-            const element = document.elementFromPoint(point.x, point.y) as HTMLElement;
-
+            let element = document.elementFromPoint(point.x, point.y) as HTMLElement;
             if (element.closest<HTMLElement>('.cursor-recording-disabled')) {
                 return;
             }
@@ -66,6 +65,10 @@ export function useCursorPositionTracking(specialZoneName?: string, pointToRecor
                 const positionRelativeToMainZone = extractRelativePosition(point, mainZone);
 
                 const additional = pointToRecording ? pointToRecording(point) : null;
+                if (additional?.element) {
+                    element = additional.element;
+                    delete additional.element;
+                }
 
                 const cursorPosition: CursorPosition = {
                     zone: mainZoneName,
