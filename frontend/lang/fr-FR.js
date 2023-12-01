@@ -284,6 +284,7 @@ module.exports = {
     ABOUT_TRANSLATORS: "et a été traduit par :",
     ABOUT_LICENSE: "License :",
     ABOUT_CODECAST: "Codecast est un projet de France-IOI développé sous la licence MIT",
+    CODECAST_VERSION: "Version de Codecast : {version}",
 
     TRALALERE_MENU_DOCUMENTATION: "Documentation",
     TRALALERE_MENU_HINTS: "Indices",
