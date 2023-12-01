@@ -3,6 +3,7 @@ import {getTaskMetadata} from "./platform/platform";
 import {getMessage} from "../lang";
 import {useAppSelector} from "../hooks";
 import {AppStore} from "../store";
+import {RECORDING_FORMAT_VERSION} from '../version';
 
 export const selectDisplayAbout = (state: AppStore) => {
     return state.task.currentTask || (state.player && state.player.data && state.player.data.version && Number(state.player.data.version.split('.')[0]) < 7);
@@ -53,6 +54,7 @@ export function TaskAbout() {
 
             {!!metadata.license && <p>{getMessage('ABOUT_LICENSE')} {metadata.license}</p>}
             <p>{getMessage('ABOUT_CODECAST')}</p>
+            <p>{getMessage('CODECAST_VERSION').format({version: RECORDING_FORMAT_VERSION})}</p>
         </div>
     );
 }
