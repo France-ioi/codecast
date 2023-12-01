@@ -12,6 +12,7 @@ import {TaskLevelName} from '../platform/platform_slice';
 import {memoize} from 'proxy-memoize';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {TaskInstructionsVideo} from './TaskInstructionsVideo';
 
 function findStringForLanguage(taskStrings: any[], languages: string[]) {
     for (let language of languages) {
@@ -252,6 +253,18 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
         }
 
         return React.createElement(tagName, props, children)
+    } else if (node.attribs && 'class' in node.attribs && -1 !== node.attribs['class'].split(' ').indexOf('videoBtn')) {
+        let children = processNodes(node.children, (node, index) => transformNode(node, index, context));
+        const props = generatePropsFromAttributes({
+            style: 'data-style' in node.attribs ? node.attribs['data-style'] : null,
+        }, index);
+
+        return <TaskInstructionsVideo
+            url={node.attribs['data-video']}
+            style={props['style'] as React.CSSProperties}
+        >
+            {React.createElement('div', props, children)}
+        </TaskInstructionsVideo>
     }
 
     return undefined;
