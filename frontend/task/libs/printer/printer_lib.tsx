@@ -320,6 +320,7 @@ export class PrinterLib extends QuickAlgoLibrary {
             CodecastPlatform.Python,
             CodecastPlatform.C,
             CodecastPlatform.Cpp,
+            CodecastPlatform.Java,
         ];
     };
 
