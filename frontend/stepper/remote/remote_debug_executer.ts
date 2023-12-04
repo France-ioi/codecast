@@ -195,7 +195,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
         });
         if (outcome.timeout) {
             yield* call([this, this.stop]);
-            throw new Error('Remote Debug Executor has timeout');
+            throw new StepperError('error', 'Remote Debug Executor has timeout');
         }
 
         return outcome.received;
