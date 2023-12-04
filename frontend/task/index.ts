@@ -937,7 +937,7 @@ export default function (bundle: Bundle) {
                 return;
             }
             const state = yield* appSelect();
-            if (state.options.tabsEnabled) {
+            if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
                 yield* call(createSourceBufferFromDocument, answer.document);
             } else {
                 const currentBuffer = state.buffers.activeBufferName;
