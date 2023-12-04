@@ -24,7 +24,7 @@ The stepper's state has the following shape:
 
 */
 
-import {apply, call, cancel, fork, put, race, select, take, takeEvery, takeLatest, throttle} from 'typed-redux-saga';
+import {apply, call, cancel, fork, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 
 import {
@@ -1129,6 +1129,10 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
     const state = yield* appSelect();
     if ('tralalere' === state.options.app) {
         yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
+    }
+
+    if (null !== state.screen) {
+        yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
     }
 
     const stepperControlsState = getStepperControlsSelector({state, enabled: true});

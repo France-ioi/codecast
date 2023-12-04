@@ -20,7 +20,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "../player";
-import {ReplayContext} from "../player/sagas";
+import {delay, ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -29,8 +29,9 @@ import {appSelect} from '../hooks';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {CodecastPlatform} from './codecast_platform';
 import {App, Codecast} from '../app_types';
-import {documentToString} from '../buffers/document';
+import {BlockBufferHandler, documentToString} from '../buffers/document';
 import {TaskAnswer} from '../task/task_types';
+import {RECORDING_FORMAT_VERSION} from '../version';
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -79,6 +80,9 @@ export default function(bundle: Bundle) {
             const answer = selectAnswer(state);
             const {allowExecutionOverBlocksLimit} = state.options;
             const platform = answer.platform;
+
+            // To make sure we have the time to conclude all Redux Saga actions triggered by the start of the compilation
+            yield* delay(0);
 
             yield* put({
                 type: ActionTypes.CompileStarted,
@@ -133,14 +137,29 @@ export default function(bundle: Bundle) {
         });
 
         recordApi.on(ActionTypes.CompileStarted, function* (addEvent, action) {
-            const {source} = action;
+            const {payload} = action;
 
-            yield* call(addEvent, 'compile.start', source); // XXX should also have platform
+            yield* call(addEvent, 'compile.start', payload.answer);
         });
         replayApi.on(['stepper.compile', 'compile.start'], function* (replayContext: ReplayContext, event) {
-            const answer = event[2];
+            let answer = event[2];
 
-            yield* put({type: ActionTypes.CompileStarted, answer});
+            // For backward-compatibility: before Codecast 7.4, this parameter was the source
+            if ('string' === typeof answer) {
+                const platform = yield* appSelect(state => state.options.platform);
+                answer = {
+                    document: TextBufferHandler.documentFromString(answer),
+                    platform,
+                };
+            } else if ('object' === typeof answer && answer.blockly) {
+                const platform = yield* appSelect(state => state.options.platform);
+                answer = {
+                    document: BlockBufferHandler.documentFromObject(answer),
+                    platform,
+                };
+            }
+
+            yield* put({type: ActionTypes.CompileStarted, payload: {answer}});
         });
 
         recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {

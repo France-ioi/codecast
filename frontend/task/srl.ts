@@ -6,11 +6,9 @@ import {Screen} from "../common/screens";
 import {StepperStepMode} from "../stepper";
 import {taskReloadStateEvent} from "./platform/actionTypes";
 import {hintUnlocked} from "./hints/hints_slice";
-import {AppStore} from "../store";
 import {taskSetBlocksUsage, taskSuccess} from "./task_slice";
 import log from 'loglevel';
 import {appSelect} from '../hooks';
-
 import {callPlatformValidate} from '../submission/submission_actions';
 import {App} from '../app_types';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
@@ -31,7 +29,7 @@ let currentState: StatsState = {
     blocksUsed: 0,
     hintsTaken: 0,
     documentationOpened: false,
-}
+};
 
 export function* statsGetStateSaga(): Generator<any, StatsState, any> {
     const state = yield* appSelect();

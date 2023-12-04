@@ -72,6 +72,10 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
             caption: "for",
             snippet: "for loop in range(${1:iteration}):\n\t${2:pass}",
         },
+        else: {
+            caption: "else",
+            snippet: "else:\n\t${2:pass}",
+        },
     };
 
     if (contextIncludeBlocks && contextIncludeBlocks.pythonAdditionalFunctions) {

@@ -31,6 +31,8 @@ import {TestsPane} from '../submission/TestsPane';
 import {TaskHintsDialog} from './dialog/TaskHintsDialog';
 import {DebugDialog} from './dialog/DebugDialog';
 import {LayoutPlayerMode, LayoutView} from './layout/layout_types';
+import {useCursorPositionTracking} from './layout/cursor_tracking';
+import {CursorPosition} from './layout/CursorPosition';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -65,6 +67,8 @@ export function TaskApp() {
     }
 
     const dispatch = useDispatch();
+
+    useCursorPositionTracking();
 
     const closeTaskSuccess = () => {
         dispatch(taskSuccessClear({}));
@@ -134,7 +138,7 @@ export function TaskApp() {
     }
 
     return (
-        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform}`}>
+        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform} cursor-main-zone`} data-cursor-zone="task-app">
             <div className="layout-general">
                 <div className={`task-section`}>
                     {LayoutView.Task !== activeView && <TestsPane
@@ -178,10 +182,17 @@ export function TaskApp() {
                     </div>
                 }
 
+                {/*<CursorPosition offset={{x: 20, y: 20}}/>*/}
+
                 {playerEnabled && isPlayerReady &&
                     <div className="layout-footer">
                         <PlayerControls/>
-                        {LayoutPlayerMode.Replay === layoutPlayerMode && <SubtitlesBand/>}
+                        {LayoutPlayerMode.Replay === layoutPlayerMode &&
+                            <React.Fragment>
+                                <CursorPosition/>
+                                <SubtitlesBand/>
+                            </React.Fragment>
+                        }
                     </div>
                 }
 

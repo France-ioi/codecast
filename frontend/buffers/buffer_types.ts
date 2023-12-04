@@ -52,8 +52,8 @@ export interface BufferState extends BufferStateParameters {
     actions: {
         goToEnd?: number,
         resize?: number,
-        blocksToInsert?: {block: Block, pos: TextPosition}[],
-        deltasToApply?: TextDocumentDelta[],
+        blocksToInsert?: {nextId: number, elements: {[id: number]: {block: Block, pos: TextPosition}}},
+        deltasToApply?: {nextId: number, elements: {[id: number]: TextDocumentDelta}},
     },
 }
 

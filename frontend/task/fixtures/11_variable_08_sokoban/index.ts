@@ -38,6 +38,7 @@ export default {
         zoom: {
             wheel: true,
         },
+        // documentationOpenByDefault: true,
         // hiddenTests: true,
         includeBlocks: {
             groupByCategory: {

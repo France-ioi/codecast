@@ -31,6 +31,10 @@ function initBufferIfNeeded(state: BuffersState, buffer: string, type: BufferTyp
     state.buffers[buffer].type = type;
 }
 
+function generateNewId(elements: {nextId: number, elements: {[id: number]: unknown}}) {
+    return elements.nextId++;
+}
+
 export const buffersSlice = createSlice({
     name: 'buffers',
     initialState: buffersInitialState,
@@ -50,12 +54,15 @@ export const buffersSlice = createSlice({
         },
         bufferModelEdit(state, action: PayloadAction<{buffer: string, delta: TextDocumentDelta}>) {
             if (!('deltasToApply' in state.buffers[action.payload.buffer].actions)) {
-                state.buffers[action.payload.buffer].actions.deltasToApply = [];
+                state.buffers[action.payload.buffer].actions.deltasToApply = {nextId: 0, elements: {}};
             }
-            state.buffers[action.payload.buffer].actions.deltasToApply.push(action.payload.delta);
+            const id = generateNewId(state.buffers[action.payload.buffer].actions.deltasToApply);
+            state.buffers[action.payload.buffer].actions.deltasToApply.elements[id] = action.payload.delta;
         },
-        bufferClearDeltasToApply(state, action: PayloadAction<{buffer: string}>) {
-            state.buffers[action.payload.buffer].actions.deltasToApply = [];
+        bufferClearDeltasToApply(state, action: PayloadAction<{buffer: string, ids: string[]}>) {
+            for (let id of action.payload.ids) {
+                delete state.buffers[action.payload.buffer].actions.deltasToApply.elements[id];
+            }
         },
         // This one is recorded, bufferResetDocument is not
         bufferEditPlain(state, action: PayloadAction<{buffer: string, document: Document}>) {
@@ -98,12 +105,15 @@ export const buffersSlice = createSlice({
         },
         bufferInsertBlock(state, action: PayloadAction<{buffer: string, block: Block, pos?: TextPosition}>) {
             if (!('blocksToInsert' in state.buffers[action.payload.buffer].actions)) {
-                state.buffers[action.payload.buffer].actions.blocksToInsert = [];
+                state.buffers[action.payload.buffer].actions.blocksToInsert = {nextId: 0, elements: {}};
             }
-            state.buffers[action.payload.buffer].actions.blocksToInsert.push({block: action.payload.block, pos: action.payload.pos});
+            const id = generateNewId(state.buffers[action.payload.buffer].actions.blocksToInsert);
+            state.buffers[action.payload.buffer].actions.blocksToInsert.elements[id] = {block: action.payload.block, pos: action.payload.pos};
         },
-        bufferClearBlocksToInsert(state, action: PayloadAction<{buffer: string}>) {
-            state.buffers[action.payload.buffer].actions.blocksToInsert = [];
+        bufferClearBlocksToInsert(state, action: PayloadAction<{buffer: string, ids: string[]}>) {
+            for (let id of action.payload.ids) {
+                delete state.buffers[action.payload.buffer].actions.blocksToInsert.elements[id];
+            }
         },
         bufferChangeActiveBufferName(state, action: PayloadAction<string>) {
             state.activeBufferName = action.payload;

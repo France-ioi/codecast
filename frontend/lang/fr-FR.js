@@ -278,6 +278,8 @@ module.exports = {
     CODE_CONSTRAINTS_LIMITED_ASSIGN_FAMILIAR: "Tu n'as pas le droit de réassigner un mot-clé à utilisation limitée : {keyword}.",
     CODE_CONSTRAINTS_EMPTY_PROGRAM: "Vous ne pouvez pas valider un programme vide.",
     CODE_CONSTRAINTS_EMPTY_PROGRAM_FAMILIAR: "Tu ne peux pas valider un programme vide.",
+    CODE_CONSTRAINTS_EMPTY_PROGRAM_BLOCKS: "Le programme est vide ! Connectez des blocs.",
+    CODE_CONSTRAINTS_EMPTY_PROGRAM_BLOCKS_FAMILIAR: "Le programme est vide ! Connecte des blocs.",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "Vous utilisez la fonction \"{funcName}\" sans les parenthèses. Ajoutez les parenthèses pour appeler la fonction.",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS_FAMILIAR: "Tu utilises la fonction \"{funcName}\" sans les parenthèses. Ajoute les parenthèses pour appeler la fonction.",
 
@@ -285,6 +287,7 @@ module.exports = {
     ABOUT_TRANSLATORS: "et a été traduit par :",
     ABOUT_LICENSE: "License :",
     ABOUT_CODECAST: "Codecast est un projet de France-IOI développé sous la licence MIT",
+    CODECAST_VERSION: "Version de Codecast : {version}",
 
     TRALALERE_MENU_DOCUMENTATION: "Documentation",
     TRALALERE_MENU_HINTS: "Indices",

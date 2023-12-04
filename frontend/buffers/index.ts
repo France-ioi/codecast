@@ -407,6 +407,17 @@ function addRecordHooks({recordApi}: App) {
     });
 }
 
+// For retro-compatibility: in Codecast 7.4, the default buffer is now source:0 and not source anymore
+function* fixBufferName(bufferName: string) {
+    if ('source' === bufferName) {
+        const currentSourceBuffers = yield* appSelect(selectSourceBuffers);
+
+        return Object.keys(currentSourceBuffers)[0];
+    } else {
+        return bufferName;
+    }
+}
+
 function addReplayHooks({replayApi}: App) {
     log.getLogger('editor').debug('Add replay hooks for editor');
     replayApi.on('start', function* (replayContext: ReplayContext, event) {
@@ -420,24 +431,26 @@ function addReplayHooks({replayApi}: App) {
                 firstVisibleRow: buffers[bufferName].firstVisibleRow,
                 document,
             };
+
+            bufferName = yield* call(fixBufferName, bufferName);
             log.getLogger('editor').debug('[buffer] replay api start', bufferState);
             yield* put(bufferReset({buffer: bufferName, state: bufferState}));
         }
     });
     replayApi.on('buffer.select', function* (replayContext: ReplayContext, event) {
-        const buffer = event[2];
+        const buffer = yield* call(fixBufferName, event[2]);
         const selection = expandRange(event[3]);
         yield* put(bufferSelect({buffer, selection}));
     });
     replayApi.on('buffer.edit_plain', function* (replayContext: ReplayContext, event) {
-        const buffer = event[2];
+        const buffer = yield* call(fixBufferName, event[2]);
         const content = event[3];
         const document = uncompressIntoDocument(content);
         yield* put(bufferEditPlain({buffer, document}))
     });
     replayApi.on(['buffer.insert', 'buffer.delete'], function*(replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
-        const buffer = event[2];
+        const buffer = yield* call(fixBufferName, event[2]);
         const range = expandRange(event[3]);
         let delta: TextDocumentDelta;
         if (event[1].endsWith('insert')) {
@@ -464,7 +477,7 @@ function addReplayHooks({replayApi}: App) {
     });
     replayApi.on('buffer.scroll', function* (replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
-        const buffer = event[2];
+        const buffer = yield* call(fixBufferName, event[2]);
         const firstVisibleRow = event[3];
 
         yield* put(bufferScrollToLine({buffer, firstVisibleRow}));

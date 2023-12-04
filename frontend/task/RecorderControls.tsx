@@ -80,7 +80,7 @@ export function RecorderControls(props: RecorderControlsProps) {
     };
 
     return (
-        <div className="task-recorder-controls">
+        <div className="task-recorder-controls cursor-recording-disabled">
             <div className="controls-recorder">
                 <ButtonGroup>
                     <Button
@@ -148,7 +148,7 @@ export function RecorderControls(props: RecorderControlsProps) {
             }
 
             <Dialog isOpen={Screen.Save === screen} title={getMessage("UPLOADING_TITLE")} isCloseButtonShown={saveDialogCanClose} onClose={() => saveDialogCanClose && onCancel()}>
-                <div style={{margin: '20px 20px 0 20px'}}>
+                <div className='bp3-dialog-body'>
                     {user ? <SaveScreen onCancel={onCancel}/> : <LoginScreen/>}
                 </div>
             </Dialog>
