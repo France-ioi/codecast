@@ -107,7 +107,7 @@ export default function(bundle: Bundle) {
             }
 
             // @ts-ignore
-            if (Codecast.runner.constructor.needsCompilation()) {
+            if (!Codecast.runner.constructor.needsCompilation()) {
                 yield* put({
                     type: ActionTypes.CompileSucceeded,
                 });
