@@ -540,6 +540,7 @@ function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void 
 
 export function stepperExitReducer(state: AppStoreReplay): void {
     clearStepper(state.stepper, true);
+    state.compile.status = CompileStatus.Clear;
     state.task.inputNeeded = false;
 }
 
@@ -1137,7 +1138,6 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
 
     if (mustCompile) {
         const compileResult = yield* call(stepperCompileFromControlsSaga, app);
-        console.log('compile result', compileResult);
         if (CompileStatus.Done !== compileResult) {
             return;
         }
@@ -1169,7 +1169,6 @@ function* stepperSaga(app: App) {
                 });
             });
 
-            console.log('got result', result);
             if (CompileStatus.Done !== result) {
                 return;
             }

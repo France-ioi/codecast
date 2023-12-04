@@ -13,7 +13,7 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, race, take, takeEvery, takeLatest} from 'typed-redux-saga';
+import {call, cancel, fork, put, race, take, takeEvery, takeLatest} from 'typed-redux-saga';
 import {TextEncoder} from "text-encoding-utf-8";
 import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
 import {ActionTypes} from "./actionTypes";
@@ -46,6 +46,52 @@ export const initialStateCompile = {
     syntaxTree: null as any
 };
 
+export function* compileSaga() {
+    let state = yield* appSelect();
+    const answer = selectAnswer(state);
+    const {allowExecutionOverBlocksLimit} = state.options;
+
+    // To make sure we have the time to conclude all Redux Saga actions triggered by the start of the compilation
+    yield* delay(0);
+
+    yield* put({
+        type: ActionTypes.CompileStarted,
+        payload: {
+            answer,
+        },
+    });
+
+    // Create a runner for this
+    Codecast.runner = yield* call(createRunnerSaga, answer.platform);
+
+    try {
+        checkCompilingCode(answer, state, allowExecutionOverBlocksLimit ? ['blocks_limit'] : []);
+    } catch (e) {
+        yield* put({
+            type: ActionTypes.CompileFailed,
+            payload: {
+                testResult: LibraryTestResult.fromString(String(e)),
+            },
+        });
+        return;
+    }
+
+    // @ts-ignore
+    if (!Codecast.runner.constructor.needsCompilation()) {
+        yield* put({
+            type: ActionTypes.CompileSucceeded,
+        });
+    } else {
+        try {
+            yield* call([Codecast.runner, Codecast.runner.compileAnswer], answer);
+        } catch (ex) {
+            yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
+        }
+    }
+}
+
+let currentCompileTask;
+
 export default function(bundle: Bundle) {
     function initReducer(state: AppStore): void {
         state.compile = {...initialStateCompile};
@@ -76,46 +122,13 @@ export default function(bundle: Bundle) {
 
     bundle.addSaga(function* watchCompile() {
         yield* takeLatest(ActionTypes.Compile, function* () {
-            let state = yield* appSelect();
-            const answer = selectAnswer(state);
-            const {allowExecutionOverBlocksLimit} = state.options;
+            currentCompileTask = yield* fork(compileSaga);
+        });
 
-            // To make sure we have the time to conclude all Redux Saga actions triggered by the start of the compilation
-            yield* delay(0);
-
-            yield* put({
-                type: ActionTypes.CompileStarted,
-                payload: {
-                    answer,
-                },
-            });
-
-            // Create a runner for this
-            Codecast.runner = yield* call(createRunnerSaga, answer.platform);
-
-            try {
-                checkCompilingCode(answer, state, allowExecutionOverBlocksLimit ? ['blocks_limit'] : []);
-            } catch (e) {
-                yield* put({
-                    type: ActionTypes.CompileFailed,
-                    payload: {
-                        testResult: LibraryTestResult.fromString(String(e)),
-                    },
-                });
-                return;
-            }
-
-            // @ts-ignore
-            if (!Codecast.runner.constructor.needsCompilation()) {
-                yield* put({
-                    type: ActionTypes.CompileSucceeded,
-                });
-            } else {
-                try {
-                    yield* call([Codecast.runner, Codecast.runner.compileAnswer], answer);
-                } catch (ex) {
-                    yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
-                }
+        yield* takeLatest(ActionTypes.StepperExit, function* () {
+            if (currentCompileTask) {
+                yield* cancel(currentCompileTask);
+                currentCompileTask = null;
             }
         });
 

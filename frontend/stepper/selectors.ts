@@ -8,6 +8,7 @@ import {hasBlockPlatform, platformsList} from './platforms';
 import {LayoutType} from '../task/layout/layout_types';
 import {CodecastPlatform} from './codecast_platform';
 import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
+import log from 'loglevel';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;
@@ -101,6 +102,8 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         speed = stepper.speed;
         controlsType = stepper.controls;
         canRestart = (enabled && 'clear' !== status) || !state.task.resetDone;
+
+        log.getLogger('stepper').debug('[Controls] ', {status, isRunning, controls});
 
         if (status === 'clear') {
             showCompile = true;

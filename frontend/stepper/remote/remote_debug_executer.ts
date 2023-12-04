@@ -1,4 +1,4 @@
-import {call, delay, put, race} from 'typed-redux-saga';
+import {call, cancel, cancelled, delay, put, race} from 'typed-redux-saga';
 import {appSelect} from '../../hooks';
 import {TaskAnswer} from '../../task/task_types';
 import {documentToString} from '../../buffers/document';
@@ -11,6 +11,7 @@ import AbstractRunner from '../abstract_runner';
 import {StepperState} from '../index';
 import {DeferredPromise} from '../../utils/app';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {submissionUpdateTaskSubmission} from '../../submission/submission_slice';
 
 export type RemoteDebugListener = (message: RemoteDebugPayload) => void;
 
@@ -86,6 +87,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
                 action: 'close',
             });
             this.ws.close();
+            this.ws = null;
         }
     }
 
