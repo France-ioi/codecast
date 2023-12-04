@@ -79,7 +79,6 @@ export default function(bundle: Bundle) {
             let state = yield* appSelect();
             const answer = selectAnswer(state);
             const {allowExecutionOverBlocksLimit} = state.options;
-            const platform = answer.platform;
 
             // To make sure we have the time to conclude all Redux Saga actions triggered by the start of the compilation
             yield* delay(0);
@@ -125,7 +124,7 @@ export default function(bundle: Bundle) {
             yield* put({type: ActionTypes.Compile, payload: {keepSubmission, fromControls}});
             const outcome = yield* race({
                 [CompileStatus.Done]: take(ActionTypes.StepperRestart),
-                [CompileStatus.Error]: take(ActionTypes.CompileFailed),
+                [CompileStatus.Error]: take([ActionTypes.CompileFailed, ActionTypes.StepperExit]),
             });
             callback(Object.keys(outcome)[0]);
         });

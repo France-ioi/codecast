@@ -123,7 +123,7 @@ export function TralalereControls(props: StepperControlsProps) {
         (<div className="tralalere-controls-container"><div className={`controls controls-stepper controls-left ${controlsType}`}>
             {showControls && <React.Fragment>
                 {_button('restart', onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStepBackward}/>, null, 'is-small')}
-                {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.runningBackground ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
+                {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.isRunning ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
                 {canInterrupt && _button('interrupt', onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
                 {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faEject} rotation={90}/>, null, 'is-big')}
                 {_button('gotoend', onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faForward}/>, null, 'is-big')}

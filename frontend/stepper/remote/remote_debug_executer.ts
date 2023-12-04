@@ -37,6 +37,10 @@ export class RemoteDebugExecutor extends AbstractRunner {
     private messageId: number = 0;
     private currentAnalysis: AnalysisSnapshot;
 
+    public static needsCompilation(): boolean {
+        return true;
+    }
+
     public *compileAnswer(answer: TaskAnswer) {
         try {
             this.ws = yield* call([this, this.connectToServer]);

@@ -1084,20 +1084,16 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     callback(lastBackgroundResult && lastBackgroundResult.result ? firstBackgroundResult : lastBackgroundResult);
 }
 
-function* stepperCompileFromControlsSaga(app: App) {
+function* stepperCompileFromControlsSaga(app: App): Generator<any, CompileStatus> {
     const state = yield* appSelect();
     const stepperStatus = state.stepper.status;
 
     let backgroundRunData: TaskSubmissionResultPayload = null;
     if (StepperStatus.Clear === stepperStatus && TaskSubmissionEvaluateOn.RemoteDebugServer !== state.submission.executionMode) {
-        let runBackgroundOver;
-        const promise = new Promise((resolve) => {
-            runBackgroundOver = resolve;
-        });
+        const deferredPromise = new DeferredPromise<TaskSubmissionResultPayload>();
+        yield* put(stepperRunBackground(deferredPromise.resolve));
+        backgroundRunData = yield* call(() => deferredPromise.promise);
 
-        yield* put(stepperRunBackground(runBackgroundOver));
-
-        backgroundRunData = yield promise;
         log.getLogger('stepper').debug('background execution result', backgroundRunData);
         if (null !== backgroundRunData) {
             const context = quickAlgoLibraries.getContext(null, 'main');
@@ -1109,20 +1105,20 @@ function* stepperCompileFromControlsSaga(app: App) {
         }
     }
 
-    const deferredPromise = new DeferredPromise();
+    const deferredPromise = new DeferredPromise<CompileStatus>();
 
     yield* put({
         type: ActionTypes.CompileWait,
         payload: {
-            callback(result) {
+            callback(result: CompileStatus) {
                 app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
-                deferredPromise.resolve(CompileStatus.Done === result);
+                deferredPromise.resolve(result);
             },
             fromControls: true,
         },
     });
 
-    yield* call(() => deferredPromise.promise);
+    return yield* call(() => deferredPromise.promise);
 }
 
 function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
@@ -1140,7 +1136,11 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
     const mustCompile = StepperStatus.Clear === stepper.status;
 
     if (mustCompile) {
-        yield* call(stepperCompileFromControlsSaga, app);
+        const compileResult = yield* call(stepperCompileFromControlsSaga, app);
+        console.log('compile result', compileResult);
+        if (CompileStatus.Done !== compileResult) {
+            return;
+        }
     }
 
     if (!stepperControlsState.canStep) {
@@ -1169,6 +1169,7 @@ function* stepperSaga(app: App) {
                 });
             });
 
+            console.log('got result', result);
             if (CompileStatus.Done !== result) {
                 return;
             }

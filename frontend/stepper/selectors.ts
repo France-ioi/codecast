@@ -44,7 +44,7 @@ interface StepperControlsStateToProps {
     controlsType: StepperControlsType,
     compileStatus: CompileStatus,
     layoutType: LayoutType,
-    runningBackground: boolean,
+    isRunning: boolean,
     soundEnabled: boolean,
 }
 
@@ -56,7 +56,6 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
     const soundEnabled = state.task.soundEnabled;
 
     const platformData = platformsList[platform];
-    const runningBackground = state.stepper.runningBackground;
 
     let showCompile = false, showControls = true, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
@@ -80,7 +79,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         };
     }
 
-    const processRunning = CompileStatus.Running === compileStatus || runningBackground;
+    const isRunning = CompileStatus.Running === compileStatus || state.stepper.runningBackground;
 
     if (state.player && state.player.data && state.player.data.version) {
         let versionComponents = state.player.data.version.split('.').map(Number);
@@ -148,9 +147,9 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         };
     }
 
-    canStep = canStep && !processRunning;
-    canGoToEnd = canGoToEnd && !processRunning;
-    canRestart = canRestart || processRunning;
+    canStep = canStep && !isRunning;
+    canGoToEnd = canGoToEnd && !isRunning;
+    canRestart = canRestart || isRunning;
 
     return {
         showStepper, showControls, controls,
@@ -165,7 +164,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         controlsType,
         compileStatus,
         layoutType,
-        runningBackground,
+        isRunning,
         soundEnabled,
     };
 });
