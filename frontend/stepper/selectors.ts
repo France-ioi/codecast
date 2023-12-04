@@ -73,9 +73,9 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         controls = {
             ...controls,
             gotoend: false,
-            speed: false,
-            run: false,
-            interrupt: false,
+            // speed: false,
+            // run: false,
+            // interrupt: false,
             expr: false,
         };
     }

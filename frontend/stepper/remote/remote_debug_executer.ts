@@ -149,12 +149,36 @@ export class RemoteDebugExecutor extends AbstractRunner {
     }
 
     public *executeAction(stepperContext: StepperContext, mode) {
+        if ('run' === mode) {
+            do {
+                yield* call([this, this.executeSingleStep], stepperContext, 'run');
+            } while (!stepperContext.state.isFinished);
+        } else {
+            yield* call([this, this.executeSingleStep], stepperContext, mode);
+        }
+    }
+
+    public *executeSingleStep(stepperContext: StepperContext, mode) {
         let response: RemoteDebugPayload;
         try {
-            response = yield* call([this, this.sendMessageAndWaitResponse], {
+            yield stepperContext.interactBefore();
+
+            let parameters = {
                 action: mode,
-            });
+                speed: yield* appSelect(state => Math.floor(state.stepper.speed / 10)),
+            };
+            if ('run' === mode) {
+                parameters.action = 'into';
+            } else {
+                delete parameters.speed;
+            }
+
+            response = yield* call([this, this.sendMessageAndWaitResponse], parameters);
         } catch (error) {
+            if (error instanceof StepperError) {
+                throw error;
+            }
+
             // @ts-ignore
             throw new StepperError('error', error.message);
         }
