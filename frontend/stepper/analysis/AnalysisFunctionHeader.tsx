@@ -9,6 +9,7 @@ interface AnalysisFunctionHeaderProps {
 
 export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.Element => {
     const {stackFrameName} = props;
+    const stackFrameNameHasParenthesis = !!(!stackFrameName || -1 !== stackFrameName.indexOf('('));
 
     const args = props.stackFrame.args && props.stackFrame.args.length ? props.stackFrame.args.map((name) => {
         const variable = props.stackFrame.variables.find(variable => name === variable.name);
@@ -22,12 +23,8 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
     return (
         <div className="scope-function-title">
             <span>
-                {stackFrameName ? (
-                    <span>
-                        <span className="function-name">{stackFrameName}</span>
-                        {'('}
-                    </span>
-                ) : null}
+                {stackFrameName && <span className="function-name">{stackFrameName}</span>}
+                {!stackFrameNameHasParenthesis && '('}
                 <span>
                     {args.map(function(argument, index) {
                         return (
@@ -41,7 +38,7 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
                             </span>
                         );
                     })}
-                </span>{stackFrameName ? ')' : null}
+                </span>{!stackFrameNameHasParenthesis && ')'}
             </span>
         </div>
     );
