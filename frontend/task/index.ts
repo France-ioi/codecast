@@ -934,7 +934,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(platformAnswerLoaded, function*({payload: {answer}}) {
             log.getLogger('task').debug('Platform answer loaded', answer);
             const state = yield* appSelect();
-            if (state.options.tabsEnabled) {
+            if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
                 yield* call(createSourceBufferFromDocument, answer.document);
             } else {
                 const currentBuffer = state.buffers.activeBufferName;
