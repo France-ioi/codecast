@@ -80,7 +80,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         };
     }
 
-    const isRunning = CompileStatus.Running === compileStatus || state.stepper.runningBackground;
+    const isRunning = CompileStatus.Running === compileStatus || state.stepper.runningBackground || 'running' === state.stepper?.status;
 
     if (state.player && state.player.data && state.player.data.version) {
         let versionComponents = state.player.data.version.split('.').map(Number);
