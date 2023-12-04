@@ -149,9 +149,15 @@ export class RemoteDebugExecutor extends AbstractRunner {
     }
 
     public *executeAction(stepperContext: StepperContext, mode) {
-        const response: RemoteDebugPayload = yield* call([this, this.sendMessageAndWaitResponse], {
-            action: mode,
-        });
+        let response: RemoteDebugPayload;
+        try {
+            response = yield* call([this, this.sendMessageAndWaitResponse], {
+                action: mode,
+            });
+        } catch (error) {
+            // @ts-ignore
+            throw new StepperError('error', error.message);
+        }
 
         if (response?.error?.message || response?.snapshot?.terminatedReason) {
             throw new StepperError('error', response?.error?.message ?? response?.snapshot?.terminatedReason);
@@ -201,7 +207,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
         });
         if (outcome.timeout) {
             yield* call([this, this.stop]);
-            throw new StepperError('error', 'Remote Debug Executor has timeout');
+            throw new Error('Remote Debug Executor has timeout');
         }
 
         return outcome.received;
