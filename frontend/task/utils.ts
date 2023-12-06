@@ -186,6 +186,8 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
         } else {
             return BlockBufferHandler.documentFromObject({blockly: '<xml></xml>'});
         }
+    } else if (context?.infos?.startingExample && platform in context?.infos?.startingExample) {
+        return TextBufferHandler.documentFromString(context.infos.startingExample[platform]);
     }
 
     if (CodecastPlatform.Python === platform) {
