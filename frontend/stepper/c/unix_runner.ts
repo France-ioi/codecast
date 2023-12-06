@@ -33,7 +33,7 @@ export default class UnixRunner extends AbstractRunner {
             return;
         }
 
-        stepperContext.state.isFinished = !stepperContext.state.programState.control;
+        stepperState.isFinished = !stepperState.programState.control;
         const analysis = stepperState.analysis = analyseState(programState);
         const focusDepth = controls.stack.focusDepth;
         stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
