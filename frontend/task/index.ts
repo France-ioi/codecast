@@ -167,6 +167,7 @@ function* taskLoadSaga(app: App, action) {
                     type: ActionTypes.Error,
                     payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`}
                 });
+                return;
             }
 
             const convertedTask = convertServerTaskToCodecastFormat(task);

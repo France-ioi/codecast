@@ -12,11 +12,18 @@ import {StepperState} from '../index';
 import {DeferredPromise} from '../../utils/app';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {submissionUpdateTaskSubmission} from '../../submission/submission_slice';
+import {CodecastPlatform} from '../codecast_platform';
 
 export type RemoteDebugListener = (message: RemoteDebugPayload) => void;
 
 const CONNECTION_TIMEOUT = 50000;
 const MESSAGE_TIMEOUT = 20000;
+export const remoteDebugSupportedPlatforms = [
+    CodecastPlatform.C,
+    CodecastPlatform.Cpp,
+    CodecastPlatform.Java,
+    CodecastPlatform.Python,
+];
 
 export interface RemoteDebugMessage {
     messageId: number,

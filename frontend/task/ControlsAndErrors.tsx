@@ -159,6 +159,11 @@ export function ControlsAndErrors() {
                                     <StepperControls enabled={clientControlsEnabled}/>
                                 </div>
                             }
+                            {TaskSubmissionEvaluateOn.Server === executionMode
+                                && <div className={`submission-server-controls ${!platformHasClientRunner ? 'no-padding' : ''}`}>
+                                    <SubmissionControls/>
+                                </div>
+                            }
                             {TaskSubmissionEvaluateOn.RemoteDebugServer === executionMode
                                 && <div className="stepper-controls-container-flex">
                                     <StepperControls enabled/>
@@ -167,7 +172,7 @@ export function ControlsAndErrors() {
                         </React.Fragment>
                     }
 
-                    {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && availableExecutionModes.length > 1 && !clientExecutionRunning && <div className="execution-controls">
+                    {availableExecutionModes.length > 1 && !clientExecutionRunning && <div className="execution-controls">
                         <div className="execution-controls-dropdown">
                             <Dropdown>
                                 <Dropdown.Toggle>
@@ -197,16 +202,17 @@ export function ControlsAndErrors() {
                                 startButtonsOnly
                             />
                         </div>}
-                        <div className="execution-controls-submit">
-                            <Button
-                                className="quickalgo-button is-medium"
-                                disabled={null !== cancellableSubmission || StepperStatus.Clear !== stepperStatus}
-                                icon={null !== cancellableSubmission && SubmissionExecutionScope.Submit === cancellableSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
-                                onClick={submitSubmission}
-                            >
-                                {getMessage('SUBMISSION_EXECUTE_SUBMIT')}
-                            </Button>
-                        </div>
+                    </div>}
+
+                    {-1 !== availableExecutionModes.indexOf(TaskSubmissionEvaluateOn.Server) && <div className="execution-controls-submit">
+                        <Button
+                            className="quickalgo-button is-medium"
+                            disabled={null !== cancellableSubmission || StepperStatus.Clear !== stepperStatus}
+                            icon={null !== cancellableSubmission && SubmissionExecutionScope.Submit === cancellableSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
+                            onClick={submitSubmission}
+                        >
+                            {getMessage('SUBMISSION_EXECUTE_SUBMIT')}
+                        </Button>
                     </div>}
                 </div>}
             </div>}

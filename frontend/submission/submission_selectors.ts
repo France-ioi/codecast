@@ -6,6 +6,7 @@ import {mapServerTestToTaskTest} from './tests';
 import {TaskLevelName} from '../task/platform/platform_slice';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {doesPlatformHaveClientRunner} from '../stepper';
+import {remoteDebugSupportedPlatforms} from '../stepper/remote/remote_debug_executer';
 
 export const selectTaskTests = memoize<AppStore, TaskTest[]>((state: AppStore) => {
     const taskLevelsTests = getTaskLevelTests(state);
@@ -78,7 +79,7 @@ export function selectAvailableExecutionModes(state: AppStore): TaskSubmissionEv
     if (serverTask) {
         availableExecutionModes.push(TaskSubmissionEvaluateOn.Server);
     }
-    if (!hasBlockPlatform(platform) && !currentTask) {
+    if (!hasBlockPlatform(platform) && (!currentTask || currentTask.gridInfos.remoteDebugEnabled) && -1 !== remoteDebugSupportedPlatforms.indexOf(platform)) {
         availableExecutionModes.push(TaskSubmissionEvaluateOn.RemoteDebugServer);
     }
 
