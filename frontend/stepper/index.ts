@@ -1033,7 +1033,7 @@ export const getSourceHighlightFromStateSelector = memoize((state: AppStore) => 
     }
 });
 
-function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
+function* stepperRunBackgroundSaga({payload: {callback}}) {
     const state = yield* appSelect();
     const answer = selectAnswer(state);
     const level = state.task.currentLevel;
@@ -1136,8 +1136,11 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
     const mustCompile = StepperStatus.Clear === stepper.status;
 
     if (mustCompile) {
-        const compileResult = yield* call(stepperCompileFromControlsSaga, app);
-        if (CompileStatus.Done !== compileResult) {
+        const {compileResult, exit} = yield* race({
+            compileResult: call(stepperCompileFromControlsSaga, app),
+            exit: take(ActionTypes.StepperExit),
+        });
+        if (exit || CompileStatus.Done !== compileResult) {
             return;
         }
     }
@@ -1177,7 +1180,7 @@ function* stepperSaga(app: App) {
     }, app);
 
     // @ts-ignore
-    yield* takeLatest(ActionTypes.StepperRunBackground, stepperRunBackgroundSaga, app);
+    yield* takeLatest(ActionTypes.StepperRunBackground, stepperRunBackgroundSaga);
     // @ts-ignore
     yield* takeLatest(ActionTypes.StepperStepFromControls, stepperStepFromControlsSaga, app);
 
