@@ -875,7 +875,6 @@ function* stepperStepSaga(app: App, action) {
                 } : null),
                 environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
-                executeEffects: app.stepperApi.executeEffects,
                 initStepMarker: Codecast.runner._steps,
             });
             log.getLogger('stepper').debug('execution stepper context', stepperContext);

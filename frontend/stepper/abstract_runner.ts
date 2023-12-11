@@ -1,4 +1,4 @@
-import {StepperContext} from "./api";
+import {StepperApi, StepperContext} from "./api";
 import {StepperState} from "./index";
 import {ContextEnrichingTypes} from './actionTypes';
 import {TaskAnswer} from '../task/task_types';
@@ -46,7 +46,7 @@ export default abstract class AbstractRunner {
 
     }
 
-    public initCodes(codes, availableBlocks = null) {
+    public initCodes(codes, availableBlocks = null, stepperApi: StepperApi = null) {
 
     }
 
@@ -83,5 +83,8 @@ export default abstract class AbstractRunner {
     }
 
     public *compileAnswer(answer: TaskAnswer): Generator<any, void> {
+    }
+
+    public async programInitialization(stepperContext: StepperContext): Promise<void> {
     }
 }
