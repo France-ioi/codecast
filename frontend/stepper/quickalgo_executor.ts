@@ -6,13 +6,18 @@ import {
     stepperExecutionError
 } from './actionTypes';
 import {LibraryTestResult} from '../task/libs/library_test_result';
-import {getCurrentImmerState} from '../task/utils';
 import {QuickalgoLibraryCall, StepperContext} from './api';
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 import {Codecast} from '../app_types';
+import {getMessage} from '../lang';
+
+const EXECUTOR_TIMEOUT = 60*1000; // ms
+
+class TimeoutError extends Error {
+}
 
 class QuickalgoExecutor {
-    private stepperContext;
+    private stepperContext: StepperContext;
     
     constructor(stepperContext: StepperContext) {
         this.stepperContext = stepperContext;
@@ -74,7 +79,7 @@ class QuickalgoExecutor {
                 }
             }
 
-            libraryCallResult = await this.makeLibraryCall(context, module, action, args);
+            libraryCallResult = await this.makeTimedLibraryCall(context, module, action, args);
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async lib call', libraryCallResult);
 
             if (hideDisplay) {
@@ -91,6 +96,11 @@ class QuickalgoExecutor {
                 }, stepperThrottleDisplayDelay);
             }
         } catch (e: unknown) {
+            // If execution of this step has been terminated during the running of this executor, don't do anything
+            if (this.stepperContext.finished) {
+                return;
+            }
+
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] context error 2', e);
             if (e instanceof Error) {
                 console.error(e);
@@ -107,7 +117,12 @@ class QuickalgoExecutor {
 
             Codecast.runner?.stop();
 
-            await this.stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(String(e))));
+            let errorMessage = String(e);
+            if (e instanceof TimeoutError) {
+                errorMessage = getMessage('SUBMISSION_ERROR_TIMEOUT').s;
+            }
+
+            await this.stepperContext.dispatch(stepperExecutionError(LibraryTestResult.fromString(errorMessage)));
         }
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async library call', libraryCallResult);
@@ -125,6 +140,15 @@ class QuickalgoExecutor {
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] return library call result', libraryCallResult);
 
         return libraryCallResult;
+    }
+
+    makeTimedLibraryCall(context: QuickAlgoLibrary, module: string, action: string, args: any) {
+        let timer: NodeJS.Timeout;
+
+        return Promise.race([
+            this.makeLibraryCall(context, module, action, args),
+            new Promise((_r, rej) => timer = setTimeout(rej, EXECUTOR_TIMEOUT, new TimeoutError())),
+        ]).finally(() => clearTimeout(timer));
     }
 
     makeLibraryCall(context: QuickAlgoLibrary, module: string, action: string, args: any) {

@@ -955,6 +955,7 @@ function* stepperStepSaga(app: App, action) {
         log.getLogger('stepper').debug('end stepper saga, call onStepperDone', stepperContext.onStepperDone);
         // We make a final call to waitForProgress to start over the execution
         // of the replay thread
+        stepperContext.finished = true;
         if (stepperContext.onStepperDone) {
             stepperContext.onStepperDone(stepperContext);
         }

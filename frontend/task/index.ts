@@ -504,7 +504,7 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
 
     const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
     if (null !== currentSubmissionId) {
-        yield* put(submissionCloseCurrentSubmission());
+        yield* put(submissionCloseCurrentSubmission({}));
     }
     yield* put(taskSuccessClear({record: false}));
 
@@ -571,7 +571,7 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     }
 
     // Stop current execution if there is one
-    if ((state.stepper && state.stepper.status !== StepperStatus.Clear) || !state.task.resetDone) {
+    if (!payload.keepSubmission && ((state.stepper && state.stepper.status !== StepperStatus.Clear) || !state.task.resetDone)) {
         yield* put({type: StepperActionTypes.StepperExit, payload: {record: false}});
     }
 
@@ -715,7 +715,7 @@ export function* onEditSource(origin?: string) {
         if (null !== activeBuffer.submissionIndex) {
             yield* put(bufferDissociateFromSubmission({buffer: activeBufferName}));
             if (activeBuffer.submissionIndex === state.submission.currentSubmissionId) {
-                yield* put(submissionCloseCurrentSubmission());
+                yield* put(submissionCloseCurrentSubmission({}));
             }
         }
     }
@@ -913,10 +913,10 @@ export default function (bundle: Bundle) {
         yield* takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution);
 
         // @ts-ignore
-        yield* takeEvery(StepperActionTypes.Compile, function*({payload}) {
+        yield* takeEvery(StepperActionTypes.CompileWait, function*({payload}) {
             log.getLogger('task').debug('stepper restart, create new submission');
             if (!payload.keepSubmission) {
-                yield* put(submissionCloseCurrentSubmission());
+                yield* put(submissionCloseCurrentSubmission({fromSubmission: true}));
             }
         });
 

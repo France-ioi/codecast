@@ -134,6 +134,9 @@ export default function(bundle: Bundle) {
 
         // @ts-ignore
         yield* takeEvery(ActionTypes.CompileWait, function* ({payload: {callback, keepSubmission, fromControls}}) {
+            // Wait that all pre-compilations actions are over
+            yield* delay(0);
+
             yield* put({type: ActionTypes.Compile, payload: {keepSubmission, fromControls}});
             const outcome = yield* race({
                 [CompileStatus.Done]: take(ActionTypes.StepperRestart),

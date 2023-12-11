@@ -329,6 +329,7 @@ module.exports = {
     SUBMISSION_WARNING_COMPILATION: "Avertissement de compilation",
     SUBMISSION_ERROR_EXECUTION: "Erreur d'exécution",
     SUBMISSION_NO_ERROR: "Compilation réussie",
+    SUBMISSION_ERROR_TIMEOUT: "L'exécution de l'action a pris trop de temps.",
     SUBMISSION_NO_TESTS: "Il n'existe pas de tests pour ce problème.",
     SUBMISSION_CREATE_TEST: "Créer un test",
     SUBMISSION_REMOVE_TEST_CONFIRM: "Confirmez-vous la suppression de ce test ?",

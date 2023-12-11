@@ -317,6 +317,7 @@ module.exports = {
     SUBMISSION_WARNING_COMPILATION: "Compilation warning",
     SUBMISSION_ERROR_EXECUTION: "Execution error",
     SUBMISSION_NO_ERROR: "Compilation succeeded",
+    SUBMISSION_ERROR_TIMEOUT: "The action execution has timeout.",
     SUBMISSION_NO_TESTS: "There are no tests for this task.",
     SUBMISSION_CREATE_TEST: "Create new test",
     SUBMISSION_REMOVE_TEST_CONFIRM: "Do you confirm the removal of this test?",

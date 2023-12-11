@@ -43,6 +43,7 @@ export interface StepperContext {
     waitForProgress?: Function,
     waitForProgressOnlyAfterIterationsCount?: number, // For backwards compatibility
     onStepperDone?: Function,
+    finished?: boolean,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
     quickAlgoCallsExecutor?: (module: string, action: string, args: any[], callback?: Function) => Promise<void>,

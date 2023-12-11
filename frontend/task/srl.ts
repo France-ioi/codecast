@@ -105,7 +105,7 @@ export default function (bundle: Bundle) {
         });
 
         // @ts-ignore
-        yield* takeEvery(StepperActionTypes.Compile, function* ({payload: {fromControls}}) {
+        yield* takeEvery(StepperActionTypes.CompileWait, function* ({payload: {fromControls}}) {
             if (fromControls) {
                 const logAttempts = yield* appSelect(state => state.options.logAttempts);
                 if (logAttempts) {
