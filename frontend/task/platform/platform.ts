@@ -270,15 +270,16 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             if ('object' !== typeof answerObject) {
                 throw new Error("Answer is not an object: " + answer);
             }
+            const convertedAnswer = {};
             for (let {level} of Object.values(taskLevels)) {
-                const answerObjectLevel = yield* call(backwardCompatibilityConvert, answerObject[level]);
-                yield* put(platformSaveAnswer({level, answer: answerObjectLevel}));
+                convertedAnswer[level] = yield* call(backwardCompatibilityConvert, answerObject[level]);
+                yield* put(platformSaveAnswer({level, answer: convertedAnswer[level]}));
                 if (level === currentLevel) {
-                    yield* put(platformAnswerLoaded(answerObjectLevel));
+                    yield* put(platformAnswerLoaded(convertedAnswer[level]));
                     yield* put(platformTaskRefresh());
                 }
             }
-            yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, success, error, true));
+            yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, success, error, true));
             yield* call(taskAnswerReloadedSaga);
         } else if (answer) {
             const answerObject = yield* call(backwardCompatibilityConvert, JSON.parse(answer));
