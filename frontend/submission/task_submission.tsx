@@ -147,7 +147,13 @@ class TaskSubmissionExecutor {
         if (finalScore > 0) {
             const nextVersion = yield* call(taskGetNextLevelToIncreaseScore, level);
 
-            yield* call([platformApi, platformApi.validate], null !== nextVersion || finalScore < 1 ? 'stay' : 'done');
+            const isTralalere = yield* appSelect(state => 'tralalere' == state.options.app);
+            let stay = finalScore < 1;
+            if (isTralalere) {
+                stay = stay || null !== nextVersion;
+            }
+
+            yield* call([platformApi, platformApi.validate], stay ? 'stay' : 'done');
             if (1 <= finalScore && window.SrlLogger) {
                 window.SrlLogger.validation(100, 'none', 0);
             }
