@@ -190,13 +190,23 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
         return TextBufferHandler.documentFromString(context.infos.startingExample[platform]);
     }
 
-    if (CodecastPlatform.Python === platform) {
-        if (context && currentTask && !isServerTask(currentTask)) {
-            const availableModules = getAvailableModules(context);
+    if (context && currentTask && !isServerTask(currentTask)) {
+        const availableModules = getAvailableModules(context);
+        if (CodecastPlatform.Python === platform) {
             let content = '';
             for (let i = 0; i < availableModules.length; i++) {
                 content += 'from ' + availableModules[i] + ' import *\n';
             }
+
+            return TextBufferHandler.documentFromString(content);
+        } else if (CodecastPlatform.C === platform || CodecastPlatform.Cpp === platform) {
+            let content = '';
+            for (let i = 0; i < availableModules.length; i++) {
+                content += '#include <' + availableModules[i] + '.h>\n';
+            }
+
+            content += "\nint main() {\n    \n}\n";
+
             return TextBufferHandler.documentFromString(content);
         }
     }

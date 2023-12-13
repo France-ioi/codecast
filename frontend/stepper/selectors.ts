@@ -124,7 +124,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
             if (!hasBlockPlatform(platform)) {
                 canStepOver = canStep;
             }
-            if (currentStepperState && currentStepperState.programState && CodecastPlatform.Cpp === platform) {
+            if (currentStepperState && currentStepperState.programState && (CodecastPlatform.C === platform || CodecastPlatform.Cpp === platform)) {
                 const {control, scope} = currentStepperState.programState;
                 canStepOut = !!C.findClosestFunctionScope(scope);
                 canStep = control && !!control.node;

@@ -29,13 +29,11 @@ export default function(bundle: Bundle) {
 
                 heapInit(programState, options.stackSize);
 
-                const context = quickAlgoLibraries.getContext(null, state.environment);
                 const answer = selectAnswer(state);
-                const blocksData = getContextBlocksDataSelector({state, context});
                 const source = documentToString(answer.document);
 
                 const unixRunner = Codecast.runner;
-                unixRunner.initCodes([source], blocksData, stepperApi);
+                unixRunner.initCodes([source]);
             }
         });
 

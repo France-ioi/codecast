@@ -58,10 +58,9 @@ export default class BlocklyRunner extends AbstractRunner {
     private firstHighlight = true;
     public _isFinished: boolean = false;
 
-    constructor(context, languageStrings) {
+    constructor(context) {
         super(context);
         this.context = context;
-        this.strings = languageStrings;
         this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;
         this.delayFactory = new window.DelayFactory();
     }
@@ -91,7 +90,7 @@ export default class BlocklyRunner extends AbstractRunner {
     reportBlockValue(id, value, varName) {
         // Show a popup displaying the value of a block in step-by-step mode
         if (this.context.display && this.stepMode) {
-            log.getLogger('blockly_runner').debug('report block value', {id, value, varName}, this.strings);
+            log.getLogger('blockly_runner').debug('report block value', {id, value, varName});
 
             // Fix for Scratch because in ext/scratch/fixes.js, we report the value as varName = varValue.
             if ('string' === typeof value && -1 !== value.indexOf('=')) {

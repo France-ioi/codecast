@@ -46,7 +46,7 @@ export function LayoutDirective(props: LayoutDirectiveProps) {
     const {key} = props.directive;
     const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : initialStepperStateControls;
     let functionCallStack = null;
-    if (platform === CodecastPlatform.Cpp || platform === CodecastPlatform.Arduino) {
+    if (platform === CodecastPlatform.C || platform === CodecastPlatform.Cpp || platform === CodecastPlatform.Arduino) {
         functionCallStack = functionCallStackMap[key];
     }
 

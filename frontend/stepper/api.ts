@@ -207,7 +207,7 @@ export function getNodeStartRow(stepperState: StepperState) {
 
     const {range} = control.node[1];
 
-    return range && range.start.row;
+    return range?.start?.row;
 }
 
 export function makeContext(stepper: Stepper|null, stepperContextParameters: StepperContextParameters): StepperContext {
@@ -340,7 +340,7 @@ async function stepInto(stepperContext: StepperContext) {
     // Take a first step.
     await executeSingleStep(stepperContext);
 
-    if (stepperContext.state.platform === CodecastPlatform.Cpp || stepperContext.state.platform === CodecastPlatform.Arduino) {
+    if (-1 !== [CodecastPlatform.Arduino, CodecastPlatform.Arduino, CodecastPlatform.Arduino].indexOf(stepperContext.state.platform)) {
         // Step out of the current statement.
         await stepUntil(stepperContext, C.outOfCurrentStmt);
         // Step into the next statement.

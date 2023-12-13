@@ -15,7 +15,7 @@ Shape of the 'compile' state:
 
 import {call, cancel, fork, put, race, take, takeEvery, takeLatest} from 'typed-redux-saga';
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
+import {clearStepper, createRunnerSaga} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore, AppStoreReplay} from "../store";
@@ -46,7 +46,7 @@ export const initialStateCompile = {
     syntaxTree: null as any
 };
 
-export function* compileSaga() {
+export function* compileSaga({stepperApi}: App) {
     let state = yield* appSelect();
     const answer = selectAnswer(state);
     const {allowExecutionOverBlocksLimit} = state.options;
@@ -83,7 +83,7 @@ export function* compileSaga() {
         });
     } else {
         try {
-            yield* call([Codecast.runner, Codecast.runner.compileAnswer], answer);
+            yield* call([Codecast.runner, Codecast.runner.compileAnswer], answer, stepperApi);
         } catch (ex) {
             yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
         }
@@ -120,9 +120,9 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.CompileWait);
 
-    bundle.addSaga(function* watchCompile() {
+    bundle.addSaga(function* watchCompile(app: App) {
         yield* takeLatest(ActionTypes.Compile, function* () {
-            currentCompileTask = yield* fork(compileSaga);
+            currentCompileTask = yield* fork(compileSaga, app);
         });
 
         yield* takeLatest(ActionTypes.StepperExit, function* () {
@@ -275,7 +275,7 @@ function compileStartedReducer(state: AppStore, {payload}): void {
 
 function compileSucceededReducer(state: AppStore, action): void {
     const answer = state.compile.answer;
-    if (-1 !== [CodecastPlatform.Cpp, CodecastPlatform.Arduino].indexOf(answer.platform) && action.response) {
+    if (-1 !== [CodecastPlatform.C, CodecastPlatform.Cpp, CodecastPlatform.Arduino].indexOf(answer.platform) && action.response) {
         const {ast, diagnostics} = action.response;
         state.compile.status = CompileStatus.Done;
         state.compile.syntaxTree = addNodeRanges(documentToString(answer.document), ast);

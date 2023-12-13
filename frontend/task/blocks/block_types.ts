@@ -18,4 +18,5 @@ export interface Block {
     value?: string, // for constant
     params?: any, // for function
     showInBlocks?: boolean,
+    returnType?: string,
 }

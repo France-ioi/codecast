@@ -46,7 +46,7 @@ export default abstract class AbstractRunner {
 
     }
 
-    public initCodes(codes, availableBlocks = null, stepperApi: StepperApi = null) {
+    public initCodes(codes, availableBlocks = null) {
 
     }
 
@@ -82,7 +82,7 @@ export default abstract class AbstractRunner {
         this._stepsWithoutAction = 0;
     }
 
-    public *compileAnswer(answer: TaskAnswer): Generator<any, void> {
+    public *compileAnswer(answer: TaskAnswer, stepperApi: StepperApi): Generator<any, void> {
     }
 
     public async programInitialization(stepperContext: StepperContext): Promise<void> {

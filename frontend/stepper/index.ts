@@ -81,7 +81,7 @@ import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {DeferredPromise} from "../utils/app";
 import {addStepperRecordAndReplayHooks} from './replay';
 import {appSelect} from '../hooks';
-import {hasBlockPlatform} from './platforms';
+import {hasBlockPlatform, platformsList} from './platforms';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {selectTaskTests} from '../submission/submission_selectors';
 import {CodecastPlatform} from './codecast_platform';
@@ -208,22 +208,17 @@ export function* createRunnerSaga(platform: CodecastPlatform): SagaIterator<Abst
     } else {
         const runnerClass = getRunnerClassFromPlatform(platform);
 
-        return new runnerClass(context, {});
+        // @ts-ignore
+        return new runnerClass(context);
     }
 }
 
 export function getRunnerClassFromPlatform(platform: CodecastPlatform) {
-    if (CodecastPlatform.Python === platform) {
-        return PythonRunner;
-    }
-    if (CodecastPlatform.Cpp === platform) {
-        return UnixRunner;
-    }
-    if (hasBlockPlatform(platform)) {
-        return BlocklyRunner;
+    if (!platformsList[platform]?.runner) {
+        throw "This platform does not have a runner: " + platform;
     }
 
-    throw "This platform does not have a runner: " + platform;
+    return platformsList[platform]?.runner;
 }
 
 export function doesPlatformHaveClientRunner(platform: CodecastPlatform): boolean {
@@ -1212,6 +1207,7 @@ function postLink(app: App) {
                 break;
             case CodecastPlatform.Arduino:
             case CodecastPlatform.Cpp:
+            case CodecastPlatform.C:
                 const syntaxTree = state.compile.syntaxTree;
                 if (syntaxTree) {
                     const options = stepperState.options = {

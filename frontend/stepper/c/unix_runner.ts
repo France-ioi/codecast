@@ -13,6 +13,8 @@ import {asyncRequestJson} from '../../utils/api';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
 import {CodecastPlatform} from '../codecast_platform';
 import {Block, BlockType} from '../../task/blocks/block_types';
+import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 
 export default class UnixRunner extends AbstractRunner {
     private builtinHandlers = new Map<string, (stepperContext: StepperContext, ...args) => void>();
@@ -20,6 +22,7 @@ export default class UnixRunner extends AbstractRunner {
     private blockBuiltins: Record<string, (stepperContext: StepperContext, ...args) => void> = {};
     private availableBlocks: Block[] = [];
     private quickAlgoCallsExecutor;
+    private functionHeaders: Record<string, string> = {};
 
     public static needsCompilation(): boolean {
         return true;
@@ -29,18 +32,9 @@ export default class UnixRunner extends AbstractRunner {
         return true;
     }
 
-    public initCodes(codes, availableBlocks, stepperApi: StepperApi) {
-        this.builtinHandlers = stepperApi.builtinHandlers;
-        this.effectHandlers = stepperApi.effectHandlers;
-        this.availableBlocks = availableBlocks;
-        this.injectFunctions();
-    }
-
     public async programInitialization(stepperContext: StepperContext): Promise<void> {
-        console.log('[unix] stepper context unix');
         while (!inUserCode(stepperContext.state)) {
             /* Mutate the stepper context to advance execution by a single step. */
-            console.log('[unix] execute step');
             const effects = C.step(stepperContext.state.programState);
             if (effects) {
                 await this.executeEffects(stepperContext, effects[Symbol.iterator]());
@@ -49,8 +43,6 @@ export default class UnixRunner extends AbstractRunner {
     }
 
     public injectFunctions() {
-        console.log('inject functions unix');
-
         let blocksByGeneratorName: {[generatorName: string]: Block[]} = {};
         for (let block of this.availableBlocks) {
             if (block.generatorName) {
@@ -61,30 +53,37 @@ export default class UnixRunner extends AbstractRunner {
             }
         }
 
+        this.functionHeaders = {};
         const blockBuiltins = {};
 
         for (let [generatorName, blocks] of Object.entries(blocksByGeneratorName)) {
+            const headers = {};
+
             for (let block of blocks.filter(block => block.type === BlockType.Function)) {
-                const {code, generatorName, name, params, type} = block;
-                blockBuiltins[code] = this._createBuiltin(code, generatorName, name, params, type);
+                const {code} = block;
+                blockBuiltins[code] = this._createBuiltin(block);
+                headers[code] = `${block.returnType ?? 'void'} ${code}();`;
             }
+
+            this.functionHeaders[generatorName + '.h'] = Object.values(headers).join("\n");
         }
 
         this.blockBuiltins = blockBuiltins;
     }
 
-    private _createBuiltin(name, generatorName, blockName, nbArgs, type) {
+    private _createBuiltin(block: Block) {
         const self = this;
 
-        console.log('create builtin', {name, generatorName, blockName})
-
         return function* (stepperContext: StepperContext, ...args) {
-            console.log('inside builtin', args);
             let result;
-            const executorPromise = self.quickAlgoCallsExecutor(generatorName, blockName, args, res => result = res);
+            const executorPromise = self.quickAlgoCallsExecutor(block.generatorName, block.name, args, res => result = res);
             yield ['promise', executorPromise];
 
-            return result;
+            if ('int' === block.returnType) {
+                yield ['result', new C.IntegralValue(C.builtinTypes['int'], result)];
+            } else if (block.returnType) {
+                yield ['result', result];
+            }
         }
     };
 
@@ -112,7 +111,6 @@ export default class UnixRunner extends AbstractRunner {
     }
 
     public async runNewStep(stepperContext: StepperContext, noInteractive = false) {
-        console.log('[unix runner] run new step', noInteractive);
         this.quickAlgoCallsExecutor = stepperContext.quickAlgoCallsExecutor;
         const effects = C.step(stepperContext.state.programState);
         await this.executeEffects(stepperContext, effects[Symbol.iterator]());
@@ -142,13 +140,26 @@ export default class UnixRunner extends AbstractRunner {
         }
     }
 
-    public *compileAnswer(answer: TaskAnswer) {
-        let response;
+    public *compileAnswer(answer: TaskAnswer, stepperApi: StepperApi) {
         const state = yield* appSelect();
+        const context = quickAlgoLibraries.getContext(null, state.environment);
+        const blocksData = getContextBlocksDataSelector({state, context});
+
+        this.builtinHandlers = stepperApi.builtinHandlers;
+        this.effectHandlers = stepperApi.effectHandlers;
+        this.availableBlocks = blocksData;
+        this.injectFunctions();
+
+        let response;
         const platform = CodecastPlatform.Cpp;
         try {
             const logData = state.statistics.logData;
-            const postData = {source: documentToString(answer.document), platform, logData};
+            const postData = {
+                source: documentToString(answer.document),
+                platform,
+                logData,
+                headers: this.functionHeaders,
+            };
             const {baseUrl} = state.options;
 
             response = yield* call(asyncRequestJson, baseUrl + '/compile', postData);
@@ -168,7 +179,6 @@ export default class UnixRunner extends AbstractRunner {
     }
 
     private async executeEffects(stepperContext: StepperContext, iterator) {
-        console.log('[unix] execute effects');
         let lastResult;
         while (true) {
             /* Pull the next effect from the builtin's iterator. */
@@ -177,7 +187,6 @@ export default class UnixRunner extends AbstractRunner {
                 return value;
             }
             const name = value[0];
-            console.log('[unix] execute effect ', name);
             if (name === 'interact') {
                 lastResult = await stepperContext.interactAfter(value[1] || {});
             } else if (name === 'promise') {
