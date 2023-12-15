@@ -340,7 +340,7 @@ async function stepInto(stepperContext: StepperContext) {
     // Take a first step.
     await executeSingleStep(stepperContext);
 
-    if (-1 !== [CodecastPlatform.Arduino, CodecastPlatform.Arduino, CodecastPlatform.Arduino].indexOf(stepperContext.state.platform)) {
+    if (-1 !== [CodecastPlatform.C, CodecastPlatform.Cpp, CodecastPlatform.Arduino].indexOf(stepperContext.state.platform)) {
         // Step out of the current statement.
         await stepUntil(stepperContext, C.outOfCurrentStmt);
         // Step into the next statement.
