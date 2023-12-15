@@ -15,6 +15,19 @@ import {CodecastPlatform} from '../codecast_platform';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {evalRef} from '../views/c/utils';
+
+const RETURN_TYPE_CONVERSION = {
+    'bool': 'int',
+    'string': 'const char*',
+    'int': 'int',
+};
+
+const PARAM_TYPE_CONVERSION = {
+    'Boolean': 'int',
+    'String': 'char*',
+    'Number': 'int',
+};
 
 export default class UnixRunner extends AbstractRunner {
     private builtinHandlers = new Map<string, (stepperContext: StepperContext, ...args) => void>();
@@ -62,7 +75,10 @@ export default class UnixRunner extends AbstractRunner {
             for (let block of blocks.filter(block => block.type === BlockType.Function)) {
                 const {code} = block;
                 blockBuiltins[code] = this._createBuiltin(block);
-                headers[code] = `${block.returnType ?? 'void'} ${code}();`;
+                const argsSection = block.params.map(param => {
+                    return param in PARAM_TYPE_CONVERSION ? PARAM_TYPE_CONVERSION[param] : 'int';
+                }).join(', ');
+                headers[code] = `${block.returnType in RETURN_TYPE_CONVERSION ? RETURN_TYPE_CONVERSION[block.returnType] : 'void'} ${code}(${argsSection});`;
             }
 
             this.functionHeaders[generatorName + '.h'] = Object.values(headers).join("\n");
@@ -76,7 +92,16 @@ export default class UnixRunner extends AbstractRunner {
 
         return function* (stepperContext: StepperContext, ...args) {
             let result;
-            const executorPromise = self.quickAlgoCallsExecutor(block.generatorName, block.name, args, res => result = res);
+            const formattedArgs = args.map(arg => {
+                if (arg instanceof C.IntegralValue) {
+                    return arg.toInteger();
+                }
+                console.log('eval ref', arg, evalRef(stepperContext.state.programState, arg, false));
+
+                return arg;
+            });
+
+            const executorPromise = self.quickAlgoCallsExecutor(block.generatorName, block.name, formattedArgs, res => result = res);
             yield ['promise', executorPromise];
 
             if ('int' === block.returnType) {

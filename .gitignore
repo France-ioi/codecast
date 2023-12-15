@@ -8,3 +8,4 @@
 config.json
 sysroot/usr/include/robot.h
 sysroot/usr/include/printer.h
+sysroot/usr/include/quickpi.h

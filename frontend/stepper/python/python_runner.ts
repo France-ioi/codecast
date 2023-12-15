@@ -52,11 +52,9 @@ export default class PythonRunner extends AbstractRunner {
     private _editor_filename = "<stdin>";
     private _maxIterations = 4000;
     private _resetCallstackOnNextStep = false;
-    private _paused = false;
     private _isRunning = false;
     private _stepInProgress = false;
     private stepMode = false;
-    private _timeouts = [];
     private _editorMarker = null;
     private availableModules = [];
     private availableBlocks = [] as Block[];
@@ -225,19 +223,19 @@ export default class PythonRunner extends AbstractRunner {
             console.error("Couldn't find the number of arguments for " + generatorName + "/" + blockName + ".");
             return;
         }
-        let nbsArgs = block.params;
-        if (nbsArgs.length === 0) {
+        let params = block.paramsCount;
+        if (params.length === 0) {
             // This function doesn't have arguments
             if (args.length > 0) {
                 msg = name + "() takes no arguments (" + args.length + " given)";
                 throw new Sk.builtin.TypeError(msg);
             }
-        } else if (nbsArgs.indexOf(args.length) === -1 && nbsArgs.indexOf(Infinity) === -1) {
-            let minArgs = nbsArgs[0];
-            let maxArgs = nbsArgs[0];
-            for (let i = 1; i < nbsArgs.length; i++) {
-                minArgs = Math.min(minArgs, nbsArgs[i]);
-                maxArgs = Math.max(maxArgs, nbsArgs[i]);
+        } else if (params.indexOf(args.length) === -1 && params.indexOf(Infinity) === -1) {
+            let minArgs = params[0];
+            let maxArgs = params[0];
+            for (let i = 1; i < params.length; i++) {
+                minArgs = Math.min(minArgs, params[i]);
+                maxArgs = Math.max(maxArgs, params[i]);
             }
 
             if (minArgs === maxArgs) {
@@ -311,38 +309,14 @@ export default class PythonRunner extends AbstractRunner {
         }
     };
 
-    private _setTimeout(func, time) {
-        let timeoutId = window.setTimeout(() => {
-            let idx = this._timeouts.indexOf(timeoutId);
-            if (idx > -1) {
-                this._timeouts.splice(idx, 1);
-            }
-
-            func();
-        }, time);
-
-        this._timeouts.push(timeoutId);
-    }
-
     waitDelay(callback, value, delay) {
         log.getLogger('python_runner').debug('WAIT DELAY', value, delay);
-        this._paused = true;
         if (delay > 0) {
             let _noDelay = this.noDelay.bind(this, callback, value);
             this._setTimeout(_noDelay, delay);
         } else {
             this.noDelay(callback, value);
         }
-    }
-
-    waitCallback(callback) {
-        // Returns a callback to be called once we can continue the execution
-        log.getLogger('python_runner').debug('WAIT CALLBACK');
-        this._paused = true;
-
-        return (value) => {
-            this.noDelay(callback, value);
-        };
     }
 
     noDelay(callback, value) {
@@ -426,7 +400,7 @@ export default class PythonRunner extends AbstractRunner {
     };
 
     _continue() {
-        log.getLogger('python_runner').debug('make continue', this._paused, this._isRunning);
+        log.getLogger('python_runner').debug('make continue', this._isRunning);
         if (this._steps >= this._maxIterations) {
             this._onStepError(window.languageStrings.tooManyIterations);
         }
@@ -544,7 +518,6 @@ export default class PythonRunner extends AbstractRunner {
         this.stepMode = false;
         this._stepInProgress = false;
         this._resetCallstackOnNextStep = false;
-        this._paused = false;
         Sk.running = false;
         if (Sk.runQueue && Sk.runQueue.length > 0) {
             let nextExec = Sk.runQueue.shift();
@@ -572,7 +545,6 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     realStep(resolve, reject) {
-        this._paused = this.stepMode;
         this._debugger.enable_step_mode();
         this._debugger.resume.call(this._debugger, resolve, reject);
         this._steps += 1;

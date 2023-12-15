@@ -160,14 +160,6 @@ export default class BlocklyRunner extends AbstractRunner {
         target.addEventListener(eventName, listenerFunc);
     };
 
-    waitCallback(callback) {
-        // Returns a callback to be called once we can continue the execution
-        //this.stackCount = 0;
-        return (value) => {
-            this.noDelay(callback, value);
-        }
-    };
-
     noDelay(callback, value = null) {
         log.getLogger('blockly_runner').debug('Call no delay with values', callback, value);
         let primitive = undefined;

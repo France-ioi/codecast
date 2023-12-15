@@ -16,7 +16,8 @@ export interface Block {
     category?: string,
     generatorName?: string,
     value?: string, // for constant
-    params?: any, // for function
+    paramsCount?: any,
+    params?: string[], // for function
     showInBlocks?: boolean,
     returnType?: string,
 }

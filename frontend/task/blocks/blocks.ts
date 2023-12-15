@@ -78,6 +78,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                         nbArgs: 0, // handled below
                         type: typeName,
                         yieldsValue: blockInfo.yieldsValue,
+                        params: blockInfo.params ?? [],
                     };
                     blocksInfos[blockInfo.name].nbsArgs = [];
                     if (blockInfo.anyArgs) {
@@ -108,6 +109,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     code = blockName;
                 }
                 let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
+                let params = blocksInfos[blockName] ? blocksInfos[blockName].params : [];
                 let type = blocksInfos[blockName] ? blocksInfos[blockName].type : 'actions';
                 let returnType = blocksInfos[blockName] ? blocksInfos[blockName].yieldsValue : null;
 
@@ -120,7 +122,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     name: blockName,
                     type: BlockType.Function,
                     category: type,
-                    params: nbsArgs,
+                    paramsCount: nbsArgs,
+                    params,
                     caption: code,
                     code,
                     returnType,

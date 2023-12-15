@@ -201,7 +201,7 @@ export const evalExpr = function(programState, localMap, expr, asRef?) {
     throw new LocalizedError('EVAL_UNSUP_EXPR', []);
 };
 
-const evalRef = function(programState, ref, asRef) {
+export const evalRef = function(programState, ref, asRef) {
     if (asRef) {
         if (ref.type.pointee.kind === 'array') {
             // Taking the address of an array, returns a decayed pointer to the array.
