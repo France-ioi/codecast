@@ -7,9 +7,14 @@ import React from 'react';
 import classnames from 'classnames';
 import * as C from '@france-ioi/persistent-c';
 
-import {LocalizedError} from '../../../lang';
+import {getMessage, LocalizedError} from '../../../lang';
 import {C_directiveViewDict} from "../index";
 import {Block, BlockType} from '../../../task/blocks/block_types';
+import {Document, TextDocument} from '../../../buffers/buffer_types';
+import {QuickAlgoLibrary} from '../../../task/libs/quickalgo_library';
+import {AppStore} from '../../../store';
+import {getAvailableModules} from '../../../task/utils';
+import {documentToString} from '../../../buffers/document';
 
 interface ViewElement {
     kind: any,
@@ -528,4 +533,20 @@ export function getCSpecificBlocks(): Block[] {
     }
 
     return availableBlocks;
+}
+
+export const checkCCode = function (document: Document, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
+    const code = documentToString(document as unknown as TextDocument);
+
+    const availableModules = getAvailableModules(context);
+    for (let availableModule of availableModules) {
+        if ('printer' === availableModule) {
+            // Printer lib is optional
+            continue;
+        }
+        let match = (new RegExp('\#include <' + availableModule + '\.h>')).exec(code);
+        if (null === match) {
+            throw getMessage('PROGRAM_MISSING_LIB').format({line: `<code>#include &lt;${availableModule}.h&gt;</code>`});
+        }
+    }
 }

@@ -1,5 +1,5 @@
-import {QuickalgoTaskIncludeBlocks} from '../task/task_types';
-import {getCSpecificBlocks} from './views/c/utils';
+import {BlocksUsage, QuickalgoTaskIncludeBlocks} from '../task/task_types';
+import {checkCCode, getCSpecificBlocks} from './views/c/utils';
 import {NotionsBag} from '../task/blocks/notions';
 import {smartContractPlatformsList} from '../task/libs/smart_contract/smart_contract_lib';
 import {CodecastPlatform} from './codecast_platform';
@@ -9,6 +9,11 @@ import PythonRunner from './python/python_runner';
 import AbstractRunner from './abstract_runner';
 import UnixRunner from './c/unix_runner';
 import BlocklyRunner from './js/blockly_runner';
+import {checkBlocklyCode, getBlocklyBlocksUsage} from './js';
+import {checkPythonCode, getPythonBlocksUsage} from '../task/python_utils';
+import {Document} from '../buffers/buffer_types';
+import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
+import {AppStore} from '../store';
 
 export interface PlatformData {
     needsCompilation?: boolean,
@@ -18,6 +23,8 @@ export interface PlatformData {
     extension?: string,
     getSpecificBlocks?: (notionsBag: NotionsBag, includeBlocks?: QuickalgoTaskIncludeBlocks) => Block[],
     runner?: typeof AbstractRunner,
+    checkCode?: (document: Document, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[]) => void,
+    getBlocksUsage?: (document: Document, context: QuickAlgoLibrary) => BlocksUsage,
 }
 
 const platformBundles = {
@@ -47,6 +54,8 @@ export const platformsList: {[key: string]: PlatformData} = {
         extension: 'py',
         runner: PythonRunner,
         getSpecificBlocks: getPythonSpecificBlocks,
+        checkCode: checkPythonCode,
+        getBlocksUsage: getPythonBlocksUsage,
     },
     [CodecastPlatform.C]: {
         needsCompilation: true,
@@ -56,6 +65,7 @@ export const platformsList: {[key: string]: PlatformData} = {
         displayBlocks: true,
         runner: UnixRunner,
         getSpecificBlocks: getCSpecificBlocks,
+        checkCode: checkCCode,
     },
     [CodecastPlatform.Cpp]: {
         needsCompilation: true,
@@ -65,6 +75,7 @@ export const platformsList: {[key: string]: PlatformData} = {
         displayBlocks: true,
         runner: UnixRunner,
         getSpecificBlocks: getCSpecificBlocks,
+        checkCode: checkCCode,
     },
     [CodecastPlatform.Java]: {
         needsCompilation: true,
@@ -84,11 +95,15 @@ export const platformsList: {[key: string]: PlatformData} = {
         aceSourceMode: 'text',
         extension: 'blockly',
         runner: BlocklyRunner,
+        checkCode: checkBlocklyCode,
+        getBlocksUsage: getBlocklyBlocksUsage,
     },
     [CodecastPlatform.Scratch]: {
         aceSourceMode: 'text',
         extension: 'scratch',
         runner: BlocklyRunner,
+        checkCode: checkBlocklyCode,
+        getBlocksUsage: getBlocklyBlocksUsage,
     },
     ...smartContractPlatformsList,
 };

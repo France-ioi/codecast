@@ -8,7 +8,7 @@ export interface BlocksUsage {
     error?: string,
     blocksLimit?: number,
     blocksCurrent?: number,
-    limitations?: {name: string, current: number, limit: number}[],
+    limitations?: {name: string, current: number, limit: number, type: string}[],
 }
 
 export interface TaskState {
