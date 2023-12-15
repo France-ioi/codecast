@@ -16,6 +16,7 @@ import {Block, BlockType} from '../../task/blocks/block_types';
 import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {evalRef} from '../views/c/utils';
+import {applyFormat, parseFormat} from '../io/printf';
 
 const RETURN_TYPE_CONVERSION = {
     'bool': 'int',
@@ -96,7 +97,9 @@ export default class UnixRunner extends AbstractRunner {
                 if (arg instanceof C.IntegralValue) {
                     return arg.toInteger();
                 }
-                console.log('eval ref', arg, evalRef(stepperContext.state.programState, arg, false));
+                if (arg instanceof C.PointerValue) {
+                    return C.readString(stepperContext.state.programState.memory, arg);
+                }
 
                 return arg;
             });
