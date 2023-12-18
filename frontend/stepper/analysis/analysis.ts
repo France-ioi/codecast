@@ -72,8 +72,6 @@ export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, l
 
     const previousValues = fetchPreviousValuesFromLastAnalysis(lastAnalysis);
 
-    console.log('previous values', previousValues);
-
     for (let stackFrameId = 0; stackFrameId < analysis.stackFrames.length; stackFrameId++) {
         let stackFrame = analysis.stackFrames[stackFrameId];
         let codecastStackFrame: CodecastAnalysisStackFrame = {

@@ -137,8 +137,6 @@ export function convertUnixStateToAnalysisSnapshot(programState: any, lastProgra
         };
     }
 
-    console.log('callstack', functionCallStack);
-
     /* Hide function calls that have no position in user code. */
     const filteredFunctionCallStack = functionCallStack.filter(function(stackFrame) {
         return stackFrame.func.body[1].range;
@@ -156,10 +154,8 @@ function convertUnixStackFrameToAnalysisStackFrame(unixStackFrame: StackFrameUni
         const {type, ref} = unixStackFrame.localMap[variableName];
         const limits = {scalars: 0, maxScalars: 15};
         const value =  readValue(context, C.pointerType(type), ref.address, limits)
-        console.log({variableName, value});
 
         const typeDecl = renderDeclType(type, '', 0);
-        console.log({typeDecl});
 
         const variable = convertUnixValueToDAPVariable(variableName, typeDecl, value, ref.address, {}, null, {});
         variables.push(variable);
@@ -187,15 +183,13 @@ function convertUnixStackFrameToAnalysisStackFrame(unixStackFrame: StackFrameUni
         id: null,
         name: unixStackFrame.func.name,
         args: unixStackFrame.args.map(arg => {
-            console.log('arg', renderValue(arg));
-
             return {
                 value: renderValue(arg),
             };
         }),
         ...range,
         scopes: [analysisScope],
-        directives: [],
+        directives: unixStackFrame.directives,
     };
 }
 
@@ -240,8 +234,6 @@ export const convertUnixValueToDAPVariable = (name: string, type: string, value:
         loaded: name in loadedReferences || (null !== loadReference && loadReference in loadedReferences),
         address: address ? '0x' + address.toString(16) : null,
     };
-
-    console.log('value to convert', value);
 
     if (value.kind === 'ellipsis') {
         return {

@@ -18,6 +18,7 @@ import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {convertSkulptStateToAnalysisSnapshot} from '../python/analysis';
 import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
 import {Codecast} from '../../app_types';
+import {parseDirectives} from '../python/directives';
 
 const RETURN_TYPE_CONVERSION = {
     'bool': 'int',
@@ -130,10 +131,15 @@ export default class UnixRunner extends AbstractRunner {
 
         stepperState.isFinished = !stepperState.programState.control;
         const analysis = stepperState.analysis = convertUnixStateToAnalysisSnapshot(stepperState.programState, stepperState.lastProgramState);
-        console.log('new unix analysis', analysis);
         const focusDepth = controls.stack.focusDepth;
         const analysisBack = analyseState(programState);
         stepperState.directives = collectDirectives(analysisBack.functionCallStack, focusDepth);
+
+        stepperState.directives = {
+            ordered: parseDirectives(stepperState.analysis),
+            functionCallStackMap: null,
+            functionCallStack: null
+        };
 
         if (!stepperState.lastAnalysis) {
             stepperState.lastAnalysis = {
