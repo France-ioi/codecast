@@ -12,8 +12,6 @@ interface AnalysisVariableProps {
     onlyValue?: boolean,
 }
 
-const collapsedTypes = ['list', 'tuple', 'range', 'set', 'frozenset', 'Array'];
-
 export const AnalysisVariable = (props: AnalysisVariableProps) => {
     const variable = props.variable;
 
@@ -37,7 +35,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
     //     )
     // }
 
-    const isCollapsed = -1 !== collapsedTypes.indexOf(variable.type);
+    const isCollapsed = variable.collapsed;
 
     const getVariableValue = () => {
         if ((isParentOpen && props.recursionLevel > 10) || (!isParentOpen && props.recursionLevel > 2)) {
@@ -53,7 +51,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
             );
             const displayMaxLength = (isOpen ? 1000 : askedDisplayedMaxLength) / elementsToDisplay;
             if (isCollapsed || !isOpen) {
-                let delimiters = -1 !== ['set', 'frozenset'].indexOf(variable.type) || !isCollapsed ? '{}' : '[]';
+                let delimiters = variable.withCurlyBraces || !isCollapsed ? '{}' : '[]';
                 renderedElements = (<React.Fragment>
                     {delimiters[0]}{variable.variables.slice(0, elementsToDisplay).map((innerVariable, index) => {
                         return (
@@ -106,7 +104,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
             )
         }
 
-        const hasPreviousValue = null !== variable.previousValue && variable.value !== variable.previousValue;
+        const hasPreviousValue = null !== variable.previousValue && undefined !== variable.previousValue && variable.value !== variable.previousValue;
 
         const sanitizeValue = (value) => {
             if ('string' === typeof value && value.substring(0, 1) === '"' && value.length > 100) {
@@ -144,7 +142,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
     return (
         <span className="variable-container">
             <span>
-                <span className="variable-name">{variable.name}</span>
+                <span className="variable-name" title={variable.address}>{variable.name}</span>
             </span>
             {' = '}
             <span className="vardecl-value">

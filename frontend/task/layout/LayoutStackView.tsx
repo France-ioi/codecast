@@ -16,12 +16,7 @@ export function LayoutStackView() {
 
     let stackView;
     if (currentStepperState) {
-        if (-1 !== [CodecastPlatform.Cpp, CodecastPlatform.C].indexOf(currentStepperState.platform) && !remoteExecution) {
-            // TODO: convert this to use AnalysisStackView like Python and Blockly
-            stackView = <StackView/>
-        } else {
-            stackView = <AnalysisStackView analysis={analysis}/>
-        }
+        stackView = <AnalysisStackView analysis={analysis}/>
     } else {
         stackView = <div className="stack-view">
             <p>{getMessage('PROGRAM_STOPPED')}</p>

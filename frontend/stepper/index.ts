@@ -372,47 +372,29 @@ export function clearStepper(stepper: Stepper, withCurrentState = false) {
 }
 
 export function getNodeRange(stepperState?: StepperState) {
-    if (!stepperState) {
+    if (!stepperState || !stepperState.codecastAnalysis) {
         return null;
     }
 
-    if (stepperState.codecastAnalysis) {
-        const {stackFrames} = stepperState.codecastAnalysis;
-        const stackFrame = stackFrames[0];
-        if (!stackFrame) {
-            return null;
-        }
-
-        const line = stackFrame.line;
-        const columnNumber = stackFrame.column;
-
-        return {
-            start: {
-                row: (line - 1),
-                column: columnNumber,
-            },
-            end: {
-                row: (line - 1),
-                column: 100,
-            }
-        };
-    } else {
-        const {control} = stepperState.programState;
-        if (!control || !control.node) {
-            return null;
-        }
-
-        const focusDepth = stepperState.controls.stack.focusDepth;
-        if (focusDepth === 0) {
-            return control.node[1].range;
-        } else {
-            const {stackFrames} = stepperState.analysis;
-            const stackFrame = stackFrames[stackFrames.length - focusDepth];
-
-            // @ts-ignore
-            return stackFrame.scopes[0].cont.node[1].range;
-        }
+    const {stackFrames} = stepperState.codecastAnalysis;
+    const stackFrame = stackFrames[0];
+    if (!stackFrame) {
+        return null;
     }
+
+    const line = stackFrame.line;
+    const columnNumber = stackFrame.column;
+
+    return {
+        start: {
+            row: (line - 1),
+            column: columnNumber,
+        },
+        end: {
+            row: stackFrame.endLine ?? (line - 1),
+            column: stackFrame.endColumn ?? 100,
+        }
+    };
 }
 
 function stringifyError(error) {

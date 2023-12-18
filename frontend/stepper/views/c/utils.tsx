@@ -4,7 +4,6 @@ extracted from the stepper by the analysis module.
 */
 
 import React from 'react';
-import classnames from 'classnames';
 import * as C from '@france-ioi/persistent-c';
 
 import {getMessage, LocalizedError} from '../../../lang';
@@ -260,44 +259,6 @@ export const viewExprs = function(programState, stackFrame, exprs) {
     return views;
 };
 
-export const viewStackFrame = function(context, stackFrame, options) {
-    const view = {
-        key: stackFrame.get('scope').key,
-        func: stackFrame.get('func'),
-        args: stackFrame.get('args'),
-        locals: [],
-        focus: null
-    };
-
-    if (options.locals) {
-        const localMap = stackFrame.get('localMap');
-        const locals = view.locals = [];
-        stackFrame.get('localNames').forEach(function(name) {
-            const {type, ref} = localMap.get(name);
-            // type and ref.type.pointee are assumed identical
-            locals.push(viewVariable(context, name, type, ref.address));
-        });
-    }
-
-    return view;
-};
-
-export const viewVariable = function(context, name, type, address) {
-    const limits = {scalars: 0, maxScalars: 15};
-    return {
-        name,
-        type,
-        address,
-        value: readValue(context, C.pointerType(type), address, limits)
-    };
-};
-
-//
-
-const parensIf = function(cond, elem) {
-    return cond ? <span>{'('}{elem}{')'}</span> : elem;
-};
-
 export const renderValue = function(value) {
     if (value === undefined) {
         return 'noval';
@@ -306,120 +267,6 @@ export const renderValue = function(value) {
         return 'void';
     }
     return value.toString();
-};
-
-export function StoredValue({value}) {
-    if (value.kind === 'ellipsis') {
-        return <span className='value value-ellipsis'>{'…'}</span>;
-    }
-    if (value.kind === 'scalar') {
-        // Value shape is {ref, current, previous, load, store}, see analysis.js for
-        // details.
-        return (
-            <span className='value'>
-                <span className={classnames(['load' in value && 'value-load'])}>
-                    {renderValue(value.current)}
-                </span>
-                {'store' in value &&
-                <span className='value-previous'>
-                    {renderValue(value.previous)}
-                </span>}
-            </span>
-        );
-    }
-    if (value.kind === 'array') {
-        const {cells} = value;
-        return (
-            <span className='value value-array'>
-                {'{'}
-                {cells.map((cell, i) =>
-                    <span key={cell.index}>
-                        <span className='value-array-cell'>
-                            <StoredValue value={cell.content}/>
-                        </span>
-                        {i + 1 === cells.length || ', '}
-                    </span>
-                )}
-                {'}'}
-            </span>
-        );
-    }
-    if (value.kind === 'record') {
-        const {fields} = value;
-        return (
-            <span className='value value-record'>
-                {'{'}
-                {fields.map((field, i) =>
-                    <span key={field.name}>
-                        <span className='value-record-field' title={field.name}>
-                            <StoredValue value={field.content}/>
-                        </span>
-                        {i + 1 === fields.length || ', '}
-                    </span>
-                )}
-                {'}'}
-            </span>
-        );
-    }
-    return <span className='value'>{`unknown value kind ${value.kind}`}</span>;
-}
-
-export const renderDeclType = function(type, subject, prec) {
-    switch (type.kind) {
-        case 'function':
-            // TODO: print param types?
-            return renderDeclType(type.result, <span>{parensIf(prec > 0, subject)}{'()'}</span>, 0);
-        case 'pointer':
-            return renderDeclType(type.pointee, <span>{'*'}{subject}</span>, 1);
-        case 'array':
-            return renderDeclType(type.elem,
-                <span>{parensIf(prec > 0, subject)}{'['}{type.count && type.count.toString()}{']'}</span>, 0);
-        case 'record':
-            return <span>{'struct'}{' '}{type.name}{' '}{subject}</span>;
-        case 'builtin':
-            return <span>{type.repr}{' '}{subject}</span>;
-        default:
-            return `<invalid kind ${type.kind}>`;
-    }
-};
-
-export function VarDecl({name, type, address, value}) {
-    const subject = <span className='vardecl-name' title={address && '0x' + address.toString(16)}>{name}</span>;
-    return (
-        <div className='vardecl'>
-            {renderDeclType(type, subject, 0)}
-            {value && ' = '}
-            {value && <span className='vardecl-value'><StoredValue value={value}/></span>}
-        </div>
-    );
-}
-
-export function FunctionCall({func, args}) {
-    const argCount = args.length;
-    return (
-        <span>
-            {func.name}
-            {'('}
-            <span>
-                {args.map(function(value, i) {
-                    return (
-                        <span key={i}>
-                            {renderValue(value)}
-                            {i + 1 < argCount && ', '}
-                        </span>
-                    );
-                })}
-            </span>
-            {')'}
-        </span>
-    );
-}
-
-export const getIdent = function(expr, noVal?) {
-    if (!expr) {
-        return noVal;
-    }
-    return expr[0] === 'ident' ? expr[1] : noVal;
 };
 
 export const getNumber = function(expr, options) {
@@ -457,25 +304,6 @@ export const getList = function(expr, noVal) {
     return expr[0] === 'list' ? expr[1] : noVal;
 };
 
-export function ShowVar(props) {
-    const {DirectiveFrame, directive, controls, functionCallStack, context} = props;
-    const {byPos} = directive;
-    const name = getIdent(byPos[0]);
-    const stackFrame = functionCallStack[0];
-    const localMap = stackFrame.get('localMap');
-    if (!localMap.has(name)) {
-        return <p>{name}{" not in scope"}</p>;
-    }
-    const {type, ref} = localMap.get(name);
-    const limits = {scalars: 0, maxScalars: 100};
-    const value = readValue(context, C.pointerType(type), ref.address, limits);
-    return (
-        <DirectiveFrame {...props}>
-            <VarDecl name={name} type={type} address={ref.address} value={value}/>
-        </DirectiveFrame>
-    );
-}
-
 const computeArrowPoints = function(p, headSize, tailSize) {
     const dx1 = headSize;
     const dy1 = headSize;
@@ -494,28 +322,6 @@ export const renderArrow = function(x, y, dir, headSize, tailSize, style?) {
 
     return <polygon points={ps} transform={`translate(${x},${y})`} {...style} />;
 };
-
-export const highlightColors = [
-    {fg: '#2196F3', bg: '#BBDEFB', name: 'blue'},
-    {fg: '#4CAF50', bg: '#C8E6C9', name: 'green'},
-    {fg: '#F44336', bg: '#FFCDD2', name: 'red'},
-    {fg: '#00BCD4', bg: '#B2EBF2', name: 'cyan'},
-    {fg: '#FFEB3B', bg: '#FFF9C4', name: 'yellow'},
-    {fg: '#9C27B0', bg: '#E1BEE7', name: 'purple'},
-    {fg: '#FF9800', bg: '#FFE0B2', name: 'orange'},
-    {fg: '#9E9E9E', bg: '#F5F5F5', name: 'grey'},
-    {fg: '#03A9F4', bg: '#B3E5FC', name: 'light blue'},
-    {fg: '#8BC34A', bg: '#DCEDC8', name: 'light green'},
-    {fg: '#E91E63', bg: '#F8BBD0', name: 'pink'},
-    {fg: '#009688', bg: '#B2DFDB', name: 'teal'},
-    {fg: '#FFC107', bg: '#FFECB3', name: 'amber'},
-    {fg: '#673AB7', bg: '#D1C4E9', name: 'deep purple'},
-    {fg: '#FF5722', bg: '#FFCCBC', name: 'deep orange'},
-    {fg: '#607D8B', bg: '#CFD8DC', name: 'blue grey'},
-    {fg: '#795548', bg: '#D7CCC8', name: 'brown'},
-    {fg: '#CDDC39', bg: '#F0F4C3', name: 'lime'},
-    {fg: '#3F51B5', bg: '#C5CAE9', name: 'indigo'}
-];
 
 export function getCSpecificBlocks(): Block[] {
     const availableBlocks: Block[] = [];

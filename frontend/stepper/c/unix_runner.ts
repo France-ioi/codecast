@@ -4,7 +4,7 @@ import * as C from '@france-ioi/persistent-c';
 import {StepperState} from "../index";
 import log from 'loglevel';
 import {ActionTypes, ContextEnrichingTypes} from '../actionTypes';
-import {analyseState, collectDirectives} from './analysis';
+import {analyseState, collectDirectives, convertUnixStateToAnalysisSnapshot} from './analysis';
 import {TaskAnswer} from '../../task/task_types';
 import {appSelect} from '../../hooks';
 import {documentToString} from '../../buffers/document';
@@ -15,6 +15,9 @@ import {CodecastPlatform} from '../codecast_platform';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {convertSkulptStateToAnalysisSnapshot} from '../python/analysis';
+import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
+import {Codecast} from '../../app_types';
 
 const RETURN_TYPE_CONVERSION = {
     'bool': 'int',
@@ -115,7 +118,8 @@ export default class UnixRunner extends AbstractRunner {
 
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
         stepperContext.state.programState = C.clearMemoryLog(state.programState);
-        stepperContext.state.lastProgramState = {...state.programState}
+        stepperContext.state.lastProgramState = {...state.programState};
+        super.enrichStepperContext(stepperContext, state);
     }
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
@@ -125,11 +129,22 @@ export default class UnixRunner extends AbstractRunner {
         }
 
         stepperState.isFinished = !stepperState.programState.control;
-        const analysis = stepperState.analysis = analyseState(programState);
+        const analysis = stepperState.analysis = convertUnixStateToAnalysisSnapshot(stepperState.programState, stepperState.lastProgramState);
+        console.log('new unix analysis', analysis);
         const focusDepth = controls.stack.focusDepth;
-        stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
+        const analysisBack = analyseState(programState);
+        stepperState.directives = collectDirectives(analysisBack.functionCallStack, focusDepth);
 
-        // TODO? initialize controls for each directive added, clear controls for each directive removed (except 'stack').
+        if (!stepperState.lastAnalysis) {
+            stepperState.lastAnalysis = {
+                stackFrames: [],
+                stepNum: 0,
+            };
+        }
+
+        stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis, {
+            displayType: true,
+        });
     }
 
     public isStuck(stepperState: StepperState): boolean {

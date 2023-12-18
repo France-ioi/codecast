@@ -317,7 +317,9 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
                 return convertSkulptValueToDAPVariable(key, item[0], {...visited, [value.v._uuid]: true}, value._uuid + '_' + key, loadedReferences);
             }),
             namedVariables: Object.keys(value.v.entries).length,
+            withCurlyBraces: true,
             variablesReference: variableReferenceCount++,
+            collapsed: true,
         };
     }
 
@@ -330,6 +332,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             }),
             indexedVariables: value.v.length,
             variablesReference: variableReferenceCount++,
+            collapsed: true,
         };
     }
 

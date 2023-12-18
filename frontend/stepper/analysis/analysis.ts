@@ -19,7 +19,7 @@ export interface AnalysisSnapshot {
 export interface AnalysisStackFrame extends DebugProtocol.StackFrame {
     scopes: AnalysisScope[],
     directives?: any[],
-    args?: string[],
+    args?: (string|{value: string})[],
 }
 export interface AnalysisScope extends DebugProtocol.Scope {
     variables: (AnalysisVariable | string)[], // It can be a variablesReference to avoid cycles
@@ -29,6 +29,8 @@ export interface AnalysisVariable extends DebugProtocol.Variable {
     variables?: (AnalysisVariable | string)[], // It can be a variablesReference to avoid cycles
     alreadyVisited?: boolean,
     loaded?: boolean,
+    collapsed?: boolean,
+    withCurlyBraces?: boolean,
 }
 
 // Codecast format for visual display
@@ -39,29 +41,38 @@ export interface CodecastAnalysisSnapshot {
 export interface CodecastAnalysisStackFrame extends DebugProtocol.StackFrame {
     variables: CodecastAnalysisVariable[],
     directives?: any[],
-    args?: string[],
+    args?: (string|{value: string})[],
 }
 
 export interface CodecastAnalysisVariable {
     name: string,
     value: string,
     path: string,
-    variables: CodecastAnalysisVariable[],
-    loaded?: boolean
+    address?: string,
+    variables?: CodecastAnalysisVariable[]|null,
+    loaded?: boolean,
     previousValue?: string,
     type?: string,
     displayType?: boolean,
     variablesReference: number,
     alreadyVisited?: boolean,
+    collapsed?: boolean,
+    withCurlyBraces?: boolean,
 }
 
-export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, lastAnalysis: AnalysisSnapshot): CodecastAnalysisSnapshot => {
+export interface AnalysisConversionOptions {
+    displayType?: boolean,
+}
+
+export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, lastAnalysis: AnalysisSnapshot, options?: AnalysisConversionOptions): CodecastAnalysisSnapshot => {
     let codecastAnalysis: CodecastAnalysisSnapshot = {
         ...analysis,
         stackFrames: [],
     };
 
     const previousValues = fetchPreviousValuesFromLastAnalysis(lastAnalysis);
+
+    console.log('previous values', previousValues);
 
     for (let stackFrameId = 0; stackFrameId < analysis.stackFrames.length; stackFrameId++) {
         let stackFrame = analysis.stackFrames[stackFrameId];
@@ -83,7 +94,7 @@ export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, l
                     variable = variableDetails[variable];
                 }
 
-                const codecastVariable = convertVariableDAPToCodecastFormat(stackFrameId, scopeId, null, variable, previousValues, variableDetails);
+                const codecastVariable = convertVariableDAPToCodecastFormat(stackFrameId, scopeId, null, variable, previousValues, variableDetails, options.displayType);
                 if (null !== codecastVariable) {
                     codecastStackFrame.variables.push(codecastVariable);
                 }
@@ -99,7 +110,7 @@ export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, l
     return codecastAnalysis;
 }
 
-export const convertVariableDAPToCodecastFormat = (stackFrameId: number, scopeId: number, path: string, variable: AnalysisVariable, previousValues, variableDetails: {[reference: string]: AnalysisVariable}): CodecastAnalysisVariable|null => {
+export const convertVariableDAPToCodecastFormat = (stackFrameId: number, scopeId: number, path: string, variable: AnalysisVariable, previousValues, variableDetails: {[reference: string]: AnalysisVariable}, displayType?: boolean): CodecastAnalysisVariable|null => {
     log.getLogger('analysis').debug('Convert variable', {stackFrameId, scopeId, variable, previousValues});
     if (variable.presentationHint) {
         return null;
@@ -132,6 +143,7 @@ export const convertVariableDAPToCodecastFormat = (stackFrameId: number, scopeId
         variables,
         previousValue,
         path: newPath,
+        displayType,
     } as CodecastAnalysisVariable;
 }
 
