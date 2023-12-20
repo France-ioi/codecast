@@ -64,7 +64,7 @@ export interface AnalysisConversionOptions {
     displayType?: boolean,
 }
 
-export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, lastAnalysis: AnalysisSnapshot, options?: AnalysisConversionOptions): CodecastAnalysisSnapshot => {
+export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, lastAnalysis: AnalysisSnapshot, options: AnalysisConversionOptions = {}): CodecastAnalysisSnapshot => {
     let codecastAnalysis: CodecastAnalysisSnapshot = {
         ...analysis,
         stackFrames: [],
