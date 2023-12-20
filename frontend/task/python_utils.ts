@@ -13,9 +13,11 @@ import {getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_library";
 import {getNotionsBagFromIncludeBlocks, NotionArborescence} from './blocks/notions';
-import {QuickalgoTaskIncludeBlocks} from './task_types';
+import {BlocksUsage, QuickalgoTaskIncludeBlocks} from './task_types';
 import {BlockType} from './blocks/block_types';
 import {pythonBlocksList, pythonNotionsToBlocks} from './blocks/python_blocks';
+import {Document, TextDocument} from '../buffers/buffer_types';
+import {documentToString} from '../buffers/document';
 
 const pythonCountPatterns = [
     // Comments
@@ -307,7 +309,8 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
     return limitations;
 }
 
-export const getPythonBlocksUsage = function (code: string, context: QuickAlgoLibrary) {
+export const getPythonBlocksUsage = function (document: Document, context: QuickAlgoLibrary): BlocksUsage {
+    const code = documentToString(document as unknown as TextDocument);
     const limitations = (context.infos.limitedUses ? pythonFindLimited(code, context.infos.limitedUses, context.strings.code) : []) as {type: string, name: string, current: number, limit: number}[];
 
     return {
@@ -316,7 +319,8 @@ export const getPythonBlocksUsage = function (code: string, context: QuickAlgoLi
     };
 };
 
-export const checkPythonCode = function (code: string, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
+export const checkPythonCode = function (document: Document, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
+    const code = documentToString(document as unknown as TextDocument);
     const includeBlocks = context.infos.includeBlocks;
     const forbidden = pythonForbidden(code, includeBlocks, context.getNotionsList());
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;

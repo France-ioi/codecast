@@ -7,6 +7,8 @@ import {memoize} from 'proxy-memoize';
 import {hasBlockPlatform, platformsList} from './platforms';
 import {LayoutType} from '../task/layout/layout_types';
 import {CodecastPlatform} from './codecast_platform';
+import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
+import log from 'loglevel';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;
@@ -43,19 +45,18 @@ interface StepperControlsStateToProps {
     controlsType: StepperControlsType,
     compileStatus: CompileStatus,
     layoutType: LayoutType,
-    runningBackground: boolean,
+    isRunning: boolean,
     soundEnabled: boolean,
 }
 
 export const getStepperControlsSelector = memoize(({state, enabled}: {state: AppStore, enabled: boolean}): StepperControlsStateToProps => {
-    let {controls, showStepper, platform} = state.options;
+    let {showStepper, platform} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
     const inputNeeded = state.task.inputNeeded;
     const soundEnabled = state.task.soundEnabled;
 
     const platformData = platformsList[platform];
-    const runningBackground = state.stepper.runningBackground;
 
     let showCompile = false, showControls = true, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
@@ -66,6 +67,20 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
     let compileOrExecuteMessage = '';
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
+
+    let controls = state.options.controls;
+    if (TaskSubmissionEvaluateOn.RemoteDebugServer === state.submission.executionMode) {
+        controls = {
+            ...controls,
+            gotoend: false,
+            // speed: false,
+            // run: false,
+            // interrupt: false,
+            expr: false,
+        };
+    }
+
+    const isRunning = CompileStatus.Running === compileStatus || state.stepper.runningBackground || 'running' === state.stepper?.status;
 
     if (state.player && state.player.data && state.player.data.version) {
         let versionComponents = state.player.data.version.split('.').map(Number);
@@ -88,6 +103,8 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         controlsType = stepper.controls;
         canRestart = (enabled && 'clear' !== status) || !state.task.resetDone;
 
+        log.getLogger('stepper').debug('[Controls] ', {status, isRunning, controls});
+
         if (status === 'clear') {
             showCompile = true;
             canCompile = enabled;
@@ -101,26 +118,18 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
             showControls = true;
             canExit = enabled;
             canGoToEnd = !currentStepperState.isFinished;
-            if (hasBlockPlatform(platform)) {
-                canStep = !currentStepperState.isFinished;
-            } else if (platform === CodecastPlatform.Python) {
-                // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
-                canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
-                canStep = !currentStepperState.isFinished;
+            canStep = !currentStepperState.isFinished;
+            // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
+            canStepOut = !!(currentStepperState.codecastAnalysis && currentStepperState.codecastAnalysis?.stackFrames?.length > 1);
+            if (!hasBlockPlatform(platform)) {
                 canStepOver = canStep;
-                canUndo = enabled && (stepper.undo.length > 0);
-                canRedo = enabled && (stepper.redo.length > 0);
-            } else {
-                if (currentStepperState && currentStepperState.programState) {
-                    const {control, scope} = currentStepperState.programState;
-
-                    canStepOut = !!C.findClosestFunctionScope(scope);
-                    canStep = control && !!control.node;
-                    canStepOver = canStep;
-                    canRestart = enabled && (stepper.currentStepperState !== stepper.initialStepperState);
-                    canUndo = enabled && (stepper.undo.length > 0);
-                    canRedo = enabled && (stepper.redo.length > 0);
-                }
+            }
+            if (currentStepperState && currentStepperState.programState && (CodecastPlatform.C === platform || CodecastPlatform.Cpp === platform)) {
+                const {control, scope} = currentStepperState.programState;
+                canStepOut = !!C.findClosestFunctionScope(scope);
+                canStep = control && !!control.node;
+                canStepOver = canStep;
+                canRestart = enabled && (stepper.currentStepperState !== stepper.initialStepperState);
             }
         } else if (status === 'starting') {
             showEdit = true;
@@ -141,9 +150,9 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         };
     }
 
-    canStep = canStep && !runningBackground;
-    canRestart = canRestart || runningBackground;
-    canGoToEnd = canGoToEnd && !runningBackground;
+    canStep = canStep && !isRunning;
+    canGoToEnd = canGoToEnd && !isRunning;
+    canRestart = canRestart || isRunning;
 
     return {
         showStepper, showControls, controls,
@@ -158,7 +167,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         controlsType,
         compileStatus,
         layoutType,
-        runningBackground,
+        isRunning,
         soundEnabled,
     };
 });

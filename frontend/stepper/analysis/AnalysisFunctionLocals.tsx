@@ -4,9 +4,11 @@ import {CodecastAnalysisStackFrame} from "./analysis";
 
 interface AnalysisFunctionLocalsProps {
     stackFrame: CodecastAnalysisStackFrame,
+    stackFrameName?: string,
 }
 
 export const AnalysisFunctionLocals = (props: AnalysisFunctionLocalsProps): JSX.Element => {
+    const {stackFrameName} = props;
     const variables = props.stackFrame.variables;
 
     const variablesTemplate = variables.map((variable) => {
@@ -27,7 +29,7 @@ export const AnalysisFunctionLocals = (props: AnalysisFunctionLocalsProps): JSX.
 
     return (
         <div className="scope-function-blocks">
-            <ul className={!props.stackFrame.name ? 'global-scope' : null}>
+            <ul className={!stackFrameName ? 'global-scope' : null}>
                 {variablesTemplate}
             </ul>
         </div>

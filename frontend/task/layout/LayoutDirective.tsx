@@ -46,11 +46,11 @@ export function LayoutDirective(props: LayoutDirectiveProps) {
     const {key} = props.directive;
     const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : initialStepperStateControls;
     let functionCallStack = null;
-    if (platform === CodecastPlatform.Unix || platform === CodecastPlatform.Arduino) {
-        functionCallStack = functionCallStackMap[key];
-    }
+    // if (platform === CodecastPlatform.C || platform === CodecastPlatform.Cpp || platform === CodecastPlatform.Arduino) {
+    //     functionCallStack = functionCallStackMap[key];
+    // }
 
-    log.getLogger('layout').debug('layout directive context', context);
+    log.getLogger('layout').debug('layout directive context', context, props.directive, functionCallStack);
 
     return (
         <DirectivePanel

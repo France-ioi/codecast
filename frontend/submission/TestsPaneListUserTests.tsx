@@ -60,7 +60,7 @@ export function TestsPaneListUserTests(props: SubmissionResultSubTaskProps) {
 
     const createNewTest = () => {
         if (props.submission) {
-            dispatch(submissionCloseCurrentSubmission());
+            dispatch(submissionCloseCurrentSubmission({}));
         }
         dispatch(submissionCreateTest());
     };

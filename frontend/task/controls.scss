@@ -38,7 +38,7 @@
     outline: none;
   }
   .dropdown-menu {
-    width: 100%;
+    //width: 100%;
   }
   .dropdown-item {
     outline: none;
@@ -66,19 +66,19 @@
   flex: 1 0;
   height: 100%;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
 }
 
 .task .stepper-controls-container-flex {
   display: flex;
+  flex: 1 0;
 }
 
 .task .execution-controls {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 20px;
 
   .execution-controls-dropdown {
@@ -93,15 +93,20 @@
       }
     }
   }
+}
 
-  .submission-server-controls.no-padding .submission-controls {
-    padding-left: 0;
-  }
+.submission-server-controls {
+  flex: 1 0;
+}
 
-  .execution-controls-submit {
-    flex: 1;
-    text-align: right;
-  }
+.submission-server-controls.no-padding .submission-controls {
+  padding-left: 0;
+}
+
+.execution-controls-submit {
+  flex: 0 1;
+  text-align: right;
+  padding-right: 10px;
 }
 
 .task .controls-stepper {

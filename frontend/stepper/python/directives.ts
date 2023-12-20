@@ -113,8 +113,12 @@ export const parseDirectives = function(analysis: AnalysisSnapshot) {
     let directives = [];
     let directiveKeyExists = {};
     for (let activeStackFrame of activeStackFrames) {
-        for (let directiveString of activeStackFrame.directives) {
-            const directive = parseDirective(directiveString);
+        for (let directiveContent of activeStackFrame.directives) {
+            let directive = directiveContent;
+            if ('string' === typeof directiveContent) {
+                directive = parseDirective(directiveContent);
+            }
+
             if (directive.key) {
                 if (directiveKeyExists.hasOwnProperty(directive.key)) {
                     // When a directive exists in both the current and global scopes, we use only the former.

@@ -1,9 +1,12 @@
 import {AppStore} from '../store';
-import {TaskTest, TaskTestGroupType} from '../task/task_types';
-import {TaskSubmissionMode} from './submission_types';
+import {isServerTask, TaskTest, TaskTestGroupType} from '../task/task_types';
+import {TaskSubmissionEvaluateOn, TaskSubmissionMode} from './submission_types';
 import {memoize} from 'proxy-memoize';
 import {mapServerTestToTaskTest} from './tests';
 import {TaskLevelName} from '../task/platform/platform_slice';
+import {hasBlockPlatform} from '../stepper/platforms';
+import {doesPlatformHaveClientRunner} from '../stepper';
+import {remoteDebugSupportedPlatforms} from '../stepper/remote/remote_debug_executer';
 
 export const selectTaskTests = memoize<AppStore, TaskTest[]>((state: AppStore) => {
     const taskLevelsTests = getTaskLevelTests(state);
@@ -61,4 +64,24 @@ export function selectSubmissionsPaneEnabled(state: AppStore) {
     const taskTests = selectTaskTests(state);
 
     return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && taskTests.length > 1))
+}
+
+export function selectAvailableExecutionModes(state: AppStore): TaskSubmissionEvaluateOn[] {
+    const platform = state.options.platform;
+    const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
+    const currentTask = state.task.currentTask;
+    const serverTask = null !== currentTask && isServerTask(currentTask);
+
+    const availableExecutionModes = [];
+    if (platformHasClientRunner) {
+        availableExecutionModes.push(TaskSubmissionEvaluateOn.Client);
+    }
+    if (serverTask) {
+        availableExecutionModes.push(TaskSubmissionEvaluateOn.Server);
+    }
+    if (!hasBlockPlatform(platform) && (!currentTask || currentTask.gridInfos.remoteDebugEnabled) && -1 !== remoteDebugSupportedPlatforms.indexOf(platform)) {
+        availableExecutionModes.push(TaskSubmissionEvaluateOn.RemoteDebugServer);
+    }
+
+    return availableExecutionModes;
 }

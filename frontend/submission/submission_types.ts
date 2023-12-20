@@ -68,6 +68,7 @@ export interface TaskSubmissionTestResult {
 export enum TaskSubmissionEvaluateOn {
     Client = 'client',
     Server = 'server',
+    RemoteDebugServer = 'remote_debug_server',
 }
 
 export interface TaskSubmission {

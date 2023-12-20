@@ -27,7 +27,8 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
     if (suspensions) {
         let stackFrameIndex = 0;
         for (let suspensionIdx = 0; suspensionIdx < suspensions.length; suspensionIdx++) {
-            const suspension = suspensions[suspensionIdx];
+            // Reverse suspension order so that the current suspension is the first to appear in the analysis
+            const suspension = suspensions[suspensions.length - 1 - suspensionIdx];
             if (!isProgramSuspension(suspension)) {
                 continue;
             }
@@ -48,7 +49,7 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
             const stackFrame: AnalysisStackFrame = {
                 id: suspensionIdx,
                 name: null,
-                column: suspension.$colno,
+                column: suspension.$colno + 1,
                 line: suspension.$lineno,
                 directives: getDirectiveVariables(suspVariables),
                 scopes: [],
@@ -316,7 +317,9 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
                 return convertSkulptValueToDAPVariable(key, item[0], {...visited, [value.v._uuid]: true}, value._uuid + '_' + key, loadedReferences);
             }),
             namedVariables: Object.keys(value.v.entries).length,
+            withCurlyBraces: true,
             variablesReference: variableReferenceCount++,
+            collapsed: true,
         };
     }
 
@@ -329,6 +332,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             }),
             indexedVariables: value.v.length,
             variablesReference: variableReferenceCount++,
+            collapsed: true,
         };
     }
 

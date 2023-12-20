@@ -1,15 +1,13 @@
 import {current, isDraft} from "immer";
-import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
 import {AppStore} from "../store";
-import {checkBlocklyCode, getBlocklyBlocksUsage} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
 import {isServerTask, Task, TaskAnswer} from './task_types';
 import {hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
-import {BlockBufferHandler, documentToString, TextBufferHandler} from '../buffers/document';
-import {BlockDocument, BufferType, Document} from '../buffers/buffer_types';
+import {BlockBufferHandler, TextBufferHandler} from '../buffers/document';
+import {Document} from '../buffers/buffer_types';
 
 export enum TaskPlatformMode {
     Source = 'source',
@@ -146,15 +144,11 @@ export function checkCompilingCode(answer: TaskAnswer|null, state: AppStore, dis
         return;
     }
 
+
     const {document, platform} = answer;
     const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (context && state.task.currentTask) {
-        if (CodecastPlatform.Python === platform && BufferType.Text === document.type) {
-            checkPythonCode(documentToString(document), context, state, disabledValidations);
-        }
-        if (hasBlockPlatform(platform)) {
-            checkBlocklyCode(document as BlockDocument, context, state, disabledValidations);
-        }
+    if (context && state.task.currentTask && platformsList[platform].checkCode) {
+        platformsList[platform].checkCode(document, context, state, disabledValidations);
     }
 }
 
@@ -166,11 +160,8 @@ export function getBlocksUsage(answer: TaskAnswer|null) {
 
     const {document, platform} = answer;
 
-    if (CodecastPlatform.Python === platform) {
-        return getPythonBlocksUsage(documentToString(document), context);
-    }
-    if (hasBlockPlatform(platform)) {
-        return getBlocklyBlocksUsage(document as BlockDocument, context);
+    if (platformsList[platform].getBlocksUsage) {
+        return platformsList[platform].getBlocksUsage(document, context);
     }
 
     return null;
@@ -190,13 +181,23 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
         return TextBufferHandler.documentFromString(context.infos.startingExample[platform]);
     }
 
-    if (CodecastPlatform.Python === platform) {
-        if (context && currentTask && !isServerTask(currentTask)) {
-            const availableModules = getAvailableModules(context);
+    if (context && currentTask && !isServerTask(currentTask)) {
+        const availableModules = getAvailableModules(context);
+        if (CodecastPlatform.Python === platform) {
             let content = '';
             for (let i = 0; i < availableModules.length; i++) {
                 content += 'from ' + availableModules[i] + ' import *\n';
             }
+
+            return TextBufferHandler.documentFromString(content);
+        } else if (CodecastPlatform.C === platform || CodecastPlatform.Cpp === platform) {
+            let content = '';
+            for (let i = 0; i < availableModules.length; i++) {
+                content += '#include <' + availableModules[i] + '.h>\n';
+            }
+
+            content += "\nint main() {\n    \n}\n";
+
             return TextBufferHandler.documentFromString(content);
         }
     }

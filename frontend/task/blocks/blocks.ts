@@ -8,7 +8,7 @@ import {selectAnswer} from "../selectors";
 import {QuickAlgoLibrary} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
 import {appSelect} from '../../hooks';
-import {platformsList} from '../../stepper/platforms';
+import {hasBlockPlatform, platformsList} from '../../stepper/platforms';
 import {getNotionsBagFromIncludeBlocks} from './notions';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
@@ -20,10 +20,12 @@ export interface DraggableBlockItem {
     block: Block,
 }
 
-function getSnippet(proto) {
+function getSnippet(block: Block, platform: CodecastPlatform) {
+    const proto = block.caption;
     let parenthesisOpenIndex = proto.indexOf("(");
+    let finalCharacter = -1 !== [CodecastPlatform.C, CodecastPlatform.Cpp].indexOf(platform) && BlockType.Function === block.type && block.category !== 'sensors' ? ';' : '';
     if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
-        return proto;
+        return proto + finalCharacter;
     } else {
         let ret = proto.substring(0, parenthesisOpenIndex + 1);
         let commaIndex = parenthesisOpenIndex;
@@ -53,7 +55,7 @@ function getSnippet(proto) {
         ret += proto.substring(commaIndex + 1, parenthesisCloseIndex);
         ret += "})";
 
-        return ret;
+        return ret + finalCharacter;
     }
 }
 
@@ -74,7 +76,9 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     let blockInfo = blockList[iBlock];
                     blocksInfos[blockInfo.name] = {
                         nbArgs: 0, // handled below
-                        type: typeName
+                        type: typeName,
+                        yieldsValue: blockInfo.yieldsValue,
+                        params: blockInfo.params ?? [],
                     };
                     blocksInfos[blockInfo.name].nbsArgs = [];
                     if (blockInfo.anyArgs) {
@@ -105,7 +109,9 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     code = blockName;
                 }
                 let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
+                let params = blocksInfos[blockName] ? blocksInfos[blockName].params : [];
                 let type = blocksInfos[blockName] ? blocksInfos[blockName].type : 'actions';
+                let returnType = blocksInfos[blockName] ? blocksInfos[blockName].yieldsValue : null;
 
                 if (type == 'actions') {
                     // this._hasActions = true;
@@ -116,9 +122,11 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     name: blockName,
                     type: BlockType.Function,
                     category: type,
-                    params: nbsArgs,
+                    paramsCount: nbsArgs,
+                    params,
                     caption: code,
-                    code: code,
+                    code,
+                    returnType,
                 });
             }
 
@@ -164,7 +172,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             let blockHelp = blockDesc.substring(blockDesc.indexOf('</code>') + 7);
             block.caption = funcProto;
             block.description = blockHelp;
-            block.snippet = getSnippet(block.caption);
+            block.snippet = getSnippet(block, platform);
         } else {
             if (block.description) {
                 block.description = block.description.replace(/@/g, block.code);
@@ -175,7 +183,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             let funcCode = block.caption;
             blockDesc = block.description;
             if (!blockDesc) {
-                if (CodecastPlatform.Python === platform) {
+                if (!hasBlockPlatform(platform)) {
                     block.caption = funcCode + '()';
                 }
             } else if (blockDesc.indexOf('</code>') < 0) {
@@ -192,7 +200,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             if (block.caption && block.caption.trim().substring(0, 1) === '%') {
                 block.caption = block.caption.substring(block.caption.indexOf('%') + 1).trim();
             }
-            block.snippet = block.snippet ? block.snippet : getSnippet(block.caption);
+            block.snippet = block.snippet ? block.snippet : getSnippet(block, platform);
         }
 
         if (block.description && block.description.trim().substring(0, 1) === ':') {
