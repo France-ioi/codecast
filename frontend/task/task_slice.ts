@@ -14,6 +14,7 @@ import P5Fixture from './fixtures/test_p5';
 import CraneFixture from './fixtures/test_crane';
 import Crane2Fixture from './fixtures/test_crane2';
 import MapFixture from './fixtures/test_map';
+import OpenCvFixture from './fixtures/test_opencv';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
@@ -36,6 +37,7 @@ const availableTasks = {
     crane2: Crane2Fixture,
     login: StringsLoginFixture,
     map: MapFixture,
+    opencv: OpenCvFixture,
 };
 
 export enum TaskActionTypes {
