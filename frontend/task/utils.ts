@@ -8,6 +8,7 @@ import {CodecastPlatform} from '../stepper/codecast_platform';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {BlockBufferHandler, TextBufferHandler} from '../buffers/document';
 import {Document} from '../buffers/buffer_types';
+import {QuickAlgoLibrary} from './libs/quickalgo_library';
 
 export enum TaskPlatformMode {
     Source = 'source',
@@ -121,7 +122,7 @@ export function extractVariantSpecific(item: any, variant: number, level?: TaskL
     }
 }
 
-export function getAvailableModules(context) {
+export function getAvailableModules(context: QuickAlgoLibrary) {
     if (context.infos.includeBlocks && context.infos.includeBlocks.generatedBlocks) {
         let availableModules = [];
         for (let generatorName in context.infos.includeBlocks.generatedBlocks) {

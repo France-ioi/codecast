@@ -1,4 +1,4 @@
-import {AppStore} from './store';
+import {AppStore, CodecastOptions} from './store';
 import {RecordApi} from './recorder/record';
 import {ReplayApi} from './player/replay';
 import {StepperApi} from './stepper/api';
@@ -27,6 +27,7 @@ export interface App {
 }
 
 export interface CodecastType {
+    options?: CodecastOptions,
     environments: { [key: string]: CodecastEnvironment },
     start?: Function,
     restartSagas?: Function,

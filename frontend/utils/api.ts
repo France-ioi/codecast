@@ -1,6 +1,7 @@
 import request from 'superagent';
 import {isLocalStorageEnabled} from "../common/utils";
 import {CANCEL} from 'redux-saga';
+import fs from 'fs';
 
 export const asyncRequestJson = function(path, body, withCredentials = true) {
     let req;

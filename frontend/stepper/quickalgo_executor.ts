@@ -161,6 +161,9 @@ class QuickalgoExecutor {
                 log.getLogger('quickalgo_executor').debug('[quickalgo_executor] set result', argumentResult);
                 resolve(argumentResult);
             }]);
+            if (result instanceof Promise) {
+                result.catch(reject);
+            }
 
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] MODULE RESULT', result);
             if (Symbol.iterator in Object(result)) {

@@ -21,8 +21,6 @@ import {
     submissionUpdateTaskSubmission,
 } from "./submission_slice";
 import {longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
-import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
-import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
 import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
@@ -39,12 +37,9 @@ import {
     TaskSubmissionServerResult
 } from './submission_types';
 import {Codecast} from '../app_types';
-import {Document} from '../buffers/buffer_types';
-import {documentToString} from '../buffers/document';
 import {murmurhash3_32_gc} from '../common/utils';
 import {bufferAssociateToSubmission} from '../buffers/buffers_slice';
 import {TaskLevelName} from '../task/platform/platform_slice';
-import {extractTestsFromTask} from './tests';
 
 const executionsCache = {};
 const submissionExecutionTasks = {};

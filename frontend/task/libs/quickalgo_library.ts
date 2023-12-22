@@ -11,6 +11,9 @@ import {TaskSubmissionServerTestResult} from '../../submission/submission_types'
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App, Codecast} from '../../app_types';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
+import {call} from 'typed-redux-saga';
+import {asyncRequestJson} from '../../utils/api';
+import {appSelect} from '../../hooks';
 
 export abstract class QuickAlgoLibrary {
     display: boolean;
@@ -360,6 +363,29 @@ export abstract class QuickAlgoLibrary {
 
     getDefaultEmptyTest() {
         return null;
+    }
+
+    generateRemoteHandler(libraryName: string, callName: string) {
+        const self = this;
+        return async function () {
+            const taskPlatformUrl = Codecast.options.taskPlatformUrl;
+
+            let args = [...arguments];
+            const callback = args.pop();
+
+            const body = {
+                libraryName,
+                callName,
+                args,
+            };
+
+            const result = (await asyncRequestJson(taskPlatformUrl + '/remote-lib-call', body, false)) as {success: boolean, result?: any, error?: string};
+            if (result?.success) {
+                self.waitDelay(callback, result.result);
+            } else {
+                throw(result.error);
+            }
+        }
     }
 }
 

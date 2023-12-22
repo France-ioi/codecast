@@ -3,6 +3,7 @@ import {useDispatch} from "react-redux";
 import {CodecastAnalysisVariable} from "./analysis";
 import {analysisTogglePath} from "./analysis_slice";
 import {useAppSelector} from "../../hooks";
+import {AnalysisVariableImage} from './AnalysisVariableImage';
 
 interface AnalysisVariableProps {
     variable: CodecastAnalysisVariable,
@@ -107,6 +108,11 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
         const hasPreviousValue = null !== variable.previousValue && undefined !== variable.previousValue && variable.value !== variable.previousValue;
 
         const sanitizeValue = (value) => {
+            if ('string' === typeof value && 'image' === value.replace(/"/g, '').split(':')[0]) {
+                return <AnalysisVariableImage
+                    imageUrl={value.replace(/"/g, '').split(':')[1]}
+                />;
+            }
             if ('string' === typeof value && value.substring(0, 1) === '"' && value.length > 100) {
                 return value.substring(0, 98) + '..."';
             }
