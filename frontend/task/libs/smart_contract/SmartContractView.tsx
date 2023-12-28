@@ -94,6 +94,7 @@ export function SmartContractView() {
                     key={logIndex}
                     log={log}
                     names={addressNames}
+                    displayBalances={logIndex === resultLog.length - 1 || !resultLog[logIndex + 1].internal}
                 />
             )}
 
