@@ -50,7 +50,7 @@ export function SmartContractView() {
                     balances[log.destination] = (balances[log.destination] ?? 10000) + Number(log.amount);
                 }
             }
-            log.balances = Object.assign({}, balances);
+            log.balances = { ...balances };
         });
         return processedLog;
     };
