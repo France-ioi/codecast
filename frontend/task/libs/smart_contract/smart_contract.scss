@@ -55,9 +55,16 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
         //background: rgb(209, 231, 221);
       }
     }
-        &.is-internal {
-          margin-left: 32px;
-        }
+    &.is-balances {
+      .smart-contract-log__header {
+        padding: 4px;
+        background: #acacac;
+        color: white;
+      }
+    }
+    &.is-internal {
+      margin-left: 32px;
+    }
   }
 
   .smart-contract-scalar {
@@ -128,6 +135,37 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
     font-weight: bold;
     svg {
       vertical-align: middle;
+    }
+  }
+
+  .smart-contract-log__balances {
+    margin-top: 8px;
+    margin-bottom: 6px;
+    padding: 8px;
+
+    .smart-contract-log__balances-balance {
+      display: flex;
+
+      .smart-contract-log__balances-address {
+        flex: 0 0 auto;
+        font-size: 0.9em;
+      }
+
+      .smart-contract-log__balances-dots {
+        flex: 0 1 99%;
+        display: inline-block;
+        background-image: linear-gradient(to right, grey 33%, rgba(255,255,255,0) 0%);
+        background-position: bottom;
+        background-size: 4px 1px;
+        background-repeat: repeat-x;
+      }
+
+      .smart-contract-log__balances-amount {
+        flex: 0 0 auto;
+        display: inline-block;
+        font-size: 0.9em;
+        margin-left: 8px;
+      }
     }
   }
 

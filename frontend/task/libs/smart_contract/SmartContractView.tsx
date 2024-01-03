@@ -1,7 +1,7 @@
 import React from "react";
 import {AppStore} from "../../../store";
 import {useAppSelector} from "../../../hooks";
-import {SmartContractResultLogLine} from './smart_contract_lib';
+import { SmartContractResultLogLine, isContract } from './smart_contract_lib';
 import {SmartContractViewTransaction} from './SmartContractViewTransaction';
 import {Alert} from "react-bootstrap";
 import {getMessage} from '../../../lang';
@@ -18,8 +18,8 @@ export function SmartContractView() {
 
     const hasFailed = !taskState.success;
 
-    const processInternalOperations = (resultLog: SmartContractResultLogLine[]): SmartContractResultLogLine[] => {
-        let processedLog = [];
+    const processLog = (resultLog: SmartContractResultLogLine[]): SmartContractResultLogLine[] => {
+        let processedLog: SmartContractResultLogLine[] = [];
         resultLog.forEach((log, logIdx) => {
             const failedLog = hasFailed && logIdx === resultLog.length - 1;
             processedLog.push({ isFailed: failedLog, ...log });
@@ -35,12 +35,29 @@ export function SmartContractView() {
                 });
             });
         });
+        let balances = {};
+        processedLog.forEach((log) => {
+            if (log.amount) {
+                if ('origination' == log.kind) {
+                    balances[log.address] = Number(log.amount);
+                }
+                if (log.source && (undefined !== balances[log.source] || !isContract(log.source))) {
+                    // if undefined, it's not a contract and starts with 10000 tez
+                    balances[log.source] = (balances[log.source] ?? 10000) - Number(log.amount);
+                }
+                if (log.destination && (undefined !== balances[log.destination] || !isContract(log.destination))) {
+                    // if undefined, it's not a contract and starts with 10000 tez
+                    balances[log.destination] = (balances[log.destination] ?? 10000) + Number(log.amount);
+                }
+            }
+            log.balances = { ...balances };
+        });
         return processedLog;
     };
 
-    const resultLog: SmartContractResultLogLine[] = processInternalOperations(taskState.resultLog);
+    const resultLog: SmartContractResultLogLine[] = processLog(taskState.resultLog);
 
-    const processAddressNames = (resultLog: SmartContractResultLogLine[]) => {
+    const getAddressNames = (resultLog: SmartContractResultLogLine[]) => {
         let aNames = {}; // maps addresses to names
         let cNames = {}; // counts how many times a name is used
         let fcNames = {}; // maps names to first address using it (to rename it to #1)
@@ -65,10 +82,10 @@ export function SmartContractView() {
                 aNames[log.source] = getNewName(log.as, log.source);
             }
         });
-        aNames['_hasMultipleContracts'] = Object.keys(aNames).filter((key) => !key.startsWith('tz1')).length > 1;
+        aNames['_hasMultipleContracts'] = Object.keys(aNames).filter(isContract).length > 1;
         return aNames;
     };
-    const addressNames = processAddressNames(resultLog);
+    const addressNames = getAddressNames(resultLog);
 
     return (
         <div className="smart-contract-visualization">
@@ -77,6 +94,7 @@ export function SmartContractView() {
                     key={logIndex}
                     log={log}
                     names={addressNames}
+                    displayBalances={logIndex === resultLog.length - 1 || !resultLog[logIndex + 1].internal}
                 />
             )}
 
