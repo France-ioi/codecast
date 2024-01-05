@@ -1,6 +1,6 @@
-import React, {useEffect, useRef} from "react";
-import {useAppSelector} from "../../hooks";
-import {BlockBufferHandler, documentToString} from "../../buffers/document";
+import React, {useCallback, useEffect, useRef} from "react";
+import {useAppSelector, useDebounce} from "../../hooks";
+import {BlockBufferHandler} from "../../buffers/document";
 import log from 'loglevel';
 import {stepperDisplayError} from '../actionTypes';
 import {useDispatch} from 'react-redux';
@@ -25,6 +25,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const language = useAppSelector(state => state.options.language.split('-')[0]);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
+    const currentValue = useRef(null);
     const previousValue = useRef(null);
     const highlightedBlock = useRef(null);
     const loaded = useRef(false);
@@ -208,8 +209,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         };
     }, [currentTask, currentLevel, contextId, props.readOnly]);
 
-    useEffect(() => {
-        const newDocument = props.state?.document ?? BlockBufferHandler.getEmptyDocument();
+    const updateDocumentConditionnally = () => {
+        const newDocument = currentValue.current ?? BlockBufferHandler.getEmptyDocument();
         log.getLogger('editor').debug('[blockly.editor] load document', {newDocument, previousValue: previousValue.current});
 
         if (previousValue.current === newDocument?.content?.blockly) {
@@ -217,6 +218,13 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
 
         reset(newDocument);
+    };
+
+    const onLoadDocument = useDebounce(updateDocumentConditionnally, 100);
+
+    useEffect(() => {
+        currentValue.current = props.state?.document;
+        onLoadDocument();
     }, [props.state?.document]);
 
     useEffect(() => {
