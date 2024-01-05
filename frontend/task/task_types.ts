@@ -8,7 +8,7 @@ export interface BlocksUsage {
     error?: string,
     blocksLimit?: number,
     blocksCurrent?: number,
-    limitations?: {name: string, current: number, limit: number}[],
+    limitations?: {name: string, current: number, limit: number, type: string}[],
 }
 
 export interface TaskState {
@@ -123,6 +123,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     showViews?: boolean,
     tabsEnabled?: boolean,
     documentationOpenByDefault?: boolean,
+    remoteDebugEnabled?: boolean,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {

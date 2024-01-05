@@ -13,12 +13,9 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-saga';
-
-import {asyncRequestJson} from '../utils/api';
-
+import {call, cancel, fork, put, race, take, takeEvery, takeLatest} from 'typed-redux-saga';
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
+import {clearStepper, createRunnerSaga} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore, AppStoreReplay} from "../store";
@@ -28,13 +25,11 @@ import {Bundle} from "../linker";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {selectAnswer} from "../task/selectors";
-import {compilePythonCodeSaga} from "./python";
 import {appSelect} from '../hooks';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {CodecastPlatform} from './codecast_platform';
 import {App, Codecast} from '../app_types';
 import {BlockBufferHandler, documentToString, TextBufferHandler} from '../buffers/document';
-import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {TaskAnswer} from '../task/task_types';
 import {RECORDING_FORMAT_VERSION} from '../version';
 
@@ -50,6 +45,52 @@ export const initialStateCompile = {
     answer: null as TaskAnswer,
     syntaxTree: null as any
 };
+
+export function* compileSaga({stepperApi}: App) {
+    let state = yield* appSelect();
+    const answer = selectAnswer(state);
+    const {allowExecutionOverBlocksLimit} = state.options;
+
+    // To make sure we have the time to conclude all Redux Saga actions triggered by the start of the compilation
+    yield* delay(0);
+
+    yield* put({
+        type: ActionTypes.CompileStarted,
+        payload: {
+            answer,
+        },
+    });
+
+    // Create a runner for this
+    Codecast.runner = yield* call(createRunnerSaga, answer.platform);
+
+    try {
+        checkCompilingCode(answer, state, allowExecutionOverBlocksLimit ? ['blocks_limit'] : []);
+    } catch (e) {
+        yield* put({
+            type: ActionTypes.CompileFailed,
+            payload: {
+                testResult: LibraryTestResult.fromString(String(e)),
+            },
+        });
+        return;
+    }
+
+    // @ts-ignore
+    if (!Codecast.runner.constructor.needsCompilation()) {
+        yield* put({
+            type: ActionTypes.CompileSucceeded,
+        });
+    } else {
+        try {
+            yield* call([Codecast.runner, Codecast.runner.compileAnswer], answer, stepperApi);
+        } catch (ex) {
+            yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
+        }
+    }
+}
+
+let currentCompileTask;
 
 export default function(bundle: Bundle) {
     function initReducer(state: AppStore): void {
@@ -79,82 +120,27 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.CompileWait);
 
-    bundle.addSaga(function* watchCompile() {
+    bundle.addSaga(function* watchCompile(app: App) {
         yield* takeLatest(ActionTypes.Compile, function* () {
-            let state = yield* appSelect();
-            const answer = selectAnswer(state);
-            const {allowExecutionOverBlocksLimit} = state.options;
-            const platform = answer.platform;
+            currentCompileTask = yield* fork(compileSaga, app);
+        });
 
-            // To make sure we have the time to conclude all Redux Saga actions triggered by the start of the compilation
-            yield* delay(0);
-
-            yield* put({
-                type: ActionTypes.CompileStarted,
-                payload: {
-                    answer,
-                },
-            });
-
-            // Create a runner for this
-            Codecast.runner = yield* call(createRunnerSaga, answer.platform);
-
-            try {
-                checkCompilingCode(answer, state, allowExecutionOverBlocksLimit ? ['blocks_limit'] : []);
-            } catch (e) {
-                yield* put({
-                    type: ActionTypes.CompileFailed,
-                    payload: {
-                        testResult: LibraryTestResult.fromString(String(e)),
-                    },
-                });
-                return;
-            }
-
-            let response;
-            const runnerClass = getRunnerClassFromPlatform(platform);
-            if (!runnerClass.needsCompilation()) {
-                yield* put({
-                    type: ActionTypes.CompileSucceeded,
-                    platform
-                });
-            } else if (CodecastPlatform.Python === platform) {
-                try {
-                    yield* call(compilePythonCodeSaga, documentToString(answer.document));
-                } catch (ex) {
-                    yield* put({type: ActionTypes.CompileFailed, payload: {testResult: LibraryTestResult.fromString(String(ex))}});
-                }
-            } else {
-                state = yield* appSelect();
-                try {
-                    const logData = state.statistics.logData;
-                    const postData = {source: documentToString(answer.document), platform, logData};
-                    const {baseUrl} = state.options;
-
-                    response = yield* call(asyncRequestJson, baseUrl + '/compile', postData);
-                } catch (ex) {
-                    response = {error: ex.toString()};
-                }
-
-                response.platform = platform;
-                if (response.ast) {
-                    yield* put({
-                        type: ActionTypes.CompileSucceeded,
-                        response,
-                        platform
-                    });
-                } else {
-                    yield* put({type: ActionTypes.CompileFailed, payload: {testResult: new LibraryTestResult(null, 'compilation', {content: response.diagnostics})}});
-                }
+        yield* takeLatest(ActionTypes.StepperExit, function* () {
+            if (currentCompileTask) {
+                yield* cancel(currentCompileTask);
+                currentCompileTask = null;
             }
         });
 
         // @ts-ignore
         yield* takeEvery(ActionTypes.CompileWait, function* ({payload: {callback, keepSubmission, fromControls}}) {
+            // Wait that all pre-compilations actions are over
+            yield* delay(0);
+
             yield* put({type: ActionTypes.Compile, payload: {keepSubmission, fromControls}});
             const outcome = yield* race({
                 [CompileStatus.Done]: take(ActionTypes.StepperRestart),
-                [CompileStatus.Error]: take(ActionTypes.CompileFailed),
+                [CompileStatus.Error]: take([ActionTypes.CompileFailed, ActionTypes.StepperExit]),
             });
             callback(Object.keys(outcome)[0]);
         });
@@ -289,7 +275,7 @@ function compileStartedReducer(state: AppStore, {payload}): void {
 
 function compileSucceededReducer(state: AppStore, action): void {
     const answer = state.compile.answer;
-    if (-1 !== [CodecastPlatform.Unix, CodecastPlatform.Arduino].indexOf(answer.platform)) {
+    if (-1 !== [CodecastPlatform.C, CodecastPlatform.Cpp, CodecastPlatform.Arduino].indexOf(answer.platform) && action.response) {
         const {ast, diagnostics} = action.response;
         state.compile.status = CompileStatus.Done;
         state.compile.syntaxTree = addNodeRanges(documentToString(answer.document), ast);

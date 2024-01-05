@@ -1,14 +1,27 @@
 import * as React from 'react';
-import {CodecastAnalysisStackFrame} from "./analysis";
+import {CodecastAnalysisStackFrame, CodecastAnalysisVariable} from "./analysis";
 import {AnalysisVariable} from "./AnalysisVariable";
 
 interface AnalysisFunctionHeaderProps {
     stackFrame: CodecastAnalysisStackFrame,
+    stackFrameName?: string,
 }
 
 export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.Element => {
-    const args = props.stackFrame.args && props.stackFrame.args.length ? props.stackFrame.args.map((name) => {
-        const variable = props.stackFrame.variables.find(variable => name === variable.name);
+    const {stackFrameName} = props;
+    const stackFrameNameHasParenthesis = !!(!stackFrameName || -1 !== stackFrameName.indexOf('('));
+
+    const args: CodecastAnalysisVariable[] = props.stackFrame.args && props.stackFrame.args.length ? props.stackFrame.args.map((element) => {
+        if ('object' === typeof element && element.value) {
+            return {
+                name: null,
+                value: element.value,
+                variablesReference: 0,
+                path: "#args",
+            }
+        }
+
+        const variable = props.stackFrame.variables.find(variable => element === variable.name);
 
         return {
             ...variable,
@@ -19,12 +32,8 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
     return (
         <div className="scope-function-title">
             <span>
-                {props.stackFrame.name ? (
-                    <span>
-                        <span className="function-name">{props.stackFrame.name}</span>
-                        {'('}
-                    </span>
-                ) : null}
+                {stackFrameName && <span className="function-name">{stackFrameName}</span>}
+                {!stackFrameNameHasParenthesis && '('}
                 <span>
                     {args.map(function(argument, index) {
                         return (
@@ -38,7 +47,7 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
                             </span>
                         );
                     })}
-                </span>{props.stackFrame.name ? ')' : null}
+                </span>{!stackFrameNameHasParenthesis && ')'}
             </span>
         </div>
     );

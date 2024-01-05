@@ -7,18 +7,11 @@ import {put, takeEvery} from "typed-redux-saga";
 import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
-import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
 import {platformsList} from '../stepper/platforms';
 import {IoMode} from '../stepper/io';
 import {CodecastPlatform} from '../stepper/codecast_platform';
-import {taskLoad} from '../task/task_actions';
-import {
-    createEmptyBufferState,
-    getBufferTypeFromPlatform
-} from '../buffers/document';
-import {bufferReset} from '../buffers/buffers_slice';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
@@ -151,6 +144,12 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     }
 
     loadOptionsFromQuery(options, query);
+
+    // For backward compatibility
+    // @ts-ignore
+    if ('unix' === state.options.platform) {
+        state.options.platform = CodecastPlatform.Cpp;
+    }
 
     if (!(state.options.platform in platformsList)) {
         throw new Error("Unknown platform name: " + state.options.platform);

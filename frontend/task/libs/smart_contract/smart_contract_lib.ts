@@ -17,6 +17,11 @@ export interface SmartContractResultLogLine {
     address?: string,
     amount: number,
     as?: string,
+    balances?: { [key: string]: number },
+    balance_updates?: {
+        dest: string,
+        value: string
+    }[],
     command?: string,
     date?: string,
     destination?: string
@@ -63,6 +68,11 @@ export interface SmartContractConfigType {
     conceptsList: DocumentationConcept[],
     smartContractsBlocksList: {[platform: string]: {[notion: string]: Block[]}},
 }
+
+export function isContract(address: string): boolean {
+    return address && !address.startsWith('tz1');
+}
+
 
 export class SmartContractLib extends QuickAlgoLibrary {
     innerState: SmartContractLibState;
@@ -141,7 +151,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
             }
 
             return new LibraryTestResult(
-                output.error?.message
+                output.error?.message,
             );
         } catch (e) {
             return LibraryTestResult.fromString(testResult.log);

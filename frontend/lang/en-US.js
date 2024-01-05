@@ -148,6 +148,9 @@ module.exports = {
     PLATFORM_MICHELSON: "Michelson",
     PLATFORM_MLIGO: "CameLIGO",
     PLATFORM_JSLIGO: "JsLIGO",
+    PLATFORM_C: "C",
+    PLATFORM_CPP: "C++",
+    PLATFORM_JAVA: "Java",
     PLATFORM_RELOAD: "We can't display the language {platform} in the current mode, please reload the page to update the display.",
     PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 
@@ -284,7 +287,8 @@ module.exports = {
 
     SUBMISSION_EXECUTE_ON: 'Execute on...',
     SUBMISSION_EXECUTE_ON_CLIENT: 'browser',
-    SUBMISSION_EXECUTE_ON_SERVER: 'server',
+    SUBMISSION_EXECUTE_ON_SERVER: 'evaluation server',
+    SUBMISSION_EXECUTE_ON_REMOTE_DEBUG_SERVER: "debug server",
     SUBMISSION_EXECUTE_THIS_TEST: 'Execute on this test',
     SUBMISSION_EXECUTE_MY_TESTS: 'My tests',
     SUBMISSION_EXECUTE_SUBMIT: 'Submit',
@@ -313,6 +317,7 @@ module.exports = {
     SUBMISSION_WARNING_COMPILATION: "Compilation warning",
     SUBMISSION_ERROR_EXECUTION: "Execution error",
     SUBMISSION_NO_ERROR: "Compilation succeeded",
+    SUBMISSION_ERROR_TIMEOUT: "The action execution has timeout.",
     SUBMISSION_NO_TESTS: "There are no tests for this task.",
     SUBMISSION_CREATE_TEST: "Create new test",
     SUBMISSION_REMOVE_TEST_CONFIRM: "Do you confirm the removal of this test?",

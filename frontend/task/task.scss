@@ -791,6 +791,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     overflow-x: auto;
     overflow-y: clip;
     min-width: 350px;
+    white-space-collapse: preserve;
     .compilation {
       white-space: pre;
       font-family: $font-family-monospace;

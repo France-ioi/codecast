@@ -13,17 +13,16 @@ import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
 import {
     submissionChangeExecutionMode,
-    submissionCloseCurrentSubmission,
     SubmissionExecutionScope
 } from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
 import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
-import {isServerTask, isTestPublic} from './task_types';
+import {isTestPublic} from './task_types';
 import {LibraryTestResult} from './libs/library_test_result';
 import {getStepperControlsSelector} from '../stepper/selectors';
-import {selectTaskTests} from '../submission/submission_selectors';
+import {selectAvailableExecutionModes, selectTaskTests} from '../submission/submission_selectors';
 import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
 import {callPlatformValidate, submissionCancel} from '../submission/submission_actions';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
@@ -37,12 +36,13 @@ export function ControlsAndErrors() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const taskTests = useAppSelector(selectTaskTests);
-    const executionMode = useAppSelector(state => state.submission.executionMode);
+    let executionMode = useAppSelector(state => state.submission.executionMode);
     const stepperStatus = useAppSelector(state => state.stepper.status);
     const cancellableSubmissionIndex = useAppSelector(selectCancellableSubmissionIndex);
     const cancellableSubmission = useAppSelector(state => null !== cancellableSubmissionIndex ? state.submission.taskSubmissions[cancellableSubmissionIndex] : null);
     const platform = useAppSelector(selectActiveBufferPlatform);
     const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector({state, enabled: true})).canRestart;
+    const availableExecutionModes = useAppSelector(selectAvailableExecutionModes);
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
@@ -69,6 +69,9 @@ export function ControlsAndErrors() {
                 error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
             } else if ('task-tests-submission-results-overview' === stepperError.type) {
                 error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
+            } else if ('compilation' === stepperError.type) {
+                const stepperErrorHtml = toHtml(stepperError.props.content);
+                error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
             } else if (stepperError.message) {
                 const stepperErrorHtml = toHtml(nl2br(stepperError.message));
                 error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
@@ -113,7 +116,6 @@ export function ControlsAndErrors() {
     const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
     const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
     const clientControlsEnabled = (!currentTask || currentTestPublic) && platformHasClientRunner;
-    const serverTask = null !== currentTask && isServerTask(currentTask);
 
     return (
         <div className="controls-and-errors cursor-main-zone" data-cursor-zone="controls-and-errors">
@@ -150,41 +152,67 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {((TaskSubmissionEvaluateOn.Client === executionMode && platformHasClientRunner && clientExecutionRunning) || !serverTask) && <div className="stepper-controls-container-flex"><StepperControls enabled={clientControlsEnabled}/></div>}
+                    {(clientExecutionRunning || availableExecutionModes.length <= 1) &&
+                        <React.Fragment>
+                            {TaskSubmissionEvaluateOn.Client === executionMode
+                                && <div className="stepper-controls-container-flex">
+                                    <StepperControls enabled={clientControlsEnabled}/>
+                                </div>
+                            }
+                            {TaskSubmissionEvaluateOn.Server === executionMode
+                                && <div className={`submission-server-controls ${!platformHasClientRunner ? 'no-padding' : ''}`}>
+                                    <SubmissionControls/>
+                                </div>
+                            }
+                            {TaskSubmissionEvaluateOn.RemoteDebugServer === executionMode
+                                && <div className="stepper-controls-container-flex">
+                                    <StepperControls enabled/>
+                                </div>
+                            }
+                        </React.Fragment>
+                    }
 
-                    {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && serverTask && !clientExecutionRunning && <div className="execution-controls">
-                        {platformHasClientRunner && <div className="execution-controls-dropdown">
+                    {availableExecutionModes.length > 1 && !clientExecutionRunning && <div className="execution-controls">
+                        <div className="execution-controls-dropdown">
                             <Dropdown>
                                 <Dropdown.Toggle>
                                     <FontAwesomeIcon icon={faCogs} className="mr-2"/>
-                                    {capitalizeFirstLetter(getMessage(TaskSubmissionEvaluateOn.Client === executionMode ? 'SUBMISSION_EXECUTE_ON_CLIENT' : 'SUBMISSION_EXECUTE_ON_SERVER').s)}
+                                    {capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_' + executionMode.toLocaleUpperCase()).s)}
                                 </Dropdown.Toggle>
 
                                 <Dropdown.Menu>
-                                    <Dropdown.Item key="client" onClick={() => changeExecutionMode(TaskSubmissionEvaluateOn.Client)}>{capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_CLIENT').s)}</Dropdown.Item>
-                                    <Dropdown.Item key="server" onClick={() => changeExecutionMode(TaskSubmissionEvaluateOn.Server)}>{capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_SERVER').s)}</Dropdown.Item>
+                                    {availableExecutionModes.map(executionMode =>
+                                        <Dropdown.Item key={executionMode} onClick={() => changeExecutionMode(executionMode)}>{capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_' + executionMode.toLocaleUpperCase()).s)}</Dropdown.Item>
+                                    )}
                                 </Dropdown.Menu>
                             </Dropdown>
-                        </div>}
-                        {(!platformHasClientRunner || TaskSubmissionEvaluateOn.Server === executionMode) && <div className={`submission-server-controls ${!platformHasClientRunner ? 'no-padding' : ''}`}>
+                        </div>
+                        {TaskSubmissionEvaluateOn.Server === executionMode && <div className={`submission-server-controls ${!platformHasClientRunner ? 'no-padding' : ''}`}>
                             <SubmissionControls/>
                         </div>}
-                        {platformHasClientRunner && TaskSubmissionEvaluateOn.Client === executionMode && <div>
+                        {TaskSubmissionEvaluateOn.Client === executionMode && <div>
                             <StepperControls
                                 enabled={clientControlsEnabled}
                                 startButtonsOnly
                             />
                         </div>}
-                        <div className="execution-controls-submit">
-                            <Button
-                                className="quickalgo-button is-medium"
-                                disabled={null !== cancellableSubmission || StepperStatus.Clear !== stepperStatus}
-                                icon={null !== cancellableSubmission && SubmissionExecutionScope.Submit === cancellableSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
-                                onClick={submitSubmission}
-                            >
-                                {getMessage('SUBMISSION_EXECUTE_SUBMIT')}
-                            </Button>
-                        </div>
+                        {TaskSubmissionEvaluateOn.RemoteDebugServer === executionMode && <div>
+                            <StepperControls
+                                enabled
+                                startButtonsOnly
+                            />
+                        </div>}
+                    </div>}
+
+                    {-1 !== availableExecutionModes.indexOf(TaskSubmissionEvaluateOn.Server) && <div className="execution-controls-submit">
+                        <Button
+                            className="quickalgo-button is-medium"
+                            disabled={null !== cancellableSubmission || StepperStatus.Clear !== stepperStatus}
+                            icon={null !== cancellableSubmission && SubmissionExecutionScope.Submit === cancellableSubmission?.scope ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
+                            onClick={submitSubmission}
+                        >
+                            {getMessage('SUBMISSION_EXECUTE_SUBMIT')}
+                        </Button>
                     </div>}
                 </div>}
             </div>}

@@ -7,13 +7,13 @@ import {StepperControlsType, stepperMaxSpeed, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
+    faFastBackward,
     faFastForward,
     faPause,
     faPlay,
     faRunning,
     faShoePrints,
     faSpinner,
-    faStop,
     faTachometerAlt,
     faWalking,
 } from '@fortawesome/free-solid-svg-icons';
@@ -172,8 +172,8 @@ export function StepperControls(props: StepperControlsProps) {
     if (props.startButtonsOnly) {
         return (
             <div className={`controls controls-stepper ${StepperControlsType.Normal}`}>
-                {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.runningBackground ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
-                {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
+                {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), controlsType === StepperControlsType.Normal && stepperControlsState.isRunning ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
+                {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), controlsType === StepperControlsType.StepByStep && stepperControlsState.isRunning ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
             </div>
         );
     }
@@ -187,10 +187,10 @@ export function StepperControls(props: StepperControlsProps) {
             {showControls && <React.Fragment>
                 {(LayoutType.MobileVertical !== layoutType || !speedDisplayedState) &&
                     <React.Fragment>
-                        {_button('restart', onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStop}/>, null, 'is-small')}
-                        {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.runningBackground ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
+                        {_button('restart', onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faFastBackward}/>, null, 'is-small')}
+                        {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), controlsType === StepperControlsType.Normal && stepperControlsState.isRunning ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
                         {canInterrupt && _button('interrupt', onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
-                        {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
+                        {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), controlsType === StepperControlsType.StepByStep && stepperControlsState.isRunning ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
                     </React.Fragment>
                 }
                 {!speedDisabled && controlsType === StepperControlsType.Normal && LayoutType.MobileVertical === layoutType &&

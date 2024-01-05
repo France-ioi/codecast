@@ -97,7 +97,7 @@ export function sendCodeExampleToOpener(code, language) {
 }
 
 export function convertPlatformToDocumentationLanguage(platform: CodecastPlatform): DocumentationLanguage {
-    if (CodecastPlatform.Unix === platform || CodecastPlatform.Arduino === platform) {
+    if (CodecastPlatform.Cpp === platform || CodecastPlatform.Arduino === platform) {
         return DocumentationLanguage.C;
     } else {
         return platform as unknown as DocumentationLanguage;
@@ -305,7 +305,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(documentationUseCodeExample, function* (action) {
             const {code, language} = action.payload;
             const document = TextBufferHandler.documentFromString(code);
-            const newPlatform = ('c' === language ? CodecastPlatform.Unix : language) as CodecastPlatform;
+            const newPlatform = ('c' === language ? CodecastPlatform.Cpp : language) as CodecastPlatform;
             const state = yield* appSelect();
             if (state.options.tabsEnabled) {
                 yield* put(bufferCreateSourceBuffer(document, newPlatform));

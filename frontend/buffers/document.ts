@@ -7,15 +7,10 @@ import {
     Document,
     TextBufferState,
     TextDocument,
-    Range, TextDocumentDelta, TextDocumentDeltaAction,
+    Range,
+    TextDocumentDelta,
+    TextDocumentDeltaAction,
 } from './buffer_types';
-import {CodecastPlatform} from '../stepper/codecast_platform';
-import {hasBlockPlatform} from '../stepper/platforms';
-import log from 'loglevel';
-
-export function getBufferTypeFromPlatform(platform: CodecastPlatform) {
-    return hasBlockPlatform(platform) ? BufferType.Block : BufferType.Text;
-}
 
 export function createEmptyBufferState(type: BufferType): BufferState {
     if (BufferType.Text === type) {

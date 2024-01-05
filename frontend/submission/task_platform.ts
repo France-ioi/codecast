@@ -27,16 +27,6 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
         } catch (ex) {
             console.error("Couldn't execute script animation", ex);
         }
-
-        if (window.taskData?.gridInfos) {
-            return {
-                ...task,
-                gridInfos: {
-                    tabsEnabled: true,
-                    ...window.taskData.gridInfos,
-                },
-            };
-        }
     }
 
     // Use this for now to check if it's a Smart Contract task. Change this in the future
@@ -55,6 +45,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                         wholeCategories: ['smart_contract_main_blocks', 'smart_contract_types'],
                     },
                 },
+                ...(window.taskData?.gridInfos ? window.taskData.gridInfos : {}),
                 // expectedStorage: "(string %names)",
                 // expectedStorage: "(Pair (string %names) (nat %nb_calls))",
                 // hints: [
@@ -97,6 +88,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                     context.success = true;
                     throw(window.languageStrings.messages.outputCorrect);
                 },
+                ...(window.taskData?.gridInfos ? window.taskData.gridInfos : {}),
             },
         }
     }

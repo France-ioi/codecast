@@ -45,12 +45,12 @@ import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
 import BlocklyBundle from './js';
-import {analyseState, AnalysisC, collectDirectives} from './c/analysis';
-import {convertSkulptStateToAnalysisSnapshot, getSkulptSuspensionsCopy} from "./python/analysis";
-import {Directive, parseDirectives} from "./python/directives";
+import {collectDirectives} from './c/analysis';
+import {getSkulptSuspensionsCopy} from "./python/analysis";
+import {Directive} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
-    ActionTypes,
+    ActionTypes, ContextEnrichingTypes,
     stepperDisplayError, stepperExecutionEnd, stepperExecutionEndConditionReached,
     stepperExecutionError,
     stepperRunBackground, stepperRunBackgroundFinished
@@ -66,8 +66,7 @@ import {Bundle} from "../linker";
 import {QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from "../task/libs/quickalgo_libraries";
-import {selectCurrentTestData, taskResetDone, taskUpdateState, updateCurrentTestId} from "../task/task_slice";
-import {getCurrentImmerState} from "../task/utils";
+import {taskResetDone, taskUpdateState, updateCurrentTestId} from "../task/task_slice";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {selectAnswer} from "../task/selectors";
@@ -82,20 +81,21 @@ import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {DeferredPromise} from "../utils/app";
 import {addStepperRecordAndReplayHooks} from './replay';
 import {appSelect} from '../hooks';
-import {hasBlockPlatform} from './platforms';
+import {hasBlockPlatform, platformsList} from './platforms';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {selectTaskTests} from '../submission/submission_selectors';
 import {CodecastPlatform} from './codecast_platform';
 import {App, Codecast} from '../app_types';
 import {mainQuickAlgoLogger} from '../task/libs/quick_algo_logger';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
-import {TaskSubmissionResultPayload} from '../submission/submission_types';
+import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode} from '../task/layout/layout_types';
 import {shuffleArray} from '../utils/javascript';
 import {computeDelayForCurrentStep} from './speed';
 import {memoize} from 'proxy-memoize';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import debounce from 'lodash.debounce';
+import {RemoteDebugExecutor} from './remote/remote_debug_executer';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -140,7 +140,7 @@ export type StepperControls = typeof initialStepperStateControls;
 
 // TODO: Separate the needs per platform (StepperStatePython, StepperStateC, etc)
 const initialStateStepperState = {
-    platform: CodecastPlatform.Unix,
+    platform: CodecastPlatform.Cpp,
     input: '',
     output: '', // Only used for python
     localVariables: {} as any, // Only used for blockly
@@ -200,24 +200,25 @@ export const initialStateStepper = {
 
 export function* createRunnerSaga(platform: CodecastPlatform): SagaIterator<AbstractRunner> {
     const environment = yield* appSelect(state => state.environment);
+    const remoteExecution = yield* appSelect(state => TaskSubmissionEvaluateOn.RemoteDebugServer === state.submission.executionMode);
     const context = quickAlgoLibraries.getContext(null, environment);
-    const runnerClass = getRunnerClassFromPlatform(platform);
 
-    return new runnerClass(context, {});
+    if (remoteExecution) {
+        return new RemoteDebugExecutor(context);
+    } else {
+        const runnerClass = getRunnerClassFromPlatform(platform);
+
+        // @ts-ignore
+        return new runnerClass(context);
+    }
 }
 
 export function getRunnerClassFromPlatform(platform: CodecastPlatform) {
-    if (CodecastPlatform.Python === platform) {
-        return PythonRunner;
-    }
-    if (CodecastPlatform.Unix === platform) {
-        return UnixRunner;
-    }
-    if (hasBlockPlatform(platform)) {
-        return BlocklyRunner;
+    if (!platformsList[platform]?.runner) {
+        throw "This platform does not have a runner: " + platform;
     }
 
-    throw "This platform does not have a runner: " + platform;
+    return platformsList[platform]?.runner;
 }
 
 export function doesPlatformHaveClientRunner(platform: CodecastPlatform): boolean {
@@ -319,6 +320,9 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.StepperExecutionError);
     bundle.addReducer(ActionTypes.StepperExecutionError, stepperExecutionErrorReducer);
 
+    bundle.defineAction(ActionTypes.StepperExecutionEnd);
+    bundle.addReducer(ActionTypes.StepperExecutionEnd, stepperExecutionEndReducer);
+
     bundle.defineAction(ActionTypes.StepperDisplayError);
     bundle.addReducer(ActionTypes.StepperDisplayError, stepperDisplayErrorReducer);
 
@@ -354,95 +358,6 @@ export default function(bundle: Bundle) {
     bundle.include(BlocklyBundle);
 };
 
-/**
- * Enrich, analysis the current stepper state.
- *
- * @param stepperState The stepper state.
- * @param {string} context The context (Stepper.Progress, Stepper.Restart, Stepper.Idle).
- * @param stepperContext
- */
-function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle', stepperContext: StepperContext = null): void {
-    const {programState, controls} = stepperState;
-    if (!programState) {
-        return;
-    }
-
-    log.getLogger('stepper').debug('make enrich', stepperState, Codecast.runner);
-    if (hasBlockPlatform(stepperState.platform)) {
-        stepperState.currentBlockId = (Codecast.runner as BlocklyRunner).getCurrentBlockId();
-        log.getLogger('stepper').debug('got block id', stepperState.currentBlockId);
-        if (context === 'Stepper.Progress') {
-            if (Codecast.runner._isFinished) {
-                log.getLogger('stepper').debug('bim is finished');
-                stepperState.isFinished = true;
-            } else {
-                stepperState.analysis = (Codecast.runner as BlocklyRunner).fetchLatestBlocklyAnalysis(stepperState.localVariables, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
-            }
-        }
-
-        if (!stepperState.analysis) {
-            stepperState.analysis =  {
-                stackFrames: [],
-                code: (Codecast.runner as BlocklyRunner)._code,
-                stepNum: 0
-            };
-
-            stepperState.lastAnalysis = {
-                stackFrames: [],
-                code: (Codecast.runner as BlocklyRunner)._code,
-                stepNum: 0
-            };
-        }
-
-        log.getLogger('stepper').debug('blockly analysis', stepperState.analysis);
-        log.getLogger('stepper').debug('last analysis', stepperState.lastAnalysis);
-        stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
-        log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
-    } else if (stepperState.platform === CodecastPlatform.Python) {
-        if (context === 'Stepper.Progress') {
-            // Don't reanalyse after program is finished :
-            // keep the last state of the stack and set isFinished state.
-            if (Codecast.runner._isFinished) {
-                stepperState.isFinished = true;
-            } else {
-                log.getLogger('stepper').debug('INCREASE STEP NUM TO ', stepperState.analysis.stepNum + 1);
-                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
-                stepperState.directives = {
-                    ordered: parseDirectives(stepperState.analysis),
-                    functionCallStackMap: null,
-                    functionCallStack: null
-                };
-            }
-        }
-
-        if (!stepperState.analysis) {
-            stepperState.analysis =  {
-                stackFrames: [],
-                code: (Codecast.runner as PythonRunner)._code,
-                lines: (Codecast.runner as PythonRunner)._code.split("\n"),
-                stepNum: 0
-            };
-
-            stepperState.lastAnalysis = {
-                stackFrames: [],
-                code: (Codecast.runner as PythonRunner)._code,
-                lines: (Codecast.runner as PythonRunner)._code.split("\n"),
-                stepNum: 0
-            };
-        }
-
-        log.getLogger('stepper').debug('python analysis', stepperState.analysis);
-        stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
-        log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
-    } else {
-        const analysis = stepperState.analysis = analyseState(programState);
-        const focusDepth = controls.stack.focusDepth;
-        stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
-
-        // TODO? initialize controls for each directive added, clear controls for each directive removed (except 'stack').
-    }
-}
-
 export function clearStepper(stepper: Stepper, withCurrentState = false) {
     stepper.status = StepperStatus.Clear;
     stepper.runningBackground = false;
@@ -457,50 +372,29 @@ export function clearStepper(stepper: Stepper, withCurrentState = false) {
 }
 
 export function getNodeRange(stepperState?: StepperState) {
-    if (!stepperState) {
+    if (!stepperState || !stepperState.codecastAnalysis) {
         return null;
     }
 
-    if (stepperState.platform === CodecastPlatform.Python) {
-        const {stackFrames} = stepperState.analysis;
-        const stackFrame = stackFrames[stackFrames.length - 1];
-        if (!stackFrame) {
-            return null;
-        }
-
-        const line = stackFrame.line;
-        const columnNumber = stackFrame.column;
-
-        return {
-            start: {
-                row: (line - 1),
-                column: columnNumber,
-            },
-            end: {
-                row: (line - 1),
-                column: 100,
-            }
-        };
-    } else if (hasBlockPlatform(stepperState.platform)) {
-        //TODO
+    const {stackFrames} = stepperState.codecastAnalysis;
+    const stackFrame = stackFrames[0];
+    if (!stackFrame) {
         return null;
-    } else {
-        const {control} = stepperState.programState;
-        if (!control || !control.node) {
-            return null;
-        }
-
-        const focusDepth = stepperState.controls.stack.focusDepth;
-        if (focusDepth === 0) {
-            return control.node[1].range;
-        } else {
-            const {stackFrames} = stepperState.analysis;
-            const stackFrame = stackFrames[stackFrames.length - focusDepth];
-
-            // @ts-ignore
-            return stackFrame.scopes[0].cont.node[1].range;
-        }
     }
+
+    const line = stackFrame.line;
+    const columnNumber = stackFrame.column;
+
+    return {
+        start: {
+            row: (line - 1),
+            column: columnNumber,
+        },
+        end: {
+            row: stackFrame.endLine ?? (line - 1),
+            column: stackFrame.endColumn ?? 100,
+        }
+    };
 }
 
 function stringifyError(error) {
@@ -519,7 +413,7 @@ function stepperRestartReducer(state: AppStore, {payload: {stepperState}}): void
     const {platform} = state.options;
 
     if (stepperState) {
-        enrichStepperState(stepperState, 'Stepper.Restart');
+        Codecast.runner.enrichStepperState(stepperState, ContextEnrichingTypes.StepperRestart);
         /**
          * StepperState comes from an action so it's not an immer draft.
          */
@@ -585,14 +479,8 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     stepperContext.state = {...stepperContext.state};
 
     if (false !== progress) {
-        if (hasBlockPlatform(stepperContext.state.platform)) {
-            stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
-        } else if (stepperContext.state.platform === CodecastPlatform.Python) {
-            stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
-        }
-
         // Set new currentStepperState state and go back to idle.
-        enrichStepperState(stepperContext.state, 'Stepper.Progress', stepperContext);
+        Codecast.runner.enrichStepperState(stepperContext.state, ContextEnrichingTypes.StepperProgress, stepperContext);
     }
 
     state.task.state = quickAlgoLibraries.getLibrariesInnerState(state.environment);
@@ -609,7 +497,7 @@ const debounceHideBlocklyDropdown = debounce(() => {
 function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
-    enrichStepperState(stepperContext.state, 'Stepper.Idle', stepperContext);
+    Codecast.runner.enrichStepperState(stepperContext.state, ContextEnrichingTypes.StepperIdle, stepperContext);
     /**
      * TODO: stepperState comes from an action so it's not an immer draft.
      */
@@ -629,6 +517,7 @@ function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void 
 
 export function stepperExitReducer(state: AppStoreReplay): void {
     clearStepper(state.stepper, true);
+    state.compile.status = CompileStatus.Clear;
     state.task.inputNeeded = false;
 }
 
@@ -727,6 +616,10 @@ export function stepperExecutionErrorReducer(state: AppStoreReplay): void {
     clearStepper(state.stepper);
 }
 
+export function stepperExecutionEndReducer(state: AppStoreReplay): void {
+    state.stepper.status = StepperStatus.Idle;
+}
+
 export function stepperDisplayErrorReducer(state: AppStoreReplay, {payload}): void {
     state.stepper.error = payload.error;
 }
@@ -751,7 +644,9 @@ function* compileSucceededSaga(app: App) {
         yield* put({type: ActionTypes.StepperDisabled});
 
         const platform = yield* appSelect(state => state.compile.answer.platform);
-        Codecast.runner = yield* call(createRunnerSaga, platform);
+        if (!Codecast.runner) {
+            Codecast.runner = yield* call(createRunnerSaga, platform);
+        }
 
         /* Build the stepper state. This automatically runs into user source code. */
         let stepperState = yield* call(app.stepperApi.buildState, platform);
@@ -957,10 +852,14 @@ function* stepperStepSaga(app: App, action) {
                 } : null),
                 environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
-                executeEffects: app.stepperApi.executeEffects,
                 initStepMarker: Codecast.runner._steps,
             });
             log.getLogger('stepper').debug('execution stepper context', stepperContext);
+
+            let stepExecutor: any = performStep;
+            if (TaskSubmissionEvaluateOn.RemoteDebugServer === state.submission.executionMode) {
+                stepExecutor = [Codecast.runner, (Codecast.runner as RemoteDebugExecutor).executeAction];
+            }
 
             if (action.payload.setStepperContext) {
                 action.payload.setStepperContext(stepperContext);
@@ -971,7 +870,7 @@ function* stepperStepSaga(app: App, action) {
             yield* call(stepperRunFromBeginningIfNecessary, stepperContext);
 
             try {
-                yield* call(performStep, stepperContext, action.payload.mode);
+                yield* call(stepExecutor, stepperContext, action.payload.mode);
             } catch (ex) {
                 log.getLogger('stepper').debug('stepperStepSaga has catched', ex);
                 if (!(ex instanceof StepperError)) {
@@ -990,14 +889,6 @@ function* stepperStepSaga(app: App, action) {
             }
 
             log.getLogger('stepper').debug('end stepper step');
-
-            if (hasBlockPlatform(stepperContext.state.platform)) {
-                stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
-            } else if (stepperContext.state.platform === CodecastPlatform.Python) {
-                stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
-            } else if (stepperContext.state.platform === CodecastPlatform.Unix) {
-                stepperContext.state.isFinished = !stepperContext.state.programState.control;
-            }
 
             if (stepperContext.state.isFinished) {
                 const taskContext = quickAlgoLibraries.getContext(null, state.environment);
@@ -1041,6 +932,7 @@ function* stepperStepSaga(app: App, action) {
         log.getLogger('stepper').debug('end stepper saga, call onStepperDone', stepperContext.onStepperDone);
         // We make a final call to waitForProgress to start over the execution
         // of the replay thread
+        stepperContext.finished = true;
         if (stepperContext.onStepperDone) {
             stepperContext.onStepperDone(stepperContext);
         }
@@ -1119,7 +1011,7 @@ export const getSourceHighlightFromStateSelector = memoize((state: AppStore) => 
     }
 });
 
-function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
+function* stepperRunBackgroundSaga({payload: {callback}}) {
     const state = yield* appSelect();
     const answer = selectAnswer(state);
     const level = state.task.currentLevel;
@@ -1170,19 +1062,16 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     callback(lastBackgroundResult && lastBackgroundResult.result ? firstBackgroundResult : lastBackgroundResult);
 }
 
-function* stepperCompileFromControlsSaga(app: App) {
-    const stepperStatus = yield* appSelect(state => state.stepper.status);
+function* stepperCompileFromControlsSaga(app: App): Generator<any, CompileStatus> {
+    const state = yield* appSelect();
+    const stepperStatus = state.stepper.status;
 
     let backgroundRunData: TaskSubmissionResultPayload = null;
-    if (StepperStatus.Clear === stepperStatus) {
-        let runBackgroundOver;
-        const promise = new Promise((resolve) => {
-            runBackgroundOver = resolve;
-        });
+    if (StepperStatus.Clear === stepperStatus && TaskSubmissionEvaluateOn.RemoteDebugServer !== state.submission.executionMode) {
+        const deferredPromise = new DeferredPromise<TaskSubmissionResultPayload>();
+        yield* put(stepperRunBackground(deferredPromise.resolve));
+        backgroundRunData = yield* call(() => deferredPromise.promise);
 
-        yield* put(stepperRunBackground(runBackgroundOver));
-
-        backgroundRunData = yield promise;
         log.getLogger('stepper').debug('background execution result', backgroundRunData);
         if (null !== backgroundRunData) {
             const context = quickAlgoLibraries.getContext(null, 'main');
@@ -1194,20 +1083,20 @@ function* stepperCompileFromControlsSaga(app: App) {
         }
     }
 
-    const deferredPromise = new DeferredPromise();
+    const deferredPromise = new DeferredPromise<CompileStatus>();
 
     yield* put({
         type: ActionTypes.CompileWait,
         payload: {
-            callback(result) {
+            callback(result: CompileStatus) {
                 app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
-                deferredPromise.resolve(CompileStatus.Done === result);
+                deferredPromise.resolve(result);
             },
             fromControls: true,
         },
     });
 
-    yield* call(() => deferredPromise.promise);
+    return yield* call(() => deferredPromise.promise);
 }
 
 function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
@@ -1225,7 +1114,13 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
     const mustCompile = StepperStatus.Clear === stepper.status;
 
     if (mustCompile) {
-        yield* call(stepperCompileFromControlsSaga, app);
+        const {compileResult, exit} = yield* race({
+            compileResult: call(stepperCompileFromControlsSaga, app),
+            exit: take(ActionTypes.StepperExit),
+        });
+        if (exit || CompileStatus.Done !== compileResult) {
+            return;
+        }
     }
 
     if (!stepperControlsState.canStep) {
@@ -1263,7 +1158,7 @@ function* stepperSaga(app: App) {
     }, app);
 
     // @ts-ignore
-    yield* takeLatest(ActionTypes.StepperRunBackground, stepperRunBackgroundSaga, app);
+    yield* takeLatest(ActionTypes.StepperRunBackground, stepperRunBackgroundSaga);
     // @ts-ignore
     yield* takeLatest(ActionTypes.StepperStepFromControls, stepperStepFromControlsSaga, app);
 
@@ -1293,23 +1188,26 @@ function postLink(app: App) {
 
                 break;
             case CodecastPlatform.Arduino:
-            case CodecastPlatform.Unix:
+            case CodecastPlatform.Cpp:
+            case CodecastPlatform.C:
                 const syntaxTree = state.compile.syntaxTree;
-                const options = stepperState.options = {
-                    memorySize: 0x10000,
-                    stackSize: 4096,
-                };
+                if (syntaxTree) {
+                    const options = stepperState.options = {
+                        memorySize: 0x10000,
+                        stackSize: 4096,
+                    };
 
-                /* Set up the programState. */
-                const emptyProgramState = stepperState.lastProgramState = C.makeCore(options.memorySize);
+                    /* Set up the programState. */
+                    const emptyProgramState = stepperState.lastProgramState = C.makeCore(options.memorySize);
 
-                /* Execute declarations and copy strings into memory */
-                const initialProgramState = stepperState.programState = {...emptyProgramState};
-                const decls = syntaxTree[2];
-                C.execDecls(initialProgramState, decls);
+                    /* Execute declarations and copy strings into memory */
+                    const initialProgramState = stepperState.programState = {...emptyProgramState};
+                    const decls = syntaxTree[2];
+                    C.execDecls(initialProgramState, decls);
 
-                /* Set up the call to the main function. */
-                C.setupCall(initialProgramState, 'main');
+                    /* Set up the call to the main function. */
+                    C.setupCall(initialProgramState, 'main');
+                }
 
                 break;
         }

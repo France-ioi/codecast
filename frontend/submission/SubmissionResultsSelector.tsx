@@ -24,7 +24,7 @@ export function SubmissionResultsSelector(props: SubmissionResultsSelectorProps)
             e.preventDefault();
             e.stopPropagation();
             setDropdownOpen(false);
-            dispatch(submissionCloseCurrentSubmission());
+            dispatch(submissionCloseCurrentSubmission({}));
         } else {
             const submissionIndex = submissionResults.findIndex(otherSubmission => otherSubmission === submission);
             dispatch(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));

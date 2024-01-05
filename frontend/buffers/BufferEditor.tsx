@@ -89,7 +89,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
             key={bufferName}
             name={bufferName}
             state={bufferState as BlockBufferState}
-            highlight={highlight}
+            highlight={highlight as string}
             onInit={onInit}
             onSelect={onSelect}
             onEditPlain={onEditPlain}
@@ -101,7 +101,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         key={bufferName}
         name={bufferName}
         state={bufferState as TextBufferState}
-        highlight={highlight}
+        highlight={highlight as Range}
         onInit={onInit}
         onEdit={onEdit}
         onEditPlain={onEditPlain}

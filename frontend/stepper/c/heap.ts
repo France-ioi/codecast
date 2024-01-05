@@ -5,7 +5,12 @@ import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 
 import {CodecastPlatform} from '../codecast_platform';
-import {App} from '../../app_types';
+import {App, Codecast} from '../../app_types';
+import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
+import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
+import {selectAnswer} from '../../task/selectors';
+import {appSelect} from '../../hooks';
+import {documentToString} from '../../buffers/document';
 
 const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);
@@ -13,13 +18,22 @@ const headerSize = 4;
 
 export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {
-        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
+        stepperApi.onInit(function (stepperState: StepperState, state: AppStore) {
             const {platform} = state.options;
 
-            if (platform === CodecastPlatform.Unix || platform === CodecastPlatform.Arduino) {
+            if (platform === CodecastPlatform.C || platform === CodecastPlatform.Cpp || platform === CodecastPlatform.Arduino) {
                 const {programState, options} = stepperState;
+                if (!programState) {
+                    return;
+                }
 
                 heapInit(programState, options.stackSize);
+
+                const answer = selectAnswer(state);
+                const source = documentToString(answer.document);
+
+                const unixRunner = Codecast.runner;
+                unixRunner.initCodes([source]);
             }
         });
 

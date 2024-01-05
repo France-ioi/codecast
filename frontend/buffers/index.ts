@@ -37,6 +37,7 @@ import {
     uncompressIntoDocument
 } from "./document";
 import "ace-builds/src-min-noconflict/mode-c_cpp";
+import "ace-builds/src-min-noconflict/mode-java";
 import "ace-builds/src-min-noconflict/mode-python";
 import "ace-builds/src-min-noconflict/mode-javascript";
 import "ace-builds/src-min-noconflict/mode-ocaml";

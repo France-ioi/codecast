@@ -1,10 +1,8 @@
 import React from "react";
-import {StackView} from "../../stepper/views/c/StackView";
 import {useAppSelector} from "../../hooks";
 import {getMessage} from "../../lang";
 import {AnalysisStackView} from "../../stepper/analysis/AnalysisStackView";
-
-import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {TaskSubmissionEvaluateOn} from '../../submission/submission_types';
 
 export function LayoutStackView() {
     const currentStepperState = useAppSelector(state => state.stepper ? state.stepper.currentStepperState : null);
@@ -14,12 +12,7 @@ export function LayoutStackView() {
 
     let stackView;
     if (currentStepperState) {
-        if (currentStepperState.platform === CodecastPlatform.Unix) {
-            //TODO: convert this to use AnalysisStackView like Python and Blockly
-            stackView = <StackView/>
-        } else {
-            stackView = <AnalysisStackView analysis={analysis}/>
-        }
+        stackView = <AnalysisStackView analysis={analysis}/>
     } else {
         stackView = <div className="stack-view">
             <p>{getMessage('PROGRAM_STOPPED')}</p>

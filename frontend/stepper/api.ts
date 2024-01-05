@@ -43,9 +43,10 @@ export interface StepperContext {
     waitForProgress?: Function,
     waitForProgressOnlyAfterIterationsCount?: number, // For backwards compatibility
     onStepperDone?: Function,
+    finished?: boolean,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
-    quickAlgoCallsExecutor?: Function,
+    quickAlgoCallsExecutor?: (module: string, action: string, args: any[], callback?: Function) => Promise<void>,
     resume?: Function | null,
     position?: any,
     lineCounter?: number,
@@ -54,7 +55,6 @@ export interface StepperContext {
     makeDelay?: boolean,
     quickAlgoContext?: any,
     environment?: string,
-    executeEffects?: Function,
     noInteractive?: boolean,
     delayToWait?: number,
     noInteractiveSteps?: number,
@@ -74,7 +74,6 @@ export interface StepperContextParameters {
     quickAlgoCallsLogger?: Function,
     environment?: string,
     speed?: number,
-    executeEffects?: Function,
     waitPreviousAnimations?: boolean,
     initStepMarker?: number,
 }
@@ -88,7 +87,8 @@ export interface StepperApi {
     addBuiltin?: Function,
     buildState?: (platform: CodecastPlatform) => Generator<any, StepperState>,
     rootStepperSaga?: any,
-    executeEffects?: Function,
+    effectHandlers: Map<string, (stepperContext: StepperContext, ...args) => void>,
+    builtinHandlers: Map<string, (stepperContext: StepperContext, ...args) => void>,
 }
 
 export default function(bundle: Bundle) {
@@ -99,13 +99,12 @@ export default function(bundle: Bundle) {
         addBuiltin,
         buildState,
         rootStepperSaga,
-        executeEffects,
+        effectHandlers: new Map(),
+        builtinHandlers: new Map(),
     };
 
     const initCallbacks = [];
     const stepperSagas = [];
-    const effectHandlers = new Map();
-    const builtinHandlers = new Map();
 
     /* Register a setup callback for the stepper's initial state. */
     function onInit(callback: (stepperState: StepperState, state: AppStore) => void): void {
@@ -126,13 +125,13 @@ export default function(bundle: Bundle) {
        yield further effects. */
     function onEffect(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
         /* TODO: guard against duplicate effects? allow multiple handlers for a single effect? */
-        effectHandlers.set(name, handler);
+        stepperApi.effectHandlers.set(name, handler);
     }
 
     /* Register a builtin. A builtin is a generator that yields effects. */
     function addBuiltin(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
         /* TODO: guard against duplicate builtins */
-        builtinHandlers.set(name, handler);
+        stepperApi.builtinHandlers.set(name, handler);
     }
 
 
@@ -186,53 +185,11 @@ export default function(bundle: Bundle) {
                 });
             },
             environment,
-            executeEffects,
         });
 
-        if (stepperContext.state.platform === CodecastPlatform.Unix || stepperContext.state.platform === CodecastPlatform.Arduino) {
-            while (!inUserCode(stepperContext.state)) {
-                /* Mutate the stepper context to advance execution by a single step. */
-                const effects = C.step(stepperContext.state.programState);
-                if (effects) {
-                    yield* call(executeEffects, stepperContext, effects[Symbol.iterator]());
-                }
-            }
-        }
+        yield Codecast.runner.programInitialization(stepperContext);
 
         return stepperContext.state;
-    }
-
-    async function executeEffects(stepperContext: StepperContext, iterator) {
-        let lastResult;
-        while (true) {
-            /* Pull the next effect from the builtin's iterator. */
-            const {done, value} = iterator.next(lastResult);
-            if (done) {
-                return value;
-            }
-            const name = value[0];
-            if (name === 'interact') {
-                lastResult = await stepperContext.interactAfter(value[1] || {});
-            } else if (name === 'promise') {
-                log.getLogger('stepper').debug('await promise');
-                lastResult = await value[1];
-                log.getLogger('stepper').debug('promise result', lastResult);
-            } else if (name === 'builtin') {
-                const builtin = value[1];
-                if (!builtinHandlers.has(builtin)) {
-                    throw new StepperError('error', `unknown builtin ${builtin}`);
-                }
-
-                lastResult = await executeEffects(stepperContext, builtinHandlers.get(builtin)(stepperContext, ...value.slice(2)));
-            } else {
-                /* Call the effect handler, feed the result back into the iterator. */
-                if (!effectHandlers.has(name)) {
-                    throw new StepperError('error', `unhandled effect ${name}`);
-                }
-
-                lastResult = await executeEffects(stepperContext, effectHandlers.get(name)(stepperContext, ...value.slice(1)));
-            }
-        }
     }
 
     bundle.defineValue('stepperApi', stepperApi);
@@ -250,7 +207,7 @@ export function getNodeStartRow(stepperState: StepperState) {
 
     const {range} = control.node[1];
 
-    return range && range.start.row;
+    return range?.start?.row;
 }
 
 export function makeContext(stepper: Stepper|null, stepperContextParameters: StepperContextParameters): StepperContext {
@@ -383,7 +340,7 @@ async function stepInto(stepperContext: StepperContext) {
     // Take a first step.
     await executeSingleStep(stepperContext);
 
-    if (stepperContext.state.platform === CodecastPlatform.Unix || stepperContext.state.platform === CodecastPlatform.Arduino) {
+    if (-1 !== [CodecastPlatform.C, CodecastPlatform.Cpp, CodecastPlatform.Arduino].indexOf(stepperContext.state.platform)) {
         // Step out of the current statement.
         await stepUntil(stepperContext, C.outOfCurrentStmt);
         // Step into the next statement.
@@ -476,8 +433,8 @@ export function isStuck(stepperState: StepperState): boolean {
     return Codecast.runner.isStuck(stepperState);
 }
 
-function inUserCode(stepperState: StepperState) {
-    if (stepperState.platform === CodecastPlatform.Python) {
+export function inUserCode(stepperState: StepperState) {
+    if (stepperState.platform === CodecastPlatform.Python || !stepperState.programState?.control) {
         return true;
     } else {
         return !!stepperState.programState.control.node[1].begin;

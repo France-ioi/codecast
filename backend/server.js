@@ -392,10 +392,17 @@ function addBackendRoutes(app, config, store) {
         const env = {LANGUAGE: 'c'};
         env.SYSROOT = path.join(config.rootDir, 'sysroot');
 
-        const {source, platform, logData} = req.body;
+        let {source, platform, logData, headers} = req.body;
+
         if (platform === 'arduino') {
             env.SOURCE_WRAPPER = "wrappers/Arduino";
             env.LANGUAGE = 'c++';
+        }
+
+        if (headers) {
+            for (let [header, content] of Object.entries(headers)) {
+                fs.writeFileSync(path.join(config.rootDir, 'sysroot/usr/include', header), content);
+            }
         }
 
         const startTime = process.hrtime();

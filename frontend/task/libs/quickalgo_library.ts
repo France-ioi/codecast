@@ -341,6 +341,8 @@ export abstract class QuickAlgoLibrary {
             CodecastPlatform.Blockly,
             CodecastPlatform.Scratch,
             CodecastPlatform.Python,
+            CodecastPlatform.C,
+            CodecastPlatform.Cpp,
         ];
     }
 

@@ -1,6 +1,5 @@
 import StackBundle from './c/stack';
 import {Bundle} from "../../linker";
-import {ShowVar as C_ShowVar} from "./c/utils";
 import {Array1D as C_Array1D} from "./c/array1d";
 import {Array2D as C_Array2D} from "./c/array2d";
 import {SortView as C_SortView} from "./c/sort";
@@ -37,7 +36,7 @@ export const directiveDimensionsDict = {
 }
 
 export const C_directiveViewDict = {
-    showVar: {View: C_ShowVar, selector: obj => obj, snippet: null},
+    // showVar: {View: C_ShowVar, selector: obj => obj, snippet: null},
     showArray: {View: C_Array1D, selector: obj => obj, snippet: "//! A = showArray(A, cursors=[i])"},
     showArray2D: {View: C_Array2D, selector: obj => obj, snippet: "//! A = showArray2D(A, rowCursors=[k], colCursors=[j])"},
     showSort: {View: C_SortView, selector: obj => obj, snippet: "//! quicksort = showSort(array, cursors=[left, right, i, j], dim=size, thresholds=[pivot])"},

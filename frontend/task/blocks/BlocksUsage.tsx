@@ -30,7 +30,7 @@ export function BlocksUsage() {
         };
     }, [wrapperRef, collapsed]);
 
-    if (!blocksUsage || !blocksUsage.blocksLimit || Infinity === blocksUsage.blocksLimit) {
+    if (!blocksUsage || (!blocksUsage.error && (!blocksUsage.blocksLimit || Infinity === blocksUsage.blocksLimit))) {
         return null;
     }
 
@@ -45,9 +45,12 @@ export function BlocksUsage() {
         <div ref={wrapperRef} className={`blocks-usage ${blocksUsage.error ? 'has-error' : ''} ${collapsed ? 'is-collapsed' : ''} platform-${platform}`} onClick={toggleCollapsed}>
             {collapsed ?
                 <React.Fragment>
-                    {blocksUsage.error ? blocksUsage.error : <span>
-                        {blocksUsage.blocksLimit - blocksUsage.blocksCurrent}/{blocksUsage.blocksLimit}
-                    </span>}
+                    {blocksUsage.error
+                        ? <span dangerouslySetInnerHTML={{__html: blocksUsage.error}}></span>
+                        : <span>
+                            {blocksUsage.blocksLimit - blocksUsage.blocksCurrent}/{blocksUsage.blocksLimit}
+                        </span>
+                    }
                 </React.Fragment>
                 :
                 <React.Fragment>
