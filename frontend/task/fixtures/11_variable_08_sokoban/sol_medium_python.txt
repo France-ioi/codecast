@@ -6,9 +6,9 @@ avancer()
 colonneCaisse = nombreSurCase()
 while colonneRobot() < colonneCaisse - 1:
     avancer()
-tournerDroite()
+pivoterDroite()
 while ligneRobot () < ligneCaisse:
     avancer()
-tournerGauche()
+pivoterGauche()
 pousserCaisse()
 
