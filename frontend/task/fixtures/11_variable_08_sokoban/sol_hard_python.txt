@@ -2,11 +2,11 @@ from robot import *
 
 avancer()
 nbCaisses = nombreSurCase()
-tournerGauche()
+pivoterGauche()
 avancer()
 for loop in range(nbCaisses):
     avancer()
-    tournerGauche()
+    pivoterGauche()
     ligneCaisse = nombreSurCase()
     while ligneRobot() > ligneCaisse + 1:
         avancer()
@@ -14,4 +14,4 @@ for loop in range(nbCaisses):
         pousserCaisse()
     while ligneRobot() < 7:
         reculer()
-    tournerDroite()
+    pivoterDroite()

@@ -241,6 +241,9 @@ module.exports = (env, argv) => {
             colors: true,
             modules: false,
             moduleTrace: false,
+        },
+        watchOptions: {
+            ignored: /node_modules/,
         }
     };
 }

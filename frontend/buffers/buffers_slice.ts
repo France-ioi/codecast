@@ -11,6 +11,7 @@ import {
 } from './buffer_types';
 import {Block} from '../task/blocks/block_types';
 import {createEmptyBufferState, TextBufferHandler} from './document';
+import {selectSourceBuffers, selectSourceBuffersFromBufferState} from './buffer_selectors';
 
 export interface BuffersState {
     buffers: {
@@ -120,7 +121,8 @@ export const buffersSlice = createSlice({
         },
         bufferRemove(state, action: PayloadAction<string>) {
             if (action.payload === state.activeBufferName) {
-                const keys = Object.keys(state.buffers);
+                const sourceBuffers = selectSourceBuffersFromBufferState(state);
+                const keys = Object.keys(sourceBuffers);
                 const currentPosition = keys.indexOf(state.activeBufferName);
                 if (currentPosition - 1 >= 0) {
                     state.activeBufferName = keys[currentPosition - 1];

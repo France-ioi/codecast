@@ -94,6 +94,14 @@ export function getTaskMetadata() {
     return metadata;
 }
 
+function sendErrorLog() {
+    // Send errors to the platform
+    let args = Array.prototype.slice.call(arguments);
+    try {
+        window.platform.log(["error", args]);
+    } catch(e) {}
+}
+
 function* linkTaskPlatformSaga() {
     const state = yield* appSelect();
     if ('main' !== state.environment) {
@@ -101,6 +109,8 @@ function* linkTaskPlatformSaga() {
     }
 
     platformApi = makePlatformAdapter(window.platform);
+
+    window.onerror = sendErrorLog;
 
     const taskChannel = yield* call(makeTaskChannel);
     taskApi = ((yield* take(taskChannel)) as {task: any}).task;

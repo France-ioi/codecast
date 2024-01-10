@@ -22,6 +22,8 @@ let originalSetBackgroundPathVertical_;
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     let blocklyHelper;
 
+    if (!context) { return; }
+
     if (context && context.blocklyHelper && !context.blocklyHelper.fake) {
         context.blocklyHelper.unloadLevel();
     }

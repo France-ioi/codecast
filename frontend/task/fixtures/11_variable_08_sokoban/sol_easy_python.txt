@@ -4,6 +4,6 @@ avancer()
 colonneCaisse = nombreSurCase()
 while colonneRobot() < colonneCaisse:
     avancer()
-tournerDroite()
+pivoterDroite()
 for loop in range(4):
     pousserCaisse()
