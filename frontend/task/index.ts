@@ -112,7 +112,6 @@ import {
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
-import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
 import {submissionCancel} from '../submission/submission_actions';
 import {createSourceBufferFromDocument} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';

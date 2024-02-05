@@ -32,7 +32,6 @@ import {
     createEmptyBufferState,
     documentToString,
     expandRange,
-    getBufferHandler,
     TextBufferHandler,
     uncompressIntoDocument
 } from "./document";
@@ -66,7 +65,7 @@ import {
     Document,
     Range,
     TextDocumentDelta,
-    TextDocumentDeltaAction
+    TextDocumentDeltaAction,
 } from './buffer_types';
 import {
     bufferChangeActiveBufferName,
@@ -85,14 +84,12 @@ import {
     bufferCreateSourceBuffer,
     bufferDownload,
     bufferDuplicateSourceBuffer,
-    bufferReload
+    bufferReload,
+    bufferResetToDefaultSourceCode,
 } from './buffer_actions';
 import {selectSourceBuffers} from './buffer_selectors';
 import {getDefaultSourceCode} from '../task/utils';
 import {submissionChangeCurrentSubmissionId} from '../submission/submission_slice';
-import {loadBlocklyHelperSaga} from '../stepper/js';
-import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
-import {importPlatformModules} from '../task/libs/import_modules';
 import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
 import {TaskAnswer} from '../task/task_types';
 import {selectAnswer} from '../task/selectors';
@@ -201,11 +198,18 @@ function* buffersSaga() {
         anchor.click();
     });
 
-    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document, platform}}) {
+    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document}}) {
         const state: AppStore = yield* appSelect();
         let newDocument = document ?? getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
         log.getLogger('editor').debug('Load new source code', newDocument);
         yield* call(createSourceBufferFromDocument, newDocument);
+    });
+
+    yield* takeEvery(bufferResetToDefaultSourceCode, function* ({payload: {bufferName}}) {
+        const state: AppStore = yield* appSelect();
+        const platform = state.buffers.buffers[bufferName].platform;
+        const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
+        yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
     });
 
     yield* takeEvery(bufferDuplicateSourceBuffer, function* () {
