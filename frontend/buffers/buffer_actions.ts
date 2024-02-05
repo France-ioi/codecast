@@ -10,6 +10,11 @@ export const bufferCreateSourceBuffer = createAction('buffer/createSourceBuffer'
         platform,
     },
 }));
+export const bufferResetToDefaultSourceCode = createAction('buffer/resetToDefaultSourceCode', (bufferName: string) => ({
+    payload: {
+        bufferName,
+    },
+}));
 export const bufferDuplicateSourceBuffer = createAction('buffer/duplicateSourceBuffer');
 export const bufferChangePlatform = createAction('buffer/changePlatform', (bufferName: string, platform: CodecastPlatform) => ({
     payload: {
