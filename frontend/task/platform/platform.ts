@@ -37,7 +37,7 @@ import {Effect} from "@redux-saga/types";
 import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
 import {taskLoaded} from '../task_slice';
-import {appSelect} from '../../hooks';
+import {appSelect, useAppSelector} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {SubmissionExecutionScope} from '../../submission/submission_slice';
 import {getMessage} from '../../lang';
@@ -136,17 +136,18 @@ export function isTaskPlatformLinked(): boolean {
 }
 
 function* taskAnswerReloadedSaga () {
-    const nextVersion = yield* call(taskGetNextLevelToIncreaseScore);
-    log.getLogger('platform').debug('Task answer reloaded, next version = ' + nextVersion);
+    const nextLevel = yield* call(taskGetNextLevelToIncreaseScore);
+    const taskLevel = useAppSelector(state => state.task.currentLevel);
+    log.getLogger('platform').debug('Task answer reloaded, next version = ' + nextLevel);
 
-    if (null !== nextVersion) {
-        yield* put(taskChangeLevel(nextVersion));
+    if (null !== nextLevel && nextLevel !== taskLevel) {
+        yield* put(taskChangeLevel(nextLevel));
     }
 }
 
 export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevelName = null): Generator<any, TaskLevelName, any> {
     const taskLevels = yield* appSelect(state => state.platform.levels);
-    let nextVersion: TaskLevelName = null;
+    let nextLevel: TaskLevelName = null;
 
     const levelScores = Object.values(taskLevels).map(element => ({
         level: element.level,
@@ -162,12 +163,12 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
         }
         const levelMaxScore = scoreCoefficient;
         if (levelMaxScore > reconciledScore) {
-            nextVersion = level;
+            nextLevel = level;
             break;
         }
     }
 
-    return nextVersion;
+    return nextLevel;
 }
 
 function* showDifferentViews() {

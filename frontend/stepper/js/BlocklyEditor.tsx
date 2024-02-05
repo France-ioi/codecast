@@ -7,6 +7,7 @@ import {useDispatch} from 'react-redux';
 import {getMessage} from '../../lang';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {BlockBufferState, BlockDocument} from '../../buffers/buffer_types';
+import {bufferResetToDefaultSourceCode} from '../../buffers/buffer_actions';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -33,7 +34,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlight: props.highlight});
 
-    const reset = (document: BlockDocument, alreadyReset = false) => {
+    const reset = (document: BlockDocument) => {
         if (!context?.blocklyHelper) {
             return;
         }
@@ -52,17 +53,18 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         log.getLogger('editor').debug('imported content', context.blocklyHelper.programs[0].blockly);
         context.blocklyHelper.reloading = true;
-        context.blocklyHelper.loadPrograms();
 
         // Check that all blocks exist and program is valid. Otherwise, reload default answer and cancel
         try {
+            context.blocklyHelper.loadPrograms();
             context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
+            if (0 === context.blocklyHelper.programs[0].blocklyJS.trim().length) {
+                throw new Error("The reloaded answer is empty");
+            }
         } catch (e) {
             console.error(e);
-            if (!alreadyReset) {
-                reset(null, true);
-                dispatch(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE')));
-            }
+            dispatch(bufferResetToDefaultSourceCode(props.name));
+            dispatch(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE').s));
         }
     };
 

@@ -24,9 +24,8 @@ import {QuickalgoTaskIncludeBlocks, Task} from '../task_types';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App} from '../../app_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
-import {bufferEditPlain, bufferResetDocument} from '../../buffers/buffers_slice';
+import {bufferResetDocument} from '../../buffers/buffers_slice';
 import {AppStore} from '../../store';
-import { smartContractPlatforms } from "../libs/smart_contract/smart_contract_blocks";
 import {bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
 
 let openerChannel;
