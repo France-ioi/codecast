@@ -21,7 +21,7 @@ interface SmartContractViewTransactionProps {
 }
 
 export function SmartContractViewTransaction(props: SmartContractViewTransactionProps) {
-    const task = useAppSelector(state => state.task.currentTask);
+    const levelGridInfos = useAppSelector(state => state.task.levelGridInfos);
 
     const truncateString = (string: string, maxLength: number) => {
         return string && string.length > maxLength ? string.substring(0, maxLength) + '...' : string;
@@ -42,11 +42,11 @@ export function SmartContractViewTransaction(props: SmartContractViewTransaction
     }
 
     const getDisplayedStorage = (storage) => {
-        if (!task.gridInfos.expectedStorage) {
+        if (!levelGridInfos?.expectedStorage) {
             return storage;
         }
 
-        const storageVariables = convertMichelsonStorageToCodecastFormat(storage, task.gridInfos.expectedStorage);
+        const storageVariables = convertMichelsonStorageToCodecastFormat(storage, levelGridInfos.expectedStorage);
 
         return <div className="scope-function-blocks">
             <ul className='global-scope'>

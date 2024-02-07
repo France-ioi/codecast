@@ -34,6 +34,7 @@ export interface TaskState {
     blocksUsage?: BlocksUsage,
     soundEnabled?: boolean,
     menuHelpsOpen?: boolean,
+    levelGridInfos: QuickalgoLibraryInfos|null,
 }
 
 export enum TaskTestGroupType {
@@ -109,7 +110,6 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     checkEndCondition?: (context: QuickAlgoLibrary, lastTurn: any) => void,
     computeGrade?: (context: QuickAlgoLibrary, message: unknown) => {successRate: number, message: string},
     checkEndEveryTurn?: boolean,
-    hiddenTests?: boolean,
     maxListSize?: number,
     placeholderBlocks?: any,
     usedSkills?: string[],
@@ -131,6 +131,7 @@ export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDe
     startingExample?: any,
     limitedUses?: {[level: string]: {blocks: string[], nbUses: number}[]},
     includeBlocks?: QuickalgoTaskIncludeBlocksAllLevels,
+    hiddenTests?: boolean|{[level: string]: boolean},
 }
 
 export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDependent {
@@ -138,6 +139,7 @@ export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDep
     startingExample: any,
     limitedUses?: {blocks: string[], nbUses: number}[],
     includeBlocks?: QuickalgoTaskIncludeBlocks,
+    hiddenTests?: boolean,
 }
 
 export interface QuickalgoTask {
