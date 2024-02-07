@@ -548,10 +548,10 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
 
 function* taskLevelLoadedSaga() {
     const state = yield* appSelect();
-    const currentTask = state.task.currentTask;
+    const levelGridInfos = state.task.levelGridInfos;
     const currentLevel = state.task.currentLevel;
 
-    if (currentTask && currentTask.gridInfos.logOption && 'main' === state.environment && window.SrlLogger) {
+    if (levelGridInfos?.logOption && 'main' === state.environment && window.SrlLogger) {
         window.SrlLogger.load();
         window.SrlLogger.levelLoaded(currentLevel);
     }

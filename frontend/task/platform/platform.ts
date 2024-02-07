@@ -172,15 +172,15 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
 }
 
 function* showDifferentViews() {
-    const currentTask = yield* select(state => state.task.currentTask);
+    const levelGridInfos = yield* appSelect(state => state.task.levelGridInfos);
     const {supportsTabs} = yield* call(platformApi.getTaskParams);
-    if (!supportsTabs || !currentTask) {
+    if (!supportsTabs || !levelGridInfos) {
         return false;
     }
 
     const context = quickAlgoLibraries.getContext(null, 'main');
-    if (currentTask && 'showViews' in currentTask?.gridInfos) {
-        return currentTask.gridInfos.showViews;
+    if (levelGridInfos && 'showViews' in levelGridInfos) {
+        return levelGridInfos.showViews;
     }
     if (context?.showViews) {
         return context.showViews();
