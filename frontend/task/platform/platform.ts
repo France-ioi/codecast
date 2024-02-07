@@ -37,7 +37,7 @@ import {Effect} from "@redux-saga/types";
 import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
 import {taskLoaded} from '../task_slice';
-import {appSelect, useAppSelector} from '../../hooks';
+import {appSelect} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {SubmissionExecutionScope} from '../../submission/submission_slice';
 import {getMessage} from '../../lang';
@@ -137,7 +137,7 @@ export function isTaskPlatformLinked(): boolean {
 
 function* taskAnswerReloadedSaga () {
     const nextLevel = yield* call(taskGetNextLevelToIncreaseScore);
-    const taskLevel = useAppSelector(state => state.task.currentLevel);
+    const taskLevel = yield* appSelect(state => state.task.currentLevel);
     log.getLogger('platform').debug('Task answer reloaded, next version = ' + nextLevel);
 
     if (null !== nextLevel && nextLevel !== taskLevel) {
