@@ -62,6 +62,7 @@ export function TralalereApp() {
     const compileStatus = useAppSelector(state => state.compile.status);
     const taskSuccess = useAppSelector(state => state.task.success);
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const levelGridInfos = useAppSelector(state => state.task.levelGridInfos);
 
     const levels = useAppSelector(state => state.platform.levels);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
@@ -212,7 +213,7 @@ export function TralalereApp() {
 
                     {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div
                         className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`}
-                        style={{backgroundImage: `url(${currentTask?.gridInfos?.backgroundSrc ? currentTask.gridInfos.backgroundSrc : window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}
+                        style={{backgroundImage: `url(${levelGridInfos?.backgroundSrc ? levelGridInfos.backgroundSrc : window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}
                     >
                         {taskSuccess && <div className="tralalere-success">
                             <img className="tralalere-success-left"

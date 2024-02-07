@@ -57,7 +57,7 @@ export function getTaskLevelTests(state: AppStore, level?: TaskLevelName) {
 }
 
 export function selectSubmissionsPaneEnabled(state: AppStore) {
-    if (!state.task.currentTask || state.task.currentTask.gridInfos.hiddenTests) {
+    if (!state.task.currentTask || state.task.levelGridInfos?.hiddenTests) {
         return false;
     }
 

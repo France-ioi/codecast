@@ -3,13 +3,13 @@ import {getStorageFormat} from './smart_contract_utils';
 import {useAppSelector} from '../../../hooks';
 
 export function SmartContractStorage() {
-    const task = useAppSelector(state => state.task.currentTask);
+    const levelGridInfos = useAppSelector(state => state.task.levelGridInfos);
 
-    if (!task?.gridInfos?.expectedStorage) {
+    if (!levelGridInfos?.expectedStorage) {
         return null;
     }
 
-    const storageVariables = getStorageFormat(task.gridInfos.expectedStorage);
+    const storageVariables = getStorageFormat(levelGridInfos.expectedStorage);
     if (!storageVariables.length) {
         return null;
     }
@@ -22,7 +22,7 @@ export function SmartContractStorage() {
             </p>
             <ul>
                 {storageVariables.map(({name, type}) =>
-                    <li key={name}><code>{name}</code> should be a {type}{task.gridInfos.taskStrings?.storageDescription[name] ? ': ' + task.gridInfos.taskStrings?.storageDescription[name] : ''}</li>
+                    <li key={name}><code>{name}</code> should be a {type}{levelGridInfos.taskStrings?.storageDescription[name] ? ': ' + levelGridInfos.taskStrings?.storageDescription[name] : ''}</li>
                 )}
             </ul>
         </div>

@@ -17,7 +17,7 @@ import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
 import {selectTaskTests} from '../submission/submission_selectors';
-import {BlocksUsage, QuickalgoTaskIncludeBlocks, Task, TaskState, TaskTest} from './task_types';
+import {BlocksUsage, QuickalgoLibraryInfos, QuickalgoTaskIncludeBlocks, Task, TaskState, TaskTest} from './task_types';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -63,6 +63,7 @@ export const taskInitialState = {
     soundEnabled: !isLocalStorageEnabled() || !window.localStorage.getItem('soundDisabled'),
     menuHelpsOpen: false,
     availablePlatforms: [],
+    levelGridInfos: null,
 } as TaskState;
 
 export const selectCurrentTestData = (state: AppStore) => {
@@ -211,6 +212,9 @@ export const taskSlice = createSlice({
         taskSetAvailablePlatforms(state: TaskState, action: PayloadAction<string[]>) {
             state.availablePlatforms = action.payload;
         },
+        taskSetLevelGridInfos(state: TaskState, action: PayloadAction<QuickalgoLibraryInfos>) {
+            state.levelGridInfos = action.payload;
+        },
     },
 });
 
@@ -242,6 +246,7 @@ export const {
     taskUnload,
     addNewTaskTest,
     removeTaskTest,
+    taskSetLevelGridInfos,
 } = taskSlice.actions;
 
 export default taskSlice;

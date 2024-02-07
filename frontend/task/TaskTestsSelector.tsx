@@ -24,12 +24,12 @@ const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: Tas
 });
 
 export function TaskTestsSelector() {
-    const currentTask = useAppSelector(state => state.task.currentTask);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const taskTests = useAppSelector(selectTaskTests);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
+    const levelGridInfos = useAppSelector(state => state.task.levelGridInfos);
 
     const dispatch = useDispatch();
 
@@ -44,7 +44,7 @@ export function TaskTestsSelector() {
         }
     };
 
-    const existingImages = currentTask.gridInfos && currentTask.gridInfos.images ? currentTask.gridInfos.images.map(element => element.path.default) : [];
+    const existingImages = levelGridInfos?.images ? levelGridInfos.images.map(element => element.path.default) : [];
 
     const getTestThumbNail = (testIndex) => {
         const file = `test_${currentLevel}_${testIndex + 1}`;

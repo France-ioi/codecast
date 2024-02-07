@@ -16,7 +16,8 @@ import {
     taskSetAvailablePlatforms,
     taskSetBlocksPanelCollapsed,
     taskSetContextIncludeBlocks,
-    taskSetContextStrings
+    taskSetContextStrings,
+    taskSetLevelGridInfos,
 } from '../task_slice';
 import {taskApi} from '../platform/platform';
 import {ActionTypes as IOActionTypes} from '../../stepper/io/actionTypes';
@@ -25,9 +26,8 @@ import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {QuickAlgoLibrariesActionType, quickAlgoLibraryResetAndReloadStateSaga} from './quickalgo_libraries';
 import {QuickAlgoLibrary} from './quickalgo_library';
 import {DebugLib} from './debug/debug_lib';
-import {QuickalgoTaskGridInfos} from '../task_types';
+import {QuickalgoLibraryInfos, QuickalgoTaskGridInfos} from '../task_types';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
-import {TaskSubmissionEvaluateOn} from '../../submission/submission_types';
 import {selectAvailableExecutionModes} from '../../submission/submission_selectors';
 import {submissionChangeExecutionMode} from '../../submission/submission_slice';
 
@@ -62,6 +62,7 @@ export function* createQuickalgoLibrary() {
         if (null !== taskVariant && undefined !== taskVariant) {
             levelGridInfos = extractVariantSpecific(levelGridInfos, taskVariant, currentLevel);
         }
+        yield* put(taskSetLevelGridInfos(levelGridInfos as unknown as QuickalgoLibraryInfos));
     }
 
     if (!state.options.preload) {
@@ -129,7 +130,7 @@ export function* createQuickalgoLibrary() {
     yield* put(taskSetAvailablePlatforms(availablePlatforms));
 
     // Set submission mode
-    const availableExecutionModes = yield* select(selectAvailableExecutionModes);
+    const availableExecutionModes = yield* appSelect(selectAvailableExecutionModes);
     if (-1 === availableExecutionModes.indexOf(state.submission.executionMode) && availableExecutionModes.length) {
         yield* put(submissionChangeExecutionMode(availableExecutionModes[0]));
     }
