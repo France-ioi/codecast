@@ -15,6 +15,8 @@ export function TaskLevelTabs() {
     const levels = useAppSelector(state => state.platform.levels);
     const [lockedDialogOpen, setLockedDialogOpen] = useState(false);
     const [levelToChange, setLevelToChange] = useState<TaskLevelName>(null);
+    // Option called "Score immédiat" in the platform
+    const taskParamsFullFeedback = useAppSelector(state => state.platform.taskParams.fullFeedback);
 
     const bypassLock = window.location.protocol === 'file:' || -1 !== ['localhost', '127.0.0.1', '0.0.0.0', 'lvh.me'].indexOf(window.location.hostname);
 
@@ -60,7 +62,7 @@ export function TaskLevelTabs() {
                         <span>{getMessage('TASK_LEVEL')}</span>
                         <Stars
                             starsCount={levelScoringData[levelData.level].stars}
-                            rating={levelData.score}
+                            rating={false !== taskParamsFullFeedback ? levelData.score : null}
                             disabled={levelData.locked}
                         />
                     </a>

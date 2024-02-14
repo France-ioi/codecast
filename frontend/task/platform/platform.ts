@@ -28,7 +28,7 @@ import {
 import {Action, ActionCreator} from "redux";
 import {
     platformSaveAnswer,
-    platformSaveScore,
+    platformSaveScore, platformTaskParamsUpdated,
     platformTaskRandomSeedUpdated,
     platformTokenUpdated, TaskLevel,
     TaskLevelName, taskLevelsList,
@@ -173,7 +173,7 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
 
 function* showDifferentViews() {
     const levelGridInfos = yield* appSelect(state => state.task.levelGridInfos);
-    const {supportsTabs} = yield* call(platformApi.getTaskParams);
+    const {supportsTabs} = yield* appSelect(state => state.platform.taskParams);
     if (!supportsTabs || !levelGridInfos) {
         return false;
     }
@@ -354,7 +354,8 @@ function* taskReloadStateEventSaga ({payload: {success, error}}: ReturnType<type
 }
 
 function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnType<typeof taskLoadEvent>) {
-    let {randomSeed, options} = yield* call(platformApi.getTaskParams);
+    const taskParams = yield* call(platformApi.getTaskParams, null, null);
+    let {randomSeed, options} = taskParams;
     // Fix issue with too large randomSeed that overflow int capacity
     randomSeed = String(randomSeed);
     if ('0' === randomSeed) {
@@ -370,6 +371,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         }
     }
     yield* put(platformTaskRandomSeedUpdated(randomSeed));
+    yield* put(platformTaskParamsUpdated(taskParams));
 
     const taskVariant = yield* appSelect(state => state.options.taskVariant);
     const randomTaskVariants = yield* appSelect(state => state.options.randomTaskVariants);
@@ -377,9 +379,9 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         const newTaskVariant = parseInt(randomSeed) % randomTaskVariants + 1;
         yield* put({
             type: ActionTypes.TaskVariantChanged,
-            payload: { variant: newTaskVariant }
+            payload: {variant: newTaskVariant},
         });
-    };
+    }
 
     let level = yield* appSelect(state => state.task.currentLevel);
     if (!level) {
@@ -428,7 +430,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);
-        const {minScore, maxScore} = yield* call(platformApi.getTaskParams, null, null);
+        const {minScore, maxScore} = yield* appSelect(state => state.platform.taskParams);
         if (taskLevels && Object.keys(taskLevels).length) {
             const versionsScore = {};
             const currentLevel = yield getTaskLevel();

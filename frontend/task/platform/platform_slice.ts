@@ -22,12 +22,24 @@ export interface PlatformState {
     taskRandomSeed: string,
     taskToken: string,
     levels: {[key: string]: TaskLevel},
+    taskParams: PlatformTaskParams,
+}
+
+export interface PlatformTaskParams {
+    randomSeed: string,
+    options: any,
+    minScore: number,
+    maxScore: number,
+    noScore: number,
+    supportsTabs?: boolean,
+    fullFeedback?: boolean,
 }
 
 export const platformInitialState = {
     taskRandomSeed: null,
     taskToken: null,
     levels: {},
+    taskParams: {},
 } as PlatformState;
 
 export const getDefaultTaskLevel = (level: TaskLevelName) => {
@@ -92,11 +104,15 @@ export const platformSlice = createSlice({
             const taskLevel = state.levels[action.payload.level];
             taskLevel.answer = action.payload.answer;
         },
+        platformTaskParamsUpdated(state: PlatformState, action: PayloadAction<PlatformTaskParams>) {
+            state.taskParams = action.payload;
+        },
     },
 });
 
 export const {
     platformTaskRandomSeedUpdated,
+    platformTaskParamsUpdated,
     platformTokenUpdated,
     platformSetTaskLevels,
     platformSaveScore,
