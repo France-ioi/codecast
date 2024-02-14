@@ -4,9 +4,9 @@ import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
 import {getMessage} from "../../lang";
 import {taskLevelsList} from "../platform/platform_slice";
-
 import {callPlatformValidate} from '../../submission/submission_actions';
 import {taskChangeLevel} from '../task_actions';
+import {getNextLevelIndex} from '../platform/platform';
 
 export interface TaskSuccessDialogProps {
     onClose: () => void,
@@ -21,20 +21,14 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const dispatch = useDispatch();
 
     let currentLevelFinished = false;
-    let currentLevelIndex = null;
-    let hasNextLevel = false;
     let nextLevel = null;
     if (currentLevel && currentLevel in levels) {
         currentLevelFinished = (levels[currentLevel].score >= 1);
-        currentLevelIndex = taskLevelsList.indexOf(currentLevel);
-        for (let level = currentLevelIndex + 1; level < taskLevelsList.length; level++) {
-            if (taskLevelsList[level] in levels) {
-                hasNextLevel = true;
-                nextLevel = level;
-                break;
-            }
+        if (currentLevelFinished) {
+            nextLevel = getNextLevelIndex(levels, currentLevel);
         }
     }
+    const hasNextLevel = null !== nextLevel;
 
     let intermediateMessage = null;
     let nextAction = 'next-level';
