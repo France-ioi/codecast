@@ -30,8 +30,8 @@ import {
     platformSaveAnswer,
     platformSaveScore,
     platformTaskRandomSeedUpdated,
-    platformTokenUpdated,
-    TaskLevelName,
+    platformTokenUpdated, TaskLevel,
+    TaskLevelName, taskLevelsList,
 } from "./platform_slice";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
@@ -520,6 +520,17 @@ function getTopLevel(levels: TaskLevelName[]) {
     });
 
     return sortedLevels[sortedLevels.length - 1];
+}
+
+export function getNextLevelIndex(levels: {[key: string]: TaskLevel}, currentLevel: TaskLevelName): number|null {
+    const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
+    for (let level = currentLevelIndex + 1; level < taskLevelsList.length; level++) {
+        if (taskLevelsList[level] in levels) {
+            return level;
+        }
+    }
+
+    return null;
 }
 
 export interface PlatformTaskGradingParameters {
