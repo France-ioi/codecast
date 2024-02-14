@@ -33,6 +33,7 @@ import {toHtml} from '../utils/sanitize';
 import {getTaskSuccessMessageSelector} from '../task/instructions/instructions';
 import {InstructionsContext} from '../contexts';
 import {DebugDialog} from '../task/dialog/DebugDialog';
+import {getNextLevelIndex} from '../task/platform/platform';
 
 const layoutEditorStyle = {backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`};
 
@@ -66,21 +67,14 @@ export function TralalereApp() {
 
     const levels = useAppSelector(state => state.platform.levels);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
-    let hasNextLevel = false;
     let nextLevel = null;
     if (currentLevel && currentLevel in levels) {
         const currentLevelFinished = (levels[currentLevel].score >= 1);
         if (currentLevelFinished) {
-            const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
-            for (let level = currentLevelIndex + 1; level < taskLevelsList.length; level++) {
-                if (taskLevelsList[level] in levels) {
-                    hasNextLevel = true;
-                    nextLevel = level;
-                    break;
-                }
-            }
+            nextLevel = getNextLevelIndex(levels, currentLevel);
         }
     }
+    const hasNextLevel = null !== nextLevel;
 
     const [nextLevelOpen, setNextLevelOpen] = useState(false);
     const displayDebug = useAppSelector(state => 0 < state.task.state?.debug?.linesLogged?.length);

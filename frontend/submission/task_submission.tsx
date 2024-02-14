@@ -2,6 +2,7 @@ import {apply, call, cancel, cancelled, fork, put, race, spawn} from "typed-redu
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
 import {
+    getNextLevelIndex,
     platformApi,
     PlatformTaskGradingParameters,
     PlatformTaskGradingResult,
@@ -145,13 +146,9 @@ class TaskSubmissionExecutor {
 
         const finalScore = worstRate;
         if (finalScore > 0) {
-            const nextVersion = yield* call(taskGetNextLevelToIncreaseScore, level);
-
-            const isTralalere = yield* appSelect(state => 'tralalere' == state.options.app);
-            let stay = finalScore < 1;
-            if (isTralalere) {
-                stay = stay || null !== nextVersion;
-            }
+            const levels = yield* appSelect(state => state.platform.levels);
+            const nextLevel = getNextLevelIndex(levels, level);
+            let stay = finalScore < 1 || null !== nextLevel;
 
             yield* call([platformApi, platformApi.validate], stay ? 'stay' : 'done');
             if (1 <= finalScore && window.SrlLogger) {
