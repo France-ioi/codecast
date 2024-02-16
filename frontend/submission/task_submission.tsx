@@ -172,12 +172,19 @@ class TaskSubmissionExecutor {
         const tests = state.task.taskTests;
         const taskVariant = state.options.taskVariant;
 
-        const serialized = [JSON.stringify(answer), level, testId, taskVariant, JSON.stringify(tests[testId])].join('§');
+        const taskParameters = [
+            documentToString(answer.document),
+            level,
+            testId,
+            taskVariant,
+            JSON.stringify(tests[testId].data),
+        ];
+        const serialized = taskParameters.join('§');
         let h1 = murmurhash3_32_gc(serialized, 0);
         const cacheKey = h1 + murmurhash3_32_gc(h1 + serialized, 0); // Extend to 64-bit hash
 
         if (!(cacheKey in executionsCache)) {
-            log.getLogger('tests').debug('Executions cache MISS', {level, testId, taskVariant}, cacheKey);
+            log.getLogger('tests').debug('Executions cache MISS', taskParameters, cacheKey);
             executionsCache[cacheKey] = yield new Promise<TaskSubmissionResultPayload>(resolve => {
                 backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
             });
