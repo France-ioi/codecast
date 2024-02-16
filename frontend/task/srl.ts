@@ -93,7 +93,7 @@ export default function (bundle: Bundle) {
         // @ts-ignore
         yield* takeEvery(StepperActionTypes.StepperStepFromControls, function* ({payload: {mode, useSpeed}}) {
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (useSpeed && StepperStepMode.Run !== mode) {
+            if (StepperStepMode.Run !== mode) {
                 if (window.SrlLogger) {
                     window.SrlLogger.stepByStep({context}, 'step');
                 }

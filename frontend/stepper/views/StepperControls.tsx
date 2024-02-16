@@ -132,9 +132,9 @@ export function StepperControls(props: StepperControlsProps) {
 
         dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Run, useSpeed: true}})
     };
-    const onStepExpr = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr, useSpeed: true}});
-    const onStepOut = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Out, useSpeed: true}});
-    const onStepOver = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Over, useSpeed: true}});
+    const onStepExpr = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr}});
+    const onStepOut = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Out}});
+    const onStepOver = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Over}});
     const onToggleSpeed = () => {
         setSpeedDisplayedState(!speedDisplayedState);
     }
@@ -152,7 +152,7 @@ export function StepperControls(props: StepperControlsProps) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
         }
 
-        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Into, useSpeed: true}})
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Into}})
     };
     const onGoToEnd = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.Normal) {

@@ -88,6 +88,7 @@ export default class PythonRunner extends AbstractRunner {
         await stepperContext.interactAfter({
             position: 0,
         });
+        stepperContext.hasMadeFinalInteract = true;
         log.getLogger('python_runner').debug('AFTER FINAL INTERACT');
     }
 
@@ -401,7 +402,7 @@ export default class PythonRunner extends AbstractRunner {
 
     _continue() {
         log.getLogger('python_runner').debug('make continue', this._isRunning);
-        if (this._steps >= this._maxIterations) {
+        if (!this.context.allowInfiniteLoop && this._steps >= this._maxIterations) {
             this._onStepError(window.languageStrings.tooManyIterations);
         }
     }
