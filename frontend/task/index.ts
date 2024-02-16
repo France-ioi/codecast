@@ -71,7 +71,7 @@ import {platformAnswerGraded, platformAnswerLoaded, taskGradeAnswerEvent,} from 
 import {
     getDefaultTaskLevel,
     platformSaveAnswer,
-    platformSetTaskLevels,
+    platformSetTaskLevels, platformTaskParamsUpdated,
     platformTokenUpdated, platformUnlockLevel,
     TaskLevelName,
     taskLevelsList
@@ -116,6 +116,7 @@ import {submissionCancel} from '../submission/submission_actions';
 import {createSourceBufferFromDocument} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {Screen} from '../common/screens';
+import {DeferredPromise} from '../utils/app';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -183,6 +184,9 @@ function* taskLoadSaga(app: App, action) {
             yield* put(currentTaskChangePredefined(selectedTask));
         }
     }
+
+    const taskParams = yield* call(platformApi.getTaskParams, null, null);
+    yield* put(platformTaskParamsUpdated(taskParams));
 
     // yield* put(hintsLoaded([
     //     {content: 'aazazaz', minScore: 0},
@@ -528,6 +532,12 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     const taskToken = getTaskTokenForLevel(newLevel, randomSeed);
     yield* put(platformTokenUpdated(taskToken));
 
+    const deferredPromise = new DeferredPromise();
+    yield* put(updateCurrentTestId({testId: 0, record: false, recreateContext: true, callback: deferredPromise.resolve}));
+
+    // Wait the creation of the new context before setting answer because getDefaultSourceCode depends on the context
+    yield deferredPromise.promise;
+
     const currentTask = state.task.currentTask;
     // Reload answer
     let newLevelAnswer = yield* appSelect(state => state.platform.levels[newLevel].answer);
@@ -540,8 +550,6 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
         }
     }
     yield* put(platformAnswerLoaded(newLevelAnswer));
-
-    yield* put(updateCurrentTestId({testId: 0, record: false, recreateContext: true}));
 
     yield* call(taskLevelLoadedSaga);
 }
@@ -604,6 +612,10 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
         if (newTaskResetDone !== state.task.resetDone) {
             yield* put(taskResetDone(newTaskResetDone));
         }
+    }
+
+    if (payload.callback) {
+        yield* call(payload.callback);
     }
 }
 

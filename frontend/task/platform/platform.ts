@@ -371,7 +371,6 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         }
     }
     yield* put(platformTaskRandomSeedUpdated(randomSeed));
-    yield* put(platformTaskParamsUpdated(taskParams));
 
     const taskVariant = yield* appSelect(state => state.options.taskVariant);
     const randomTaskVariants = yield* appSelect(state => state.options.randomTaskVariants);
@@ -430,7 +429,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);
-        const {minScore, maxScore} = yield* appSelect(state => state.platform.taskParams);
+        const {minScore, maxScore} = yield* call(platformApi.getTaskParams, null, null);
         if (taskLevels && Object.keys(taskLevels).length) {
             const versionsScore = {};
             const currentLevel = yield getTaskLevel();
