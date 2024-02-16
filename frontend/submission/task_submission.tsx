@@ -117,16 +117,16 @@ class TaskSubmissionExecutor {
             }
 
             yield* put(submissionStartExecutingTest({submissionId: currentSubmissionId, testId: testIndex}));
-            if ('main' === environment) {
-                yield* delay(0);
-            }
+            // if ('main' === environment) {
+            // yield* delay(0);
+            // }
             log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
             const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(level, testIndex, answer);
             log.getLogger('tests').debug('[Tests] End execution, result=', payload);
             yield* put(submissionSetTestResult({submissionId: currentSubmissionId, testId: testIndex, result: payload}));
-            if ('main' === environment) {
-                yield* delay(0);
-            }
+            // if ('main' === environment) {
+            // yield* delay(0);
+            // }
             lastMessage = payload.message;
             displayedResults.push(payload);
             if (false === payload.result) {
