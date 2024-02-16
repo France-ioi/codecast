@@ -104,7 +104,7 @@ export function TralalereControls(props: StepperControlsProps) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
         }
 
-        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Into}})
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Into, useSpeed: true}})
     };
 
     const toggleSound = () => {
