@@ -61,6 +61,7 @@ export interface StepperContext {
     backgroundRunData?: TaskSubmissionResultPayload,
     waitPreviousAnimations?: boolean,
     initStepMarker?: number,
+    hasMadeFinalInteract?: boolean,
 }
 
 export interface StepperContextParameters {
@@ -263,7 +264,9 @@ async function executeSingleStep(stepperContext: StepperContext) {
     }
 
     log.getLogger('stepper').debug('execute single step, no interactive = ', stepperContext.noInteractive);
+    let makeInteraction = false;
     if (!stepperContext.noInteractive || stepperContext.noInteractiveSteps % stepperMaxStepsBetweenInteractBefore === 0) {
+        makeInteraction = true;
         await stepperContext.interactBefore();
 
         if (stepperContext.waitForProgress) {
@@ -288,7 +291,17 @@ async function executeSingleStep(stepperContext: StepperContext) {
     // context.changeDelay(0);
     // context.display = false;
 
+    stepperContext.hasMadeFinalInteract = false;
+
     await Codecast.runner.runNewStep(stepperContext, stepperContext.noInteractive);
+
+    if (!stepperContext.hasMadeFinalInteract && stepperContext.noInteractive && makeInteraction) {
+        await stepperContext.interactAfter({
+            position: 0,
+        });
+        stepperContext.hasMadeFinalInteract = true;
+    }
+
     // context.display = true;
 }
 
@@ -410,6 +423,8 @@ async function stepOver(stepperContext: StepperContext) {
 }
 
 export async function performStep(stepperContext: StepperContext, mode) {
+    stepperContext.hasMadeFinalInteract = false;
+
     switch (mode) {
         case 'run':
             await stepUntil(stepperContext);
@@ -426,6 +441,13 @@ export async function performStep(stepperContext: StepperContext, mode) {
         case 'over':
             await stepOver(stepperContext);
             break;
+    }
+
+    if (!stepperContext.hasMadeFinalInteract) {
+        // Make a final interactAfter to refresh display after the execution of this step
+        await stepperContext.interactAfter({
+            position: 0,
+        });
     }
 }
 

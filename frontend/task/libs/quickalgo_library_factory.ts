@@ -140,7 +140,7 @@ export function* createQuickalgoLibrary() {
     context.environment = state.environment;
     // For QuickPi lib, with this option, the program is graded even when context.display = false
     // (which happens in particular in the case of a replay)
-    context.forceGradingWithoutDisplay = true;
+    context.forceGradingWithoutDisplay = 'background' !== state.environment;
     yield* call(addCustomBlocksToQuickalgoLibrary, context, display, levelGridInfos);
 
     if (context.changeSoundEnabled) {

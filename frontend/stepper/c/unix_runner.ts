@@ -181,9 +181,10 @@ export default class UnixRunner extends AbstractRunner {
             stepperContext.makeDelay = true;
             stepperContext.unixNextStepCondition = 0;
             await stepperContext.interactAfter({
-                position
+                position,
             });
             stepperContext.position = position;
+            stepperContext.hasMadeFinalInteract = true;
         }
     }
 

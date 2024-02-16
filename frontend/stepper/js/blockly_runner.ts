@@ -584,6 +584,7 @@ export default class BlocklyRunner extends AbstractRunner {
         await stepperContext.interactAfter({
             position: 0,
         });
+        stepperContext.hasMadeFinalInteract = true;
     }
 
     public getCurrentBlockId(): string {
