@@ -71,7 +71,7 @@ import {platformAnswerGraded, platformAnswerLoaded, taskGradeAnswerEvent,} from 
 import {
     getDefaultTaskLevel,
     platformSaveAnswer,
-    platformSetTaskLevels,
+    platformSetTaskLevels, platformTaskParamsUpdated,
     platformTokenUpdated, platformUnlockLevel,
     TaskLevelName,
     taskLevelsList
@@ -184,6 +184,9 @@ function* taskLoadSaga(app: App, action) {
             yield* put(currentTaskChangePredefined(selectedTask));
         }
     }
+
+    const taskParams = yield* call(platformApi.getTaskParams, null, null);
+    yield* put(platformTaskParamsUpdated(taskParams));
 
     // yield* put(hintsLoaded([
     //     {content: 'aazazaz', minScore: 0},
