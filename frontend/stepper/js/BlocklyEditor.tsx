@@ -226,8 +226,13 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const onLoadDocument = useDebounce(updateDocumentConditionnally, 100);
 
     useEffect(() => {
+        log.getLogger('editor').debug('[blockly.editor] document has changed', {
+            oldDocument: currentValue.current,
+            newDocument: props.state?.document,
+        });
         currentValue.current = props.state?.document;
-        onLoadDocument();
+        updateDocumentConditionnally();
+        // onLoadDocument();
     }, [props.state?.document]);
 
     useEffect(() => {
