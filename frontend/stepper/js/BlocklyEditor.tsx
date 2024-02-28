@@ -56,6 +56,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         // Check that all blocks exist and program is valid. Otherwise, reload default answer and cancel
         try {
+            previousValue.current = context.blocklyHelper.programs[0].blockly;
             context.blocklyHelper.loadPrograms();
             context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
             if (0 === context.blocklyHelper.programs[0].blocklyJS.trim().length) {
@@ -225,8 +226,13 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const onLoadDocument = useDebounce(updateDocumentConditionnally, 100);
 
     useEffect(() => {
+        log.getLogger('editor').debug('[blockly.editor] document has changed', {
+            oldDocument: currentValue.current,
+            newDocument: props.state?.document,
+        });
         currentValue.current = props.state?.document;
-        onLoadDocument();
+        updateDocumentConditionnally();
+        // onLoadDocument();
     }, [props.state?.document]);
 
     useEffect(() => {
