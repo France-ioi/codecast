@@ -180,6 +180,11 @@ export default function(bundle: Bundle) {
         state.options.tabsEnabled = tabsEnabled;
     });
 
+    bundle.defineAction(ActionTypes.LogAttemptsChanged);
+    bundle.addReducer(ActionTypes.LogAttemptsChanged, (state, {payload: {logAttempts}}) => {
+        state.options.logAttempts = logAttempts;
+    });
+
     bundle.addSaga(function* () {
         // @ts-ignore
         yield* takeEvery(ActionTypes.PlatformChanged, function* ({payload: {reloadTask}}) {
