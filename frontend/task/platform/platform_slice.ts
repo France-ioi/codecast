@@ -27,7 +27,11 @@ export interface PlatformState {
 
 export interface PlatformTaskParams {
     randomSeed: string,
-    options: any,
+    options: {
+        log?: boolean,
+        version?: TaskLevelName,
+        level?: TaskLevelName,
+    },
     minScore: number,
     maxScore: number,
     noScore: number,

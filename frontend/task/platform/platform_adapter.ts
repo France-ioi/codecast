@@ -1,3 +1,5 @@
+import {PlatformTaskParams} from './platform_slice';
+
 export default function (platform) {
     function initWithTask (task) {
         return new Promise<void>(function (resolve, reject) {
@@ -7,7 +9,7 @@ export default function (platform) {
     }
 
     function getTaskParams (key?, defaultValue?) {
-        return new Promise<{randomSeed: string, options: any, minScore: number, maxScore: number, noScore: number, supportsTabs?: boolean}>(function (resolve, reject) {
+        return new Promise<PlatformTaskParams>(function (resolve, reject) {
             platform.getTaskParams(key, defaultValue, resolve, reject);
         });
     }
