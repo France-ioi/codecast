@@ -26,6 +26,10 @@ export default function (platform) {
         });
     }
 
+    function log(details) {
+        platform.log(details);
+    }
+
     function updateDisplay (options) {
         return new Promise(function (resolve, reject) {
             platform.updateDisplay(options, resolve, reject);
@@ -37,6 +41,7 @@ export default function (platform) {
         getTaskParams,
         askHint,
         validate,
+        log,
         updateDisplay,
     };
 }

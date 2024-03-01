@@ -112,7 +112,7 @@ import {
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
-import {submissionCancel} from '../submission/submission_actions';
+import {callPlatformLog, callPlatformValidate, submissionCancel} from '../submission/submission_actions';
 import {createSourceBufferFromDocument} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {Screen} from '../common/screens';
@@ -558,6 +558,20 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* call(taskLevelLoadedSaga);
 }
 
+function* logLoadLevel() {
+    yield* delay(1000);
+
+    const logAttempts = yield* appSelect(state => state.options.logAttempts);
+    const currentLevel = yield* appSelect(state => state.task.currentLevel);
+    if (logAttempts) {
+        const details = 'loadLevel;' + currentLevel;
+
+        yield* put(callPlatformLog(['activity', details]));
+    }
+}
+
+let currentLevelLoadLogTask = null;
+
 function* taskLevelLoadedSaga() {
     const state = yield* appSelect();
     const levelGridInfos = state.task.levelGridInfos;
@@ -566,6 +580,13 @@ function* taskLevelLoadedSaga() {
     if (levelGridInfos?.logOption && 'main' === state.environment && window.SrlLogger) {
         window.SrlLogger.load();
         window.SrlLogger.levelLoaded(currentLevel);
+    }
+
+    if ('main' === state.environment && state.options.logAttempts) {
+        if (currentLevelLoadLogTask) {
+            yield* cancel(currentLevelLoadLogTask)
+        }
+        currentLevelLoadLogTask = yield* fork(logLoadLevel);
     }
 }
 

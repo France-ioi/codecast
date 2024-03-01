@@ -30,6 +30,7 @@ import {
     TaskSubmissionServer, TaskSubmissionServerExecutionMetadata, TaskSubmissionServerTestResult
 } from './submission_types';
 import {
+    callPlatformLog,
     callPlatformValidate, submissionCancel,
     submissionCreateTest,
     submissionExecuteMyTests,
@@ -145,10 +146,14 @@ export interface TestResultDiffLog {
 }
 
 export default function (bundle: Bundle) {
-    bundle.addSaga(function* (app: App) {
+    bundle.addSaga(function* () {
         yield* takeEvery(callPlatformValidate, function* (action) {
             const platformAction = action.payload.action ?? 'done';
             yield* call([platformApi, platformApi.validate], platformAction);
+        });
+
+        yield* takeEvery(callPlatformLog, function* ({payload: {details}}) {
+            yield* call([platformApi, platformApi.log], details);
         });
 
         yield* takeEvery(updateCurrentTestId, function* ({payload}) {
