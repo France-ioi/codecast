@@ -188,6 +188,10 @@ function* taskLoadSaga(app: App, action) {
     const taskParams = yield* call(platformApi.getTaskParams, null, null);
     yield* put(platformTaskParamsUpdated(taskParams));
 
+    if (taskParams.options.log) {
+        yield* put({type: ActionTypes.LogAttemptsChanged, payload: {logAttempts: true}});
+    }
+
     // yield* put(hintsLoaded([
     //     {content: 'aazazaz', minScore: 0},
     //     {content: 'aazazazazazazz', minScore: 0},
