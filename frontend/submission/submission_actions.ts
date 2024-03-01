@@ -5,6 +5,11 @@ export const callPlatformValidate = createAction('submission/callPlatformValidat
         action,
     },
 }));
+export const callPlatformLog = createAction('submission/callPlatformLog', (details?: any) => ({
+    payload: {
+        details,
+    },
+}));
 export const submissionExecuteMyTests = createAction('submission/executeMyTests');
 export const submissionCreateTest = createAction('submission/createTest');
 export const submissionUpdateCurrentTest = createAction('submission/updateCurrentTest', (data: object) => ({
