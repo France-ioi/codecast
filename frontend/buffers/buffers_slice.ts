@@ -10,8 +10,11 @@ import {
     BufferStateParameters,
 } from './buffer_types';
 import {Block} from '../task/blocks/block_types';
-import {createEmptyBufferState, TextBufferHandler} from './document';
+import {createEmptyBufferState, documentToString, TextBufferHandler} from './document';
 import {selectSourceBuffers, selectSourceBuffersFromBufferState} from './buffer_selectors';
+import {DropResult} from 'react-beautiful-dnd';
+import {CodeSegment, htmlSegment, parseHTMLToString, TagType} from './html/html_editor_config';
+import {v4 as uuidv4} from "uuid"
 
 export interface BuffersState {
     buffers: {
@@ -139,6 +142,64 @@ export const buffersSlice = createSlice({
         bufferDissociateFromSubmission(state, action: PayloadAction<{buffer: string}>) {
             state.buffers[action.payload.buffer].submissionIndex = null;
         },
+        toggleBlockDescription(state, action: PayloadAction<{blockId: number}>) {
+            // const parentCategory = state.categories.find(c => c.blocks.find(b => b.id === action.payload.blockId))
+            // if (parentCategory) {
+            //     parentCategory.openDesc = parentCategory.openDesc === action.payload.blockId ? null : action.payload.blockId
+            // }
+        },
+        visualEditorElementMove(state, action: PayloadAction<{buffer: string, elementId: DropResult}>) {
+            const draggedElementId = action.payload.elementId.draggableId
+            const source = action.payload.elementId.source
+            const destination = action.payload.elementId.destination
+            const codeElements = htmlSegment(documentToString(state.buffers[action.payload.buffer].document), false);
+            const foundElement = codeElements.find(e => e.id === draggedElementId)
+            if (source && destination && foundElement) {
+                // If element dropped at higher index AND on a different line, set modifier to 1
+                const modifier = (destination.index > source.index && destination.droppableId !== source.droppableId) ? 1 : 0
+                // Insert element at destination index - modifier while removing element at source index
+                codeElements.splice(
+                    destination.index - modifier, 0, codeElements.splice(source.index, 1)[0]!
+                );
+                const string = parseHTMLToString(codeElements);
+                state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
+            } else {
+                console.log('Not found!', {source, destination, foundElement, codeElements})
+            }
+        },
+        visualEditorElementDelete(state, action: PayloadAction<{buffer: string, elementId: DropResult}>) {
+            const codeElements = htmlSegment(documentToString(state.buffers[action.payload.buffer].document), false);
+            codeElements.splice(action.payload.elementId.source.index, 1);
+            const string = parseHTMLToString(codeElements);
+            state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
+        },
+        visualEditorElementCreate(state, action: PayloadAction<{buffer: string, elementId: DropResult}>) {
+            const elementTagType = action.payload.elementId.draggableId.split("-")
+            const elementToCreate: CodeSegment = {
+                id: uuidv4(),
+                type: elementTagType[1] === 'opening' ? TagType.Opening : TagType.Closing,
+                value: elementTagType[0]!,
+                unlocked: true
+            }
+            if (action.payload.elementId.destination) {
+                const codeElements = htmlSegment(documentToString(state.buffers[action.payload.buffer].document), false);
+                codeElements.splice(action.payload.elementId.destination.index, 0, elementToCreate);
+                const string = parseHTMLToString(codeElements);
+                state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
+            }
+        },
+        switchEditorMode(state) {
+            // if (state.type === EditorType.Textual) {
+            //     state.type = EditorType.Visual
+            //     state.codeElements = htmlSegment(state.codeString, true)
+            // } else if (state.type === EditorType.Visual) {
+            //     state.type = EditorType.Textual
+            //     state.codeString = parseHTMLToString(state.codeElements)
+            // }
+        },
+        textualEditorUpdateCode(state, action: PayloadAction<{code: string}>) {
+            // state.codeString = action.payload;
+        },
     },
 });
 
@@ -159,6 +220,12 @@ export const {
     bufferRemove,
     bufferAssociateToSubmission,
     bufferDissociateFromSubmission,
+    toggleBlockDescription,
+    visualEditorElementMove,
+    visualEditorElementDelete,
+    visualEditorElementCreate,
+    switchEditorMode,
+    textualEditorUpdateCode,
 } = buffersSlice.actions;
 
 export default buffersSlice;

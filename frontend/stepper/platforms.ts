@@ -105,6 +105,10 @@ export const platformsList: {[key: string]: PlatformData} = {
         checkCode: checkBlocklyCode,
         getBlocksUsage: getBlocklyBlocksUsage,
     },
+    [CodecastPlatform.Html]: {
+        aceSourceMode: 'html',
+        extension: 'html',
+    },
     ...smartContractPlatformsList,
 };
 

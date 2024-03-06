@@ -24,7 +24,9 @@ import {
 } from './buffer_types';
 import {useAppSelector} from '../hooks';
 import {getSourceHighlightFromStateSelector} from '../stepper';
-import {createEmptyBufferState} from './document';
+import {createEmptyBufferState, documentToString} from './document';
+import {VisualHTMLEditor} from './html/VisualHTMLEditor';
+import {htmlSegment} from './html/html_editor_config';
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -83,6 +85,23 @@ const _BufferEditor = (props: BufferEditorProps) => {
     const onDropBlock = useCallback((block: Block, pos: TextPosition) => {
         dispatch(bufferInsertBlock({buffer: bufferName, block, pos}));
     }, [bufferName]);
+
+
+    if (CodecastPlatform.Html === props.platform) {
+        const codeElements = htmlSegment(documentToString(bufferState.document), false);
+
+        return <VisualHTMLEditor
+            elements={codeElements}
+            // key={bufferName}
+            // name={bufferName}
+            // state={bufferState as BlockBufferState}
+            // highlight={highlight as string}
+            // onInit={onInit}
+            // onSelect={onSelect}
+            // onEditPlain={onEditPlain}
+            // readOnly={props.readOnly}
+        />
+    }
 
     if (BufferType.Block === bufferType) {
         return <BlocklyEditor

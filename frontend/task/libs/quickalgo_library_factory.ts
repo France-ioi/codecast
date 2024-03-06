@@ -30,6 +30,7 @@ import {QuickalgoLibraryInfos, QuickalgoTaskGridInfos} from '../task_types';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {selectAvailableExecutionModes} from '../../submission/submission_selectors';
 import {submissionChangeExecutionMode} from '../../submission/submission_slice';
+import {HtmlLib} from './html/html_lib';
 
 export function* createQuickalgoLibrary() {
     let state = yield* appSelect();
@@ -86,6 +87,11 @@ export function* createQuickalgoLibrary() {
         if (!window.quickAlgoLibrariesList.find(lib => 'smart_contract' === lib[0])) {
             window.quickAlgoLibrariesList.push(['smart_contract', (display, infos) => {
                 return new SmartContractLib(display, infos);
+            }]);
+        }
+        if (!window.quickAlgoLibrariesList.find(lib => 'html' === lib[0])) {
+            window.quickAlgoLibrariesList.push(['html', (display, infos) => {
+                return new HtmlLib(display, infos);
             }]);
         }
 

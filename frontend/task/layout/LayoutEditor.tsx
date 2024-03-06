@@ -21,6 +21,22 @@ import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
 import {getMessage} from '../../lang';
 import {bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
+import {
+    DragDropContext,
+    DraggableStateSnapshot,
+    DraggingStyle,
+    DragUpdate,
+    DropResult,
+    NotDraggingStyle,
+} from "react-beautiful-dnd";
+import editorConfig, {EditorType, TagType, tbConf} from '../../buffers/html/html_editor_config';
+import {
+    visualEditorElementCreate,
+    visualEditorElementDelete,
+    visualEditorElementMove
+} from '../../buffers/buffers_slice';
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {HTMLEditorBlockToolbox} from '../../buffers/html/HTMLEditorBlockToolbox';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -70,40 +86,87 @@ export function LayoutEditor(props: LayoutEditorProps) {
         && !readOnly
     );
 
+    // let codeToInsert = ""
+
+    // function refreshPreview() {
+    //     // If editor type is visual, build code string from codeElements
+    //     // otherwise use codeString directly
+    //     editorConfig.type === EditorType.Visual ?
+    //         editorConfig.codeElements.map(e => {
+    //             let tag = ''
+    //             if (e.type === TagType.Opening) tag = '<' + e.value + '>'
+    //             else if (e.type === TagType.Closing) tag = '</' + e.value + '>'
+    //             else tag = `${e.value} `
+    //             return codeToInsert += tag
+    //         })
+    //         :
+    //         codeToInsert = editorConfig.codeString
+    //     return codeToInsert
+    // }
+
+    const onDragEnd = (result: DropResult) => {
+        console.log('drag end', result);
+        if (result.source && result.destination) {
+            if (result.destination.droppableId === 'toolbox-dropzone' && result.source.droppableId !== 'toolbox-dropzone') {
+                dispatch(visualEditorElementDelete({buffer: activeBufferName, elementId: result}))
+            } else if (result.source.droppableId !== 'toolbox-dropzone' && result.source.index !== result.destination.index) {
+                dispatch(visualEditorElementMove({buffer: activeBufferName, elementId: result}))
+            } else if (result.source.droppableId === 'toolbox-dropzone' && result.destination.droppableId !== 'toolbox-dropzone') {
+                dispatch(visualEditorElementCreate({buffer: activeBufferName, elementId: result}))
+            }
+        }
+    }
+
+    //TODO Insert animated cursor to show user precisely where their tag will be dropped
+    const onDragUpdate = (update: DragUpdate) => {
+    }
+
+    // refreshPreview();
+
     return (
-        <div className="layout-editor cursor-main-zone" data-cursor-zone="layout-editor" style={props.style}>
-            {editorTabsEnabled && <BufferEditorTabs/>}
+        <DragDropContext onDragEnd={onDragEnd} onDragUpdate={onDragUpdate}>
+            <div className="layout-editor cursor-main-zone" data-cursor-zone="layout-editor" style={props.style}>
+                {editorTabsEnabled && <BufferEditorTabs/>}
 
-            {null !== activeBufferPendingSubmissionIndex && <div className="layout-editor-read-only">
-                <div className="layout-editor-read-only-icon">
-                    <FontAwesomeIcon icon={faBell}/>
-                </div>
-                <span className="ml-2">{getMessage('BUFFER_TAB_NOT_EDITABLE')}</span>
-                {editorTabsEnabled && <a onClick={duplicateCurrentSource} className="layout-editor-read-only-link ml-1">{getMessage('COPY')}</a>}
-            </div>}
+                {null !== activeBufferPendingSubmissionIndex && <div className="layout-editor-read-only">
+                    <div className="layout-editor-read-only-icon">
+                        <FontAwesomeIcon icon={faBell}/>
+                    </div>
+                    <span className="ml-2">{getMessage('BUFFER_TAB_NOT_EDITABLE')}</span>
+                    {editorTabsEnabled && <a onClick={duplicateCurrentSource} className="layout-editor-read-only-link ml-1">{getMessage('COPY')}</a>}
+                </div>}
 
-            {null !== activeBufferName && <div className="layout-editor-section">
-                {currentTask && displayBlocks && !readOnly && <AvailableBlocks collapsed={blocksCollapsed}/>}
-                <div className="task-layout-editor-container">
-                    {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
-                        <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
-                    </div>}
-                    <BufferEditor
-                        platform={platform}
-                        bufferName={activeBufferName}
-                        readOnly={readOnly}
-                        shield={preventInput}
-                        mode={sourceMode}
-                        requiredWidth="100%"
-                        requiredHeight="100%"
-                        hasAutocompletion
-                        dragEnabled
-                        editorProps={editorProps}
-                    />
-                </div>
-                {'tralalere' !== options.app && <BlocksUsage/>}
-            </div>}
-        </div>
+                {null !== activeBufferName && <div className="layout-editor-section">
+                    {currentTask && displayBlocks && !readOnly &&
+                        <AvailableBlocks collapsed={blocksCollapsed}/>
+                    }
+                    {CodecastPlatform.Html === platform && context && !readOnly &&
+                        <HTMLEditorBlockToolbox
+                            categories={tbConf}
+                            allowModeSwitch={true}
+                        />
+                    }
+                    <div className="task-layout-editor-container">
+                        {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
+                            <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
+                        </div>}
+                        <BufferEditor
+                            platform={platform}
+                            bufferName={activeBufferName}
+                            readOnly={readOnly}
+                            shield={preventInput}
+                            mode={sourceMode}
+                            requiredWidth="100%"
+                            requiredHeight="100%"
+                            hasAutocompletion
+                            dragEnabled
+                            editorProps={editorProps}
+                        />
+                    </div>
+                    {'tralalere' !== options.app && <BlocksUsage/>}
+                </div>}
+            </div>
+        </DragDropContext>
     );
 }
 

@@ -1,0 +1,271 @@
+.toolbox-block {
+  padding: 10px 0 10px 16px;
+  outline: 1px solid #b9bfcb;
+}
+
+.toolbox-block-description {
+  margin-top: 7px;
+  font-size: 0.7rem;
+  font-style: italic;
+  height: auto;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease-out;
+}
+
+.toolbox-block-tag {
+  display: inline-block;
+  color: white;
+  background: #4a90e2;
+  line-height: 30px;
+  position: relative;
+  height: 30px;
+  cursor: pointer;
+}
+
+.toolbox-block-tag:before {
+  position: absolute;
+  content: "";
+  width: 1px;
+  height: 0;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+}
+
+.tag-self-closing {
+  padding: 0 8px 0 8px;
+  border-radius: 5px;
+}
+
+.tag-open {
+  margin-right: 2.4rem;
+  padding: 0 0 0 8px;
+  border-radius: 5px 0 0 5px;
+}
+
+.tag-open:before {
+  right: -15px;
+  border-left: 14px solid #4a90e2;
+}
+
+.tag-close {
+  padding: 0 8px 0 0;
+  border-radius: 0 5px 5px 0;
+}
+
+.tag-close:before {
+  left: -15px;
+  border-right: 14px solid #4a90e2;
+}
+
+.chevron-right {
+  box-sizing: border-box;
+  position: relative;
+  float: right;
+  display: inline-block;
+  transform: scale(1);
+  width: 22px;
+  height: 22px;
+  border: 2px solid transparent;
+  border-radius: 100px;
+}
+
+.chevron-right::after {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+  transform: rotate(-45deg);
+  right: 10px;
+  top: 7px
+}
+
+.toolbox-category-title {
+  color: #7c7c7c;
+  display: block;
+  padding: 15px;
+  background-color: #f1f2f7;
+  border-bottom: 2px solid #ecedf2;
+  cursor: pointer;
+}
+
+.toolbox-category-title:hover {
+  opacity: 0.9;
+}
+
+.toolbox-category-blocks {
+  height: auto;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.toolbox {
+  font-family: Consolas, monospace;
+  background-color: #dfe7f4;
+  height: 100%;
+  min-width: 20%;
+  float: left;
+  overflow: auto;
+}
+
+@media only screen and (max-width: 768px) {
+  .toolbox {
+    height: auto;
+    min-width: 100%;
+    float: none;
+    overflow: scroll;
+  }
+}
+
+.textual-html-editor {
+  height: 100%;
+  display: flex;
+}
+
+@media only screen and (max-width: 768px) {
+  .textual-html-editor {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+.visual-html-editor {
+  line-height: 20px;
+  //max-width: 80%;
+  height: 100%;
+  display: flex;
+  font-family: Consolas, monospace;
+  font-size: 14px;
+  overflow: auto;
+}
+
+.lines-counter {
+  width: 40px;
+  background-color: #f0f0f0;
+  color: #333;
+  position: relative;
+}
+
+.lines-container {
+  width: auto;
+}
+
+@media only screen and (max-width: 768px) {
+  .visual-html-editor {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+.line {
+  white-space: nowrap;
+  width: 100%;
+  margin-right: 80px;
+  padding: 3px 0 3px 0;
+  min-height: 26px; /* Fixes issue when single-element line draggable picked up */
+}
+
+.text {
+  display: inline-block;
+  position: relative;
+  white-space: pre;
+  cursor: default;
+}
+
+.opening, .closing, .self-closing {
+  display: inline-block;
+  color: white;
+  background: #4a90e2;
+  line-height: 20px;
+  position: relative;
+  height: 20px;
+}
+
+.opening:before, .closing:before, .self-closing:before {
+  position: absolute;
+  content: "";
+  width: 1px;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+}
+
+.self-closing {
+  margin-right: 2px;
+  padding: 0 8px 0 8px;
+  border-radius: 5px;
+}
+
+.opening {
+  margin-right: 1rem;
+  padding: 0 0 0 8px;
+  border-radius: 5px 0 0 5px;
+}
+
+.opening:before {
+  right: -14px;
+  border-left: 14px solid #4a90e2;
+}
+
+.closing {
+  margin-left: 1rem;
+  padding: 0 8px 0 0;
+  border-radius: 0 5px 5px 0;
+}
+
+.closing:before {
+  left: -14px;
+  border-right: 14px solid #4a90e2;
+}
+
+.locked.opening,
+.locked.closing,
+.locked.self-closing {
+  background: rgba(74, 144, 226, 0.5);
+}
+
+.locked.opening:before,
+.locked.closing:before,
+.locked.self-closing:before {
+  opacity: 0.5;
+}
+
+.unlocked.opening:before {
+  border-left: 14px solid #4a90e2;
+}
+
+.unlocked.closing:before {
+  border-right: 14px solid #4a90e2;
+}
+
+.unlocked {
+  cursor: pointer;
+}
+
+.unlocked:hover {
+  opacity: 0.8;
+}
+
+.is-dragged-over {
+  background-color: #f0f0f0;
+}
+
+.lines-counter-inner {
+  height: 100%;
+  user-select: none;
+  text-align: right;
+  position: relative;
+  background-color: #E8E8E8;
+}
+
+.lines-counter-cell {
+  height: 26px;
+  font-size: 14px;
+  font-family: Consolas, monospace;
+  padding: 3px 13px 0 19px;
+}
