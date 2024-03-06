@@ -13,7 +13,7 @@ import {Block} from '../task/blocks/block_types';
 import {createEmptyBufferState, documentToString, TextBufferHandler} from './document';
 import {selectSourceBuffers, selectSourceBuffersFromBufferState} from './buffer_selectors';
 import {DropResult} from 'react-beautiful-dnd';
-import {CodeSegment, htmlSegment, parseHTMLToString, TagType} from './html/html_editor_config';
+import {CodeSegment, EditorType, htmlSegment, parseHTMLToString, TagType} from './html/html_editor_config';
 import {v4 as uuidv4} from "uuid"
 
 export interface BuffersState {
@@ -188,14 +188,14 @@ export const buffersSlice = createSlice({
                 state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
             }
         },
-        switchEditorMode(state) {
-            // if (state.type === EditorType.Textual) {
-            //     state.type = EditorType.Visual
-            //     state.codeElements = htmlSegment(state.codeString, true)
-            // } else if (state.type === EditorType.Visual) {
-            //     state.type = EditorType.Textual
-            //     state.codeString = parseHTMLToString(state.codeElements)
-            // }
+        switchEditorMode(state, action: PayloadAction<{buffer: string}>) {
+            const bufferState = state.buffers[action.payload.buffer];
+
+            if (bufferState.htmlMode === EditorType.Textual) {
+                bufferState.htmlMode = EditorType.Visual
+            } else {
+                bufferState.htmlMode = EditorType.Textual
+            }
         },
         textualEditorUpdateCode(state, action: PayloadAction<{code: string}>) {
             // state.codeString = action.payload;

@@ -1,5 +1,6 @@
 import {Block} from '../task/blocks/block_types';
 import {CodecastPlatform} from '../stepper/codecast_platform';
+import {EditorType} from './html/html_editor_config';
 
 export enum BufferType {
     Text = 'text',
@@ -47,6 +48,7 @@ export interface BufferStateParameters {
 
 export interface BufferState extends BufferStateParameters {
     document: Document,
+    htmlMode?: EditorType,
     selection?: any,
     firstVisibleRow?: number,
     actions: {

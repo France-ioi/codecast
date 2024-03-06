@@ -26,7 +26,8 @@ import {useAppSelector} from '../hooks';
 import {getSourceHighlightFromStateSelector} from '../stepper';
 import {createEmptyBufferState, documentToString} from './document';
 import {VisualHTMLEditor} from './html/VisualHTMLEditor';
-import {htmlSegment} from './html/html_editor_config';
+import {EditorType, htmlSegment} from './html/html_editor_config';
+import {TextualHTMLEditor} from './html/TextualHTMLEditor';
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -88,19 +89,20 @@ const _BufferEditor = (props: BufferEditorProps) => {
 
 
     if (CodecastPlatform.Html === props.platform) {
-        const codeElements = htmlSegment(documentToString(bufferState.document), false);
+        const html = documentToString(bufferState.document);
+        const codeElements = htmlSegment(html, false);
 
-        return <VisualHTMLEditor
-            elements={codeElements}
-            // key={bufferName}
-            // name={bufferName}
-            // state={bufferState as BlockBufferState}
-            // highlight={highlight as string}
-            // onInit={onInit}
-            // onSelect={onSelect}
-            // onEditPlain={onEditPlain}
-            // readOnly={props.readOnly}
-        />
+        if (EditorType.Textual === bufferState.htmlMode) {
+            return <TextualHTMLEditor
+                key={bufferName}
+                elements={html}
+            />
+        } else {
+            return <VisualHTMLEditor
+                key={bufferName}
+                elements={codeElements}
+            />
+        }
     }
 
     if (BufferType.Block === bufferType) {
