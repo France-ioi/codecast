@@ -2,6 +2,7 @@ import React, {useRef} from "react";
 import {useAppSelector} from "../hooks";
 import {AppStore} from "../store";
 import {getMessageChoices} from "../lang";
+import {getTralalereImg} from "./TralalereAssets";
 
 export function TralalereBlocksUsage() {
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);
@@ -20,7 +21,7 @@ export function TralalereBlocksUsage() {
                     remaining: `${blocksUsage.blocksCurrent} / ${blocksUsage.blocksLimit}`
                 })}
             </span>
-            <img className="tralalere-box-small-right" src={window.modulesPath + 'img/algorea/crane/box_right.svg'}/>
+            <img className="tralalere-box-small-right" src={getTralalereImg('box_right.svg')}/>
             <div className={`block-usage-status ${blocksUsage.blocksLimit === blocksUsage.blocksCurrent ? 'is-warning' : (blocksUsage.blocksLimit < blocksUsage.blocksCurrent ? 'is-error' : '')}`}/>
         </div>
     );

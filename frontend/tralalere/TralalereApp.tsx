@@ -34,8 +34,9 @@ import {getTaskSuccessMessageSelector} from '../task/instructions/instructions';
 import {InstructionsContext} from '../contexts';
 import {DebugDialog} from '../task/dialog/DebugDialog';
 import {getNextLevelIndex} from '../task/platform/platform';
+import {getTralalereImg} from './TralalereAssets';
 
-const layoutEditorStyle = {backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`};
+const layoutEditorStyle = { backgroundImage: `url(${getTralalereImg('editor-cross.png')}` };
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -195,7 +196,7 @@ export function TralalereApp() {
                 <div className={`tralalere-section`}>
                     {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className={`tralalere-menu-icons ${menuHelpsOpen ? 'has-helps' : ''}`}>
                         <div className="tralalere-button" onClick={toggleDocumentation}>
-                            <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation.svg'}/>
+                            <img className="menu-task-icon" src={getTralalereImg('documentation.svg')} />
                             <div className="tralalere-menu-label">{getMessage('TRALALERE_MENU_DOCUMENTATION')}</div>
                         </div>
 
@@ -207,11 +208,11 @@ export function TralalereApp() {
 
                     {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div
                         className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`}
-                        style={{backgroundImage: `url(${levelGridInfos?.backgroundSrc ? levelGridInfos.backgroundSrc : window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}
+                        style={{ backgroundImage: `url(${levelGridInfos?.backgroundSrc ? levelGridInfos.backgroundSrc : getTralalereImg('visualization-background.png')}` }}
                     >
                         {taskSuccess && <div className="tralalere-success">
                             <img className="tralalere-success-left"
-                                src={window.modulesPath + 'img/algorea/crane/task-success.png'}/>
+                                src={getTralalereImg('task-success.png')} />
                             <div>{getMessage('TRALALERE_TASK_SUCCESS')}</div>
                             {null !== taskSuccessMessage && <div
                                 className="tralalere-success-message"
@@ -256,7 +257,7 @@ export function TralalereApp() {
                         <LayoutEditor style={layoutEditorStyle}/>
 
                         {hasBlockPlatform(platform) && <div className="blockly-flyout-wrapper">
-                            <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
+                            <img className="blockly-flyout-wrapper-bottom" src={getTralalereImg('editor-bottom-background.png')} />
                         </div>}
 
                         {isMobile && <TralalereBlocksUsage/>}
@@ -302,7 +303,7 @@ export function TralalereApp() {
                         header={
                             <div className="tralalere-box-header">
                                 <div className="tralalere-box-header-icon">
-                                    <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation_white.svg'}/>
+                                    <img className="menu-task-icon" src={getTralalereImg('documentation_white.svg')} />
                                 </div>
                                 <div className="tralalere-box-header-title">
                                     {getMessage('TRALALERE_MENU_DOCUMENTATION')}

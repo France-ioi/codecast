@@ -2,6 +2,7 @@ import {TaskInstructions} from "../task/TaskInstructions";
 import React, {useState} from "react";
 import {useAppSelector} from "../hooks";
 import {LayoutType} from '../task/layout/layout_types';
+import {getTralalereImg} from "./TralalereAssets";
 
 export interface TralalereInstructionsProps {
     expanded?: boolean,
@@ -17,9 +18,9 @@ export function TralalereInstructions(props: TralalereInstructionsProps) {
     return (
         <div className={`tralalere-instructions ${props.expanded ? 'is-expanded' : ''} ${props.absolute ? 'is-absolute' : ''} ${displayExpanded ? 'show-more': ''}`} style={props.style}>
             <img className="tralalere-instructions-shadow-down tralalere-instructions-design"
-                src={window.modulesPath + 'img/algorea/crane/instructions-shadow-down.png'}/>
-            <img className="tralalere-instructions-window  tralalere-instructions-design" src={window.modulesPath + 'img/algorea/crane/instructions-window.png'}/>
-            <img className="tralalere-instructions-left  tralalere-instructions-design" src={window.modulesPath + 'img/algorea/crane/instructions-left-folded.png'}/>
+                src={getTralalereImg('instructions-shadow-down.png')}/>
+            <img className="tralalere-instructions-window  tralalere-instructions-design" src={getTralalereImg('instructions-window.png')}/>
+            <img className="tralalere-instructions-left  tralalere-instructions-design" src={getTralalereImg('instructions-left-folded.png')}/>
             <div className="tralalere-instructions-container">
                 <TaskInstructions
                     expanded={props.expanded}
