@@ -5,7 +5,7 @@ import {HTMLEditorBlock} from './HTMLEditorBlock';
 
 export function HTMLEditorBlockCategory(props: ToolboxCategory) {
     const [open, setOpen] = useState(false)
-    const categoryBlocksRef = useRef<HTMLDivElement>(null)
+    const categoryBlocksRef = useRef<HTMLDivElement>(null);
 
     // TODO Change behavior and fix height inconsistencies
     useEffect(() => {
@@ -23,7 +23,7 @@ export function HTMLEditorBlockCategory(props: ToolboxCategory) {
                 blocksContainer.style.maxHeight = maxHeight + "px"
             }
         })()
-    }, [open, props.openDesc])
+    }, [open])
 
     return (
         <div className={'toolbox-category'} style={{borderLeft: `10px solid ${props.highlight}`}}>

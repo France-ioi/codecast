@@ -29,19 +29,19 @@ export function HTMLEditorBlock(props: ToolboxCategoryBlocks) {
     let prevCrt: Node
 
     // TODO Change behavior and fix height inconsistencies
-    useEffect(() => {
-        (function () {
-            let maxHeight = 0
-            if (blockDescriptionRef.current && blockDescriptionRef.current.firstElementChild) {
-                if (cat && props.id === cat.openDesc) {
-                    maxHeight = blockDescriptionRef.current.firstElementChild.getBoundingClientRect().height
-                } else {
-                    maxHeight = 0
-                }
-                blockDescriptionRef.current.style.maxHeight = maxHeight + "px"
-            }
-        })()
-    }, [cat, props.id])
+    // useEffect(() => {
+    //     (function () {
+    //         let maxHeight = 0
+    //         if (blockDescriptionRef.current && blockDescriptionRef.current.firstElementChild) {
+    //             if (cat) {
+    //                 maxHeight = blockDescriptionRef.current.firstElementChild.getBoundingClientRect().height
+    //             } else {
+    //                 maxHeight = 0
+    //             }
+    //             blockDescriptionRef.current.style.maxHeight = maxHeight + "px"
+    //         }
+    //     })()
+    // }, [cat, props.id])
 
     function makeToolboxDraggable(tagProp: string, type: TagType, index: number, paired: boolean) {
         let classesToAdd = 'toolbox-block-tag '
