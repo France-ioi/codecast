@@ -170,6 +170,15 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             let blockDesc = context.docGenerator.blockDescription(block.name);
             let funcProto = blockDesc.substring(blockDesc.indexOf('<code>') + 6, blockDesc.indexOf('</code>'));
             let blockHelp = blockDesc.substring(blockDesc.indexOf('</code>') + 7);
+            while (blockHelp.startsWith('<br>') || (blockHelp.startsWith('<code>') && context.infos.hideVariantsInDocumentation)) {
+                if (blockHelp.startsWith('<br>')) {
+                    blockHelp = blockHelp.slice('<br>'.length);
+                }
+                if (blockHelp.startsWith('<code>') && context.infos.hideVariantsInDocumentation) {
+                    blockHelp = blockHelp.substring(blockHelp.indexOf('</code>') + 7);
+                }
+            }
+
             block.caption = funcProto;
             block.description = blockHelp;
             block.snippet = getSnippet(block, platform);
