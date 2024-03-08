@@ -1,5 +1,5 @@
 import React from "react";
-import {getTralalereImg} from "./TralalereAssets";
+import { getTralalereImg } from "./tralalere_assets";
 
 export interface TralalereBoxProps {
     children: JSX.Element | JSX.Element[],

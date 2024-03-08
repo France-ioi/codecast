@@ -34,7 +34,7 @@ import {getTaskSuccessMessageSelector} from '../task/instructions/instructions';
 import {InstructionsContext} from '../contexts';
 import {DebugDialog} from '../task/dialog/DebugDialog';
 import {getNextLevelIndex} from '../task/platform/platform';
-import {getTralalereImg} from './TralalereAssets';
+import { getTralalereImg } from './tralalere_assets';
 
 const layoutEditorStyle = { backgroundImage: `url(${getTralalereImg('editor-cross.png')}` };
 

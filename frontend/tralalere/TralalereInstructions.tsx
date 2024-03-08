@@ -2,7 +2,7 @@ import {TaskInstructions} from "../task/TaskInstructions";
 import React, {useState} from "react";
 import {useAppSelector} from "../hooks";
 import {LayoutType} from '../task/layout/layout_types';
-import {getTralalereImg} from "./TralalereAssets";
+import { getTralalereImg } from "./tralalere_assets";
 
 export interface TralalereInstructionsProps {
     expanded?: boolean,

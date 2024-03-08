@@ -2,7 +2,7 @@ import React, {useRef} from "react";
 import {useAppSelector} from "../hooks";
 import {AppStore} from "../store";
 import {getMessageChoices} from "../lang";
-import {getTralalereImg} from "./TralalereAssets";
+import { getTralalereImg } from "./tralalere_assets";
 
 export function TralalereBlocksUsage() {
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);
