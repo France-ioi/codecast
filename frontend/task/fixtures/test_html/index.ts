@@ -75,9 +75,9 @@ export default {
             More <i>information </i>...
         </p>
         <span><i>Hello world </i></span>
-            <p>
-                Hello!
-            </p>
+        <p>
+            Hello!
+        </p>
     </div>
 </body>`,
         },

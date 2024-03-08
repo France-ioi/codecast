@@ -86,24 +86,6 @@ export function LayoutEditor(props: LayoutEditorProps) {
         && !readOnly
     );
 
-    // let codeToInsert = ""
-
-    // function refreshPreview() {
-    //     // If editor type is visual, build code string from codeElements
-    //     // otherwise use codeString directly
-    //     editorConfig.type === EditorType.Visual ?
-    //         editorConfig.codeElements.map(e => {
-    //             let tag = ''
-    //             if (e.type === TagType.Opening) tag = '<' + e.value + '>'
-    //             else if (e.type === TagType.Closing) tag = '</' + e.value + '>'
-    //             else tag = `${e.value} `
-    //             return codeToInsert += tag
-    //         })
-    //         :
-    //         codeToInsert = editorConfig.codeString
-    //     return codeToInsert
-    // }
-
     const onDragEnd = (result: DropResult) => {
         console.log('drag end', result);
         if (result.source && result.destination) {

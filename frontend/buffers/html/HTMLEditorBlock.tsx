@@ -1,9 +1,7 @@
-import React from "react";
-import {tbConf, ToolboxCategoryBlocks} from "./html_editor_config";
-import {DragEvent, useEffect, useRef} from "react";
+import React, {DragEvent, useRef} from "react";
+import {EditorType, getDragStyle, isTouchDevice, TagType, tbConf, ToolboxCategoryBlocks} from "./html_editor_config";
 import {useAppSelector} from "../../hooks";
 import {Draggable} from "react-beautiful-dnd";
-import {EditorType, getDragStyle, isTouchDevice, TagType} from "./html_editor_config";
 import {polyfill} from "mobile-drag-drop/release";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/release/scroll-behaviour";
 import {useDispatch} from 'react-redux';
@@ -20,13 +18,15 @@ if (isTouchDevice()) {
 }
 
 export function HTMLEditorBlock(props: ToolboxCategoryBlocks) {
+    const editorMode = useAppSelector(state => state.buffers.buffers[state.buffers.activeBufferName].htmlMode) ?? EditorType.Visual;
     const cat = tbConf.categories.find(c => c.blocks.find((b) => b.id === props.id));
     const dispatch = useDispatch();
     const blockDescriptionRef = useRef<HTMLDivElement>(null)
     const openingTag = '<' + props.tag + '>'
     const closingTag = '</' + props.tag + '>'
-    const editorMode = 'visual'; // useAppSelector(state => state.visualHTMLReducer.type) // TODO: change this
     let prevCrt: Node
+
+    console.log('render block', props);
 
     // TODO Change behavior and fix height inconsistencies
     // useEffect(() => {
@@ -44,6 +44,7 @@ export function HTMLEditorBlock(props: ToolboxCategoryBlocks) {
     // }, [cat, props.id])
 
     function makeToolboxDraggable(tagProp: string, type: TagType, index: number, paired: boolean) {
+        console.log('editor mode', editorMode);
         let classesToAdd = 'toolbox-block-tag '
         if (!paired) classesToAdd += 'tag-self-closing '
         else classesToAdd += type === TagType.Opening ? 'tag-open ' : 'tag-close '
@@ -77,15 +78,20 @@ export function HTMLEditorBlock(props: ToolboxCategoryBlocks) {
             )
         } else {
             function setDragContents(ev: DragEvent) {
-                let crt = ev.currentTarget.cloneNode(true) as HTMLElement // Get drag target & clone
-                prevCrt = crt
+                // let crt = ev.currentTarget.cloneNode(true) as HTMLElement // Get drag target & clone
+                // prevCrt = crt
                 ev.dataTransfer.setData("Text", tagToAdd)
                 if (!isTouchDevice()) {
-                    document.body.appendChild(crt)
+                    // document.body.appendChild(crt)
+                    // type === TagType.Opening ? // Set element location in relation to cursor depending on opening or closing tag
+                    //     ev.dataTransfer.setDragImage(crt, crt.clientWidth + 15, 15)
+                    //     :
+                    //     ev.dataTransfer.setDragImage(crt, -1, 15)
+
                     type === TagType.Opening ? // Set element location in relation to cursor depending on opening or closing tag
-                        ev.dataTransfer.setDragImage(crt, crt.clientWidth + 15, 15)
+                        ev.dataTransfer.setDragImage(ev.currentTarget, ev.currentTarget.clientWidth + 15, 15)
                         :
-                        ev.dataTransfer.setDragImage(crt, -1, 15)
+                        ev.dataTransfer.setDragImage(ev.currentTarget, -1, 15)
                 }
             }
 
@@ -98,7 +104,7 @@ export function HTMLEditorBlock(props: ToolboxCategoryBlocks) {
                     className={classesToAdd}
                     draggable={true}
                     onDragStart={setDragContents}
-                    onDragEnd={removeOldDrag}
+                    // onDragEnd={removeOldDrag}
                 >
                     {tagToAdd}
                 </span>

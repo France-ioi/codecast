@@ -21,7 +21,7 @@ export function HTMLEditorBlockToolbox(props: BlocksToolboxProps) {
             id={'editor-mode-toggle'}
             onChange={() => dispatch(switchEditorMode({buffer: activeBufferName}))}
         />
-        <label htmlFor={'editor-mode-toggle'}>Visuel / Textuel</label>
+        <label htmlFor={'editor-mode-toggle'}>Mode textuel</label>
     </>
 
     return (
