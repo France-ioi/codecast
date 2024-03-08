@@ -153,7 +153,7 @@ export const buffersSlice = createSlice({
             const source = action.payload.elementId.source
             const destination = action.payload.elementId.destination
             const codeElements = htmlSegment(documentToString(state.buffers[action.payload.buffer].document), false);
-            const foundElement = codeElements.find(e => e.id === draggedElementId)
+            const foundElement = codeElements[draggedElementId];
             if (source && destination && foundElement) {
                 // If element dropped at higher index AND on a different line, set modifier to 1
                 const modifier = (destination.index > source.index && destination.droppableId !== source.droppableId) ? 1 : 0
@@ -164,7 +164,7 @@ export const buffersSlice = createSlice({
                 const string = parseHTMLToString(codeElements);
                 state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
             } else {
-                console.log('Not found!', {source, destination, foundElement, codeElements})
+                console.log('Not found!', {source, destination, draggedElementId, foundElement, codeElements})
             }
         },
         visualEditorElementDelete(state, action: PayloadAction<{buffer: string, elementId: DropResult}>) {
@@ -197,9 +197,6 @@ export const buffersSlice = createSlice({
                 bufferState.htmlMode = EditorType.Textual
             }
         },
-        textualEditorUpdateCode(state, action: PayloadAction<{code: string}>) {
-            // state.codeString = action.payload;
-        },
     },
 });
 
@@ -225,7 +222,6 @@ export const {
     visualEditorElementDelete,
     visualEditorElementCreate,
     switchEditorMode,
-    textualEditorUpdateCode,
 } = buffersSlice.actions;
 
 export default buffersSlice;

@@ -29,7 +29,7 @@ import {
     DropResult,
     NotDraggingStyle,
 } from "react-beautiful-dnd";
-import editorConfig, {EditorType, TagType, tbConf} from '../../buffers/html/html_editor_config';
+import {tbConf} from '../../buffers/html/html_editor_config';
 import {
     visualEditorElementCreate,
     visualEditorElementDelete,

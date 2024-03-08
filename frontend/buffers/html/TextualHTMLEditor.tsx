@@ -8,10 +8,12 @@ import "ace-builds/src-noconflict/ext-language_tools"
 import 'ace-builds/webpack-resolver'
 import {useDispatch} from 'react-redux';
 import {isTouchDevice} from './html_editor_config';
-import {textualEditorUpdateCode} from '../buffers_slice';
+import {bufferEditPlain} from '../buffers_slice';
+import {TextBufferHandler} from '../document';
 
 interface TextualHTMLEditorProps {
-    elements: string
+    elements: string,
+    name: string,
 }
 
 export function TextualHTMLEditor(props: TextualHTMLEditorProps) {
@@ -19,8 +21,10 @@ export function TextualHTMLEditor(props: TextualHTMLEditorProps) {
     const dispatch = useDispatch();
 
     const onChange = () => {
-        dispatch(textualEditorUpdateCode({code: editorRef!.editor.getValue()}));
-    }
+        const document = TextBufferHandler.documentFromString(editorRef!.editor.getValue());
+        dispatch(bufferEditPlain({buffer: props.name, document}));
+    };
+
     const onLoad = () => {
         if (isTouchDevice()) {
             // If using touch api, prevent default dragover and dragenter events on ace_content layer

@@ -1,5 +1,6 @@
 import {QuickAlgoLibrary} from "../quickalgo_library";
 import {CodecastPlatform} from '../../../stepper/codecast_platform';
+import {HtmlLibView} from './HtmlLibView';
 
 const localLanguageStrings = {
 };
@@ -53,4 +54,8 @@ export class HtmlLib extends QuickAlgoLibrary {
             CodecastPlatform.Html,
         ];
     };
+
+    getComponent() {
+        return this.display ? HtmlLibView : null;
+    }
 }

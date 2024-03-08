@@ -90,11 +90,12 @@ const _BufferEditor = (props: BufferEditorProps) => {
 
     if (CodecastPlatform.Html === props.platform) {
         const html = documentToString(bufferState.document);
-        const codeElements = htmlSegment(html, false);
+        const codeElements = htmlSegment(html, true);
 
         if (EditorType.Textual === bufferState.htmlMode) {
             return <TextualHTMLEditor
                 key={bufferName}
+                name={bufferName}
                 elements={html}
             />
         } else {

@@ -12,7 +12,7 @@ interface ElementProps {
 
 export function VisualHTMLEditorElement(props: ElementProps) {
     return (
-        <Draggable key={props.id} draggableId={props.id} index={props.index} isDragDisabled={!props.unlocked}>
+        <Draggable key={props.id} draggableId={String(props.index)} index={props.index} isDragDisabled={!props.unlocked}>
             {(provided, snapshot) => (
                 <span
                     className={props.className}

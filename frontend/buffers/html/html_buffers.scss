@@ -44,7 +44,7 @@
 }
 
 .tag-open:before {
-  right: -15px;
+  right: -14px;
   border-left: 14px solid #4a90e2;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .tag-close:before {
-  left: -15px;
+  left: -14px;
   border-right: 14px solid #4a90e2;
 }
 
@@ -108,7 +108,7 @@
   font-family: Consolas, monospace;
   background-color: #dfe7f4;
   height: 100%;
-  min-width: 20%;
+  min-width: 30%;
   float: left;
   overflow: auto;
 }
@@ -268,4 +268,8 @@
   font-size: 14px;
   font-family: Consolas, monospace;
   padding: 3px 13px 0 19px;
+}
+
+label[for="editor-mode-toggle"] {
+  margin-left: 5px;
 }
