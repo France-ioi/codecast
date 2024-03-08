@@ -115,6 +115,7 @@ declare global {
         debounce: any,
         processingEndConditions: any,
         modulesPath: string,
+        localModulesPath: string,
         app: string,
         algoreaInstructionsStrings: string[][],
         getAlgoreaInstructionsAsHtml: (strings: string[], gridInfos: any, data: any, taskLevel: TaskLevelName) => string,
