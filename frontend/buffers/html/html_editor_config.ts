@@ -1,5 +1,6 @@
 import {v4 as uuidv4} from 'uuid'
 import {DraggableStateSnapshot, DraggingStyle, NotDraggingStyle} from 'react-beautiful-dnd';
+import {memoize} from 'proxy-memoize';
 
 export interface ToolboxCategoryBlocks {
     id: number,
@@ -256,6 +257,8 @@ export function htmlSegment(html: string, unlockAll: boolean) {
     return editorCode
 }
 
+export const htmlSegmentMemoize = memoize((element: {html: string}) => htmlSegment(element.html, true));
+
 const beautifyHTML = require('js-beautify').html
 
 export function parseHTMLToString(elements: CodeSegments | string) {
@@ -303,11 +306,3 @@ export function isTouchDevice() {
     // @ts-ignore
         (navigator.msMaxTouchPoints > 0));
 }
-
-const editorConfig = {
-    type: initialMode,
-    codeElements: htmlSegment(initialCode, false),
-    codeString: parseHTMLToString(initialCode)
-}
-
-export default editorConfig

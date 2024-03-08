@@ -26,7 +26,7 @@ import {useAppSelector} from '../hooks';
 import {getSourceHighlightFromStateSelector} from '../stepper';
 import {createEmptyBufferState, documentToString} from './document';
 import {VisualHTMLEditor} from './html/VisualHTMLEditor';
-import {EditorType, htmlSegment} from './html/html_editor_config';
+import {EditorType, htmlSegment, htmlSegmentMemoize} from './html/html_editor_config';
 import {TextualHTMLEditor} from './html/TextualHTMLEditor';
 
 interface BufferEditorProps {
@@ -90,7 +90,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
 
     if (CodecastPlatform.Html === props.platform) {
         const html = documentToString(bufferState.document);
-        const codeElements = htmlSegment(html, true);
+        const codeElements = htmlSegmentMemoize({html});
 
         if (EditorType.Textual === bufferState.htmlMode) {
             return <TextualHTMLEditor

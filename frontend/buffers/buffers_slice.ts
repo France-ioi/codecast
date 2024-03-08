@@ -11,9 +11,9 @@ import {
 } from './buffer_types';
 import {Block} from '../task/blocks/block_types';
 import {createEmptyBufferState, documentToString, TextBufferHandler} from './document';
-import {selectSourceBuffers, selectSourceBuffersFromBufferState} from './buffer_selectors';
+import {selectSourceBuffersFromBufferState} from './buffer_selectors';
 import {DropResult} from 'react-beautiful-dnd';
-import {CodeSegment, EditorType, htmlSegment, parseHTMLToString, TagType} from './html/html_editor_config';
+import {CodeSegment, EditorType, htmlSegmentMemoize, parseHTMLToString, TagType} from './html/html_editor_config';
 import {v4 as uuidv4} from "uuid"
 
 export interface BuffersState {
@@ -152,8 +152,8 @@ export const buffersSlice = createSlice({
             const draggedElementId = action.payload.elementId.draggableId
             const source = action.payload.elementId.source
             const destination = action.payload.elementId.destination
-            const codeElements = htmlSegment(documentToString(state.buffers[action.payload.buffer].document), false);
-            const foundElement = codeElements[draggedElementId];
+            const codeElements = htmlSegmentMemoize({html: documentToString(state.buffers[action.payload.buffer].document)});
+            const foundElement = codeElements.find(e => e.id === draggedElementId);
             if (source && destination && foundElement) {
                 // If element dropped at higher index AND on a different line, set modifier to 1
                 const modifier = (destination.index > source.index && destination.droppableId !== source.droppableId) ? 1 : 0
@@ -168,7 +168,7 @@ export const buffersSlice = createSlice({
             }
         },
         visualEditorElementDelete(state, action: PayloadAction<{buffer: string, elementId: DropResult}>) {
-            const codeElements = htmlSegment(documentToString(state.buffers[action.payload.buffer].document), false);
+            const codeElements = htmlSegmentMemoize({html: documentToString(state.buffers[action.payload.buffer].document)});
             codeElements.splice(action.payload.elementId.source.index, 1);
             const string = parseHTMLToString(codeElements);
             state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
@@ -182,7 +182,7 @@ export const buffersSlice = createSlice({
                 unlocked: true
             }
             if (action.payload.elementId.destination) {
-                const codeElements = htmlSegment(documentToString(state.buffers[action.payload.buffer].document), false);
+                const codeElements = htmlSegmentMemoize({html: documentToString(state.buffers[action.payload.buffer].document)});
                 codeElements.splice(action.payload.elementId.destination.index, 0, elementToCreate);
                 const string = parseHTMLToString(codeElements);
                 state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
