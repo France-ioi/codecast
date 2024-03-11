@@ -182,7 +182,9 @@ function* showDifferentViews() {
     if (levelGridInfos && 'showViews' in levelGridInfos) {
         return levelGridInfos.showViews;
     }
-    if (context?.showViews) {
+
+    const levels = yield* appSelect(state => state.platform.levels);
+    if (context?.showViews && 1 >= Object.keys(levels).length) {
         return context.showViews();
     }
 
