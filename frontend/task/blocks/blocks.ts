@@ -105,7 +105,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                 let blockName = blockList[iBlock];
                 let code = contextStrings.code[blockName];
-                if (typeof (code) == "undefined") {
+                if ('undefined' === typeof code) {
                     code = blockName;
                 }
                 let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];

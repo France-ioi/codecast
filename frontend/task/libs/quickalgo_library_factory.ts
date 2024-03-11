@@ -65,8 +65,8 @@ export function* createQuickalgoLibrary() {
         yield* put(taskSetLevelGridInfos(levelGridInfos as unknown as QuickalgoLibraryInfos));
     }
 
+    const platform = selectActiveBufferPlatform(state);
     if (!state.options.preload) {
-        const platform = selectActiveBufferPlatform(state);
         yield* call(importPlatformModules, platform, window.modulesPath);
 
         if (levelGridInfos.importModules) {
@@ -77,6 +77,7 @@ export function* createQuickalgoLibrary() {
 
     // Reset fully local strings when creating a new context to avoid keeping strings from an other language
     window.languageStrings = {};
+    window.currentPlatform = platform;
 
     let contextLib;
     if (levelGridInfos.context) {
