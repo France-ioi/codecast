@@ -76,8 +76,15 @@ export abstract class QuickAlgoLibrary {
 
     // Set the localLanguageStrings for this context
     setLocalLanguageStrings(localLanguageStrings) {
-        log.getLogger('libraries').debug('set local language strings', localLanguageStrings);
+        log.getLogger('libraries').debug('set local language strings', localLanguageStrings, this.infos.blocksLanguage, window.currentPlatform);
         const stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
+
+        if (this.infos?.blocksLanguage) {
+            localLanguageStrings = this.mutateBlockStrings(
+                localLanguageStrings,
+                this.infos?.blocksLanguage
+            );
+        }
 
         if (typeof window.languageStrings != "object") {
             console.error("window.languageStrings is not an object");
@@ -92,6 +99,37 @@ export abstract class QuickAlgoLibrary {
 
         return this.strings;
     };
+
+    mutateBlockStrings(strings, blocksLanguage) {
+        let src = window.stringsLanguage;
+        if (typeof blocksLanguage == 'string') {
+            src = blocksLanguage;
+        } else if (typeof blocksLanguage == 'object' && window.currentPlatform in blocksLanguage) {
+            src = blocksLanguage[window.currentPlatform];
+        }
+        const dst = window.stringsLanguage;
+
+        if (src === dst || !strings[src]?.code) {
+            return strings;
+        }
+
+        for (let k in strings[dst].description) {
+            if (k in strings[src]?.code) {
+                strings[dst].description[k] = strings[dst].description[k].replace(
+                    new RegExp('%' + k, 'g'),
+                    strings[src].code[k],
+                );
+                strings[dst].description[k] = strings[dst].description[k].replace(
+                    new RegExp(strings[dst].code[k] + '\\(', 'g'),
+                    strings[src].code[k] + '(',
+                );
+            }
+        }
+
+        strings[dst].code = {...strings[src].code};
+
+        return strings;
+    }
 
     // Import more language strings
     importLanguageStrings(source, dest) {
