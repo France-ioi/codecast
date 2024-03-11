@@ -22,48 +22,16 @@ export default {
         },
         // documentationOpenByDefault: true,
         // hiddenTests: true,
-        // includeBlocks: {
-        //     groupByCategory: {
-        //         easy: false,
-        //         medium: true,
-        //         hard: true
-        //     },
-        //     generatedBlocks: {
-        //         robot: {
-        //             basic:["pushObject", "forward", "right", "readNumber", "col"],
-        //             easy:["pushObject", "forward", "right", "readNumber", "col"],
-        //             medium:["pushObject", "forward", "right", "left", "readNumber", "col", "row"],
-        //             hard: ["pushObject", "forward", "backwards", "right", "left", "readNumber", "col", "row"],
-        //         }
-        //     },
-        //     standardBlocks: {
-        //         includeAll: false,
-        //         wholeCategories: {
-        //             easy: [],
-        //             medium: [],
-        //             hard:["variables"]
-        //         },
-        //         singleBlocks: {
-        //             shared:["controls_whileUntil", "logic_compare"],
-        //             easy:["controls_repeat"],
-        //             medium: ["controls_repeat", "math_number", "math_arithmetic"],
-        //             hard: ["controls_repeat_ext", "math_number", "math_arithmetic"]
-        //         }
-        //     },
-        //     variables : {
-        //         easy: ["colonneCaisse"],
-        //         medium: ["ligneCaisse", "colonneCaisse"]
-        //     }
-        // },
-        // intro: {
-        //     default: true,
-        //     more: {
-        //         medium: [ { type: "helpConcept", concepts: ["extra_function"] } ],
-        //         hard: [ { type: "helpConcept", concepts: ["extra_function"] } ]
-        //     }
-        // },
-        // forceNextTaskAfter: 2,
-        // defaultLevel: 'easy',
+        includeBlocks: {
+            groupByCategory: true,
+            generatedBlocks: {
+                html: ["font-size", "text-align", "selector_id", "selector_class"],
+            },
+            standardBlocks: {
+                includeAll: false,
+                singleBlocks: ["text", "controls_whileUntil", "logic_compare", "controls_repeat", "math_number", "math_arithmetic"],
+            },
+        },
         startingExample: {
             html: `<body>
     <div>

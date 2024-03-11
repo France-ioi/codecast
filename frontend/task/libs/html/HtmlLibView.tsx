@@ -1,19 +1,33 @@
-import React, {useRef} from "react";
+import React from "react";
 import {useAppSelector} from '../../../hooks';
-import {HtmlLibState} from './html_lib';
+import {HtmlLib, HtmlLibState} from './html_lib';
 import {selectAnswer} from '../../selectors';
-import {documentToString} from '../../../buffers/document';
+import {BlockDocument} from '../../../buffers/buffer_types';
+import {quickAlgoLibraries} from '../quick_algo_libraries_model';
 
 export function HtmlLibView() {
     const taskState: HtmlLibState = useAppSelector(state => state.task.state?.html);
+    const context = quickAlgoLibraries.getContext(null, 'main') as HtmlLib;
     const answer = useAppSelector(selectAnswer);
-    console.log('new answer', answer);
+    console.log('new answer', answer, context.html);
 
-    if (!answer) {
+    if (!answer || !context) {
         return null;
     }
 
-    const html = documentToString(answer.document);
+    // const html = documentToString(answer.document);
+
+    const css = context.html.convertBlocksIntoCss(answer.document as BlockDocument);
+    const html = `<html>
+<head>
+<style>
+${css}
+</style>
+</head>
+<body>
+<div class="classname">test</div>
+</body>
+</html>`;
 
     return (
         <div className="html-lib-container" style={{width: 'calc(100% - 24px)', height: '100%', margin: '0 10px', border: 'solid 2px black'}}>

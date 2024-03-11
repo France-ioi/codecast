@@ -302,14 +302,14 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
     return blocksUsed;
 }
 
-const getBlocksFromXml = function (xmlText) {
+export function getBlocksFromXml(xmlText: string) {
     const xml = window.Blockly.Xml.textToDom(xmlText)
     const tmpOptions = new window.Blockly.Options({});
     const tmpWorkspace = new window.Blockly.Workspace(tmpOptions);
     window.Blockly.Xml.domToWorkspace(xml, tmpWorkspace);
 
     return tmpWorkspace.getAllBlocks();
-};
+}
 
 export const blocklyFindLimited = (blocks, limitedUses, context) => {
     if (!blocks || !limitedUses) {
