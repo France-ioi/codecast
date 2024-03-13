@@ -2,8 +2,9 @@ import React from "react";
 import {useAppSelector} from '../../../hooks';
 import {HtmlLib, HtmlLibState} from './html_lib';
 import {selectAnswer} from '../../selectors';
-import {BlockDocument} from '../../../buffers/buffer_types';
+import {BlockDocument, BufferType} from '../../../buffers/buffer_types';
 import {quickAlgoLibraries} from '../quick_algo_libraries_model';
+import {documentToString} from '../../../buffers/document';
 
 export function HtmlLibView() {
     const taskState: HtmlLibState = useAppSelector(state => state.task.state?.html);
@@ -15,10 +16,12 @@ export function HtmlLibView() {
         return null;
     }
 
-    // const html = documentToString(answer.document);
+    let css = '';
+    let html = '';
+    if (answer.document.type === BufferType.Block) {
+        css = context.html.convertBlocksIntoCss(answer.document as BlockDocument);
 
-    const css = context.html.convertBlocksIntoCss(answer.document as BlockDocument);
-    const html = `<html>
+        html = `<html>
 <head>
 <style>
 ${css}
@@ -28,6 +31,9 @@ ${css}
 <div class="classname">test</div>
 </body>
 </html>`;
+    } else {
+        html = documentToString(answer.document);
+    }
 
     return (
         <div className="html-lib-container" style={{width: 'calc(100% - 24px)', height: '100%', margin: '0 10px', border: 'solid 2px black'}}>

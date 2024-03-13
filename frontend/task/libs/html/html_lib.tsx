@@ -9,14 +9,12 @@ import {BlocklyBlock} from '../../../stepper/js/blockly_types';
 const localLanguageStrings = {
     fr: {
         categories: {
-            css_attributes: "Attributs CSS",
-            css_selectors: 'Sélecteurs CSS',
+            css: "CSS",
         },
         label: {
-            "font-size": "définir la taille de la police",
-            "text-align": "définir l'alignement du texte",
-            "selector_id": "pour toute balise ayant l'ID",
-            "selector_class": "pour toute balise ayant la classe",
+            "font-size": "font-size:",
+            "text-align": "text-align:",
+            "css_selector": "sur le sélecteur",
         },
         options: {
             left: 'gauche',
@@ -30,9 +28,17 @@ const localLanguageStrings = {
 export interface HtmlLibState {
 }
 
+interface HtmlCustomBlock {
+    name: string,
+    params: string[],
+    blocklyJson?: any,
+    blocklyInit?: () => void,
+    handler: (block: BlocklyBlock) => string,
+}
+
 export class HtmlLib extends QuickAlgoLibrary {
     html: any;
-    htmlCustomBlocks: {[category: string]: {name: string, params: string[], blocklyJson?: any, handler: (block: BlocklyBlock) => string}[]};
+    htmlCustomBlocks: {[category: string]: HtmlCustomBlock[]};
     innerState: HtmlLibState;
 
     constructor (display, infos) {
@@ -41,12 +47,64 @@ export class HtmlLib extends QuickAlgoLibrary {
         this.setLocalLanguageStrings(localLanguageStrings);
 
         this.htmlCustomBlocks = {
-            css_attributes: [
+            css: [
+                {
+                    name: "css_selector",
+                    params: ['String'],
+                    blocklyInit: function () {
+                        this.setColour(290);
+                        this.appendValueInput("SELECTOR").appendField("sur le sélecteur");
+                        this.appendStatementInput("STYLE").appendField("style");
+                        this.setPreviousStatement(false);
+                        this.setNextStatement(true);
+                    },
+                    handler(block: BlocklyBlock) {
+                        const selectorBlock = block.getInputTargetBlock('SELECTOR');
+                        if (!selectorBlock) {
+                            return '';
+                        }
+
+                        const selectorText = this.extractBlockCss(selectorBlock);
+
+                        const styleBlock = block.getInputTargetBlock('STYLE');
+
+                        const styleText = this.extractBlockCss(styleBlock);
+
+                        return `${selectorText} {
+${styleText}
+}`;
+                    },
+                },
+                {
+                    name: "partial_selector",
+                    params: ['String'],
+                    blocklyJson: {
+                        colour: 290,
+                        args0: [
+                            {name: "SELECTOR", type: "field_input"},
+                            {name: "NEXT", type: "input_value"},
+                        ],
+                        output: true,
+                        message0: "%1 %2"
+                    },
+                    handler(block: BlocklyBlock) {
+                        const partialSelectorValue = block.getFieldValue('SELECTOR');
+                        const nextBlock = block.getInputTargetBlock('NEXT');
+
+                        if (nextBlock) {
+                            const nextStyleText = this.extractBlockCss(nextBlock);
+
+                            return `${partialSelectorValue}${nextStyleText}`;
+                        }
+
+                        return partialSelectorValue;
+                    },
+                },
                 {
                     name: "font-size",
                     params: ['Number'],
                     handler(block: BlocklyBlock) {
-                        return `font-size: ${block.getInputTargetBlock('PARAM_0').getFieldValue('NUM')}px;`;
+                        return `font-size: ${block.getInputTargetBlock('PARAM_0')?.getFieldValue('NUM')}px;`;
                     },
                 },
                 {
@@ -57,51 +115,14 @@ export class HtmlLib extends QuickAlgoLibrary {
                             "type": "field_dropdown",
                             "name": "PARAM_0",
                             "options": [
-                                [localLanguageStrings[window.stringsLanguage].options.left, "left"],
-                                [localLanguageStrings[window.stringsLanguage].options.center, "center"],
-                                [localLanguageStrings[window.stringsLanguage].options.right, "right"],
+                                ['left', 'left'],
+                                ['center', 'center'],
+                                ['right', 'right'],
                             ],
                         }],
                     },
                     handler(block: BlocklyBlock) {
                         return `text-align: ${block.getFieldValue('PARAM_0')};`;
-                    },
-                },
-            ],
-            css_selectors: [
-                {
-                    name: "selector_id",
-                    params: ['String'],
-                    blocklyJson: {
-                        nextStatement: 0,
-                    },
-                    handler(block: BlocklyBlock) {
-                        const blockId = block.getInputTargetBlock('PARAM_0').getFieldValue('TEXT');
-                        if (!blockId) {
-                            return '';
-                        }
-
-                        return `#${blockId} {
-${this.extractBlockCss(block)}
-}`;
-                    },
-                },
-                {
-                    name: "selector_class",
-                    params: ['String'],
-                    blocklyJson: {
-                        nextStatement: 0,
-                    },
-                    handler(block: BlocklyBlock) {
-                        const blockClass = block.getInputTargetBlock('PARAM_0').getFieldValue('TEXT');
-                        console.log('block class', blockClass);
-                        if (!blockClass) {
-                            return '';
-                        }
-
-                        return `.${blockClass} {
-${this.extractBlockCss(block)}
-}`;
                     },
                 },
             ],
@@ -127,11 +148,11 @@ ${this.extractBlockCss(block)}
     extractBlockCss(blocklyBlock: BlocklyBlock) {
         let currentBlock = blocklyBlock;
         const cssParts = [];
-        while (currentBlock.getNextBlock()) {
-            currentBlock = currentBlock.getNextBlock();
+        while (currentBlock) {
             const fieldType = currentBlock.type;
             const css = this.html[fieldType](currentBlock);
             cssParts.push(css);
+            currentBlock = currentBlock.getNextBlock();
         }
 
         return cssParts.join("\n");
@@ -168,8 +189,7 @@ ${this.extractBlockCss(block)}
     provideBlocklyColours() {
         return {
             categories: {
-                css_attributes: 30,
-                css_selectors: 290,
+                css: 30,
             },
         };
     }
@@ -178,7 +198,7 @@ ${this.extractBlockCss(block)}
         const blocks = getBlocksFromXml(document.content.blockly);
         const cssFragments = [];
         for (let block of blocks) {
-            const customBlock = this.htmlCustomBlocks['css_selectors'].find(customBlock => customBlock.name === block.type);
+            const customBlock = this.htmlCustomBlocks['css'].find(customBlock => customBlock.name === block.type);
             if (customBlock) {
                 const cssFragment = this.html[customBlock.name](block);
                 cssFragments.push(cssFragment);

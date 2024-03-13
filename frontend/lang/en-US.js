@@ -151,6 +151,7 @@ module.exports = {
     PLATFORM_C: "C",
     PLATFORM_CPP: "C++",
     PLATFORM_JAVA: "Java",
+    PLATFORM_HTML: "HTML",
     PLATFORM_RELOAD: "We can't display the language {platform} in the current mode, please reload the page to update the display.",
     PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 
