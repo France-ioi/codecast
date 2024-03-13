@@ -51,12 +51,14 @@ export class HtmlLib extends QuickAlgoLibrary {
                 {
                     name: "css_selector",
                     params: ['String'],
-                    blocklyInit: function () {
-                        this.setColour(290);
-                        this.appendValueInput("SELECTOR").appendField("sur le sélecteur");
-                        this.appendStatementInput("STYLE").appendField("style");
-                        this.setPreviousStatement(false);
-                        this.setNextStatement(true);
+                    blocklyInit() {
+                        return function () {
+                            this.setColour(290);
+                            this.appendValueInput("SELECTOR").appendField("sur le sélecteur");
+                            this.appendStatementInput("STYLE").appendField("style");
+                            this.setPreviousStatement(false);
+                            this.setNextStatement(true);
+                        };
                     },
                     handler(block: BlocklyBlock) {
                         const selectorBlock = block.getInputTargetBlock('SELECTOR');
