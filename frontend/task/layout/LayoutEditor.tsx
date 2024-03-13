@@ -87,7 +87,6 @@ export function LayoutEditor(props: LayoutEditorProps) {
     );
 
     const onDragEnd = (result: DropResult) => {
-        console.log('drag end', result);
         if (result.source && result.destination) {
             if (result.destination.droppableId === 'toolbox-dropzone' && result.source.droppableId !== 'toolbox-dropzone') {
                 dispatch(visualEditorElementDelete({buffer: activeBufferName, elementId: result}))

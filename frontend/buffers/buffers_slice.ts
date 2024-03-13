@@ -32,7 +32,9 @@ function initBufferIfNeeded(state: BuffersState, buffer: string, type: BufferTyp
     if (!(buffer in state.buffers)) {
         state.buffers[buffer] = createEmptyBufferState(type);
     }
-    state.buffers[buffer].type = type;
+    if (type) {
+        state.buffers[buffer].type = type;
+    }
 }
 
 function generateNewId(elements: {nextId: number, elements: {[id: number]: unknown}}) {

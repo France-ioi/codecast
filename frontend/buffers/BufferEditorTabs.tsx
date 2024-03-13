@@ -10,6 +10,7 @@ import {SubmissionResultsSelector} from '../submission/SubmissionResultsSelector
 import {faArrowLeft} from '@fortawesome/free-solid-svg-icons/faArrowLeft';
 import {faArrowRight} from '@fortawesome/free-solid-svg-icons/faArrowRight';
 import debounce from 'lodash.debounce';
+import {CodecastPlatform} from '../stepper/codecast_platform';
 
 export interface BufferEditorTabsProps {
 }
@@ -17,6 +18,7 @@ export interface BufferEditorTabsProps {
 export function BufferEditorTabs(props: BufferEditorTabsProps) {
     const sourceBuffers = useAppSelector(selectSourceBuffers);
     const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
+    const platform = useAppSelector(state => state.options.platform);
     const dispatch = useDispatch();
 
     const createNewTab = () => {
@@ -70,6 +72,8 @@ export function BufferEditorTabs(props: BufferEditorTabsProps) {
         return null;
     }
 
+    const readOnly = CodecastPlatform.Html === platform;
+
     return (
         <div className="layout-editor-tabs">
             <div className="layout-editor-tabs-section">
@@ -94,6 +98,7 @@ export function BufferEditorTabs(props: BufferEditorTabsProps) {
                             key={bufferName}
                             buffer={buffer}
                             bufferName={bufferName}
+                            readOnly={readOnly}
                         />
                     )}
                 </div>
@@ -109,14 +114,14 @@ export function BufferEditorTabs(props: BufferEditorTabsProps) {
                     </button>
                 </div>}
             </div>
-            <div className="layout-editor-tabs-end">
+            {!readOnly && <div className="layout-editor-tabs-end">
                 <div className="layout-editor-tabs-option">
                     <SubmissionResultsSelector/>
                 </div>
                 <div className="layout-editor-tabs-option" onClick={createNewTab}>
                     <FontAwesomeIcon icon={faPlus}/>
                 </div>
-            </div>
+            </div>}
         </div>
     );
 }

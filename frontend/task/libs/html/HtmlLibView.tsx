@@ -9,31 +9,17 @@ import {documentToString} from '../../../buffers/document';
 export function HtmlLibView() {
     const taskState: HtmlLibState = useAppSelector(state => state.task.state?.html);
     const context = quickAlgoLibraries.getContext(null, 'main') as HtmlLib;
-    const answer = useAppSelector(selectAnswer);
-    console.log('new answer', answer, context.html);
-
-    if (!answer || !context) {
+    const buffers = useAppSelector(state => state.buffers.buffers);
+    if (!context) {
         return null;
     }
 
-    let css = '';
-    let html = '';
-    if (answer.document.type === BufferType.Block) {
-        css = context.html.convertBlocksIntoCss(answer.document as BlockDocument);
+    let html = 'source:0' in buffers ? documentToString(buffers['source:0'].document) : '';
+    const css = 'source:1' in buffers ? context.html.convertBlocksIntoCss(buffers['source:1'].document) : '';
 
-        html = `<html>
-<head>
-<style>
+    html += `<style>
 ${css}
-</style>
-</head>
-<body>
-<div class="classname">test</div>
-</body>
-</html>`;
-    } else {
-        html = documentToString(answer.document);
-    }
+</style>`;
 
     return (
         <div className="html-lib-container" style={{width: 'calc(100% - 24px)', height: '100%', margin: '0 10px', border: 'solid 2px black'}}>

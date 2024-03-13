@@ -32,6 +32,7 @@ interface HtmlCustomBlock {
     name: string,
     params: string[],
     blocklyJson?: any,
+    blocklyXml?: string,
     blocklyInit?: () => void,
     handler: (block: BlocklyBlock) => string,
 }
@@ -89,6 +90,7 @@ ${styleText}
                         output: true,
                         message0: "%1 %2"
                     },
+                    blocklyXml: '<block type="partial_selector"><field name="SELECTOR"></field></block>',
                     handler(block: BlocklyBlock) {
                         const partialSelectorValue = block.getFieldValue('SELECTOR');
                         const nextBlock = block.getInputTargetBlock('NEXT');
@@ -105,6 +107,13 @@ ${styleText}
                 {
                     name: "font-size",
                     params: ['Number'],
+                    blocklyXml: "<block type='font-size'>" +
+                            "  <value name='PARAM_0'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>0</field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        "</block>",
                     handler(block: BlocklyBlock) {
                         return `font-size: ${block.getInputTargetBlock('PARAM_0')?.getFieldValue('NUM')}px;`;
                     },
@@ -197,6 +206,10 @@ ${styleText}
     }
 
     convertBlocksIntoCss(document: BlockDocument) {
+        if (!document?.content?.blockly) {
+            return '';
+        }
+
         const blocks = getBlocksFromXml(document.content.blockly);
         const cssFragments = [];
         for (let block of blocks) {

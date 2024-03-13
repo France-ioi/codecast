@@ -16,6 +16,7 @@ import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
 export interface BufferEditorTabProps {
     bufferName: string,
     buffer: BufferState,
+    readOnly?: boolean,
 }
 
 export function BufferEditorTab(props: BufferEditorTabProps) {
@@ -60,7 +61,7 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
         dispatch(bufferRemove(bufferName));
     };
 
-    const closable = Object.keys(sourceBuffers).length > 1;
+    const closable = Object.keys(sourceBuffers).length > 1 && !props.readOnly;
 
     const popoverStyle = {
         backgroundColor: "#dddddd",

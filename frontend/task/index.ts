@@ -21,7 +21,6 @@ import taskSlice, {
     currentTaskChange,
     currentTaskChangePredefined,
     recordingEnabledChange,
-    selectCurrentTestData,
     TaskActionTypes,
     taskAddInput,
     taskChangeSoundEnabled,
@@ -62,7 +61,7 @@ import {
     stepperExecutionError,
     stepperExecutionSuccess
 } from "../stepper/actionTypes";
-import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
+import {StepperStatus, StepperStepMode} from "../stepper";
 import {makeContext, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
@@ -71,22 +70,26 @@ import {platformAnswerGraded, platformAnswerLoaded, taskGradeAnswerEvent,} from 
 import {
     getDefaultTaskLevel,
     platformSaveAnswer,
-    platformSetTaskLevels, platformTaskParamsUpdated,
-    platformTokenUpdated, platformUnlockLevel,
+    platformSetTaskLevels,
+    platformTaskParamsUpdated,
+    platformTokenUpdated,
+    platformUnlockLevel,
     TaskLevelName,
     taskLevelsList
 } from "./platform/platform_slice";
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
-import {createEmptyBufferState, isEmptyDocument} from "../buffers/document";
+import {isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {convertServerTaskToCodecastFormat, getTaskFromId} from "../submission/task_platform";
 import {
     submissionChangePaneOpen,
-    submissionChangePlatformName, submissionCloseCurrentSubmission, SubmissionExecutionScope,
+    submissionChangePlatformName,
+    submissionCloseCurrentSubmission,
+    SubmissionExecutionScope,
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
 import {selectTaskTests} from '../submission/submission_selectors';
@@ -103,7 +106,7 @@ import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
-import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmission} from '../submission/submission';
+import {isServerSubmission, selectCurrentServerSubmission} from '../submission/submission';
 import {
     bufferDissociateFromSubmission,
     bufferEdit,
@@ -112,11 +115,13 @@ import {
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
-import {callPlatformLog, callPlatformValidate, submissionCancel} from '../submission/submission_actions';
+import {callPlatformLog, submissionCancel} from '../submission/submission_actions';
 import {createSourceBufferFromDocument} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {Screen} from '../common/screens';
 import {DeferredPromise} from '../utils/app';
+import {CodecastPlatform} from '../stepper/codecast_platform';
+import {importPlatformModules} from './libs/import_modules';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -398,6 +403,12 @@ function* taskLoadSaga(app: App, action) {
     if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state)?.document)) {
         let newDocument = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
         yield* call(createSourceBufferFromDocument, newDocument);
+        if ('html' === state.options.platform) {
+            yield* call(importPlatformModules, CodecastPlatform.Blockly, window.modulesPath);
+            yield* call(loadBlocklyHelperSaga, context);
+            let newDocument = getDefaultSourceCode(CodecastPlatform.Blockly, state.environment, state.task.currentTask);
+            yield* call(createSourceBufferFromDocument, newDocument, {fileName: 'CSS', platform: CodecastPlatform.Blockly});
+        }
     }
 
     yield* call(taskLevelLoadedSaga);

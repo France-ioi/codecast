@@ -137,12 +137,12 @@ export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
 //
 // }
 
-export function* createSourceBufferFromDocument(document: Document) {
+export function* createSourceBufferFromDocument(document: Document, options?: {fileName?: string, platform?: CodecastPlatform} ) {
     const state: AppStore = yield* appSelect();
 
     const newBufferName = yield* call(getNewBufferName);
-    const platform = state.options.platform;
-    const newFileName = getNewFileName(state, platform);
+    const platform = options?.platform ?? state.options.platform;
+    const newFileName = options?.fileName ?? getNewFileName(state, platform);
 
     const newBuffer: BufferStateParameters = {
         type: document.type,
