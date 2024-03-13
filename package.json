@@ -84,7 +84,6 @@
     "randomstring": "^1.3.0",
     "rc-slider": "^9.7.5",
     "react": "^17.0.2",
-    "react-ace": "^9.4.0",
     "react-beautiful-dnd": "^13.1.0",
     "react-bootstrap": "^2.7.4",
     "react-clickdrag": "^4.0.0",

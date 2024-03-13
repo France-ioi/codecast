@@ -26,8 +26,7 @@ import {useAppSelector} from '../hooks';
 import {getSourceHighlightFromStateSelector} from '../stepper';
 import {createEmptyBufferState, documentToString} from './document';
 import {VisualHTMLEditor} from './html/VisualHTMLEditor';
-import {EditorType, htmlSegment, htmlSegmentMemoize} from './html/html_editor_config';
-import {TextualHTMLEditor} from './html/TextualHTMLEditor';
+import {EditorType, htmlSegmentMemoize} from './html/html_editor_config';
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -92,13 +91,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         const html = documentToString(bufferState.document);
         const codeElements = htmlSegmentMemoize({html});
 
-        if (EditorType.Textual === bufferState.htmlMode) {
-            return <TextualHTMLEditor
-                key={bufferName}
-                name={bufferName}
-                elements={html}
-            />
-        } else {
+        if (EditorType.Textual !== bufferState.htmlMode) {
             return <VisualHTMLEditor
                 key={bufferName}
                 elements={codeElements}
