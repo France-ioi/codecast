@@ -377,9 +377,6 @@ export default class BlocklyRunner extends AbstractRunner {
             }
             let iInterpreter = this.curNode;
             this.context.setCurNode(iInterpreter);
-            if (this.context.infos.checkEndEveryTurn) {
-                this.context.infos.checkEndCondition(this.context, false);
-            }
             let interpreter = this.interpreters[iInterpreter];
             let wasPaused = interpreter.paused_;
             while(!this.context.programEnded[iInterpreter]) {
