@@ -40,7 +40,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
     const getVariableValue = () => {
         const isScalar = !Array.isArray(variable.variables);
 
-        if (((isParentOpen && props.recursionLevel > 10) || (!isParentOpen && props.recursionLevel > 2)) && !isScalar) {
+        if (((isParentOpen && props.recursionLevel > 10) || (!isParentOpen && props.recursionLevel > 2)) && (!isScalar || String(variable.value).length > 4)) {
             return <span>...</span>;
         }
 
@@ -103,7 +103,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
                     {isCollapsed ? <span className="value-count">{`(${variable.variables.length})`}</span> : ''}
                     {elementsToDisplay > 0 && <span>&nbsp;{renderedElements}</span>}
                 </span>
-            )
+            );
         }
 
         const hasPreviousValue = null !== variable.previousValue && undefined !== variable.previousValue && variable.value !== variable.previousValue;
