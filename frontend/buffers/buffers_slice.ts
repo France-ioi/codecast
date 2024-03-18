@@ -190,6 +190,12 @@ export const buffersSlice = createSlice({
                 state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
             }
         },
+        visualEditorElementEdit(state, action: PayloadAction<{buffer: string, elementIndex: number, codeSegment: CodeSegment}>) {
+            const codeElements = htmlSegmentMemoize({html: documentToString(state.buffers[action.payload.buffer].document)});
+            codeElements[action.payload.elementIndex] = action.payload.codeSegment;
+            const string = parseHTMLToString(codeElements);
+            state.buffers[action.payload.buffer].document = TextBufferHandler.documentFromString(string);
+        },
         switchEditorMode(state, action: PayloadAction<{buffer: string}>) {
             const bufferState = state.buffers[action.payload.buffer];
 
@@ -223,6 +229,7 @@ export const {
     visualEditorElementMove,
     visualEditorElementDelete,
     visualEditorElementCreate,
+    visualEditorElementEdit,
     switchEditorMode,
 } = buffersSlice.actions;
 

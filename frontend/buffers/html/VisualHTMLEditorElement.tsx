@@ -1,27 +1,68 @@
-import React from "react";
+import React, {useState} from "react";
 import {Draggable} from "react-beautiful-dnd"
-import {getDragStyle} from './html_editor_config';
+import {CodeSegment, getCodeSegmentClasses, getDragStyle, getDisplayedTag, TagType} from './html_editor_config';
+import {OverlayTrigger, Popover} from 'react-bootstrap';
+import {VisualHTMLEditorElementAttributes} from './VisualHTMLEditorElementAttributes';
 
 interface ElementProps {
-    className: string
-    unlocked: boolean
-    childrenElements: string
-    id: string
-    index: number
+    codeSegment: CodeSegment,
 }
 
 export function VisualHTMLEditorElement(props: ElementProps) {
+    const [showEdit, setShowEdit] = useState(false);
+
+    const popoverStyle = {
+        backgroundColor: "#dddddd",
+        '--bs-popover-bg': '#dddddd'
+    } as React.CSSProperties;
+
+    const codeSegment = props.codeSegment;
+
+    const className = getCodeSegmentClasses(codeSegment);
+    const tag = getDisplayedTag(codeSegment);
+
     return (
-        <Draggable key={props.id} draggableId={props.id} index={props.index} isDragDisabled={!props.unlocked}>
+        <Draggable key={codeSegment.id} draggableId={codeSegment.id} index={codeSegment.index} isDragDisabled={!codeSegment.unlocked}>
             {(provided, snapshot) => (
                 <span
-                    className={props.className}
-                    ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                     style={getDragStyle(provided.draggableProps.style, snapshot)}
+                    ref={provided.innerRef}
                 >
-                    {props.childrenElements}
+                    {TagType.Opening === codeSegment.type ?
+                        <OverlayTrigger
+                            placement="bottom"
+                            trigger="click"
+                            show={showEdit}
+                            onToggle={setShowEdit}
+                            overlay={
+                                <Popover style={popoverStyle}>
+                                    <VisualHTMLEditorElementAttributes
+                                        codeSegment={codeSegment}
+                                        onClose={() => setShowEdit(false)}
+                                    />
+                                </Popover>
+                            }
+                            rootClose
+                        >
+                            {({ref, ...triggerHandler}) => (
+                                <span
+                                    ref={ref}
+                                    className={className}
+                                    {...triggerHandler}
+                                >
+                                    {tag}
+                                </span>
+                            )}
+                        </OverlayTrigger>
+                        :
+                        <span
+                            className={className}
+                        >
+                            {tag}
+                        </span>
+                    }
                 </span>
             )}
         </Draggable>

@@ -273,3 +273,30 @@
 label[for="editor-mode-toggle"] {
   margin-left: 5px;
 }
+
+.html-tag-attributes {
+  padding: 10px;
+  border-radius: 8px;
+  width: 255px;
+}
+
+.html-tag-attribute {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  .html-tag-attribute-remove {
+    cursor: pointer;
+    padding: 5px;
+  }
+}
+
+.html-tag-new-attribute {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  > :first-child {
+    flex: 0 1;
+  }
+}

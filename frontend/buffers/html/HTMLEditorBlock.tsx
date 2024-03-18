@@ -26,8 +26,6 @@ export function HTMLEditorBlock(props: ToolboxCategoryBlocks) {
     const closingTag = '</' + props.tag + '>'
     let prevCrt: Node
 
-    console.log('render block', props);
-
     // TODO Change behavior and fix height inconsistencies
     // useEffect(() => {
     //     (function () {
@@ -44,7 +42,6 @@ export function HTMLEditorBlock(props: ToolboxCategoryBlocks) {
     // }, [cat, props.id])
 
     function makeToolboxDraggable(tagProp: string, type: TagType, index: number, paired: boolean) {
-        console.log('editor mode', editorMode);
         let classesToAdd = 'toolbox-block-tag '
         if (!paired) classesToAdd += 'tag-self-closing '
         else classesToAdd += type === TagType.Opening ? 'tag-open ' : 'tag-close '

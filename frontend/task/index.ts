@@ -402,12 +402,14 @@ function* taskLoadSaga(app: App, action) {
     const sourceBuffers = selectSourceBuffers(state);
     if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state)?.document)) {
         let newDocument = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
-        yield* call(createSourceBufferFromDocument, newDocument);
         if ('html' === state.options.platform) {
             yield* call(importPlatformModules, CodecastPlatform.Blockly, window.modulesPath);
             yield* call(loadBlocklyHelperSaga, context);
-            let newDocument = getDefaultSourceCode(CodecastPlatform.Blockly, state.environment, state.task.currentTask);
-            yield* call(createSourceBufferFromDocument, newDocument, {fileName: 'CSS', platform: CodecastPlatform.Blockly});
+            yield* call(createSourceBufferFromDocument, newDocument);
+            const blocklyDocument = getDefaultSourceCode(CodecastPlatform.Blockly, state.environment, state.task.currentTask);
+            yield* call(createSourceBufferFromDocument, blocklyDocument, {fileName: 'CSS', platform: CodecastPlatform.Blockly});
+        } else {
+            yield* call(createSourceBufferFromDocument, newDocument);
         }
     }
 

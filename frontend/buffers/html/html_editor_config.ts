@@ -207,20 +207,46 @@ export interface CodeSegment {
     id: string,
     type: TagType,
     value: string,
-    unlocked: boolean
-    index?: number
+    unlocked: boolean,
+    index?: number,
+    htmlAttributes?: {[attribute: string]: string},
 }
 
 export type CodeSegments = Array<CodeSegment>
 
-export const makeTag = (tag: CodeSegment) => {
-    let returnTag: string
-    if (tag.type !== TagType.Text) {
-        returnTag = tag.type === TagType.Closing ? `</${tag.value}>` : `<${tag.value}>`
-    } else {
-        returnTag = tag.value + ' '
+export const getDisplayedTag = (tag: CodeSegment) => {
+    if (TagType.Text === tag.type) {
+        return tag.value + ' ';
     }
-    return returnTag
+
+    if (TagType.Closing === tag.type){
+        return `</${tag.value}>`;
+    }
+
+    const attributes = tag.htmlAttributes ? Object.entries(tag.htmlAttributes).map(([name, value]) => {
+        return `${name}="${value}"`;
+    }).join(' ') : null;
+
+    return `<${tag.value}${attributes ? ' ' + attributes : ''}>`;
+}
+
+const selfClosingTags = [
+    'area', 'base', 'br', 'col', 'embed', 'hr',
+    'img', 'link', 'meta', 'param', 'source'
+];
+
+export function getCodeSegmentClasses(element: CodeSegment) {
+    let classes: string = element.unlocked ? 'unlocked ' : 'locked '
+    if (element.type !== 'text') {
+        selfClosingTags.includes(element.value) ?
+            classes += 'self-closing '
+            :
+            classes += element.type === 'opening' ? 'opening ' : 'closing '
+    } else {
+        classes += 'text '
+    }
+
+    return classes;
 }
 
 export function htmlSegment(html: string, unlockAll: boolean) {
@@ -231,11 +257,19 @@ export function htmlSegment(html: string, unlockAll: boolean) {
 
     for (const m of matches) {
         if (m[1] !== undefined) { // 1st bounding group, opening tags
+            const attributeRegex = /([^\s]+)="([^"]*)"/g;
+            let match;
+            const attributes = {};
+            while ((match = attributeRegex.exec(m[1])) !== null) {
+                attributes[match[1]] = match[2];
+            }
+
             editorCode.push({
                 id: uuidv4(),
                 type: TagType.Opening,
-                value: m[1].replace('?', ''),
-                unlocked: m[1].charAt(0) === '?' || unlockAll
+                value: m[1].replace('?', '').split(' ')[0],
+                unlocked: m[1].charAt(0) === '?' || unlockAll,
+                htmlAttributes: attributes,
             })
         } else if (m[2] !== undefined) { // 2nd bounding group, closing tags
             editorCode.push({
@@ -262,25 +296,26 @@ export const htmlSegmentMemoize = memoize((element: {html: string}) => htmlSegme
 const beautifyHTML = require('js-beautify').html
 
 export function parseHTMLToString(elements: CodeSegments | string) {
-    const selfClosingBlock = [
-        'hr', 'br'
-    ]
-    let stringedHTML = ''
-    if (typeof elements !== 'string')
-        elements.map((e, index) => {
+    let stringedHTML = '';
+
+    if (typeof elements !== 'string') {
+        for (let index = 0; index < elements.length; index++) {
+            const e = elements[index];
             if (
                 (e.value === 'p' && e.type === TagType.Closing)
-                ||
-                (selfClosingBlock.includes(e.value) &&  elements[index - 1]?.value !== 'p')
-            ) stringedHTML += '\n'
-            stringedHTML += makeTag(e)
+                || (selfClosingTags.includes(e.value) && elements[index - 1]?.value !== 'p')
+            ) {
+                stringedHTML += '\n';
+            }
+            stringedHTML += getDisplayedTag(e);
             if (
                 e.value === 'p'
-                ||
-                (selfClosingBlock.includes(e.value) && elements[index + 1]?.value !== 'p')
-            ) stringedHTML += '\n'
-            return stringedHTML
-        })
+                || (selfClosingTags.includes(e.value) && elements[index + 1]?.value !== 'p')
+            ) {
+                stringedHTML += '\n';
+            }
+        }
+    }
 
     return beautifyHTML(stringedHTML, {wrap_line_length: 0, preserve_newlines: true})
 }
