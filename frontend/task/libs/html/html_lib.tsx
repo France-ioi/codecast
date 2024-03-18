@@ -161,6 +161,9 @@ ${styleText}
         const cssParts = [];
         while (currentBlock) {
             const fieldType = currentBlock.type;
+            if (!(fieldType in this.html)) {
+                break;
+            }
             const css = this.html[fieldType](currentBlock);
             cssParts.push(css);
             currentBlock = currentBlock.getNextBlock();
