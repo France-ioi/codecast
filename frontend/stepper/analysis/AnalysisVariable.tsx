@@ -38,7 +38,9 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
     const isCollapsed = variable.collapsed;
 
     const getVariableValue = () => {
-        if ((isParentOpen && props.recursionLevel > 10) || (!isParentOpen && props.recursionLevel > 2)) {
+        const isScalar = !Array.isArray(variable.variables);
+
+        if (((isParentOpen && props.recursionLevel > 10) || (!isParentOpen && props.recursionLevel > 2)) && !isScalar) {
             return <span>...</span>;
         }
 
