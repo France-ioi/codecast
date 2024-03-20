@@ -11,7 +11,7 @@ import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
 import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
 import {memoize} from 'proxy-memoize';
 import {ErrorCodeData, testErrorCodeData} from '../submission/TestsPaneListTest';
-import {selectTaskTests} from '../submission/submission_selectors';
+import {selectSubmissionsPaneEnabled, selectTaskTests} from '../submission/submission_selectors';
 import {TaskTest} from './task_types';
 
 const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: TaskTest} => {
@@ -30,6 +30,7 @@ export function TaskTestsSelector() {
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
     const levelGridInfos = useAppSelector(state => state.task.levelGridInfos);
+    const submissionPaneEnabled = useAppSelector(selectSubmissionsPaneEnabled);
 
     const dispatch = useDispatch();
 
@@ -92,13 +93,13 @@ export function TaskTestsSelector() {
 
     return (
         <div className="tests-selector">
-            <div
+            {submissionPaneEnabled && <div
                 className={`tests-selector-tab tests-selector-menu`}
                 onClick={toggleSubmissionPane}>
                 <span>
                     <FontAwesomeIcon icon={faList}/>
                 </span>
-            </div>
+            </div>}
             {Object.entries(tooManyTests ? (null !== currentTestId ? {[currentTestId]: taskTestsByIndex[currentTestId]} : {}) : taskTestsByIndex).map(([index, testData]) =>
                 <div
                     key={index}

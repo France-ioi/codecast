@@ -18,7 +18,7 @@ export const AnalysisStackView = (props: AnalysisStackViewProps): JSX.Element =>
                     {'… +'}{firstVisible}
                 </div>
             }
-            {props.analysis.stackFrames.slice().map((analysisStackFrame, index) => (
+            {props.analysis.stackFrames.slice().reverse().map((analysisStackFrame, index) => (
                 <AnalysisFunctionView
                     key={index}
                     stackFrame={analysisStackFrame}

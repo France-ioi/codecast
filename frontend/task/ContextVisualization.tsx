@@ -16,7 +16,11 @@ import {nl2br} from '../common/utils';
 import {Button} from '@blueprintjs/core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
-import {selectSubmissionsPaneEnabled, selectTaskTests} from '../submission/submission_selectors';
+import {
+    selectSubmissionsPaneEnabled,
+    selectTaskSelectorEnabled,
+    selectTaskTests
+} from '../submission/submission_selectors';
 import {TaskSubmissionServerTestResult} from '../submission/submission_types';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {TestResultVisualization} from '../submission/TestResultVisualization';
@@ -31,7 +35,7 @@ export function ContextVisualization() {
     const {width, height, ref} = useResizeDetector();
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const dispatch = useDispatch();
-    const submissionPaneEnabled = useAppSelector(selectSubmissionsPaneEnabled);
+    const testsSelectorEnabled = useAppSelector(selectTaskSelectorEnabled);
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
@@ -61,7 +65,6 @@ export function ContextVisualization() {
         dispatch(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
     };
 
-    const testsSelectorEnabled = submissionPaneEnabled;
     const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
 
     const submission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
@@ -145,7 +148,7 @@ export function ContextVisualization() {
                 {innerVisualization}
             </div>
 
-            {testsSelectorEnabled && <div><TaskTestsSelector/></div>}
+            {testsSelectorEnabled && <TaskTestsSelector/>}
         </div>
     );
 }

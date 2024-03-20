@@ -180,7 +180,7 @@
   border-bottom: solid 1px #cecece;
 }
 
-.submission-result-compilation-status + .submission-result-subtasks {
+.submission-result-compilation-status + .submission-result-subtasks, .submission-result-test + .submission-result-subtasks {
   border-top: solid 1px #cecece;
 }
 
