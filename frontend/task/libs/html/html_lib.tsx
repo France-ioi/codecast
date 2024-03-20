@@ -96,13 +96,67 @@ ${styleText}
                         const partialSelectorValue = block.getFieldValue('SELECTOR');
                         const nextBlock = block.getInputTargetBlock('NEXT');
 
-                        if (nextBlock) {
-                            const nextStyleText = this.extractBlockCss(nextBlock);
+                        return `${partialSelectorValue}${nextBlock ? this.extractBlockCss(nextBlock) : ''}`;
+                    },
+                },
+                {
+                    name: "class_selector",
+                    params: ['String'],
+                    blocklyJson: {
+                        colour: 290,
+                        args0: [
+                            {name: "SELECTOR", type: "field_input"},
+                            {name: "NEXT", type: "input_value"},
+                        ],
+                        output: true,
+                        message0: "de classe %1 %2"
+                    },
+                    blocklyXml: '<block type="class_selector"><field name="SELECTOR"></field></block>',
+                    handler(block: BlocklyBlock) {
+                        const partialSelectorValue = block.getFieldValue('SELECTOR');
+                        const nextBlock = block.getInputTargetBlock('NEXT');
 
-                            return `${partialSelectorValue}${nextStyleText}`;
-                        }
+                        return `.${partialSelectorValue}${nextBlock ? this.extractBlockCss(nextBlock) : ''}`;
+                    },
+                },
+                {
+                    name: "id_selector",
+                    params: ['String'],
+                    blocklyJson: {
+                        colour: 290,
+                        args0: [
+                            {name: "SELECTOR", type: "field_input"},
+                            {name: "NEXT", type: "input_value"},
+                        ],
+                        output: true,
+                        message0: "d'id %1 %2"
+                    },
+                    blocklyXml: '<block type="id_selector"><field name="SELECTOR"></field></block>',
+                    handler(block: BlocklyBlock) {
+                        const partialSelectorValue = block.getFieldValue('SELECTOR');
+                        const nextBlock = block.getInputTargetBlock('NEXT');
 
-                        return partialSelectorValue;
+                        return `#${partialSelectorValue}${nextBlock ? this.extractBlockCss(nextBlock) : ''}`;
+                    },
+                },
+                {
+                    name: "element_selector",
+                    params: ['String'],
+                    blocklyJson: {
+                        colour: 290,
+                        args0: [
+                            {name: "SELECTOR", type: "field_input"},
+                            {name: "NEXT", type: "input_value"},
+                        ],
+                        output: true,
+                        message0: "d'élément %1 %2"
+                    },
+                    blocklyXml: '<block type="element_selector"><field name="SELECTOR"></field></block>',
+                    handler(block: BlocklyBlock) {
+                        const partialSelectorValue = block.getFieldValue('SELECTOR');
+                        const nextBlock = block.getInputTargetBlock('NEXT');
+
+                        return `${partialSelectorValue}${nextBlock ? this.extractBlockCss(nextBlock) : ''}`;
                     },
                 },
                 {
@@ -274,6 +328,10 @@ ${styleText}
         const blocks = getBlocksFromXml(document.content.blockly);
         const cssFragments = [];
         for (let block of blocks) {
+            if ('css_selector' !== block.type) {
+                continue;
+            }
+
             const customBlock = this.htmlCustomBlocks['css'].find(customBlock => customBlock.name === block.type);
             if (customBlock) {
                 const cssFragment = this.html[customBlock.name](block);
