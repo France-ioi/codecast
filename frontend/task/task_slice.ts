@@ -1,5 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import StringRotationFixture from './fixtures/14_strings_05_rotation';
+import MatrixMultiplicationFixture from './fixtures/matrix_multiplication';
 import TurtleFixture from './fixtures/turtle_05_functions_01';
 import ProcessingFixture from './fixtures/test_processing';
 import BarcodeFixture from './fixtures/test_barcode';
@@ -27,6 +28,7 @@ const availableTasks = {
     direction: QuickPiDirectionFixture,
     processing: ProcessingFixture,
     printer: StringRotationFixture,
+    matrix: MatrixMultiplicationFixture,
     barcode: BarcodeFixture,
     database: DatabaseFixture,
     p5: P5Fixture,
