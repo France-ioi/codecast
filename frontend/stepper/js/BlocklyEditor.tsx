@@ -60,7 +60,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             context.blocklyHelper.loadPrograms();
             context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
             if (0 === context.blocklyHelper.programs[0].blocklyJS.trim().length) {
-                throw new Error("The reloaded answer is empty");
+                // TODO: re-enable this, temporarily disable to allow loading <xml></xml>
+                // throw new Error("The reloaded answer is empty");
             }
         } catch (e) {
             console.error(e);
@@ -180,6 +181,29 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
 
         log.getLogger('editor').debug('[blockly.editor] load blockly editor', blocklyHelper, blocklyHelper.load, props.state?.document);
+
+        // TODO: Remove this, only for demo
+        if ('JavaScript' === props.state.fileName) {
+            if (!blocklyHelper.includeBlocks.generatedBlocksSaved) {
+                blocklyHelper.includeBlocks.generatedBlocksSaved = {...blocklyHelper.includeBlocks.generatedBlocks};
+            }
+            blocklyHelper.includeBlocks.generatedBlocks = {
+                html: blocklyHelper.includeBlocks.generatedBlocksSaved.html.filter(type => {
+                    return 'css' !== type.split('_')[0];
+                }),
+            };
+        }
+        if ('CSS' === props.state.fileName) {
+            if (!blocklyHelper.includeBlocks.generatedBlocksSaved) {
+                blocklyHelper.includeBlocks.generatedBlocksSaved = {...blocklyHelper.includeBlocks.generatedBlocks};
+            }
+            blocklyHelper.includeBlocks.generatedBlocks = {
+                html: blocklyHelper.includeBlocks.generatedBlocksSaved.html.filter(type => {
+                    return 'js' !== type.split('_')[0];
+                }),
+            };
+        }
+        
         blocklyHelper.load(language, true, 1, blocklyOptions);
 
         blocklyHelper.workspace.addChangeListener(onBlocklyEvent);

@@ -74,6 +74,11 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     }
 
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
+    // TODO: Disable this, only for demo
+    // @ts-ignore
+    if (context.html) {
+        blocklyHelper.startingBlock = false;
+    }
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
     // during loadPrograms at the start of the program execution

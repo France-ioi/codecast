@@ -14,21 +14,20 @@ const localLanguageStrings = {
             js: "JS",
         },
         label: {
-            "font-size": "font-size:",
-            "text-align": "text-align:",
-            "background-color": "background-color:",
-            "color": "color:",
-            "width": "width:",
-            "height": "height:",
+            "css_font-size": "font-size:",
+            "css_text-align": "text-align:",
+            "css_background-color": "background-color:",
+            "css_color": "color:",
+            "css_width": "width:",
+            "css_height": "height:",
             "css_selector": "sur le sélecteur",
-            "change_attribute": "changer l'attribut",
         },
         options: {
             left: 'gauche',
             center: 'centré',
             right: 'droite',
         },
-        startingBlockName: "Feuille de style",
+        startingBlockName: "Au chargement de la page",
     },
 };
 
@@ -168,7 +167,7 @@ ${styleText}
                     },
                 },
                 {
-                    name: "font-size",
+                    name: "css_font-size",
                     params: ['Number'],
                     blocklyJson: {
                         args0: [
@@ -176,7 +175,7 @@ ${styleText}
                         ],
                         message0: "font-size: %1 px"
                     },
-                    blocklyXml: "<block type='font-size'>" +
+                    blocklyXml: "<block type='css_font-size'>" +
                         "  <value name='SIZE'>" +
                         "    <shadow type='math_number'>" +
                         "      <field name='NUM'>16</field>" +
@@ -188,7 +187,7 @@ ${styleText}
                     },
                 },
                 {
-                    name: "text-align",
+                    name: "css_text-align",
                     params: ['String'],
                     blocklyJson: {
                         "args0": [{
@@ -206,7 +205,7 @@ ${styleText}
                     },
                 },
                 {
-                    name: "background-color",
+                    name: "css_background-color",
                     params: ['String'],
                     blocklyJson: {
                         "args0": [{
@@ -219,7 +218,7 @@ ${styleText}
                     },
                 },
                 {
-                    name: "color",
+                    name: "css_color",
                     params: ['String'],
                     blocklyJson: {
                         "args0": [{
@@ -232,7 +231,7 @@ ${styleText}
                     },
                 },
                 {
-                    name: "width",
+                    name: "css_width",
                     params: ['Number'],
                     blocklyJson: {
                         args0: [
@@ -240,7 +239,7 @@ ${styleText}
                         ],
                         message0: "width: %1 px"
                     },
-                    blocklyXml: "<block type='width'>" +
+                    blocklyXml: "<block type='css_width'>" +
                         "  <value name='SIZE'>" +
                         "    <shadow type='math_number'>" +
                         "      <field name='NUM'></field>" +
@@ -252,7 +251,7 @@ ${styleText}
                     },
                 },
                 {
-                    name: "height",
+                    name: "css_height",
                     params: ['Number'],
                     blocklyJson: {
                         args0: [
@@ -260,7 +259,7 @@ ${styleText}
                         ],
                         message0: "height: %1 px"
                     },
-                    blocklyXml: "<block type='height'>" +
+                    blocklyXml: "<block type='css_height'>" +
                         "  <value name='SIZE'>" +
                         "    <shadow type='math_number'>" +
                         "      <field name='NUM'></field>" +
@@ -310,7 +309,7 @@ elements.forEach(function (element) {
                     },
                 },
                 {
-                    name: "add_class",
+                    name: "js_add_class",
                     params: ['String', null],
                     blocklyInit() {
                         return function () {
@@ -340,7 +339,7 @@ innerElements.forEach(function (innerElement) {
                     },
                 },
                 {
-                    name: "remove_class",
+                    name: "js_remove_class",
                     params: ['String', null],
                     blocklyInit() {
                         return function () {
@@ -449,7 +448,6 @@ innerElements.forEach(function (innerElement) {
     }
 
     convertBlocksIntoJs(document: BlockDocument) {
-        console.log('convert js', document);
         return this.convertBlocksIntoLang(document, 'js', ['js_event']);
     }
 
