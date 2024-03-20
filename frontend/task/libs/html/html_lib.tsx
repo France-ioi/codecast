@@ -15,6 +15,10 @@ const localLanguageStrings = {
         label: {
             "font-size": "font-size:",
             "text-align": "text-align:",
+            "background-color": "background-color:",
+            "color": "color:",
+            "width": "width:",
+            "height": "height:",
             "css_selector": "sur le sélecteur",
             "change_attribute": "changer l'attribut",
         },
@@ -163,15 +167,21 @@ ${styleText}
                 {
                     name: "font-size",
                     params: ['Number'],
+                    blocklyJson: {
+                        args0: [
+                            {name: "SIZE", type: "input_value", check: "Number"},
+                        ],
+                        message0: "font-size: %1 px"
+                    },
                     blocklyXml: "<block type='font-size'>" +
-                            "  <value name='PARAM_0'>" +
+                        "  <value name='SIZE'>" +
                         "    <shadow type='math_number'>" +
-                        "      <field name='NUM'>0</field>" +
+                        "      <field name='NUM'>16</field>" +
                         "    </shadow>" +
                         "  </value>" +
                         "</block>",
                     handler(block: BlocklyBlock) {
-                        return `font-size: ${block.getInputTargetBlock('PARAM_0')?.getFieldValue('NUM')}px;`;
+                        return `font-size: ${block.getInputTargetBlock('SIZE')?.getFieldValue('NUM')}px;`;
                     },
                 },
                 {
@@ -180,7 +190,7 @@ ${styleText}
                     blocklyJson: {
                         "args0": [{
                             "type": "field_dropdown",
-                            "name": "PARAM_0",
+                            "name": "ALIGNMENT",
                             "options": [
                                 ['left', 'left'],
                                 ['center', 'center'],
@@ -189,7 +199,73 @@ ${styleText}
                         }],
                     },
                     handler(block: BlocklyBlock) {
-                        return `text-align: ${block.getFieldValue('PARAM_0')};`;
+                        return `text-align: ${block.getFieldValue('ALIGNMENT')};`;
+                    },
+                },
+                {
+                    name: "background-color",
+                    params: ['String'],
+                    blocklyJson: {
+                        "args0": [{
+                            "type": "field_colour",
+                            "name": "COLOR",
+                        }],
+                    },
+                    handler(block: BlocklyBlock) {
+                        return `background-color: ${block.getFieldValue('COLOR')};`;
+                    },
+                },
+                {
+                    name: "color",
+                    params: ['String'],
+                    blocklyJson: {
+                        "args0": [{
+                            "type": "field_colour",
+                            "name": "COLOR",
+                        }],
+                    },
+                    handler(block: BlocklyBlock) {
+                        return `color: ${block.getFieldValue('COLOR')};`;
+                    },
+                },
+                {
+                    name: "width",
+                    params: ['Number'],
+                    blocklyJson: {
+                        args0: [
+                            {name: "SIZE", type: "input_value", check: "Number"},
+                        ],
+                        message0: "width: %1 px"
+                    },
+                    blocklyXml: "<block type='width'>" +
+                        "  <value name='SIZE'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'></field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        "</block>",
+                    handler(block: BlocklyBlock) {
+                        return `width: ${block.getInputTargetBlock('SIZE')?.getFieldValue('NUM')}px;`;
+                    },
+                },
+                {
+                    name: "height",
+                    params: ['Number'],
+                    blocklyJson: {
+                        args0: [
+                            {name: "SIZE", type: "input_value", check: "Number"},
+                        ],
+                        message0: "height: %1 px"
+                    },
+                    blocklyXml: "<block type='height'>" +
+                        "  <value name='SIZE'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'></field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        "</block>",
+                    handler(block: BlocklyBlock) {
+                        return `height: ${block.getInputTargetBlock('SIZE')?.getFieldValue('NUM')}px;`;
                     },
                 },
             ],

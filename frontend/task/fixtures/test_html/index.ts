@@ -25,7 +25,20 @@ export default {
         includeBlocks: {
             groupByCategory: true,
             generatedBlocks: {
-                html: ["css_selector", "class_selector", "id_selector", "element_selector", "font-size", "text-align", "js_event", "add_class"],
+                html: [
+                    "css_selector",
+                    "class_selector",
+                    "id_selector",
+                    "element_selector",
+                    "font-size",
+                    "text-align",
+                    "js_event",
+                    "background-color",
+                    "color",
+                    "width",
+                    "height",
+                    "add_class",
+                ],
             },
             standardBlocks: {
                 includeAll: false,
