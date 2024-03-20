@@ -63,6 +63,16 @@ export function selectSubmissionsPaneEnabled(state: AppStore) {
 
     const taskTests = selectTaskTests(state);
 
+    return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && taskTests.length > 3))
+}
+
+export function selectTaskSelectorEnabled(state: AppStore) {
+    if (!state.task.currentTask || state.task.levelGridInfos?.hiddenTests) {
+        return false;
+    }
+
+    const taskTests = selectTaskTests(state);
+
     return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && taskTests.length > 1))
 }
 
