@@ -285,9 +285,14 @@ label[for="editor-mode-toggle"] {
   align-items: center;
   justify-content: center;
   gap: 5px;
+  .html-tag-attribute-remove, .html-tag-attribute-remove-placeholder {
+    width: 40px;
+  }
   .html-tag-attribute-remove {
     cursor: pointer;
-    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 

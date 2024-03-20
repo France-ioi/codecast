@@ -761,3 +761,7 @@ button.btn-cc {
 .bp3-dialog:not(.simple-dialog) {
   padding-bottom: 0;
 }
+
+.bp3-input[readonly] {
+  cursor: default;
+}

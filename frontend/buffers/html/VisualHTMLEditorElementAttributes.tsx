@@ -19,20 +19,47 @@ interface ElementAttributesProps {
 interface HtmlAttribute {
     name: string,
     value: string,
+    removable: boolean,
 }
+
+const attributesAlwaysPresent = [
+    'id',
+    'class',
+];
 
 export function VisualHTMLEditorElementAttributes(props: ElementAttributesProps) {
     const codeSegment = props.codeSegment;
     const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
-    const [htmlAttributes, setHtmlAttributes] = useState<HtmlAttribute[]>(
-        codeSegment.htmlAttributes ? Object.entries(codeSegment.htmlAttributes).map(([name, value]) => ({name, value})) : []);
+
+    let defaultHtmlAttributes = [];
+    let defaultHtmlAttributesCompleted = {};
+    for (let attr of attributesAlwaysPresent) {
+        defaultHtmlAttributesCompleted[attr] = '';
+    }
+
+    defaultHtmlAttributesCompleted = {
+        ...defaultHtmlAttributesCompleted,
+        ...(codeSegment.htmlAttributes ? codeSegment.htmlAttributes : {}),
+    };
+
+    const appearedNames = {};
+    for (let [name, value] of Object.entries(defaultHtmlAttributesCompleted)) {
+        defaultHtmlAttributes.push({
+            name,
+            value,
+            removable: -1 === attributesAlwaysPresent.indexOf(name) || name in appearedNames,
+        });
+        appearedNames[name] = true;
+    }
+
+    const [htmlAttributes, setHtmlAttributes] = useState<HtmlAttribute[]>(defaultHtmlAttributes);
 
     const dispatch = useDispatch();
 
     const saveElement = (e: FormEvent<HTMLFormElement>) => {
         const htmlAttributesObject = {};
         for (let {name, value} of htmlAttributes) {
-            if (!name || !name.match(/^[a-zA-Z\-._]+/)) {
+            if (!name || !name.match(/^[a-zA-Z\-._]+/) || !value) {
                 continue;
             }
             htmlAttributesObject[name] = value;
@@ -61,7 +88,7 @@ export function VisualHTMLEditorElementAttributes(props: ElementAttributesProps)
     const addNewHtmlAttribute = () => {
         setHtmlAttributes([
             ...htmlAttributes,
-            {name: '', value: ''},
+            {name: '', value: '', removable: true},
         ]);
     };
 
@@ -75,7 +102,7 @@ export function VisualHTMLEditorElementAttributes(props: ElementAttributesProps)
 
     return (
         <form onSubmit={saveElement} className="html-tag-attributes">
-            {htmlAttributes.map(({name, value}, index) =>
+            {htmlAttributes.map(({name, value, removable}, index) =>
                 <div
                     key={index}
                     className="html-tag-attribute mb-1"
@@ -84,6 +111,7 @@ export function VisualHTMLEditorElementAttributes(props: ElementAttributesProps)
                         type='text'
                         value={name}
                         onChange={(event) => changeHtmlAttribute(index, 'name', event.target.value)}
+                        readOnly={!removable}
                     />
 
                     <InputGroup
@@ -92,9 +120,9 @@ export function VisualHTMLEditorElementAttributes(props: ElementAttributesProps)
                         onChange={(event) => changeHtmlAttribute(index, 'value', event.target.value)}
                     />
 
-                    <div className="html-tag-attribute-remove" onClick={() => removeHtmlAttribute(index)}>
+                    {removable ? <div className="html-tag-attribute-remove" onClick={() => removeHtmlAttribute(index)}>
                         <FontAwesomeIcon icon={faTimes}/>
-                    </div>
+                    </div> : <div className="html-tag-attribute-remove-placeholder"/>}
                 </div>
             )}
 
