@@ -9,6 +9,7 @@ import {BlocklyBlock} from '../../../stepper/js/blockly_types';
 const localLanguageStrings = {
     fr: {
         categories: {
+            selectors: 'Sélecteurs',
             css: "CSS",
             js: "JS",
         },
@@ -54,36 +55,7 @@ export class HtmlLib extends QuickAlgoLibrary {
         this.setLocalLanguageStrings(localLanguageStrings);
 
         this.htmlCustomBlocks = {
-            css: [
-                {
-                    name: "css_selector",
-                    params: ['String'],
-                    blocklyInit() {
-                        return function () {
-                            this.setColour(290);
-                            this.appendValueInput("SELECTOR").appendField("sur le sélecteur");
-                            this.appendStatementInput("STYLE").appendField("style");
-                            this.setPreviousStatement(false);
-                            this.setNextStatement(false);
-                        };
-                    },
-                    handler(block: BlocklyBlock) {
-                        const selectorBlock = block.getInputTargetBlock('SELECTOR');
-                        if (!selectorBlock) {
-                            return '';
-                        }
-
-                        const selectorText = this.extractBlockRecursive(selectorBlock);
-
-                        const styleBlock = block.getInputTargetBlock('STYLE');
-
-                        const styleText = this.extractBlockRecursive(styleBlock);
-
-                        return `${selectorText} {
-${styleText}
-}`;
-                    },
-                },
+            selectors: [
                 {
                     name: "partial_selector",
                     params: ['String'],
@@ -162,6 +134,37 @@ ${styleText}
                         const nextBlock = block.getInputTargetBlock('NEXT');
 
                         return `${partialSelectorValue}${nextBlock ? this.extractBlockRecursive(nextBlock) : ''}`;
+                    },
+                },
+            ],
+            css: [
+                {
+                    name: "css_selector",
+                    params: ['String'],
+                    blocklyInit() {
+                        return function () {
+                            this.setColour(290);
+                            this.appendValueInput("SELECTOR").appendField("sur le sélecteur");
+                            this.appendStatementInput("STYLE").appendField("style");
+                            this.setPreviousStatement(false);
+                            this.setNextStatement(false);
+                        };
+                    },
+                    handler(block: BlocklyBlock) {
+                        const selectorBlock = block.getInputTargetBlock('SELECTOR');
+                        if (!selectorBlock) {
+                            return '';
+                        }
+
+                        const selectorText = this.extractBlockRecursive(selectorBlock);
+
+                        const styleBlock = block.getInputTargetBlock('STYLE');
+
+                        const styleText = this.extractBlockRecursive(styleBlock);
+
+                        return `${selectorText} {
+${styleText}
+}`;
                     },
                 },
                 {
@@ -311,7 +314,7 @@ elements.forEach(function (element) {
                     params: ['String', null],
                     blocklyInit() {
                         return function () {
-                            this.setColour(45);
+                            this.setColour(80);
                             this.appendValueInput('SELECTOR')
                                 .appendField("ajouter la classe")
                                 .appendField(new window.Blockly.FieldTextInput(''), "CLASS")
@@ -333,6 +336,36 @@ elements.forEach(function (element) {
                         return `var innerElements = document.querySelectorAll("${selectorText}");
 innerElements.forEach(function (innerElement) {
     innerElement.classList.add('${className}');
+});`;
+                    },
+                },
+                {
+                    name: "remove_class",
+                    params: ['String', null],
+                    blocklyInit() {
+                        return function () {
+                            this.setColour(80);
+                            this.appendValueInput('SELECTOR')
+                                .appendField("retirer la classe")
+                                .appendField(new window.Blockly.FieldTextInput(''), "CLASS")
+                                .appendField('du sélecteur');
+                            this.setPreviousStatement(true);
+                            this.setNextStatement(true);
+                        };
+                    },
+                    handler(block: BlocklyBlock) {
+                        const selectorBlock = block.getInputTargetBlock('SELECTOR');
+                        if (!selectorBlock) {
+                            return '';
+                        }
+
+                        const className = block.getFieldValue('CLASS');
+
+                        const selectorText = this.extractBlockRecursive(selectorBlock);
+
+                        return `var innerElements = document.querySelectorAll("${selectorText}");
+innerElements.forEach(function (innerElement) {
+    innerElement.classList.remove('${className}');
 });`;
                     },
                 },
@@ -405,6 +438,8 @@ innerElements.forEach(function (innerElement) {
         return {
             categories: {
                 css: 30,
+                selectors: 290,
+                js: 80,
             },
         };
     }

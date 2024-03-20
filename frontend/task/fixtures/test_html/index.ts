@@ -38,6 +38,7 @@ export default {
                     "width",
                     "height",
                     "add_class",
+                    "remove_class",
                 ],
             },
             standardBlocks: {
