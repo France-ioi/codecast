@@ -235,14 +235,6 @@
   opacity: 0.5;
 }
 
-.unlocked.opening:before {
-  border-left: 14px solid #4a90e2;
-}
-
-.unlocked.closing:before {
-  border-right: 14px solid #4a90e2;
-}
-
 .unlocked {
   cursor: pointer;
 }
@@ -304,4 +296,16 @@ label[for="editor-mode-toggle"] {
   > :first-child {
     flex: 0 1;
   }
+}
+
+.html-tag.has-error {
+  background-color: red;
+}
+
+.html-tag.has-error.opening:before {
+  border-left-color: red;
+}
+
+.html-tag.has-error.closing:before {
+  border-right-color: red;
 }

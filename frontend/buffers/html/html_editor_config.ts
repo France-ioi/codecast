@@ -175,6 +175,7 @@ export interface CodeSegment {
     type: TagType,
     value: string,
     unlocked: boolean,
+    error?: boolean,
     index?: number,
     htmlAttributes?: {[attribute: string]: string},
 }
@@ -203,7 +204,10 @@ const selfClosingTags = [
 ];
 
 export function getCodeSegmentClasses(element: CodeSegment) {
-    let classes: string = element.unlocked ? 'unlocked ' : 'locked '
+    let classes: string = `html-tag ${element.unlocked ? 'unlocked ' : 'locked '}`;
+    if (element.error) {
+        classes += 'has-error ';
+    }
     if (element.type !== 'text') {
         selfClosingTags.includes(element.value) ?
             classes += 'self-closing '
@@ -220,7 +224,10 @@ export function htmlSegment(html: string, unlockAll: boolean) {
     let editorCode: CodeSegments = []
     let trimmed = html.trim()
     const reg = /<([^/][^>]*?)>|<\/(.+?)>|([^<>\s][a-zA-Z.!]*)/g
-    const matches = trimmed.matchAll(reg)
+    const matches = trimmed.matchAll(reg);
+
+    const tagStack = [];
+    let hasError = false;
 
     for (const m of matches) {
         if (m[1] !== undefined) { // 1st bounding group, opening tags
@@ -231,20 +238,35 @@ export function htmlSegment(html: string, unlockAll: boolean) {
                 attributes[match[1]] = match[2];
             }
 
+            const tag = m[1].replace('?', '').split(' ')[0];
+
             editorCode.push({
                 id: uuidv4(),
                 type: TagType.Opening,
-                value: m[1].replace('?', '').split(' ')[0],
+                value: tag,
                 unlocked: m[1].charAt(0) === '?' || unlockAll,
                 htmlAttributes: attributes,
-            })
+            });
+
+            tagStack.push({tag, index: editorCode.length - 1});
         } else if (m[2] !== undefined) { // 2nd bounding group, closing tags
+            const tag = m[2].replace('?', '');
+
+            let error = false;
+            if (tagStack.length && tag === tagStack[tagStack.length - 1].tag) {
+                tagStack.pop();
+            } else if (!hasError) {
+                error = true;
+                hasError = true;
+            }
+
             editorCode.push({
                 id: uuidv4(),
                 type: TagType.Closing,
-                value: m[2].replace('?', ''),
-                unlocked: m[2].charAt(0) === '?' || unlockAll
-            })
+                value: tag,
+                unlocked: m[2].charAt(0) === '?' || unlockAll,
+                error,
+            });
         } else if (m[3] !== undefined) { // 3rd bounding group, text
             editorCode.push({
                 id: uuidv4(),
@@ -252,6 +274,12 @@ export function htmlSegment(html: string, unlockAll: boolean) {
                 value: m[3],
                 unlocked: false
             })
+        }
+    }
+
+    if (tagStack.length && !hasError) {
+        for (let {index} of tagStack) {
+            editorCode[index].error = true;
         }
     }
 
