@@ -758,6 +758,6 @@ button.btn-cc {
   width: 100%;
 }
 
-.bp3-dialog:not(.simple-dialog) {
+.bp3-dialog:not(.simple-dialog):not(.bp3-alert) {
   padding-bottom: 0;
 }
