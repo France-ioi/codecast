@@ -377,7 +377,7 @@ export function getNodeRange(stepperState?: StepperState) {
     }
 
     const {stackFrames} = stepperState.codecastAnalysis;
-    const stackFrame = stackFrames[0];
+    const stackFrame = stackFrames[stackFrames.length - 1];
     if (!stackFrame) {
         return null;
     }

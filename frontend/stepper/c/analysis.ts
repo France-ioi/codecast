@@ -143,7 +143,7 @@ export function convertUnixStateToAnalysisSnapshot(programState: any, lastProgra
     });
 
     return {
-        stackFrames: filteredFunctionCallStack.map(stackFrame => convertUnixStackFrameToAnalysisStackFrame(stackFrame, programState, lastProgramState)).slice().reverse(),
+        stackFrames: filteredFunctionCallStack.map(stackFrame => convertUnixStackFrameToAnalysisStackFrame(stackFrame, programState, lastProgramState)),
     };
 }
 
