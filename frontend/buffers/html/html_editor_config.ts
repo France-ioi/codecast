@@ -21,24 +21,6 @@ export interface ToolboxConfiguration {
     categories: ToolboxCategory[]
 }
 
-// Set default editor mode (visual or textual)
-export const initialMode = 'visual'
-// Allow user to switch editor modes
-export const allowModeSwitch: boolean = true
-
-// =============================SET DEFAULT HTML CODE HERE============================================================
-export const initialCode = "<body>" +
-    "<div>" +
-    "<h1>" +
-    "Example Domain" +
-    "</h1>" +
-    "<p>This domain is for use in illustrative examples in documents. " +
-    "You may use this domain in literature without prior coordination or asking for permission.</p>" +
-    "<p>More <i>information</i>...</p>" +
-    "<span><?i>Hello world</?i></span>" +
-    "<p>Hello!</p>" +
-    "</div>" +
-    "</body>"
 // ===================================================================================================================
 
 // =============================SET AVAILABLE TOOLBOX CATEGORIES & BLOCKS HERE========================================

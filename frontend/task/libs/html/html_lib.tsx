@@ -15,6 +15,7 @@ const localLanguageStrings = {
             "font-size": "font-size:",
             "text-align": "text-align:",
             "css_selector": "sur le sélecteur",
+            "change_attribute": "changer l'attribut",
         },
         options: {
             left: 'gauche',
@@ -58,7 +59,7 @@ export class HtmlLib extends QuickAlgoLibrary {
                             this.appendValueInput("SELECTOR").appendField("sur le sélecteur");
                             this.appendStatementInput("STYLE").appendField("style");
                             this.setPreviousStatement(false);
-                            this.setNextStatement(true);
+                            this.setNextStatement(false);
                         };
                     },
                     handler(block: BlocklyBlock) {
@@ -137,6 +138,63 @@ ${styleText}
                     },
                 },
             ],
+            js: [
+                {
+                    name: "js_event",
+                    params: [null, null],
+                    blocklyInit() {
+                        return function () {
+                            this.setColour(290);
+                            this.appendValueInput('SELECTOR')
+                                .appendField("en cas d'évènement")
+                                .appendField(new window.Blockly.FieldDropdown([
+                                    ['onclick', 'onclick'],
+                                ]), 'EVENT')
+                                .appendField('sur le sélecteur')
+                            this.appendStatementInput("STYLE").appendField("actions");
+                            this.setPreviousStatement(false);
+                            this.setNextStatement(false);
+                        };
+                    },
+                    handler(block: BlocklyBlock) {
+                        const selectorBlock = block.getInputTargetBlock('SELECTOR');
+                        if (!selectorBlock) {
+                            return '';
+                        }
+
+                        const selectorText = this.extractBlockCss(selectorBlock);
+
+                        const styleBlock = block.getInputTargetBlock('STYLE');
+
+                        const styleText = this.extractBlockCss(styleBlock);
+
+                        return `${selectorText} {
+${styleText}
+}`;
+                    },
+                },
+                {
+                    name: "change_attribute",
+                    params: [null],
+                    blocklyInit() {
+                        return function () {
+                            this.setColour(290);
+                            this.appendDummyInput('OP')
+                                .appendField("changer la valeur de l'attribut")
+                                .appendField(new window.Blockly.FieldTextInput('default text'), "NAME")
+                                .appendField("en")
+                                .appendField(new window.Blockly.FieldTextInput('default text'), "OP");
+                            // this.appendDummyInput()
+                            //     .appendField("changer l'attribut")
+                            //     .appendField(new window.Blockly.FieldInput('aaaa'), 'EVENT')
+                            //     .appendField('sur le sélecteur')
+                        };
+                    },
+                    handler(block: BlocklyBlock) {
+                        return `text-align: ${block.getFieldValue('PARAM_0')};`;
+                    },
+                },
+            ]
         };
 
         this.customBlocks = {
