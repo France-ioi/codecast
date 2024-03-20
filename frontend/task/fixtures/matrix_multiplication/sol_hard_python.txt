@@ -1,0 +1,12 @@
+from printer import *
+
+for loop in range(10):
+    mot = input()
+    resultat = ""
+    moitie = len(mot) // 2
+    debut = ""
+    fin = ""
+    for pos in range(moitie):
+        debut += mot[(pos - 1 + moitie) % moitie]
+        fin += mot[moitie + (pos - 1 + moitie) % moitie]
+    print(fin + debut)

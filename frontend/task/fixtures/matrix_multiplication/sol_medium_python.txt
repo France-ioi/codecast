@@ -1,0 +1,11 @@
+from printer import *
+
+for loop in range(10):
+    mot = input()
+    resultat = ""
+    for pos in range(len(mot)):
+        resultat += mot[(pos + len(mot) - 3) % len(mot)]
+    print(resultat)
+
+
+    
