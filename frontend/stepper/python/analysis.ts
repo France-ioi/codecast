@@ -170,6 +170,8 @@ const variablesBeginWithIgnore = [
     '$iter',
     '$call',
     '$loadtuple',
+    '$loaddict',
+    '$loadlist',
     '$items',
     '$elem',
     '$lattr'
