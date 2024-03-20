@@ -10,6 +10,7 @@ const localLanguageStrings = {
     fr: {
         categories: {
             css: "CSS",
+            js: "JS",
         },
         label: {
             "font-size": "font-size:",
@@ -68,11 +69,11 @@ export class HtmlLib extends QuickAlgoLibrary {
                             return '';
                         }
 
-                        const selectorText = this.extractBlockCss(selectorBlock);
+                        const selectorText = this.extractBlockRecursive(selectorBlock);
 
                         const styleBlock = block.getInputTargetBlock('STYLE');
 
-                        const styleText = this.extractBlockCss(styleBlock);
+                        const styleText = this.extractBlockRecursive(styleBlock);
 
                         return `${selectorText} {
 ${styleText}
@@ -96,7 +97,7 @@ ${styleText}
                         const partialSelectorValue = block.getFieldValue('SELECTOR');
                         const nextBlock = block.getInputTargetBlock('NEXT');
 
-                        return `${partialSelectorValue}${nextBlock ? this.extractBlockCss(nextBlock) : ''}`;
+                        return `${partialSelectorValue}${nextBlock ? this.extractBlockRecursive(nextBlock) : ''}`;
                     },
                 },
                 {
@@ -116,7 +117,7 @@ ${styleText}
                         const partialSelectorValue = block.getFieldValue('SELECTOR');
                         const nextBlock = block.getInputTargetBlock('NEXT');
 
-                        return `.${partialSelectorValue}${nextBlock ? this.extractBlockCss(nextBlock) : ''}`;
+                        return `.${partialSelectorValue}${nextBlock ? this.extractBlockRecursive(nextBlock) : ''}`;
                     },
                 },
                 {
@@ -136,7 +137,7 @@ ${styleText}
                         const partialSelectorValue = block.getFieldValue('SELECTOR');
                         const nextBlock = block.getInputTargetBlock('NEXT');
 
-                        return `#${partialSelectorValue}${nextBlock ? this.extractBlockCss(nextBlock) : ''}`;
+                        return `#${partialSelectorValue}${nextBlock ? this.extractBlockRecursive(nextBlock) : ''}`;
                     },
                 },
                 {
@@ -156,7 +157,7 @@ ${styleText}
                         const partialSelectorValue = block.getFieldValue('SELECTOR');
                         const nextBlock = block.getInputTargetBlock('NEXT');
 
-                        return `${partialSelectorValue}${nextBlock ? this.extractBlockCss(nextBlock) : ''}`;
+                        return `${partialSelectorValue}${nextBlock ? this.extractBlockRecursive(nextBlock) : ''}`;
                     },
                 },
                 {
@@ -205,7 +206,7 @@ ${styleText}
                                     ['onclick', 'onclick'],
                                 ]), 'EVENT')
                                 .appendField('sur le sélecteur')
-                            this.appendStatementInput("STYLE").appendField("actions");
+                            this.appendStatementInput("ACTIONS").appendField("actions");
                             this.setPreviousStatement(false);
                             this.setNextStatement(false);
                         };
@@ -215,37 +216,48 @@ ${styleText}
                         if (!selectorBlock) {
                             return '';
                         }
+                        
+                        const eventName = block.getFieldValue('EVENT');
+                        const selectorText = this.extractBlockRecursive(selectorBlock);
+                        const actionsBlock = block.getInputTargetBlock('ACTIONS');
+                        const actionsText = this.extractBlockRecursive(actionsBlock);
 
-                        const selectorText = this.extractBlockCss(selectorBlock);
-
-                        const styleBlock = block.getInputTargetBlock('STYLE');
-
-                        const styleText = this.extractBlockCss(styleBlock);
-
-                        return `${selectorText} {
-${styleText}
-}`;
+                        return `var elements = document.querySelectorAll("${selectorText}");
+elements.forEach(function (element) {
+    element['${eventName}'] = function () {
+        ${actionsText}
+    };
+});`;
                     },
                 },
                 {
-                    name: "change_attribute",
-                    params: [null],
+                    name: "add_class",
+                    params: ['String', null],
                     blocklyInit() {
                         return function () {
-                            this.setColour(290);
-                            this.appendDummyInput('OP')
-                                .appendField("changer la valeur de l'attribut")
-                                .appendField(new window.Blockly.FieldTextInput('default text'), "NAME")
-                                .appendField("en")
-                                .appendField(new window.Blockly.FieldTextInput('default text'), "OP");
-                            // this.appendDummyInput()
-                            //     .appendField("changer l'attribut")
-                            //     .appendField(new window.Blockly.FieldInput('aaaa'), 'EVENT')
-                            //     .appendField('sur le sélecteur')
+                            this.setColour(45);
+                            this.appendValueInput('SELECTOR')
+                                .appendField("ajouter la classe")
+                                .appendField(new window.Blockly.FieldTextInput(''), "CLASS")
+                                .appendField('sur le sélecteur');
+                            this.setPreviousStatement(true);
+                            this.setNextStatement(true);
                         };
                     },
                     handler(block: BlocklyBlock) {
-                        return `text-align: ${block.getFieldValue('PARAM_0')};`;
+                        const selectorBlock = block.getInputTargetBlock('SELECTOR');
+                        if (!selectorBlock) {
+                            return '';
+                        }
+
+                        const className = block.getFieldValue('CLASS');
+
+                        const selectorText = this.extractBlockRecursive(selectorBlock);
+
+                        return `var innerElements = document.querySelectorAll("${selectorText}");
+innerElements.forEach(function (innerElement) {
+    innerElement.classList.add('${className}');
+});`;
                     },
                 },
             ]
@@ -257,6 +269,7 @@ ${styleText}
 
         this.html = {
             convertBlocksIntoCss: memoize(this.convertBlocksIntoCss.bind(this)),
+            convertBlocksIntoJs: memoize(this.convertBlocksIntoJs.bind(this)),
         };
         for (let blocks of Object.values(this.htmlCustomBlocks)) {
             for (let block of blocks) {
@@ -268,20 +281,20 @@ ${styleText}
         };
     }
 
-    extractBlockCss(blocklyBlock: BlocklyBlock) {
+    extractBlockRecursive(blocklyBlock: BlocklyBlock) {
         let currentBlock = blocklyBlock;
-        const cssParts = [];
+        const parts = [];
         while (currentBlock) {
             const fieldType = currentBlock.type;
             if (!(fieldType in this.html)) {
                 break;
             }
-            const css = this.html[fieldType](currentBlock);
-            cssParts.push(css);
+            const blockContent = this.html[fieldType](currentBlock);
+            parts.push(blockContent);
             currentBlock = currentBlock.getNextBlock();
         }
 
-        return cssParts.join("\n");
+        return parts.join("\n");
     }
 
     reset() {
@@ -321,6 +334,15 @@ ${styleText}
     }
 
     convertBlocksIntoCss(document: BlockDocument) {
+        return this.convertBlocksIntoLang(document, 'css', ['css_selector']);
+    }
+
+    convertBlocksIntoJs(document: BlockDocument) {
+        console.log('convert js', document);
+        return this.convertBlocksIntoLang(document, 'js', ['js_event']);
+    }
+
+    convertBlocksIntoLang(document: BlockDocument, mainCategory: string, rootBlockTypes: string[]) {
         if (!document?.content?.blockly) {
             return '';
         }
@@ -328,11 +350,11 @@ ${styleText}
         const blocks = getBlocksFromXml(document.content.blockly);
         const cssFragments = [];
         for (let block of blocks) {
-            if ('css_selector' !== block.type) {
+            if (-1 === rootBlockTypes.indexOf(block.type)) {
                 continue;
             }
 
-            const customBlock = this.htmlCustomBlocks['css'].find(customBlock => customBlock.name === block.type);
+            const customBlock = this.htmlCustomBlocks[mainCategory].find(customBlock => customBlock.name === block.type);
             if (customBlock) {
                 const cssFragment = this.html[customBlock.name](block);
                 cssFragments.push(cssFragment);

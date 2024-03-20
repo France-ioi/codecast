@@ -1,13 +1,10 @@
 import React from "react";
 import {useAppSelector} from '../../../hooks';
-import {HtmlLib, HtmlLibState} from './html_lib';
-import {selectAnswer} from '../../selectors';
-import {BlockDocument, BufferType} from '../../../buffers/buffer_types';
+import {HtmlLib} from './html_lib';
 import {quickAlgoLibraries} from '../quick_algo_libraries_model';
 import {documentToString} from '../../../buffers/document';
 
 export function HtmlLibView() {
-    const taskState: HtmlLibState = useAppSelector(state => state.task.state?.html);
     const context = quickAlgoLibraries.getContext(null, 'main') as HtmlLib;
     const buffers = useAppSelector(state => state.buffers.buffers);
     if (!context) {
@@ -16,10 +13,14 @@ export function HtmlLibView() {
 
     let html = 'source:0' in buffers ? documentToString(buffers['source:0'].document) : '';
     const css = 'source:1' in buffers ? context.html.convertBlocksIntoCss(buffers['source:1'].document) : '';
+    const js = 'source:2' in buffers ? context.html.convertBlocksIntoJs(buffers['source:2'].document) : '';
 
     html += `<style>
 ${css}
-</style>`;
+</style>
+<script>
+${js}
+</script>`;
 
     return (
         <div className="html-lib-container" style={{width: 'calc(100% - 24px)', height: '100%', margin: '0 10px', border: 'solid 2px black'}}>
