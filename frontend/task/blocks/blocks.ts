@@ -1,6 +1,6 @@
 import {AppStore, AppStoreReplay} from "../../store";
 import {Bundle} from "../../linker";
-import {call, debounce, put, takeEvery} from "typed-redux-saga";
+import {call, debounce, put, take, takeEvery} from "typed-redux-saga";
 import {BlocksUsage} from "../task_types";
 import {taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
@@ -15,6 +15,7 @@ import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {Block, BlockType} from './block_types';
 import {bufferEdit, bufferEditPlain, bufferInit, bufferReset} from '../../buffers/buffers_slice';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
+import {createAction} from '@reduxjs/toolkit';
 
 export interface DraggableBlockItem {
     block: Block,
@@ -252,17 +253,27 @@ function* checkSourceSaga() {
     yield* put(taskSetBlocksUsage(blocksUsage));
 }
 
+function* selectorChangeSaga(selector, saga) {
+    let previous = yield* appSelect(selector)
+    while (true) {
+        yield* take();
+        const next = yield* appSelect(selector)
+        if (JSON.stringify(next) !== JSON.stringify(previous)) {
+            yield* saga(next, previous)
+            previous = next;
+        }
+    }
+}
+
+export const checkSource = createAction('checkSource');
+
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
-        yield* debounce(500, bufferEdit, checkSourceSaga);
-        yield* debounce(500, bufferEditPlain, checkSourceSaga);
-        yield* debounce(500, bufferReset, checkSourceSaga);
+        yield* debounce(500, checkSource, checkSourceSaga);
 
-        yield* takeEvery(bufferInit, function* ({payload}) {
-            const activeBufferName = yield* appSelect(state => state.buffers.activeBufferName);
-            if (activeBufferName === payload.buffer) {
-                yield* call(checkSourceSaga);
-            }
-        });
+        // Debounce 500ms each time answer changes before checking source
+        yield* selectorChangeSaga(selectAnswer, function* () {
+            yield* put(checkSource());
+        })
     });
 }
