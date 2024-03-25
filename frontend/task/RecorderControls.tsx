@@ -16,6 +16,9 @@ import {Vumeter} from "../recorder/Vumeter";
 import {useAppSelector} from "../hooks";
 import {SaveStep} from "../recorder/save_screen";
 import {getMessage} from "../lang";
+import {LayoutPlayerMode} from './layout/layout_types';
+import {CursorPosition} from './layout/CursorPosition';
+import {SubtitlesBand} from '../subtitles/SubtitlesBand';
 
 interface RecorderControlsProps {
     enabled?: boolean
@@ -81,6 +84,9 @@ export function RecorderControls(props: RecorderControlsProps) {
 
     return (
         <div className="task-recorder-controls cursor-recording-disabled">
+            {isPlayback &&
+                <CursorPosition/>
+            }
             <div className="controls-recorder">
                 <ButtonGroup>
                     <Button
