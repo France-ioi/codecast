@@ -390,17 +390,22 @@ export default class BlocklyRunner extends AbstractRunner {
                     return;
                 }
                 if (interpreter.paused_) {
-                    log.getLogger('blockly_runner').debug('interpreter paused', this._stepInProgress);
+                    // @ts-ignore
+                    if (false === this._stepInProgress) {
+                        this.context.curSteps[iInterpreter].total++;
+                        if(this.context.curSteps[iInterpreter].lastNbMoves != this.nbActions) {
+                            this.context.curSteps[iInterpreter].lastNbMoves = this.nbActions;
+                            this.context.curSteps[iInterpreter].withoutAction = 0;
+                        } else {
+                            this.context.curSteps[iInterpreter].withoutAction++;
+                        }
+                    }
+
+                    log.getLogger('blockly_runner').debug('interpreter paused', this._stepInProgress, this.context.curSteps[iInterpreter].total);
                     this.oneStepDone = !wasPaused;
                     return;
                 }
-                this.context.curSteps[iInterpreter].total++;
-                if(this.context.curSteps[iInterpreter].lastNbMoves != this.nbActions) {
-                    this.context.curSteps[iInterpreter].lastNbMoves = this.nbActions;
-                    this.context.curSteps[iInterpreter].withoutAction = 0;
-                } else {
-                    this.context.curSteps[iInterpreter].withoutAction++;
-                }
+
             }
 
             if (!this.context.programEnded[iInterpreter] && !this.context.allowInfiniteLoop) {

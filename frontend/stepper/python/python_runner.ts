@@ -401,7 +401,7 @@ export default class PythonRunner extends AbstractRunner {
     };
 
     _continue() {
-        log.getLogger('python_runner').debug('make continue', this._isRunning);
+        log.getLogger('python_runner').debug('make continue', this._isRunning, this._steps);
         if (!this.context.allowInfiniteLoop && this._steps >= this._maxIterations) {
             this._onStepError(window.languageStrings.tooManyIterations);
         }
@@ -431,7 +431,7 @@ export default class PythonRunner extends AbstractRunner {
         this._setBreakpoint(1, false);
 
         if (typeof this.context.infos.maxIter !== 'undefined') {
-            this._maxIterations = Math.ceil(this.context.infos.maxIter / 10);
+            this._maxIterations = this.context.infos.maxIter;
         }
 
         try {
