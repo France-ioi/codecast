@@ -281,11 +281,17 @@ function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, 
 }
 
 export function* canReloadAnswer(answer: TaskAnswer) {
+    if (!answer) {
+        return true;
+    }
+
     const canChangePlatform = yield* appSelect(state => state.options.canChangePlatform);
     const platform = yield* appSelect(state => state.options.platform);
     if (!canChangePlatform && answer.platform !== platform) {
         return false;
     }
+
+    yield* call(importPlatformModules, answer.platform, window.modulesPath);
 
     return true;
 }
