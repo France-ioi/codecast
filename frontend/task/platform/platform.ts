@@ -51,6 +51,8 @@ import {ActionTypes} from '../../common/actionTypes';
 import {TaskAnswer} from '../task_types';
 import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
+import {CodecastPlatform} from '../../stepper/codecast_platform';
+import {hasBlockPlatform} from '../../stepper/platforms';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -246,7 +248,7 @@ function* taskGetAnswerEventSaga (action: ReturnType<typeof taskGetAnswerEvent>)
     yield* call(action.payload.success, stringify(answer));
 }
 
-function* backwardCompatibilityConvert(answer) {
+function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, any> {
     if (!answer) {
         return null;
     }
@@ -255,13 +257,20 @@ function* backwardCompatibilityConvert(answer) {
         return answer;
     }
 
-    const platform = yield* appSelect(state => state.options.platform);
+    let platform = yield* appSelect(state => state.options.platform);
 
+    // Try to set appropriate platform
     let document: Document;
     if (answer.blockly) {
         document = BlockBufferHandler.documentFromObject(answer);
+        if (!hasBlockPlatform(platform)) {
+            platform = CodecastPlatform.Blockly;
+        }
     } else {
         document = uncompressIntoDocument(answer);
+        if (hasBlockPlatform(platform)) {
+            platform = CodecastPlatform.Python;
+        }
     }
 
     return {
@@ -269,6 +278,16 @@ function* backwardCompatibilityConvert(answer) {
         document,
         platform,
     }
+}
+
+export function* canReloadAnswer(answer: TaskAnswer) {
+    const canChangePlatform = yield* appSelect(state => state.options.canChangePlatform);
+    const platform = yield* appSelect(state => state.options.platform);
+    if (!canChangePlatform && answer.platform !== platform) {
+        return false;
+    }
+
+    return true;
 }
 
 function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: ReturnType<typeof taskReloadAnswerEvent>) {
@@ -283,6 +302,10 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             const convertedAnswer = {};
             for (let {level} of Object.values(taskLevels)) {
                 convertedAnswer[level] = yield* call(backwardCompatibilityConvert, answerObject[level]);
+                if (!(yield* call(canReloadAnswer, convertedAnswer[level]))) {
+                    throw new Error("This answer is not accepted: " + answer)
+                }
+
                 yield* put(platformSaveAnswer({level, answer: convertedAnswer[level]}));
                 if (level === currentLevel) {
                     yield* put(platformAnswerLoaded(convertedAnswer[level]));
