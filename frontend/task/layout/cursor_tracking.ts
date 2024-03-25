@@ -19,7 +19,6 @@ const DISTANCE_MIN_BETWEEN_POSITIONS = 10; // px
 
 export function useCursorPositionTracking(specialZoneName?: string, pointToRecording?: ScreenPointToRecordingTransformer, recordingToPoint?: RecordingToScreenPointTransformer) {
     const isRecording = useAppSelector(state => RecorderStatus.Recording === getRecorderState(state).status);
-    const isPlaying = useAppSelector(state => getPlayerState(state).isReady);
     const previousPoint = useRef<CursorPoint>(null);
 
     const dispatch = useDispatch();
@@ -30,9 +29,6 @@ export function useCursorPositionTracking(specialZoneName?: string, pointToRecor
 
     useEffect(() => {
         if (!isRecording) {
-            return null;
-        }
-        if (isPlaying) {
             return null;
         }
 
@@ -95,7 +91,7 @@ export function useCursorPositionTracking(specialZoneName?: string, pointToRecor
                 delete zonePointToScreenTransformers[specialZoneName];
             }
         };
-    }, [isRecording, isPlaying]);
+    }, [isRecording]);
 }
 
 // For recording
