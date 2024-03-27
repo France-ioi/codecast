@@ -95,6 +95,7 @@ import {TaskAnswer} from '../task/task_types';
 import {selectAnswer} from '../task/selectors';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {StepperStatus} from '../stepper';
+import {canReloadAnswer} from '../task/platform/platform';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -136,11 +137,11 @@ export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
 //
 // }
 
-export function* createSourceBufferFromDocument(document: Document) {
+export function* createSourceBufferFromDocument(document: Document, platform?: CodecastPlatform) {
     const state: AppStore = yield* appSelect();
 
     const newBufferName = yield* call(getNewBufferName);
-    const platform = state.options.platform;
+    platform = platform ?? state.options.platform;
     const newFileName = getNewFileName(state, platform);
 
     const newBuffer: BufferStateParameters = {
@@ -202,7 +203,7 @@ function* buffersSaga() {
         const state: AppStore = yield* appSelect();
         let newDocument = document ?? getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
         log.getLogger('editor').debug('Load new source code', newDocument);
-        yield* call(createSourceBufferFromDocument, newDocument);
+        yield* call(createSourceBufferFromDocument, newDocument, state.options.platform);
     });
 
     yield* takeEvery(bufferResetToDefaultSourceCode, function* ({payload: {bufferName}}) {
@@ -220,7 +221,7 @@ function* buffersSaga() {
         }
         const document = state.buffers.buffers[activeBuffer].document;
         const documentCopy = JSON.parse(JSON.stringify(document));
-        yield* call(createSourceBufferFromDocument, documentCopy);
+        yield* call(createSourceBufferFromDocument, documentCopy, state.buffers.buffers[activeBuffer].platform);
     });
 
     yield* takeEvery(bufferChangeActiveBufferName, function* () {
@@ -261,6 +262,10 @@ function* buffersSaga() {
                 platform: state.options.platform,
             };
 
+            if (!(yield* call(canReloadAnswer, answer))) {
+                throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
+            }
+
             yield* put(platformAnswerLoaded(answer));
             yield* put(platformTaskRefresh());
         } catch (e: any) {
@@ -281,7 +286,7 @@ function* buffersSaga() {
         yield* put(bufferInit({buffer, fileName: newFileName}));
     });
 
-    yield* takeEvery(bufferChangePlatform, function* ({payload: {bufferName, platform}}) {
+    yield* takeEvery(bufferChangePlatform, function* ({payload: {bufferName, platform, document}}) {
         const state = yield* appSelect();
         const bufferState = state.buffers.buffers[bufferName];
         const currentPlatform = bufferState.platform;
@@ -289,7 +294,7 @@ function* buffersSaga() {
 
         if (currentPlatform !== platform) {
             yield* call(createQuickalgoLibrary);
-            const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
+            document = document ?? getDefaultSourceCode(platform, state.environment, state.task.currentTask);
             yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
         }
     });

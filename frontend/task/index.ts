@@ -117,6 +117,7 @@ import {createSourceBufferFromDocument} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {Screen} from '../common/screens';
 import {DeferredPromise} from '../utils/app';
+import {bufferChangePlatform} from '../buffers/buffer_actions';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -397,7 +398,7 @@ function* taskLoadSaga(app: App, action) {
     const sourceBuffers = selectSourceBuffers(state);
     if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state)?.document)) {
         let newDocument = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
-        yield* call(createSourceBufferFromDocument, newDocument);
+        yield* call(createSourceBufferFromDocument, newDocument, state.options.platform);
     }
 
     yield* call(taskLevelLoadedSaga);
@@ -972,10 +973,14 @@ export default function (bundle: Bundle) {
             log.getLogger('task').debug('Platform answer loaded', answer);
             const state = yield* appSelect();
             if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
-                yield* call(createSourceBufferFromDocument, answer.document);
+                yield* call(createSourceBufferFromDocument, answer.document, answer.platform);
             } else {
                 const currentBuffer = state.buffers.activeBufferName;
-                yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
+                if (state.buffers.buffers[currentBuffer].platform !== answer.platform) {
+                    yield* put(bufferChangePlatform(currentBuffer, answer.platform, answer.document));
+                } else {
+                    yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
+                }
             }
         });
 

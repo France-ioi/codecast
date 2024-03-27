@@ -133,7 +133,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
         return;
     }
 
-    if (isLocalStorageEnabled() && window.localStorage.getItem('platform') && window.localStorage.getItem('platform') in platformsList) {
+    if (!isInPlatform() && isLocalStorageEnabled() && window.localStorage.getItem('platform') && window.localStorage.getItem('platform') in platformsList) {
         state.options.platform = window.localStorage.getItem('platform') as CodecastPlatform;
     }
 
@@ -153,6 +153,30 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
 
     if (!(state.options.platform in platformsList)) {
         throw new Error("Unknown platform name: " + state.options.platform);
+    }
+}
+
+function isInPlatform() {
+    var hasPlatform = false;
+    try {
+        // @ts-ignore
+        hasPlatform = (inIframe() && (typeof parent.TaskProxyManager !== 'undefined') && (typeof parent.generating == 'undefined' || parent.generating === true));
+    } catch(ex) {
+        // iframe from files:// url are considered cross-domain by Chrome
+        const urlParameters = new URLSearchParams(window.location.search);
+        if (location.protocol !== 'file:' && urlParameters.get('iframe') !== 'noApi') {
+            hasPlatform = true;
+        }
+    }
+
+    return hasPlatform;
+}
+
+function inIframe() {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        return false;
     }
 }
 
