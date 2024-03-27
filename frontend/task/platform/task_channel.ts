@@ -58,7 +58,7 @@ function makeTask (emit) {
         load: function (views, success, error) {
             emit(taskLoadEvent(views, success ?? (() => {}), error ?? (() => {})));
         },
-        gradeAnswer: function (answer, answerToken, success, error, silent = false) {
+        gradeAnswer: function (answer, answerToken, success, error, silent = true) {
             emit(taskGradeAnswerEvent(answer, answerToken, success ?? (() => {}), error ?? (() => {}), silent));
         },
     };
