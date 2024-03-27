@@ -269,10 +269,20 @@ export const checkSource = createAction('checkSource');
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
+        if ('main' !== (yield* appSelect(state => state.environment))) {
+            return;
+        }
+
         yield* debounce(500, checkSource, checkSourceSaga);
 
         // Debounce 500ms each time answer changes before checking source
-        yield* selectorChangeSaga(selectAnswer, function* () {
+        yield* selectorChangeSaga((state: AppStore) => {
+            return {
+                answer: selectAnswer(state),
+                level: state.task.currentLevel,
+                task: state.task.currentTask,
+            };
+        }, function* () {
             yield* put(checkSource());
         })
     });
