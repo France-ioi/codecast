@@ -82,3 +82,9 @@ export const taskGetResourcesPost = createAction('taskEventGetResourcesPost', (r
         callback,
     },
 }));
+
+export const platformValidateEvent = createAction('platformEventValidate', (mode: string) => ({
+    payload: {
+        mode,
+    },
+}));

@@ -5,12 +5,13 @@ import {generateTokenUrl, getTaskTokenForLevel} from "./task_token";
 import jwt from "jsonwebtoken";
 import {Bundle} from "../../linker";
 import makeTaskChannel from './task_channel';
-import makePlatformAdapter from './platform_adapter';
+import makePlatformAdapter, {makePlatformHelperChannel} from './platform_adapter';
 import {
     platformAnswerGraded,
     platformAnswerLoaded,
     platformTaskLink,
     platformTaskRefresh,
+    platformValidateEvent,
     taskGetAnswerEvent,
     taskGetHeightEvent,
     taskGetMetadataEvent,
@@ -53,6 +54,7 @@ import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {hasBlockPlatform} from '../../stepper/platforms';
+import {callPlatformValidate} from '../../submission/submission_actions';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -104,6 +106,11 @@ function sendErrorLog() {
     } catch(e) {}
 }
 
+function* dispatchActionToStore(action: Action) {
+    const environmentStore = Codecast.environments[taskEventsEnvironment ?? 'main'].store;
+    yield* call(environmentStore.dispatch, action);
+}
+
 function* linkTaskPlatformSaga() {
     const state = yield* appSelect();
     if ('main' !== state.environment) {
@@ -112,15 +119,18 @@ function* linkTaskPlatformSaga() {
 
     platformApi = makePlatformAdapter(window.platform);
 
+    const platformHelperChannel = yield* call(makePlatformHelperChannel);
+    const platformHelper = ((yield* take(platformHelperChannel)) as {platformHelper: any}).platformHelper;
+    platformApi.subscribe(platformHelper);
+
+    yield* takeEvery(platformHelperChannel, dispatchActionToStore);
+
     window.onerror = sendErrorLog;
 
     const taskChannel = yield* call(makeTaskChannel);
     taskApi = ((yield* take(taskChannel)) as {task: any}).task;
 
-    yield* takeEvery(taskChannel, function* (action: Action) {
-        const environmentStore = Codecast.environments[taskEventsEnvironment ?? 'main'].store;
-        yield* call(environmentStore.dispatch, action);
-    });
+    yield* takeEvery(taskChannel, dispatchActionToStore);
 
     window.task = taskApi;
     if (window.implementGetResources) {
@@ -488,7 +498,9 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
                     currentScoreToken = scoreToken;
                 }
 
-                yield* put(platformSaveScore({level, score, answer: answerObject[level]}));
+                if (!silent) {
+                    yield* put(platformSaveScore({level, score, answer: answerObject[level]}));
+                }
             }
 
             const levelScores = Object.values(taskLevels).map(element => ({
@@ -516,14 +528,18 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer: answerObject});
             const scoreWithPlatformParameters = minScore + (maxScore - minScore) * score;
 
-            yield* put(platformAnswerGraded({score, message}));
+            if (!silent) {
+                yield* put(platformAnswerGraded({score, message}));
+            }
             log.getLogger('tests').debug('[Tests] Evaluation result', {scoreWithPlatformParameters, message});
             yield* call(success, scoreWithPlatformParameters, message, scoreToken);
         }
     } catch (ex: any) {
         const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
             : (ex.message ? ex.message : ex.toString());
-        yield* put(platformAnswerGraded({error: message}));
+        if (!silent) {
+            yield* put(platformAnswerGraded({error: message}));
+        }
         console.error(ex);
         if (error) {
             yield* call(error, message);
@@ -563,6 +579,24 @@ export function getNextLevelIndex(levels: {[key: string]: TaskLevel}, currentLev
     }
 
     return null;
+}
+
+function* platformValidateEventSaga({payload: {mode}}: ReturnType<typeof platformValidateEvent>) {
+    if ('log' === mode) {
+        return;
+    }
+    if ('cancel' === mode) {
+        yield* put(taskReloadAnswerEvent('', () => {}, () => {}));
+    } else if ('stay' === mode) {
+        // A few tasks erroneously call this validate directly instead of the
+        // platform's validate
+        yield* put(callPlatformValidate('none'));
+    } else {
+        const answer = stringify(yield* getTaskAnswerAggregated());
+
+        // Grade in mode silent = false
+        yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, () => {}, () => {}, false));
+    }
 }
 
 export interface PlatformTaskGradingParameters {
@@ -614,5 +648,6 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskReloadAnswerEvent, taskReloadAnswerEventSaga);
         yield* takeEvery(taskGetResourcesPost, taskGetResourcesPostSaga);
         yield* takeEvery(platformTaskLink, linkTaskPlatformSaga);
+        yield* takeEvery(platformValidateEvent, platformValidateEventSaga);
     });
 }
