@@ -153,11 +153,11 @@ function convertUnixStackFrameToAnalysisStackFrame(unixStackFrame: StackFrameUni
     for (let variableName of unixStackFrame.localNames) {
         const {type, ref} = unixStackFrame.localMap[variableName];
         const limits = {scalars: 0, maxScalars: 15};
-        const value =  readValue(context, C.pointerType(type), ref.address, limits)
+        const value =  readValue(context, C.pointerType(type), ref.address, limits);
 
         const typeDecl = renderDeclType(type, '', 0);
 
-        const variable = convertUnixValueToDAPVariable(variableName, typeDecl, value, ref.address, {}, null, {});
+        const variable = convertUnixValueToDAPVariable(variableName, typeDecl, value, ref.address, {});
         variables.push(variable);
     }
 
@@ -226,12 +226,12 @@ function renderValue(value: string) {
     return value.toString();
 }
 
-export const convertUnixValueToDAPVariable = (name: string, type: string, value: any, address: any, visited: {[uuid: string]: boolean}, loadReference: string, loadedReferences): AnalysisVariable => {
+export const convertUnixValueToDAPVariable = (name: string, type: string, value: any, address: any, visited: {[uuid: string]: boolean}): AnalysisVariable => {
     // log.getLogger('python_runner').debug('convert value', name, value, visited, loadedReferences);
     let variableData = {
         name,
         type,
-        loaded: name in loadedReferences || (null !== loadReference && loadReference in loadedReferences),
+        loaded: false,
         address: address ? '0x' + address.toString(16) : null,
     };
 
@@ -251,6 +251,7 @@ export const convertUnixValueToDAPVariable = (name: string, type: string, value:
             ...variableData,
             value: renderValue(value.current),
             alreadyVisited: true,
+            loaded: !!value.load,
             variablesReference: 0,
         };
     }
@@ -258,7 +259,7 @@ export const convertUnixValueToDAPVariable = (name: string, type: string, value:
         return {
             ...variableData,
             value: renderValue(value.current),
-            variables: value.cells.map((cell, index) => convertUnixValueToDAPVariable(index, null, cell.content, address, visited, loadReference, loadedReferences)),
+            variables: value.cells.map((cell, index) => convertUnixValueToDAPVariable(index, null, cell.content, address, visited)),
             alreadyVisited: true,
             variablesReference: 0,
             collapsed: true,
@@ -269,7 +270,7 @@ export const convertUnixValueToDAPVariable = (name: string, type: string, value:
         return {
             ...variableData,
             value: renderValue(value.current),
-            variables: value.fields.map((field) => convertUnixValueToDAPVariable(field.name, null, field.content, address, visited, loadReference, loadedReferences)),
+            variables: value.fields.map((field) => convertUnixValueToDAPVariable(field.name, null, field.content, address, visited)),
             alreadyVisited: true,
             variablesReference: 0,
         };
