@@ -15,19 +15,19 @@ export function DirectivePanel({scale, directive, controls, context, functionCal
     }
 
     let directiveDescription;
-    if (platform === CodecastPlatform.Python) {
-        if (!analysisDirectiveViewDict[kind]) {
-            return <p>{'Error: undefined view kind '}{kind}</p>;
-        }
-
-        directiveDescription = analysisDirectiveViewDict[kind];
-    } else {
-        if (!C_directiveViewDict[kind]) {
-            return <p>{'Error: undefined view kind '}{kind}</p>;
-        }
-
-        directiveDescription = C_directiveViewDict[kind];
+    // if (platform === CodecastPlatform.Python) {
+    if (!analysisDirectiveViewDict[kind]) {
+        return <p>{'Error: undefined view kind '}{kind}</p>;
     }
+
+    directiveDescription = analysisDirectiveViewDict[kind];
+    // } else {
+    //     if (!C_directiveViewDict[kind]) {
+    //         return <p>{'Error: undefined view kind '}{kind}</p>;
+    //     }
+    //
+    //     directiveDescription = C_directiveViewDict[kind];
+    // }
 
     const props = directiveDescription.selector({scale, directive, context, controls, functionCallStack, allocatedWidth, allocatedHeight});
 

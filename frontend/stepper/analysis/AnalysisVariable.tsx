@@ -120,10 +120,10 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
             <React.Fragment>
                 <span className={`value-scalar ${hasPreviousValue ? 'value-has-changed' : ''} ${!hasPreviousValue && variable.loaded ? 'value-loaded' : ''}`}>
                     {sanitizeValue(variable.value)}
-                    {variable.displayType && <span className="value-type ml-1">
-                        &lt;{variable.type}&gt;
-                    </span>}
                 </span>
+                {variable.displayType && <span className="value-type ml-1">
+                    &lt;{variable.type}&gt;
+                </span>}
                 {hasPreviousValue ?
                     <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{sanitizeValue(variable.previousValue)}</span>
                     : null}

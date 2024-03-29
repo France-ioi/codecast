@@ -42,10 +42,10 @@ export function DebugDialog() {
                 <h1 className="mb-4">Choose which log levels to enable:</h1>
 
                 {Object.entries(log.getLoggers()).map(([name, logger]) =>
-                    <div style={{display: 'flex'}} key={name}>
+                    <label style={{display: 'flex', cursor: 'pointer'}} key={name}>
                         <span className="mr-2">{name}</span>
                         <Checkbox checked={logger.getLevel() === 1} onChange={() => onChangeLevel(name, logger.getLevel() !== 1)}/>
-                    </div>
+                    </label>
                 )}
             </div>
         </Dialog>

@@ -10,7 +10,7 @@ export const extractView = function(context, name: string, options) {
         return {error: getMessage('PYTHON_ARRAY2D_REF_UNDEFINED').format({name})};
     }
 
-    if ('list' !== ref.type) {
+    if (!ref.variables) {
         return {error: getMessage('PYTHON_ARRAY2D_REF_NOT_LIST').format({name})};
     }
 
