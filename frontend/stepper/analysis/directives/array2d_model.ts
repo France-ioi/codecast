@@ -7,11 +7,11 @@ export const extractView = function(context, name: string, options) {
 
     const ref = getVariable(analysis, name);
     if (!ref) {
-        return {error: getMessage('PYTHON_ARRAY2D_REF_UNDEFINED').format({name})};
+        return {error: getMessage('ARRAY2D_REF_UNDEFINED').format({name})};
     }
 
     if (!ref.variables) {
-        return {error: getMessage('PYTHON_ARRAY2D_REF_NOT_LIST').format({name})};
+        return {error: getMessage('ARRAY2D_REF_NOT_LIST').format({name})};
     }
 
     const rowCount = (options.rowCount) ? options.rowCount : ref.variables.length;

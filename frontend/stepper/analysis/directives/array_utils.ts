@@ -97,11 +97,11 @@ export const extractView = function(context, name, options) {
 
     const ref = getVariable(analysis, name);
     if (!ref) {
-        return {error: getMessage('PYTHON_ARRAY1D_REF_UNDEFINED').format({name})};
+        return {error: getMessage('ARRAY1D_REF_UNDEFINED').format({name})};
     }
 
-    if ('list' !== ref.type) {
-        return {error: getMessage('PYTHON_ARRAY1D_REF_NOT_LIST').format({name})};
+    if (!ref.variables) {
+        return {error: getMessage('ARRAY1D_REF_NOT_LIST').format({name})};
     }
 
     if (elemCount === undefined) {
