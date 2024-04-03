@@ -87,7 +87,7 @@ export function TaskLevelTabs() {
 
                     {bypassLock && <div className="has-text-centered">
                         <Button
-                            className="quickalgo-button"
+                            className="quickalgo-button is-medium"
                             onClick={doBypassLock}
                         >
                             {getMessage('TASK_LEVEL_LOCKED_MESSAGE_DEV_BUTTON')}
