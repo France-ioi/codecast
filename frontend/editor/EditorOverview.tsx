@@ -43,7 +43,7 @@ export function EditorOverview(props: EditorOverviewProps) {
                 <input
                     type='text'
                     placeholder="Name"
-                    className='bp3-input bp3-fill'
+                    className='bp4-input bp4-fill'
                     value={name || ''}
                     onChange={_nameChanged}
                 />
@@ -82,7 +82,7 @@ export function EditorOverview(props: EditorOverviewProps) {
                 <div className='vbox'>
                     {save.state === EditorSaveState.Pending &&
                         <div className='fill'>
-                            <Spinner size={Spinner.SIZE_SMALL} />
+                            <Spinner size={20} />
                             {getMessage('EDITOR_SAVING')}
                         </div>
                     }

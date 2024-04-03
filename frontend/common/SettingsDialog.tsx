@@ -70,7 +70,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
 
     return (
         <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={props.open} onClose={props.onClose} canEscapeKeyClose={closable} canOutsideClickClose={closable} isCloseButtonShown={closable}>
-            <div className='bp3-dialog-body'>
+            <div className='bp4-dialog-body'>
                 {canChangeLanguage && <div style={{marginBottom: '10px'}}>
                     <LanguageSelection closeMenu={props.onClose}/>
                 </div>}
@@ -79,9 +79,9 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 }
                 {ioModeSelect &&
                     <div>
-                        <label className='bp3-label'>
+                        <label className='bp4-label'>
                             {getMessage('IOPANE_MODE')}
-                            <div className='bp3-select'>
+                            <div className='bp4-select'>
                                 <select value={ioMode} onChange={onIOModeChanged}>
                                     {modeOptions.map(p =>
                                         <option
@@ -97,9 +97,9 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 }
                 {recordingEnabled &&
                     <div>
-                        <label className='bp3-label'>
+                        <label className='bp4-label'>
                             {getMessage('LAYOUT_TYPE_REQUIRED_LABEL')}
-                            <div className='bp3-select'>
+                            <div className='bp4-select'>
                                 <select value={layoutRequiredType || ''} onChange={onLayoutRequiredTypeChanged}>
                                     <option key="null" value={''}>{getMessage('NONE')}</option>
                                     {layoutChoices.map(p =>

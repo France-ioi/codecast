@@ -32,7 +32,7 @@ class _ExamplePicker extends React.PureComponent<ExamplePickerProps> {
 
         return (
             <div>
-                <label className='bp3-label'>
+                <label className='bp4-label'>
                     {getMessage('EXAMPLES_LABEL')}
                     <AnchorButton href={examplesUrl} rightIcon='share'>
                         {getMessage('EXAMPLES_BUTTON_TITLE')}

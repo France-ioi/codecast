@@ -44,7 +44,7 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
                     canOutsideClickClose={closable}
                     title={getMessage('AN_ERROR_OCCURRED')}
                 >
-                    <div className='bp3-dialog-body'>
+                    <div className='bp4-dialog-body'>
                         {source && <p>{"Source: "}{source}</p>}
                         <p style={{fontWeight: 'bold'}}>{(error || '').toString()}</p>
                         {source === 'react' &&

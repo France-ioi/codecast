@@ -343,7 +343,7 @@ export async function importPlatformModules(platform, modulesPath) {
 
 export function loadFonts(theme: string, task: Task|null) {
     if (window.FontsLoader) {
-        const fontsToLoad = ['inconsolata', 'blueprint-16'];
+        const fontsToLoad = ['inconsolata', 'blueprint-16-new'];
         if ('quickpi' === task?.gridInfos?.context) {
             fontsToLoad.push('fontawesome');
         }

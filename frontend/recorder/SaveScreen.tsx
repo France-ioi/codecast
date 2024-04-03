@@ -105,7 +105,7 @@ export function SaveScreen(props: SaveScreenProps) {
                 <input
                     id='eventsUrlInput'
                     type='text'
-                    className='bp3-input bp3-fill'
+                    className='bp4-input bp4-fill'
                     value={eventsUrl || ''}
                     readOnly
                     onFocus={handleFocus}
@@ -115,7 +115,7 @@ export function SaveScreen(props: SaveScreenProps) {
                 <input
                     id='audioUrlInput'
                     type='text'
-                    className='bp3-input bp3-fill'
+                    className='bp4-input bp4-fill'
                     value={audioUrl || ''}
                     readOnly
                     onFocus={handleFocus}
@@ -126,7 +126,7 @@ export function SaveScreen(props: SaveScreenProps) {
                 <input
                     id='wavAudioUrlInput'
                     type='text'
-                    className='bp3-input bp3-fill'
+                    className='bp4-input bp4-fill'
                     value={wavAudioUrl || ''}
                     readOnly
                     onFocus={handleFocus}
@@ -146,7 +146,7 @@ export function SaveScreen(props: SaveScreenProps) {
             </FormGroup>
             <div className="encoding-status">
                 {busy ?
-                    <Spinner size={Spinner.SIZE_SMALL} className="mr-2" />
+                    <Spinner size={20} className="mr-2" />
                     : (step === SaveStep.Done ?
                         <Icon icon='tick' intent={Intent.SUCCESS} />
                         : null)}

@@ -56,9 +56,9 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
 
     return (
         <Dialog icon='menu' title={getMessage('CLOSED_CAPTIONS_TITLE')} isOpen={props.open} onClose={props.onClose}>
-            <div className='bp3-dialog-body'>
+            <div className='bp4-dialog-body'>
                 {busy &&
-                    <Spinner size={Spinner.SIZE_SMALL}/>
+                    <Spinner size={20}/>
                 }
                 <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={_selectSubtitles}>
                     <Radio value='none' label={getMessage('CLOSED_CAPTIONS_OFF')}/>
@@ -87,7 +87,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
                 </div>
                 {isLoaded &&
                     <div style={{textAlign: 'center'}} className="mt-4">
-                        <a {...(hasLocalSubtitles ? {onClick: downloadSubtitles} : {href: availableOptions[loadedKey].url})} className='bp3-button bp3-small bp3-icon-download'
+                        <a {...(hasLocalSubtitles ? {onClick: downloadSubtitles} : {href: availableOptions[loadedKey].url})} className='bp4-button bp4-small bp4-icon-download'
                             target='_blank' rel="noreferrer" download>
                             {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
                         </a>

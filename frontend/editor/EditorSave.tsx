@@ -89,7 +89,7 @@ export function EditorSave() {
                 <input
                     type='text'
                     placeholder="Name"
-                    className='bp3-input bp3-fill'
+                    className='bp4-input bp4-fill'
                     value={name || ''}
                     onChange={_nameChanged}
                 />
@@ -123,7 +123,7 @@ export function EditorSave() {
 
                     {save.state === EditorSaveState.Pending &&
                         <div className='encoding-status fill'>
-                            <Spinner size={Spinner.SIZE_SMALL} className="mr-2 save-spinner"/>
+                            <Spinner size={20} className="mr-2 save-spinner"/>
                             {getMessage(save.step ? `UPLOADING_${save.step.toLocaleUpperCase()}` : 'EDITOR_SAVING')}
                         </div>
                     }

@@ -16,6 +16,7 @@ interface MultiVisualizationDispatchToProps {
 interface MultiVisualizationProps extends MultiVisualizationDispatchToProps {
     className?: string,
     currentVisualizationGroup: number,
+    children: React.ReactNode,
 }
 
 const _CustomToggle = ({children, onClick}, ref) => (

@@ -82,11 +82,11 @@
       background-color: var(--primary-color);
       color: white;
       font-weight: bold;
-      .bp3-icon {
+      .bp4-icon {
         color: white;
       }
     }
-    .bp3-icon {
+    .bp4-icon {
       color: var(--primary-color);
       margin-right: 5px;
     }
@@ -271,9 +271,9 @@
   }
 
   .documentation-select {
-    &.bp3-label {
+    &.bp4-label {
       margin-bottom: 0 !important;
-      .bp3-select {
+      .bp4-select {
         margin-top: 0 !important;
         &:after {
           display: none !important;

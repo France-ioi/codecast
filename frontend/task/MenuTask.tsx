@@ -56,7 +56,7 @@ export function MenuTask() {
         if (
             wrapperRef.current
             && !wrapperRef.current.contains(event.target)
-            && !event.target.closest('.bp3-portal')
+            && !event.target.closest('.bp4-portal')
             && menuOpen
         ) {
             setMenuOpen(false);
@@ -149,7 +149,7 @@ export function MenuTask() {
                 onClose={closeEditRecording}
             />
             <Dialog title={getMessage('MENU_ABOUT')} isOpen={aboutOpen} onClose={() => setAboutOpen(false)}>
-                <div className='bp3-dialog-body'>
+                <div className='bp4-dialog-body'>
                     <TaskAbout/>
                 </div>
             </Dialog>

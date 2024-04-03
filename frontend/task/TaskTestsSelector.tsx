@@ -4,7 +4,6 @@ import {updateCurrentTestId} from "./task_slice";
 import {useDispatch} from "react-redux";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {Spinner} from "@blueprintjs/core";
-import {getMessage} from "../lang";
 import {submissionChangePaneOpen} from '../submission/submission_slice';
 import {faList} from '@fortawesome/free-solid-svg-icons/faList';
 import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
@@ -112,7 +111,7 @@ export function TaskTestsSelector() {
                     </div>}
                     <span className={`test-title ${tooManyTests ? 'too-many-tests' : ''}`}>
                         {testStatuses[index] && <span className="test-icon">
-                            {testStatuses[index].executing && <Spinner size={Spinner.SIZE_SMALL}/>}
+                            {testStatuses[index].executing && <Spinner size={20}/>}
                             {!testStatuses[index].executing && testStatuses[index].errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: testStatuses[index].errorCodeData.color}}>
                                 <FontAwesomeIcon icon={testStatuses[index].errorCodeData.icon}/>
                             </div>}
