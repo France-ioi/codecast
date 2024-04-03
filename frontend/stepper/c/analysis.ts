@@ -202,7 +202,7 @@ function renderDeclType(type, subject, prec): string {
             return renderDeclType(type.pointee, `*${subject}`, 1);
         case 'array':
             return renderDeclType(type.elem,
-                `${parensIf(prec > 0, subject)}[${type.count && type.count.toString()}]`, 0);
+                `${parensIf(prec > 0, subject)}[${type.count ? type.count.toString() : ''}]`, 0);
         case 'record':
             return `struct ${type.name}${subject}`;
         case 'builtin':
