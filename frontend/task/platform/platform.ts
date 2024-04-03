@@ -276,11 +276,13 @@ function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, 
         if (!hasBlockPlatform(platform)) {
             platform = CodecastPlatform.Blockly;
         }
-    } else {
+    } else if ('string' === typeof answer) {
         document = uncompressIntoDocument(answer);
         if (hasBlockPlatform(platform)) {
             platform = CodecastPlatform.Python;
         }
+    } else {
+        throw new Error("Unknown answer format");
     }
 
     return {
@@ -292,7 +294,7 @@ function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, 
 
 export function* canReloadAnswer(answer: TaskAnswer) {
     if (!answer) {
-        return true;
+        return false;
     }
 
     const canChangePlatform = yield* appSelect(state => state.options.canChangePlatform);
@@ -332,6 +334,9 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             yield* call(taskAnswerReloadedSaga);
         } else if (answer) {
             const answerObject = yield* call(backwardCompatibilityConvert, JSON.parse(answer));
+            if (!(yield* call(canReloadAnswer, answerObject))) {
+                throw new Error("This answer is not accepted: " + answer)
+            }
             yield* put(platformAnswerLoaded(answerObject));
             yield* put(platformTaskRefresh());
             yield* call(success);
@@ -340,7 +345,7 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
         }
     } catch (ex: any) {
         console.error(ex);
-        yield* call(error, `bad answer: ${ex.message}`);
+        yield* call(error, `Answer cannot be reloaded (${answer}): ${ex.message}`);
     }
 }
 
