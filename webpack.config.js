@@ -60,7 +60,9 @@ module.exports = (env, argv) => {
             },
             alias: {
                 lamejs: 'lamejs/src/js/',
-                stream: 'stream-browserify'
+                stream: 'stream-browserify',
+                "react/jsx-runtime.js": "react/jsx-runtime",
+                "react/jsx-dev-runtime.js": "react/jsx-dev-runtime",
             },
             extensions: ['.tsx', '.ts', '.js']
         },

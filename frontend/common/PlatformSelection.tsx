@@ -33,7 +33,7 @@ export function PlatformSelection(props: PlatformSelectionProps) {
         }
     };
 
-    const selector = <div className='bp3-select'>
+    const selector = <div className='bp4-select'>
         <select onChange={setPlatform} value={currentPlatform}>
             {availablePlatforms.map(platform =>
                 <option key={platform} value={platform}>{getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`)}</option>
@@ -47,7 +47,7 @@ export function PlatformSelection(props: PlatformSelectionProps) {
 
     return (
         <div>
-            <label className='bp3-label'>
+            <label className='bp4-label'>
                 {getMessage('PLATFORM_SETTING')}
                 {selector}
             </label>

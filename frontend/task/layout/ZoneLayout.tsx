@@ -6,21 +6,20 @@ interface ZoneLayoutProps {
     name: string,
     metadata: LayoutElementMetadata,
     directives?: Directive[],
+    children: React.ReactNode,
 }
 
-export class ZoneLayout extends React.PureComponent<ZoneLayoutProps> {
-    render() {
-        const {metadata} = this.props;
-        const hasDesiredSize = !!metadata.desiredSize;
-        const style: React.CSSProperties = hasDesiredSize ? {flexBasis: metadata.desiredSize} : {flex: '1 0'};
-        if (false !== metadata.overflow) {
-            style.overflow = 'auto';
-        }
-
-        return (
-            <div className="zone-layout" style={style}>
-                {this.props.children}
-            </div>
-        );
+export function ZoneLayout(props: ZoneLayoutProps) {
+    const {metadata} = props;
+    const hasDesiredSize = !!metadata.desiredSize;
+    const style: React.CSSProperties = hasDesiredSize ? {flexBasis: metadata.desiredSize} : {flex: '1 0'};
+    if (false !== metadata.overflow) {
+        style.overflow = 'auto';
     }
+
+    return (
+        <div className="zone-layout" style={style}>
+            {props.children}
+        </div>
+    );
 }

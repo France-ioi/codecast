@@ -16,8 +16,8 @@ export function DocumentationLanguageSelector() {
     };
 
     return (
-        <label className='bp3-label documentation-select'>
-            <div className='bp3-select'>
+        <label className='bp4-label documentation-select'>
+            <div className='bp4-select'>
                 <select onChange={setDocumentationLanguage} value={documentationLanguage}>
                     {availablePlatforms.map(platform =>
                         <option key={platform} value={platform}>{getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`)}</option>

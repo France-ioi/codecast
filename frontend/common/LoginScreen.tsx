@@ -29,7 +29,7 @@ export function LoginScreen() {
                 {authProviders && authProviders.map((provider) =>
                     <a
                         key={provider}
-                        className='bp3-button'
+                        className='bp4-button'
                         onClick={() => openProvider(provider)}
                     >
                         {provider}

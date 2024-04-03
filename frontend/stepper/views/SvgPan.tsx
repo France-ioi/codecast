@@ -8,7 +8,8 @@ interface SvgPanProps {
     scale: any,
     className: any,
     getPosition: Function,
-    onPan: Function
+    onPan: Function,
+    children: React.ReactNode,
 }
 
 interface SvgPanState {

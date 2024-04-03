@@ -8,7 +8,8 @@ interface DirectiveFrameProps {
     controls?: StepperControls,
     title?: string,
     hasFullView?: boolean,
-    onChange?: Function
+    onChange?: Function,
+    children: React.ReactNode,
 }
 
 export class DirectiveFrame extends React.PureComponent<DirectiveFrameProps> {

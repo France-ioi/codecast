@@ -27,7 +27,7 @@ $color-active: fade-out($color-hover, 0.5);
     &:hover {
       border-color: $color-hover;
 
-      .bp3-icon {
+      .bp4-icon {
         fill: $color-hover;
       }
     }
@@ -35,12 +35,12 @@ $color-active: fade-out($color-hover, 0.5);
     &:active {
       border-color: $color-active;
 
-      .bp3-icon {
+      .bp4-icon {
         fill: $color-active;
       }
     }
 
-    .bp3-icon {
+    .bp4-icon {
       color: $color-theme;
     }
   }
@@ -53,11 +53,11 @@ $color-active: fade-out($color-hover, 0.5);
   border-radius: 4px;
   transition: width 0.3s, height 0.05s;
 
-  .bp3-slider-progress.bp3-intent-primary {
+  .bp4-slider-progress.bp4-intent-primary {
     background-color: $color-theme;
   }
 
-  .bp3-slider-handle {
+  .bp4-slider-handle {
     width: 14px;
     height: 14px;
     background: $color-theme;
@@ -68,7 +68,7 @@ $color-active: fade-out($color-hover, 0.5);
 
   &:not(disabled) {
     &:hover {
-      .bp3-slider-handle {
+      .bp4-slider-handle {
         transform: scale(1);
       }
     }

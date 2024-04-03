@@ -156,7 +156,7 @@ class _StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
                 <hr style={{width: '80%'}} />
                 <div style={{marginBottom: '30px', display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
                     {searchStatus === 'loading' &&
-                        <Spinner className="text-center" intent={Intent.PRIMARY} size={Spinner.SIZE_STANDARD} />
+                        <Spinner className="text-center" intent={Intent.PRIMARY} size={50} />
                     }
                     {rowData.length === 0 ?
                         searchStatus !== 'loading' && (

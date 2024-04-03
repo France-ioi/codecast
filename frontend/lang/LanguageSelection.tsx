@@ -26,9 +26,9 @@ export function LanguageSelection(props: LanguageSelectionProps) {
     };
 
     return (
-        <label className='bp3-label'>
+        <label className='bp4-label'>
             {getMessage('LANGUAGE:')}
-            <div className='bp3-select'>
+            <div className='bp4-select'>
                 <select onChange={setLanguage} value={language}>
                     {languageKeys.map(lang => {
                         const label = Languages[lang].language;

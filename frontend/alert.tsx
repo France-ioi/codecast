@@ -1,12 +1,14 @@
 import React, {Component, ReactElement} from 'react'
 import {Alert, Intent} from '@blueprintjs/core'
-import ReactDOM from 'react-dom'
+import {createRoot} from 'react-dom/client';
+
 
 export type ShowAlertProps = {
     handleClose?: (isConfirm: boolean) => void
     text?: string
     resolve?: (result: boolean) => void,
     intent?: Intent,
+    children?: React.ReactNode,
 }
 
 export type ShowConfirmProps = {
@@ -16,6 +18,7 @@ export type ShowConfirmProps = {
     intent?: Intent,
     confirmText?: string,
     cancelText?: string,
+    children?: React.ReactNode,
 }
 
 export const showAlert = (props: ShowAlertProps) => {
@@ -79,12 +82,14 @@ class AlertWrapper extends Component<ShowAlertProps | ShowConfirmProps> {
 
 export const renderOnDoc = (fn: (props: () => void) => ReactElement) => {
     const elemDiv = document.createElement('div')
-    document.body.appendChild(elemDiv)
+    document.body.appendChild(elemDiv);
+    const root = createRoot(elemDiv);
+
     const handleClose = () => {
         setTimeout(() => {
-            ReactDOM.unmountComponentAtNode(elemDiv)
+            root.unmount();
             document.body.removeChild(elemDiv)
         })
     }
-    ReactDOM.render(fn(handleClose), elemDiv)
+    root.render(fn(handleClose));
 }

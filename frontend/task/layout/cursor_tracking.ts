@@ -29,7 +29,7 @@ export function useCursorPositionTracking(specialZoneName?: string, pointToRecor
 
     useEffect(() => {
         if (!isRecording) {
-            return null;
+            return undefined;
         }
 
         const updateMousePosition = (ev) => {
