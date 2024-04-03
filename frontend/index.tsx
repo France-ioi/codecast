@@ -272,10 +272,6 @@ window.Codecast.start = function(options) {
             break;
 
         case 'task':
-            mainStore.dispatch({
-                type: StatisticsActionTypes.StatisticsLogLoadingData
-            });
-
             autoLogin();
 
             appDisplay = <TaskApp/>;
