@@ -1,7 +1,8 @@
-import {call, cancel, delay, fork, takeEvery} from 'typed-redux-saga';
+import {call, cancel, fork, takeEvery} from 'typed-redux-saga';
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {delay} from '../player/sagas';
 
 export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.VumeterMounted);

@@ -3,10 +3,8 @@ import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper
 import log from "loglevel";
 import {
     getNextLevelIndex,
-    platformApi,
     PlatformTaskGradingParameters,
     PlatformTaskGradingResult,
-    taskGetNextLevelToIncreaseScore,
 } from "../task/platform/platform";
 import {selectAnswer} from "../task/selectors";
 import {delay} from "../player/sagas";
@@ -22,8 +20,6 @@ import {
     submissionUpdateTaskSubmission,
 } from "./submission_slice";
 import {longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
-import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
-import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
 import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
@@ -40,12 +36,11 @@ import {
     TaskSubmissionServerResult
 } from './submission_types';
 import {Codecast} from '../app_types';
-import {Document} from '../buffers/buffer_types';
 import {documentToString} from '../buffers/document';
 import {murmurhash3_32_gc} from '../common/utils';
 import {bufferAssociateToSubmission} from '../buffers/buffers_slice';
 import {TaskLevelName} from '../task/platform/platform_slice';
-import {extractTestsFromTask} from './tests';
+import {callPlatformValidate} from './submission_actions';
 
 const executionsCache = {};
 const submissionExecutionTasks = {};
@@ -150,7 +145,7 @@ class TaskSubmissionExecutor {
             const nextLevel = getNextLevelIndex(levels, level);
             let stay = finalScore < 1 || null !== nextLevel;
 
-            yield* call([platformApi, platformApi.validate], stay ? 'stay' : 'done');
+            yield* put(callPlatformValidate(stay ? 'stay' : 'done'));
             if (1 <= finalScore && window.SrlLogger) {
                 window.SrlLogger.validation(100, 'none', 0);
             }

@@ -19,7 +19,6 @@ import {ReplayApi} from "./replay";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {inputBufferLibTest, PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
-import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
 import {currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
@@ -56,6 +55,10 @@ export interface ReplayContext {
 
 let timersStarted = 0;
 let timersEnded = 0;
+// /!\ Use this custom delay function and not the one from redux-saga
+// Using this function, when we create a new delay in the code,
+// during replay it will wait for this delay to be over
+// before moving to the next event to replay
 export function* delay<T = true>(
     ms: number,
     val?: T,
