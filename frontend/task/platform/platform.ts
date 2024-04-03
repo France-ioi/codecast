@@ -587,10 +587,6 @@ function* platformValidateEventSaga({payload: {mode}}: ReturnType<typeof platfor
     }
     if ('cancel' === mode) {
         yield* put(taskReloadAnswerEvent('', () => {}, () => {}));
-    } else if ('stay' === mode) {
-        // A few tasks erroneously call this validate directly instead of the
-        // platform's validate
-        yield* put(callPlatformValidate('none'));
     } else {
         const answer = stringify(yield* getTaskAnswerAggregated());
 
