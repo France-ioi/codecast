@@ -4,8 +4,7 @@ import url from 'url';
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import {Provider} from 'react-redux';
-import HTML5toTouch from 'react-dnd-multi-backend/dist/esm/HTML5toTouch';
-import MultiBackend from 'react-dnd-multi-backend';
+import {HTML5toTouch} from 'rdndmb-html5-to-touch';
 import log from 'loglevel';
 import 'rc-slider/assets/index.css?global';
 import {AppStore} from './store';
@@ -30,7 +29,7 @@ import '@france-ioi/skulpt/dist/skulpt.min.js';
 import '@france-ioi/skulpt/dist/skulpt-stdlib.js';
 import '@france-ioi/skulpt/dist/debugger.js';
 import {Portal} from "@blueprintjs/core";
-import {DndProvider} from "react-dnd";
+import {DndProvider} from "react-dnd-multi-backend";
 import {CustomDragLayer} from "./task/CustomDragLayer";
 import {TralalereApp} from "./tralalere/TralalereApp";
 import {TaskLevelName} from "./task/platform/platform_slice";
@@ -302,7 +301,7 @@ window.Codecast.start = function(options) {
     root.render(
         <Provider store={mainStore}>
             <AppErrorBoundary>
-                <DndProvider backend={MultiBackend} options={HTML5toTouch}>
+                <DndProvider options={HTML5toTouch}>
                     <CustomDragLayer/>
                     {appDisplay}
                 </DndProvider>
