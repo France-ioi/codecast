@@ -2,7 +2,7 @@ import './buffers/ace_loader';
 import './style.scss';
 import url from 'url';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import {Provider} from 'react-redux';
 import HTML5toTouch from 'react-dnd-multi-backend/dist/esm/HTML5toTouch';
 import MultiBackend from 'react-dnd-multi-backend';
@@ -298,7 +298,8 @@ window.Codecast.start = function(options) {
     }
 
     const container = document.getElementById('react-container');
-    ReactDOM.render(
+    const root = createRoot(container!);
+    root.render(
         <Provider store={mainStore}>
             <AppErrorBoundary>
                 <DndProvider backend={MultiBackend} options={HTML5toTouch}>
@@ -306,7 +307,7 @@ window.Codecast.start = function(options) {
                     {appDisplay}
                 </DndProvider>
             </AppErrorBoundary>
-        </Provider>, container
+        </Provider>
     );
 };
 
