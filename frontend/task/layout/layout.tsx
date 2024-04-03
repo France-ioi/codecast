@@ -49,7 +49,7 @@ interface XmlParserNodeProps {
 }
 
 interface XmlParserNode {
-    type: ReactNode,
+    type: any,
     props: XmlParserNodeProps,
     elements: XmlParserNode[],
     visualizationGroups?: LayoutVisualizationGroup[],
@@ -58,7 +58,7 @@ interface XmlParserNode {
 }
 
 interface Converters {
-    [key: string]: (attrs: object, data?: any) => ({type: ReactNode, metadata?: LayoutElementMetadata, props?: object})
+    [key: string]: (attrs: object, data?: any) => ({type: any, metadata?: LayoutElementMetadata, props?: object})
 }
 
 interface BuildZoneLayoutData {

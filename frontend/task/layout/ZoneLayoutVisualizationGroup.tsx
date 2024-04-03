@@ -3,6 +3,7 @@ import {LayoutElementMetadata} from "./layout";
 
 interface VisualizationGroupProps {
     metadata: LayoutElementMetadata,
+    children: React.ReactNode,
 }
 
 // A group in which we can have one or more visualizations that share the same zome in the layout

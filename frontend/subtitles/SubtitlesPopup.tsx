@@ -58,7 +58,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
         <Dialog icon='menu' title={getMessage('CLOSED_CAPTIONS_TITLE')} isOpen={props.open} onClose={props.onClose}>
             <div className='bp4-dialog-body'>
                 {busy &&
-                    <Spinner size={Spinner.SIZE_SMALL}/>
+                    <Spinner size={20}/>
                 }
                 <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={_selectSubtitles}>
                     <Radio value='none' label={getMessage('CLOSED_CAPTIONS_OFF')}/>

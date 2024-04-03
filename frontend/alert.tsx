@@ -8,6 +8,7 @@ export type ShowAlertProps = {
     text?: string
     resolve?: (result: boolean) => void,
     intent?: Intent,
+    children?: React.ReactNode,
 }
 
 export type ShowConfirmProps = {
@@ -17,6 +18,7 @@ export type ShowConfirmProps = {
     intent?: Intent,
     confirmText?: string,
     cancelText?: string,
+    children?: React.ReactNode,
 }
 
 export const showAlert = (props: ShowAlertProps) => {

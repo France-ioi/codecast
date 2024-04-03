@@ -25,7 +25,7 @@ import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
 interface DocumentationProps {
     standalone: boolean,
     hasTaskInstructions?: boolean,
-    header?: ReactFragment,
+    header?: React.ReactNode,
 }
 
 export function Documentation(props: DocumentationProps) {

@@ -82,7 +82,7 @@ export function EditorOverview(props: EditorOverviewProps) {
                 <div className='vbox'>
                     {save.state === EditorSaveState.Pending &&
                         <div className='fill'>
-                            <Spinner size={Spinner.SIZE_SMALL} />
+                            <Spinner size={20} />
                             {getMessage('EDITOR_SAVING')}
                         </div>
                     }

@@ -9,6 +9,7 @@ export enum RelativeLayoutOrientation {
 interface RelativeLayoutProps {
     orientation: RelativeLayoutOrientation,
     metadata: LayoutElementMetadata,
+    children: React.ReactNode,
 }
 
 export class RelativeLayout extends React.PureComponent<RelativeLayoutProps> {

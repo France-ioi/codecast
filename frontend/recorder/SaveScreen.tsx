@@ -146,7 +146,7 @@ export function SaveScreen(props: SaveScreenProps) {
             </FormGroup>
             <div className="encoding-status">
                 {busy ?
-                    <Spinner size={Spinner.SIZE_SMALL} className="mr-2" />
+                    <Spinner size={20} className="mr-2" />
                     : (step === SaveStep.Done ?
                         <Icon icon='tick' intent={Intent.SUCCESS} />
                         : null)}
