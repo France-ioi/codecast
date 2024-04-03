@@ -302,9 +302,7 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
                 <div className="memory-controls directive-controls">
                     <div className="memory-slider-container" style={{width: `${Math.min(400, allocatedWidth / 2)}px`}}>
                         <Slider prefixCls="memory-slider" value={centerAddress} min={0}
-                            max={maxAddress} onChange={this.onSeek}>
-                            <div className="memory-slider-background"/>
-                        </Slider>
+                            max={maxAddress} onChange={this.onSeek}/>
                     </div>
                     <span style={{verticalAlign: '6px', marginRight: '2px'}}>
                         <ButtonGroup>
