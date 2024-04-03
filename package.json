@@ -96,7 +96,7 @@
     "react-highlighter": "^0.4.3",
     "react-portal": "^4.2.2",
     "react-redux": "^8.1.1",
-    "react-resize-detector": "^9.1.0",
+    "react-resize-detector": "^9.1.1",
     "react-rnd": "^10.4.1",
     "react-svg-pan-zoom": "^3.12.1",
     "react-transition-group": "^4.4.5",
