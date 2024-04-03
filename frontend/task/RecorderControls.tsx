@@ -154,7 +154,7 @@ export function RecorderControls(props: RecorderControlsProps) {
             }
 
             <Dialog isOpen={Screen.Save === screen} title={getMessage("UPLOADING_TITLE")} isCloseButtonShown={saveDialogCanClose} onClose={() => saveDialogCanClose && onCancel()}>
-                <div className='bp3-dialog-body'>
+                <div className='bp4-dialog-body'>
                     {user ? <SaveScreen onCancel={onCancel}/> : <LoginScreen/>}
                 </div>
             </Dialog>

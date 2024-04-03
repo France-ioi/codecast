@@ -45,7 +45,7 @@ html {
 }
 
 /* Darker icons on blueprint buttons. */
-.bp3-button .bp3-icon, .bp3-button .bp3-icon-standard, .bp3-button .bp3-icon-large {
+.bp4-button .bp4-icon, .bp4-button .bp4-icon-standard, .bp4-button .bp4-icon-large {
   color: #3c5060;
 }
 
@@ -202,7 +202,7 @@ body#app, #app h1, #app h2, #app h3 {
 .terminal-view-header {
   display: flex;
   align-items: center;
-  .bp3-icon {
+  .bp4-icon {
     margin-left: 5px;
   }
 }
@@ -223,6 +223,10 @@ body#app, #app h1, #app h2, #app h3 {
   .empty-state-text {
     text-align: center;
   }
+}
+
+h6.bp4-heading {
+  font-size: 18px;
 }
 
 #vumeter {
@@ -269,7 +273,7 @@ ul.global-scope li, ul.object-scope li {
   top: -1px;
   right: -1px;
 }
-.stack-controls button.bp3-small {
+.stack-controls button.bp4-small {
   min-height: 20px;
 }
 
@@ -441,15 +445,15 @@ span + .value-previous {
 .directive-bar {
   margin-bottom: 6px;
 }
-.directive-bar .bp3-navbar {
+.directive-bar .bp4-navbar {
   height: 40px;
   padding: 0 8px;
   box-shadow: none;
 }
-.directive-bar .bp3-navbar-group {
+.directive-bar .bp4-navbar-group {
   height: 40px;
 }
-.directive-bar .bp3-button {
+.directive-bar .bp4-button {
   margin-right: 8px;
 }
 
@@ -467,7 +471,7 @@ span + .value-previous {
   right: -1px;
 }
 
-.memory-controls .bp3-button-group {
+.memory-controls .bp4-button-group {
     vertical-align: 6px;
     padding-right: 2px;
 }
@@ -758,6 +762,6 @@ button.btn-cc {
   width: 100%;
 }
 
-.bp3-dialog:not(.simple-dialog):not(.bp3-alert) {
+.bp4-dialog:not(.simple-dialog):not(.bp4-alert) {
   padding-bottom: 0;
 }

@@ -82,7 +82,7 @@ export function TaskLevelTabs() {
                 onClose={closeLockedDialog}
                 title={getMessage('TASK_LEVEL_LOCKED_TITLE')}
             >
-                <div className='bp3-dialog-body'>
+                <div className='bp4-dialog-body'>
                     <p>{getMessage(bypassLock ? 'TASK_LEVEL_LOCKED_MESSAGE_DEV' : 'TASK_LEVEL_LOCKED_MESSAGE')}</p>
 
                     {bypassLock && <div className="has-text-centered">

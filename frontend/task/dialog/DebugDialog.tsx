@@ -38,7 +38,7 @@ export function DebugDialog() {
             canEscapeKeyClose
             onClose={() => setOpen(false)}
         >
-            <div className='bp3-dialog-body'>
+            <div className='bp4-dialog-body'>
                 <h1 className="mb-4">Choose which log levels to enable:</h1>
 
                 {Object.entries(log.getLoggers()).map(([name, logger]) =>

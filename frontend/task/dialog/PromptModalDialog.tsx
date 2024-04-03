@@ -101,7 +101,7 @@ export function PromptModalDialog() {
             <form onSubmit={validate}>
                 {ModalType.input === modalData.mode &&
                     <div className="text-center mb-2 mt-4">
-                        <input autoFocus type="text" className='modal-input bp3-input bp3-fill' value={inputValue} onChange={(event) => setInputValue(event.target.value)}></input>
+                        <input autoFocus type="text" className='modal-input bp4-input bp4-fill' value={inputValue} onChange={(event) => setInputValue(event.target.value)}></input>
                     </div>
                 }
 

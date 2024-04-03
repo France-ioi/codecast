@@ -43,7 +43,7 @@ export function EditorOverview(props: EditorOverviewProps) {
                 <input
                     type='text'
                     placeholder="Name"
-                    className='bp3-input bp3-fill'
+                    className='bp4-input bp4-fill'
                     value={name || ''}
                     onChange={_nameChanged}
                 />
