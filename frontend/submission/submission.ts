@@ -148,11 +148,23 @@ export interface TestResultDiffLog {
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* takeEvery(callPlatformValidate, function* (action) {
+            const environment = yield* appSelect(state => state.environment);
+            // Don't interact with the platform in replay mode
+            if ('main' !== environment) {
+                return;
+            }
+
             const platformAction = action.payload.action ?? 'done';
             yield* call([platformApi, platformApi.validate], platformAction);
         });
 
         yield* takeEvery(callPlatformLog, function* ({payload: {details}}) {
+            const environment = yield* appSelect(state => state.environment);
+            // Don't interact with the platform in replay mode
+            if ('main' !== environment) {
+                return;
+            }
+
             yield* call([platformApi, platformApi.log], details);
         });
 
