@@ -1,5 +1,5 @@
 import {Bundle} from "../linker";
-import {call, delay, put, race, take, takeEvery} from "typed-redux-saga";
+import {call, put, race, take, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {platformApi} from "../task/platform/platform";
 import {appSelect} from '../hooks';

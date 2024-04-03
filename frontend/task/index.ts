@@ -7,7 +7,8 @@ import {
 } from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {all, call, cancel, cancelled, delay, fork, put, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {all, call, cancel, cancelled, fork, put, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {delay} from "../player/sagas";
 import {getRecorderState} from "../recorder/selectors";
 import {AppStore} from "../store";
 import QuickalgoLibsBundle, {
@@ -719,7 +720,7 @@ function* watchRecordingProgressSaga(app: App) {
         const shouldUpdate = previousStep !== nextStep;
         if (shouldUpdate) {
             log.getLogger('task').debug('[recording.progress] update', previousStep, nextStep);
-            yield* call([platformApi, platformApi.validate], 'done');
+            yield* put(callPlatformValidate('done'));
         }
     }
 }

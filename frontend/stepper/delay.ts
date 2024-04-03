@@ -1,4 +1,4 @@
-import {delay} from 'typed-redux-saga';
+import {delay} from '../player/sagas';
 import {StepperContext} from "./api";
 import {Bundle} from "../linker";
 

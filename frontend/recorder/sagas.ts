@@ -1,4 +1,4 @@
-import {call, delay, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-saga';
+import {call, delay, put, race, take, takeEvery, takeLatest} from 'typed-redux-saga';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {spawnWorker} from '../utils/worker_utils';
