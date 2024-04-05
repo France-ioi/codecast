@@ -7,9 +7,14 @@ export const asyncRequestJson = function(path, body, withCredentials = true) {
     const promise = new Promise<any>(function(resolve, reject) {
         req = request.post(path);
 
-        const token = isLocalStorageEnabled() && withCredentials ? window.localStorage.getItem('token') : null;
+        if (isLocalStorageEnabled() && withCredentials) {
+            body = {
+                ...body,
+                token: window.localStorage.getItem('token'),
+            };
+        }
         req.set('Accept', 'application/json');
-        req.send({...body, token});
+        req.send(body);
         req.end(function(err, res) {
             if (err || !res.ok) {
                 return reject({err, res});
