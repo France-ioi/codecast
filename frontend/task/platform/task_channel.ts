@@ -8,10 +8,14 @@ import {
     taskUnloadEvent, taskUpdateTokenEvent
 } from "./actionTypes";
 import {Action} from "redux";
+import {appSelect} from '../../hooks';
+import {AppStore} from '../../store';
 
-export default function () {
+export default function* () {
+    const state = yield* appSelect();
+
     return eventChannel<{task: any} | Action>(function (emit) {
-        const task = makeTask(emit);
+        const task = makeTask(emit, state);
         emit({task});
         return function () {
             for (let prop of Object.keys(task)) {
@@ -23,7 +27,7 @@ export default function () {
     }, buffers.expanding(4));
 }
 
-function makeTask (emit) {
+function makeTask (emit, state: AppStore) {
     return {
         showViews: function (views, success, error) {
             emit(taskShowViewsEvent(views, success ?? (() => {}), error ?? (() => {})));
@@ -58,7 +62,13 @@ function makeTask (emit) {
         load: function (views, success, error) {
             emit(taskLoadEvent(views, success ?? (() => {}), error ?? (() => {})));
         },
-        gradeAnswer: function (answer, answerToken, success, error, silent = true) {
+        gradeAnswer: function (answer, answerToken, success, error, silent) {
+            const isTralalere = 'tralalere' === state.options.app;
+            if (isTralalere && undefined === silent) {
+                silent = false;
+            } else {
+                silent = true;
+            }
             emit(taskGradeAnswerEvent(answer, answerToken, success ?? (() => {}), error ?? (() => {}), silent));
         },
     };
