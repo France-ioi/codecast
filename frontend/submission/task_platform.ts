@@ -7,7 +7,6 @@ import {submissionUpdateTaskSubmission} from './submission_slice';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
 import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms';
 import {documentToString} from '../buffers/document';
-import {getAnswerTokenForLevel, getTaskTokenForLevel} from '../task/platform/task_token';
 import stringify from 'json-stable-stringify-without-jsonify';
 import {TaskLevelName} from '../task/platform/platform_slice';
 import {CodecastPlatform} from '../stepper/codecast_platform';
@@ -122,16 +121,15 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
     }
 }
 
-export function* makeServerSubmission(answer: TaskAnswer, level: TaskLevelName, platform: CodecastPlatform, userTests: TaskTest[]) {
+export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, platform: CodecastPlatform, userTests: TaskTest[]) {
     const state = yield* appSelect();
     const taskPlatformUrl = state.options.taskPlatformUrl;
-    const randomSeed = state.platform.taskRandomSeed;
-    const newTaskToken = getTaskTokenForLevel(level, randomSeed);
+    // TODO: check if answerToken is given, otherwise generate dummy answer token?
+    const taskToken = state.platform.taskToken;
     const answerContent = documentToString(answer.document);
-    const answerToken = getAnswerTokenForLevel(stringify(answerContent), level, randomSeed);
 
     const body = {
-        token: newTaskToken,
+        token: taskToken,
         answerToken: answerToken,
         answer: {
             language: platform,

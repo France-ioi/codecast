@@ -1,7 +1,6 @@
 import {call, fork, put, select, take, takeEvery} from 'typed-redux-saga';
 import stringify from 'json-stable-stringify-without-jsonify';
 import {getHeight, windowHeightMonitorSaga} from "./window_height_monitor";
-import {generateTokenUrl, getTaskTokenForLevel} from "./task_token";
 import jwt from "jsonwebtoken";
 import {Bundle} from "../../linker";
 import makeTaskChannel from './task_channel';
@@ -476,28 +475,6 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         });
     }
 
-    let level = yield* appSelect(state => state.task.currentLevel);
-    if (!level) {
-        const urlParameters = new URLSearchParams(window.location.search);
-        const query = Object.fromEntries(urlParameters);
-
-        if (options && options.version) {
-            level = options.version;
-        } else {
-            if (!query['version'] && window.options) {
-                query['taskID'] = window.options.defaults.taskID;
-                query['version'] = window.options.defaults.version;
-                window.location.href = generateTokenUrl(query);
-                return;
-            } else {
-                level = query['version'] as TaskLevelName;
-            }
-        }
-    }
-
-    const taskToken = getTaskTokenForLevel(level, randomSeed);
-    yield* put(platformTokenUpdated(taskToken));
-
     try {
         const taskLoadParameters: {level?: TaskLevelName} = {};
         if (options.level) {
@@ -505,12 +482,6 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         }
         yield* put(taskLoad(taskLoadParameters));
         yield* take(taskLoaded);
-
-        // if (serverApi) {
-        //     const taskData = yield* call(serverApi, 'tasks', 'taskData', {task: taskToken});
-        //     //yield* put({type: taskInit, payload: {taskData}});
-        // }
-
         yield* call(success);
         yield* fork(windowHeightMonitorSaga, platformApi);
     } catch (ex) {
@@ -519,7 +490,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     }
 }
 
-export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, updateScore, showResult}}: ReturnType<typeof taskGradeAnswerEvent>) {
+export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, success, error, updateScore, showResult}}: ReturnType<typeof taskGradeAnswerEvent>) {
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);
@@ -570,11 +541,6 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, up
             log.getLogger('tests').debug('[Tests] Evaluation result', {scoreWithPlatformParameters, currentMessage});
             yield* call(success, scoreWithPlatformParameters, currentMessage, currentScoreToken);
         } else {
-            // if (!answerToken) {
-            //     const answer = yield getTaskAnswer();
-            //     answerToken = window.task_token.getAnswerToken(stringify(answer));
-            // }
-
             const answerObject = JSON.parse(answer);
 
             // Score is between 0 and 1
@@ -651,6 +617,7 @@ function* platformValidateEventSaga({payload: {mode}}: ReturnType<typeof platfor
 export interface PlatformTaskGradingParameters {
     level?: TaskLevelName,
     answer?: TaskAnswer,
+    answerToken?: string,
     scope?: SubmissionExecutionScope,
 }
 

@@ -77,10 +77,9 @@ import {
     TaskLevelName,
     taskLevelsList
 } from "./platform/platform_slice";
-import {getTaskTokenForLevel} from "./platform/task_token";
 import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
-import {createEmptyBufferState, isEmptyDocument} from "../buffers/document";
+import {isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
@@ -536,10 +535,6 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(taskCurrentLevelChange({level: newLevel}));
 
     yield* put({type: LayoutActionTypes.LayoutInstructionsIndexChanged, payload: {tabIndex: 0, pageIndex: 0}});
-
-    const randomSeed = yield* appSelect(state => state.platform.taskRandomSeed);
-    const taskToken = getTaskTokenForLevel(newLevel, randomSeed);
-    yield* put(platformTokenUpdated(taskToken));
 
     const deferredPromise = new DeferredPromise();
     yield* put(updateCurrentTestId({testId: 0, record: false, recreateContext: true, callback: deferredPromise.resolve}));
