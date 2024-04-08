@@ -124,7 +124,6 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
 export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, platform: CodecastPlatform, userTests: TaskTest[]) {
     const state = yield* appSelect();
     const taskPlatformUrl = state.options.taskPlatformUrl;
-    // TODO: check if answerToken is given, otherwise generate dummy answer token?
     const taskToken = state.platform.taskToken;
     const answerContent = documentToString(answer.document);
 

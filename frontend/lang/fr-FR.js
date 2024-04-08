@@ -353,4 +353,6 @@ module.exports = {
     SUBMISSION_RESULT_OUTPUT_PROGRAM: "Votre programme a affiché :",
     SUBMISSION_RESULT_OUTPUT_EXPECTED: "Alors que la réponse attendue était :",
     SUBMISSION_RESULT_OUTPUT_HELP: "Pour vous aider, le premier caractère différent est mis sur fond rouge.<br><br>Vérifiez bien que vous affichez exactement ce qui est demandé et rien de plus. Vérifiez aussi les retours à la ligne.",
+    LOCAL_WORK_URL: "Utilisez cette commande pour soumettre :",
+    COPIED: "Copié !",
 };

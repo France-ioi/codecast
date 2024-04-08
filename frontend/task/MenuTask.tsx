@@ -23,6 +23,7 @@ import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {bufferDownload, bufferReload} from '../buffers/buffer_actions';
 import {isServerTask} from './task_types';
 import {LocalWorkDialog} from './LocalWorkDialog';
+import {IconNames} from '@blueprintjs/icons';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -145,7 +146,7 @@ export function MenuTask() {
                     </React.Fragment>
                 }
                 {serverTask && <div className="menu-item" onClick={() => setLocalWorkOpen(!localWorkOpen)}>
-                    <Icon icon="code"/>
+                    <Icon icon={IconNames.Console}/>
                     <span>{getMessage('MENU_LOCAL')}</span>
                 </div>}
             </div>

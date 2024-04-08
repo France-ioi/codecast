@@ -1,8 +1,10 @@
-import {AnchorButton, Dialog, FormGroup, InputGroup} from "@blueprintjs/core";
-import React from "react";
+import {Button, ControlGroup, Dialog, FormGroup, InputGroup} from "@blueprintjs/core";
+import React, {useRef, useState} from "react";
 import {getMessage} from "../lang";
 import {IconNames} from '@blueprintjs/icons';
 import {useAppSelector} from '../hooks';
+import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
+import {platformsList} from '../stepper/platforms';
 
 interface LocalWorkDialogProps {
     open: boolean,
@@ -11,12 +13,27 @@ interface LocalWorkDialogProps {
 
 export function LocalWorkDialog(props: LocalWorkDialogProps) {
     const taskToken = useAppSelector(state => state.platform.taskToken);
-    const shellCommand = `fioi submit file.py ${taskToken}`
+    const platform = useAppSelector(selectActiveBufferPlatform);
+    const shellCommand = `fioi submit code.${platformsList[platform].extension} ${taskToken}`;
+    const [copied, setCopied] = useState(false);
+    const timeoutRef = useRef<NodeJS.Timeout>();
+
     const handleFocus = (event) => event.target.select();
+
+    const copyCommand = () => {
+        navigator.clipboard.writeText(shellCommand);
+        setCopied(true);
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(() => {
+            setCopied(false);
+        }, 2000);
+    };
 
     return (
         <Dialog
-            icon='code'
+            icon="menu"
             title={getMessage('MENU_LOCAL')}
             isOpen={props.open}
             onClose={props.onClose}
@@ -25,14 +42,20 @@ export function LocalWorkDialog(props: LocalWorkDialogProps) {
             isCloseButtonShown={true}
         >
             <div className='bp4-dialog-body'>
-                <FormGroup labelFor='shellCommand' label={getMessage('EDITOR_LINK')} className="mt-4">
-                    <InputGroup
-                        leftIcon={IconNames.LINK}
-                        type='text'
-                        value={shellCommand}
-                        readOnly
-                        onFocus={handleFocus}
-                    />
+                <FormGroup labelFor='shellCommand' label={getMessage('LOCAL_WORK_URL')}>
+                    <ControlGroup>
+                        <InputGroup
+                            leftIcon={IconNames.Console}
+                            type='text'
+                            value={shellCommand}
+                            readOnly
+                            onFocus={handleFocus}
+                        />
+                        <Button icon={copied ? 'tick' : 'duplicate'} onClick={copyCommand} />
+                        {copied && <div className="ml-1" style={{fontSize: '0.85rem', display: 'flex', alignItems: 'center'}}>
+                            {getMessage('COPIED')}
+                        </div>}
+                    </ControlGroup>
                 </FormGroup>
             </div>
         </Dialog>
