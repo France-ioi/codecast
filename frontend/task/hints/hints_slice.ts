@@ -27,17 +27,6 @@ export const hintsInitialState = {
     unlockedHintIds: [],
 } as HintsState;
 
-export const selectAvailableHints = memoize((state: AppStore): TaskHint[] => {
-    const levels = state.platform.levels;
-    const currentLevel = state.task.currentLevel;
-    const currentLevelScore = currentLevel && currentLevel in levels ? levels[currentLevel].score : 0;
-
-    return state.hints.availableHints.filter(hint => {
-        return ((undefined === hint.minScore || currentLevelScore >= hint.minScore)
-            && (!hint.levels || hint.levels.includes(currentLevel)));
-    });
-});
-
 export const hintsSlice = createSlice({
     name: 'hints',
     initialState: hintsInitialState,
