@@ -247,7 +247,7 @@ export abstract class QuickAlgoLibrary {
         log.getLogger('libraries').debug('reset and reload state', taskInfos, innerState);
 
         // Avoid resetting context visualization if the paper does not have a visible container on the page
-        const hasVisualization = 0 < document.getElementsByClassName('context-visualization').length;
+        const hasVisualization = 0 < document.getElementsByClassName('task-visualization').length;
         if (!hasVisualization) {
             this.display = false;
         }

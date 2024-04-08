@@ -13,7 +13,7 @@ import {submissionChangeDisplayedError, SubmissionErrorType} from '../submission
 import {Alert} from "react-bootstrap";
 import {toHtml} from '../utils/sanitize';
 import {nl2br} from '../common/utils';
-import {Button} from '@blueprintjs/core';
+import {Button, Spinner} from '@blueprintjs/core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {
@@ -81,7 +81,11 @@ export function ContextVisualization() {
     };
 
     let innerVisualization;
-    if (submission && SubmissionErrorType.CompilationError === submissionDisplayedError && submission.result && submission.result.compilationError) {
+    if (!taskLoaded) {
+        innerVisualization = <div className="task-visualization-not-public">
+            <Spinner size={50}/>
+        </div>;
+    } else if (submission && SubmissionErrorType.CompilationError === submissionDisplayedError && submission.result && submission.result.compilationError) {
         innerVisualization = createAlertVisualization(<div dangerouslySetInnerHTML={toHtml(submission.result.compilationMessage)}></div>);
     } else if (submission && SubmissionErrorType.CompilationWarning === submissionDisplayedError && submission.result && submission.result.compilationMessage) {
         innerVisualization = createAlertVisualization(submission.result.compilationMessage);
