@@ -142,7 +142,7 @@ export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, p
             clientId: test.id,
         })),
         sLocale: state.options.language.split('-')[0],
-        platform: state.submission.platformName,
+        platform: state.platform.platformName,
         taskId: String(state.task.currentTask.id),
         taskParams: {
             minScore: 0,

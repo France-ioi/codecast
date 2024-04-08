@@ -13,8 +13,9 @@ interface LocalWorkDialogProps {
 
 export function LocalWorkDialog(props: LocalWorkDialogProps) {
     const taskToken = useAppSelector(state => state.platform.taskToken);
+    const platformName = useAppSelector(state => state.platform.platformName);
     const platform = useAppSelector(selectActiveBufferPlatform);
-    const shellCommand = `fioi submit code.${platformsList[platform].extension} ${taskToken}`;
+    const shellCommand = `fioi submit code.${platformsList[platform].extension} --platform ${platformName} --token ${taskToken}`;
     const [copied, setCopied] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout>();
 

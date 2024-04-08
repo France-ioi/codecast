@@ -449,21 +449,11 @@ function* taskReloadStateEventSaga ({payload: {success, error}}: ReturnType<type
 function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnType<typeof taskLoadEvent>) {
     const taskParams = yield* call(platformApi.getTaskParams, null, null);
     let {randomSeed, options} = taskParams;
-    // Fix issue with too large randomSeed that overflow int capacity
-    randomSeed = String(randomSeed);
-    if ('0' === randomSeed) {
-        randomSeed = String(Math.floor(Math.random() * 10));
-        if (window.task_token) {
-            const token = window.task_token.get();
-            if (token) {
-                const payload = jwt.decode(token);
-                if (null !== payload.randomSeed && undefined !== payload.randomSeed) {
-                    randomSeed = String(payload.randomSeed);
-                }
-            }
-        }
+    if (randomSeed) {
+        // Fix issue with too large randomSeed that overflow int capacity
+        randomSeed = String(randomSeed);
+        yield* put(platformTaskRandomSeedUpdated(randomSeed));
     }
-    yield* put(platformTaskRandomSeedUpdated(randomSeed));
 
     const taskVariant = yield* appSelect(state => state.options.taskVariant);
     const randomTaskVariants = yield* appSelect(state => state.options.randomTaskVariants);

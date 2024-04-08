@@ -23,6 +23,7 @@ export interface PlatformState {
     taskToken: string,
     levels: {[key: string]: TaskLevel},
     taskParams: PlatformTaskParams,
+    platformName: string,
 }
 
 export interface PlatformTaskParams {
@@ -44,6 +45,7 @@ export const platformInitialState = {
     taskToken: null,
     levels: {},
     taskParams: {},
+    platformName: null,
 } as PlatformState;
 
 export const getDefaultTaskLevel = (level: TaskLevelName) => {
@@ -111,6 +113,9 @@ export const platformSlice = createSlice({
         platformTaskParamsUpdated(state: PlatformState, action: PayloadAction<PlatformTaskParams>) {
             state.taskParams = action.payload;
         },
+        platformChangeName(state, action: PayloadAction<string>) {
+            state.platformName = action.payload;
+        },
     },
 });
 
@@ -122,6 +127,7 @@ export const {
     platformSaveScore,
     platformSaveAnswer,
     platformUnlockLevel,
+    platformChangeName,
 } = platformSlice.actions;
 
 export default platformSlice;
