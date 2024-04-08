@@ -103,6 +103,7 @@ module.exports = {
     MENU_ABOUT: "À propos",
     MENU_DOWNLOAD: "Enregistrer",
     MENU_RELOAD: "Recharger",
+    MENU_LOCAL: "Travailler en local",
     EXAMPLES_LABEL: "Exemples: ",
     EXAMPLES_BUTTON_TITLE: "Afficher la liste",
     EXAMPLES_MESSAGE: "Charger un exemple interrompt toute activité en cours",

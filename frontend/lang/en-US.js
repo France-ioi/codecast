@@ -101,6 +101,7 @@ module.exports = {
     MENU_ABOUT: "About",
     MENU_DOWNLOAD: "Save",
     MENU_RELOAD: "Reload",
+    MENU_LOCAL: "Work locally",
     EXAMPLES_LABEL: "Examples: ",
     EXAMPLES_BUTTON_TITLE: "View list",
     EXAMPLES_MESSAGE: "Loading an example interrupts any pending action",

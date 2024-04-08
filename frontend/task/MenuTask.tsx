@@ -21,6 +21,8 @@ import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {bufferDownload, bufferReload} from '../buffers/buffer_actions';
+import {isServerTask} from './task_types';
+import {LocalWorkDialog} from './LocalWorkDialog';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -31,6 +33,8 @@ export function MenuTask() {
     const canRecord = useAppSelector(state => state.options.canRecord);
     const hideSettings = useAppSelector(state => state.options.hideSettings);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
+    const currentTask = useAppSelector(state => state.task.currentTask);
+    const serverTask = null !== currentTask && isServerTask(currentTask);
 
     const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     const layoutType = useAppSelector(state => state.layout.type);
@@ -39,6 +43,7 @@ export function MenuTask() {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);
+    const [localWorkOpen, setLocalWorkOpen] = useState(false);
 
     const controls = useAppSelector(state => state.options.controls);
 
@@ -139,6 +144,10 @@ export function MenuTask() {
                         </div>
                     </React.Fragment>
                 }
+                {serverTask && <div className="menu-item" onClick={() => setLocalWorkOpen(!localWorkOpen)}>
+                    <Icon icon="code"/>
+                    <span>{getMessage('MENU_LOCAL')}</span>
+                </div>}
             </div>
             <SettingsDialog
                 open={settingsOpen || forceSettingsOpen}
@@ -148,6 +157,10 @@ export function MenuTask() {
             <EditRecordingDialog
                 open={screen === Screen.EditorSave}
                 onClose={closeEditRecording}
+            />
+            <LocalWorkDialog
+                open={localWorkOpen}
+                onClose={() => setLocalWorkOpen(false)}
             />
             <Dialog title={getMessage('MENU_ABOUT')} isOpen={aboutOpen} onClose={() => setAboutOpen(false)}>
                 <div className='bp4-dialog-body'>
