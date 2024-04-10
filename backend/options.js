@@ -16,6 +16,7 @@ export function buildCommonOptions(config, start) {
         canChangePlatform: /sandbox|recorder|task/.test(start),
         canChangeLanguage: true,
         controls: {},
+        canDownload: true,
     };
 }
 
