@@ -55,6 +55,8 @@ import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {hasBlockPlatform} from '../../stepper/platforms';
 import {callPlatformValidate} from '../../submission/submission_actions';
+import {loadOptionsFromQuery} from '../../common/options';
+import {CodecastOptions} from '../../store';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -357,7 +359,12 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 
 function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType<typeof taskGetResourcesPost>) {
     const options = yield* appSelect(state => state.options);
-    const optionsToPreload = {
+    let optionsToPreload = {};
+    const urlParameters = new URLSearchParams(window.location.search);
+    const queryParameters = Object.fromEntries(urlParameters);
+    loadOptionsFromQuery(optionsToPreload as CodecastOptions, queryParameters);
+    optionsToPreload = {
+        ...optionsToPreload,
         platform: options.platform,
         language: options.language,
     };
