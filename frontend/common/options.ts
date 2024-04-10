@@ -14,7 +14,7 @@ import {IoMode} from '../stepper/io';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 
-function loadOptionsFromQuery(options: CodecastOptions, query) {
+export function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
         options.language = query.language;
     }
@@ -34,13 +34,19 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
         options.canChangeLanguage = false;
     }
 
-    (query.stepperControls || '').split(',').forEach(function (controlStr) {
-        // No prefix to highlight, '-' to disable.
-        const m = /^([-_])?(.*)$/.exec(controlStr);
-        if (m) {
-            options.controls[m[2]] = m[1] || '+';
-        }
-    });
+    if (query.stepperControls) {
+        query.stepperControls.split(',').forEach(function (controlStr) {
+            // No prefix to highlight, '-' to disable.
+            const m = /^([-_])?(.*)$/.exec(controlStr);
+            if (m) {
+                if (!options.controls) {
+                    options.controls = {};
+                }
+                options.controls[m[2]] = m[1] || '+';
+            }
+        });
+    }
+
     if ('noStepper' in query) {
         options.showStepper = false;
         options.showStack = false;
@@ -96,7 +102,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('defaultLevel' in query) {
         options.defaultLevel = query.defaultLevel;
     }
-    options.canDownload = !('noDownload' in query);
+    if ('noDownload' in query) {
+        options.canDownload = false;
+    }
 
     if (query.recording) {
         options.baseDataUrl = query.recording;
