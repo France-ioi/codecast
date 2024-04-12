@@ -1165,7 +1165,9 @@ function* stepperSaga(app: App) {
     // @ts-ignore
     yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function*({payload}) {
         log.getLogger('stepper').debug('receive an error, display it');
-        yield* put(stepperDisplayError(payload.testResult));
+        if (false !== payload?.display) {
+            yield* put(stepperDisplayError(payload.testResult));
+        }
     });
 }
 

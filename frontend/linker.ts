@@ -1,4 +1,4 @@
-import {default as createSagaMiddleware, Saga} from 'redux-saga';
+import {default as createSagaMiddleware} from 'redux-saga';
 import {all, call} from 'typed-redux-saga';
 import produce from "immer";
 import {AppStore} from "./store";
@@ -11,8 +11,10 @@ import platformSlice from "./task/platform/platform_slice";
 import analysisSlice from "./stepper/analysis/analysis_slice";
 import modalSlice from "./common/modal_slice";
 import submissionSlice from "./submission/submission_slice";
-import {App, CodecastEnvironmentMonitoring} from './app_types';
+import {App, Codecast, CodecastEnvironmentMonitoring} from './app_types';
 import buffersSlice from './buffers/buffers_slice';
+import {stepperExecutionError, stepperDisplayError} from './stepper/actionTypes';
+import {LibraryTestResult} from './task/libs/library_test_result';
 
 export interface Linker {
     scope: App,
@@ -177,15 +179,33 @@ export function link(rootBuilder, globalScope: App): Linker {
         },
     };
 
+    let lastSagaTermination = new Date().getTime();
+
     // Compose the enhancers.
     const sagaMiddleware = createSagaMiddleware({
         sagaMonitor,
         onError: (error, {sagaStack}) => {
             console.error(error);
             console.error(sagaStack);
-            setImmediate(() => {
-                throw error;
-            });
+
+            const mainStore = Codecast.environments['main'].store;
+            if ('background' === globalScope.environment) {
+                mainStore.dispatch(stepperExecutionError(LibraryTestResult.fromString(error.message), false));
+            } else {
+                mainStore.dispatch(stepperDisplayError(error.message));
+                // When the error bubbles up to this onError listener, redux-saga terminates the saga. So we have to restart them
+            }
+
+            let currentDate = new Date().getTime();
+            if (currentDate - lastSagaTermination > 1000) {
+                setTimeout(() => {
+                    Codecast.restartSagas();
+                });
+            }
+
+            lastSagaTermination = currentDate;
+
+            throw error;
         }
     });
 

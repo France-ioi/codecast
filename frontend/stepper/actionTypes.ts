@@ -56,10 +56,11 @@ export const stepperExecutionSuccess = (testResult: LibraryTestResult) => ({
     },
 });
 
-export const stepperExecutionError = (testResult: LibraryTestResult) => ({
+export const stepperExecutionError = (testResult: LibraryTestResult, display = true) => ({
     type: ActionTypes.StepperExecutionError,
     payload: {
         testResult,
+        display,
     },
 });
 
