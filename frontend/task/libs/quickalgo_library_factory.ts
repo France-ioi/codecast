@@ -62,7 +62,8 @@ export function* createQuickalgoLibrary() {
         if (null !== taskVariant && undefined !== taskVariant) {
             levelGridInfos = extractVariantSpecific(levelGridInfos, taskVariant, currentLevel);
         }
-        yield* put(taskSetLevelGridInfos(levelGridInfos as unknown as QuickalgoLibraryInfos));
+        const levelGridInfosCopy = JSON.parse(JSON.stringify(levelGridInfos));
+        yield* put(taskSetLevelGridInfos(levelGridInfosCopy as unknown as QuickalgoLibraryInfos));
     }
 
     const platform = selectActiveBufferPlatform(state);
