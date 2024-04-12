@@ -21,7 +21,7 @@ export interface TaskState {
     success?: boolean,
     successMessage?: string,
     taskTests: TaskTest[],
-    currentTestId?: number|null,
+    currentTestId?: number|null, // current test id is the index of the current test in the list of filtered task tests corresponding to the current level
     previousTestId?: number,
     inputNeeded?: boolean,
     inputs?: any[],

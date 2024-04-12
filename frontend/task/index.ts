@@ -597,11 +597,15 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     const context = quickAlgoLibraries.getContext(null, state.environment);
     log.getLogger('task').debug('update current test', context);
 
+    const taskTests = yield* appSelect(selectTaskTests);
+
     // Save context state for the test we have just left
-    if (context && !payload.recreateContext && null !== state.task.previousTestId) {
+    if (context && !payload.recreateContext && null !== state.task.previousTestId && state.task.currentTestId !== state.task.previousTestId) {
         const currentState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
         const taskResetDone = state.task.resetDone;
-        yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState, contextStateResetDone: taskResetDone}));
+        const allTaskTests = state.task.taskTests;
+        const realTestIndex = allTaskTests.indexOf(taskTests[state.task.previousTestId]);
+        yield* put(updateTestContextState({testIndex: realTestIndex, contextState: currentState, contextStateResetDone: taskResetDone}));
     }
 
     // Stop current execution if there is one
@@ -617,7 +621,6 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     if (payload.recreateContext) {
         yield* call(createQuickalgoLibrary);
     } else if (context) {
-        const taskTests = yield* appSelect(selectTaskTests);
         log.getLogger('task').debug('task update test', taskTests, state.task.currentTestId);
         if (!(state.task.currentTestId in taskTests)) {
             console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task);
