@@ -395,6 +395,14 @@ export default function (bundle: Bundle) {
             }
         });
 
+
+    });
+
+    bundle.defer(function (app: App) {
+        if ('main' !== app.environment) {
+            return;
+        }
+
         addAutoRecordingBehaviour(app, {
             actions: [
                 documentationUseCodeExample,

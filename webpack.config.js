@@ -57,6 +57,7 @@ module.exports = (env, argv) => {
                 fs: false,
                 crypto: require.resolve('crypto-browserify'),
                 util: require.resolve('util'),
+                vm: false,
             },
             alias: {
                 lamejs: 'lamejs/src/js/',
