@@ -600,7 +600,7 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     const taskTests = yield* appSelect(selectTaskTests);
 
     // Save context state for the test we have just left
-    if (context && !payload.recreateContext && null !== state.task.previousTestId) {
+    if (context && !payload.recreateContext && null !== state.task.previousTestId && state.task.currentTestId !== state.task.previousTestId) {
         const currentState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
         const taskResetDone = state.task.resetDone;
         const allTaskTests = state.task.taskTests;
