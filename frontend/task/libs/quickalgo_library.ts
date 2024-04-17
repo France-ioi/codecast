@@ -148,7 +148,7 @@ export abstract class QuickAlgoLibrary {
     // Get the list of concepts
     // List can be defined either in context.conceptList, or by redefining this
     // function
-    getConceptList() {
+    getConceptList(baseConceptUrl?: string) {
         return this.conceptList || [];
     };
 
