@@ -192,6 +192,8 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
             'tralalere_en': 'https://static4.castor-informatique.fr/help/index_tralalere_en.html',
             'tralalere_nl': 'https://static4.castor-informatique.fr/help/index_tralalere_nl.html',
             'tralalere_v2': 'https://static4.castor-informatique.fr/help/index_tralalere_s3.html',
+            'tralalere_v2_en': 'https://static4.castor-informatique.fr/help/index_tralalere_s3_en.html',
+            'tralalere_v2_nl': 'https://static4.castor-informatique.fr/help/index_tralalere_s3_nl.html',
         };
         let baseConceptUrl = context.infos.conceptViewerBaseUrl;
         if (baseConceptUrl === undefined) {
