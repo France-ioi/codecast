@@ -206,7 +206,7 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
         if (DocumentationLanguage.C !== language) {
             const baseConcepts = window.getConceptViewerBaseConcepts(baseConceptUrl);
             // Take concepts from the library first
-            allConcepts = context.getConceptList();
+            allConcepts = context.getConceptList(baseConceptUrl);
             // Add base concepts not in the library
             allConcepts = allConcepts.concat(baseConcepts.filter((concept) => allConcepts.find((c) => c.id === concept.id) === undefined));
             // Fill library concepts with information from base concepts if needed
