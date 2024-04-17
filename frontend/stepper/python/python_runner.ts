@@ -655,11 +655,7 @@ export default class PythonRunner extends AbstractRunner {
             } else {
                 log.getLogger('stepper').debug('INCREASE STEP NUM TO ', stepperState.analysis.stepNum + 1);
                 stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
-                stepperState.directives = {
-                    ordered: parseDirectives(stepperState.analysis),
-                    functionCallStackMap: null,
-                    functionCallStack: null
-                };
+                stepperState.directives = parseDirectives(stepperState.analysis);
             }
         }
 

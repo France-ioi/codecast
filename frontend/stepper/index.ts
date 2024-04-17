@@ -45,8 +45,6 @@ import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
 import BlocklyBundle from './js';
-import {collectDirectives} from './c/analysis';
-import {getSkulptSuspensionsCopy} from "./python/analysis";
 import {Directive} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
@@ -115,12 +113,6 @@ export enum StepperControlsType {
     StepByStep = 'step_by_step',
 }
 
-export interface StepperDirectives {
-    ordered: readonly Directive[],
-    functionCallStack: any, // C
-    functionCallStackMap: any // Python
-}
-
 export const initialStepperStateControls = {
     hide: false,
     fullView: false,
@@ -158,15 +150,11 @@ const initialStateStepperState = {
     selectedPort: {} as any, // Only used for arduino
     controls: initialStepperStateControls, // Only used for c
     codecastAnalysis: null as CodecastAnalysisSnapshot,
-    analysis: null as any,
-    lastAnalysis: null as AnalysisSnapshot, // Only used for python
+    analysis: null as AnalysisSnapshot,
+    lastAnalysis: null as AnalysisSnapshot,
     threadsAnalysis: {} as {[threadId: string]: {sourceHighlight: SourceHighlight}},
     computedSourceHighlight: [] as ComputedSourceHighlight[],
-    directives: {
-        ordered: [],
-        functionCallStack: null,
-        functionCallStackMap: null
-    } as StepperDirectives,
+    directives: [] as readonly Directive[],
     inputBuffer: '',
     error: '',
     serial: {
@@ -572,9 +560,9 @@ function stepperStackUpReducer(state: AppStoreReplay): void {
 
         controls.stack.focusDepth = focusDepth;
 
-        const directives = collectDirectives(analysis.stackFrames, focusDepth);
+        // const directives = collectDirectives(analysis.stackFrames, focusDepth);
         state.stepper.currentStepperState.controls = controls;
-        state.stepper.currentStepperState.directives = directives;
+        // state.stepper.currentStepperState.directives = directives;
     }
 }
 
@@ -587,9 +575,9 @@ function stepperStackDownReducer(state: AppStoreReplay): void {
 
         controls.stack.focusDepth = focusDepth;
 
-        const directives = collectDirectives(analysis.stackFrames, focusDepth);
+        // const directives = collectDirectives(analysis.stackFrames, focusDepth);
         state.stepper.currentStepperState.controls = controls;
-        state.stepper.currentStepperState.directives = directives;
+        // state.stepper.currentStepperState.directives = directives;
     }
 }
 

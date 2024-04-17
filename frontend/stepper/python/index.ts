@@ -43,11 +43,7 @@ export default function(bundle: Bundle) {
                     channel.put(stepperExecutionError(LibraryTestResult.fromString(diagnostics)));
                 };
 
-                stepperState.directives = {
-                    ordered: [],
-                    functionCallStackMap: {},
-                    functionCallStack: {}
-                };
+                stepperState.directives = [];
 
                 // Currently in replay we don't compile Python code.
                 // TODO: compile Python code so we don't need this

@@ -28,7 +28,7 @@ g.numberExpr = g.number.map(function (match) {
     return ['number', parseFloat(match)];
 });
 g.identExpr = g.ident.map(function (match) {
-    return match;
+    return ['ident', match];
 });
 g.parensExpr = PR.seq(g.lparen, () => g.expr, g.rparen).map(function (match) {
     return match[1];
@@ -39,7 +39,7 @@ g.subscriptExpr = PR.seq(() => g.expr1, g.lbrack, () => g.expr, g.rbrack).map(fu
 g.expr1 = PR.alt(g.numberExpr, g.identExpr, g.parensExpr, g.subscriptExpr);
 
 g.listExpr = PR.seq(g.lbrack, PR.repeatSeparated(() => g.expr, g.coma, {min: 0}).optional(), g.rbrack).map(function (match) {
-    return match[1] || [];
+    return ['list', match[1] || []];
 });
 g.derefExpr = PR.seq(g.star, () => g.expr).map(function (match) {
     return ['deref', match[1]];

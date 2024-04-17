@@ -171,7 +171,6 @@ function drawColCursors(colCount, rowCount, infoMap) {
 interface Array2DProps {
     scale: any,
     directive: any,
-    functionCallStack: any,
     context: any,
     controls: StepperControls,
     onChange: Function
@@ -179,7 +178,7 @@ interface Array2DProps {
 
 export class Array2D extends React.PureComponent<Array2DProps> {
     render() {
-        const {scale, directive, functionCallStack, context} = this.props;
+        const {scale, directive, context} = this.props;
         const {byName, byPos} = directive;
         const expr = byPos[0];
         const rowCursors = getList(byName.rowCursors, []);
@@ -188,7 +187,7 @@ export class Array2D extends React.PureComponent<Array2DProps> {
         const view: Array2DParams = {rowCursors, colCursors, height};
         const {hPan, vPan} = this.getPosition();
 
-        const extractedView = extractView(context, functionCallStack[0], expr, view);
+        const extractedView = extractView(context, null, expr, view);
         Object.assign(view, extractedView);
         if (view.error) {
             return (

@@ -46,6 +46,7 @@ export const analysisDirectiveViewDict = {
     showArray: {View: analysisArray1D, selector: obj => obj, snippet: "_VIEW_arr = \"showArray(arr, cursors=[index], cursorRows=20)\""},
     showArray2D: {View: analysisArray2D, selector: obj => obj, snippet: "_VIEW_arr = \"showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)\""},
     showSort: {View: analysisSortView, selector: obj => obj, snippet: "_VIEW_quicksort= \"showSort(quicksort, cursors=[left, right, i, j], dim=size, thresholds=[pivot])\""},
+    showMemory: MemoryViewDirective,
 };
 
 export default function(bundle: Bundle) {

@@ -6,18 +6,12 @@ A `Stored Value` can have one of these shapes:
 
 */
 
-import {StepperDirectives} from "../index";
 import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from '../analysis/analysis';
 import {readValue} from '../views/c/utils';
 import * as C from '@france-ioi/persistent-c';
 
 export interface AnalysisC {
-    functionCallStack: any,
-    callReturn?: {
-        func: any,
-        args: any,
-        result: any
-    }
+    functionCallStack: StackFrameUnixAnalysis[],
 }
 
 export interface StackFrameUnixAnalysis {
@@ -36,13 +30,6 @@ export interface StackFrameUnixAnalysis {
 export const analyseState = function(programState): AnalysisC {
     const functionCallStack = analyseScope(programState.scope);
     const result: AnalysisC = {functionCallStack};
-    if (programState.direction === 'out') {
-        result.callReturn = {
-            func: programState.control.values[0],
-            args: programState.control.values.slice(1),
-            result: programState.result
-        };
-    }
 
     return Object.freeze(result);
 };
@@ -100,42 +87,8 @@ const analyseScope = function(scope): StackFrameUnixAnalysis[] {
     return functionCallStack;
 };
 
-export const collectDirectives = function(functionCallStack, focusDepth): StepperDirectives {
-    const ordered = [];
-    const functionCallStackMap = {};
-    // StackFrames are collected in reverse order, so that the directive's render
-    // function should use functionCallStack[key][0] to access the innermost stackFrame.
-    for (let depth = functionCallStack.size - 1 - focusDepth; depth >= 0; depth -= 1) {
-        const stackFrame = functionCallStack.get(depth);
-        const directives = stackFrame.get('directives');
-        directives.forEach(function(directive) {
-            const {key} = directive;
-            if (key in functionCallStackMap) {
-                functionCallStackMap[key].push(stackFrame);
-            } else {
-                ordered.push(directive);
-                functionCallStackMap[key] = [stackFrame];
-            }
-        })
-    }
-
-    return Object.freeze({
-        ordered,
-        functionCallStackMap,
-        functionCallStack: null
-    });
-};
-
 export function convertUnixStateToAnalysisSnapshot(programState: any, lastProgramState: any): AnalysisSnapshot {
     const functionCallStack = analyseScope(programState.scope);
-    const result: AnalysisC = {functionCallStack};
-    if (programState.direction === 'out') {
-        result.callReturn = {
-            func: programState.control.values[0],
-            args: programState.control.values.slice(1),
-            result: programState.result
-        };
-    }
 
     /* Hide function calls that have no position in user code. */
     const filteredFunctionCallStack = functionCallStack.filter(function(stackFrame) {
@@ -158,6 +111,7 @@ function convertUnixStackFrameToAnalysisStackFrame(unixStackFrame: StackFrameUni
         const typeDecl = renderDeclType(type, '', 0);
 
         const variable = convertUnixValueToDAPVariable(variableName, typeDecl, value, ref.address, {});
+        variable.unixVariable = unixStackFrame.localMap[variableName];
         variables.push(variable);
     }
 

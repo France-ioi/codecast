@@ -6,6 +6,7 @@ import {SvgPan} from '../../views/SvgPan';
 import {DirectiveFrame} from "../../views/DirectiveFrame";
 import {StepperControls} from "../../index";
 import {CodecastAnalysisVariable} from "../analysis";
+import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
 
 const DEFAULT_MAX_VISIBLE_CELLS = 40;
 const MARGIN_LEFT = 100;
@@ -145,7 +146,7 @@ function Threshold({view, threshold}: ThresholdProps) {
 interface SortViewProps {
     controls: StepperControls,
     directive: any,
-    context: any,
+    context: LayoutDirectiveContext,
     scale: any,
     onChange: Function
 }
@@ -200,7 +201,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
             return <DirectiveFrame {...this.props}>{view.error}</DirectiveFrame>;
         }
 
-        view.thresholds = getVariables(context.analysis, thresholds);
+        view.thresholds = getVariables(context, thresholds);
 
         const list = view.ref.variables;
         view.nbCells = list.length;

@@ -6,6 +6,7 @@ import {SvgPan} from '../../views/SvgPan';
 import {DirectiveFrame} from "../../views/DirectiveFrame";
 import {StepperControls} from "../../index";
 import {CodecastAnalysisVariable} from "../analysis";
+import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
 
 const TEXT_LINE_HEIGHT = 18;
 const TEXT_BASELINE = 5; // from bottom
@@ -198,7 +199,7 @@ function drawColCursors(colCount, rowCount, infoMap) {
 interface Array2DProps {
     scale: any,
     directive: any,
-    context: any,
+    context: LayoutDirectiveContext,
     controls: StepperControls,
     onChange: Function
 }

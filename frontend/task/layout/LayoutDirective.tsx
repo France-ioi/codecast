@@ -17,7 +17,7 @@ interface LayoutDirectiveProps {
     metadata: LayoutElementMetadata,
 }
 
-interface LayoutDirectiveContext {
+export interface LayoutDirectiveContext {
     analysis: CodecastAnalysisSnapshot,
     programState: any,
     lastProgramState: any,
@@ -40,17 +40,12 @@ export function LayoutDirective(props: LayoutDirectiveProps) {
         return false;
     }
 
-    const {codecastAnalysis, programState, lastProgramState, controls, directives, platform} = stepperState;
-    const {functionCallStackMap} = directives;
+    const {codecastAnalysis, programState, lastProgramState, controls, platform} = stepperState;
     const context: LayoutDirectiveContext = {analysis: codecastAnalysis, programState, lastProgramState};
     const {key} = props.directive;
     const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : initialStepperStateControls;
-    let functionCallStack = null;
-    // if (platform === CodecastPlatform.C || platform === CodecastPlatform.Cpp || platform === CodecastPlatform.Arduino) {
-    //     functionCallStack = functionCallStackMap[key];
-    // }
 
-    log.getLogger('layout').debug('layout directive context', context, props.directive, functionCallStack);
+    log.getLogger('layout').debug('layout directive context', context, props.directive);
 
     return (
         <DirectivePanel
@@ -59,8 +54,6 @@ export function LayoutDirective(props: LayoutDirectiveProps) {
             controls={dirControls}
             scale={zoomLevel}
             context={context}
-            functionCallStack={functionCallStack}
-            platform={platform}
             allocatedWidth={metadata.allocatedWidth}
             allocatedHeight={metadata.allocatedHeight}
             onChange={onControlsChange}

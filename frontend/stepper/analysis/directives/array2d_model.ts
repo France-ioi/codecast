@@ -1,11 +1,10 @@
-import {getVariable} from './utils';
+import {DirectiveVariableName, getVariable} from './utils';
 import {getCursorMap} from './array_utils';
 import {getMessage} from "../../../lang";
+import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
 
-export const extractView = function(context, name: string, options) {
-    const {analysis} = context;
-
-    const ref = getVariable(analysis, name);
+export const extractView = function (context: LayoutDirectiveContext, name: DirectiveVariableName, options) {
+    const ref = getVariable(context, name);
     if (!ref) {
         return {error: getMessage('ARRAY2D_REF_UNDEFINED').format({name})};
     }
@@ -18,11 +17,11 @@ export const extractView = function(context, name: string, options) {
     const colCount = (options.colCount) ? options.colCount : ref.variables[0].variables.length;
 
     // Inspect cursors.
-    const rowInfoMap = getCursorMap(analysis, options.rowCursors, {
+    const rowInfoMap = getCursorMap(context, options.rowCursors, {
         minIndex: 0,
         maxIndex: rowCount + 1
     });
-    const colInfoMap = getCursorMap(analysis, options.colCursors, {
+    const colInfoMap = getCursorMap(context, options.colCursors, {
         minIndex: 0,
         maxIndex: colCount + 1
     });

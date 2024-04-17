@@ -31,6 +31,7 @@ export interface AnalysisVariable extends DebugProtocol.Variable {
     loaded?: boolean,
     collapsed?: boolean,
     withCurlyBraces?: boolean,
+    unixVariable?: {type: any, ref: any},
 }
 
 // Codecast format for visual display
@@ -58,6 +59,7 @@ export interface CodecastAnalysisVariable {
     alreadyVisited?: boolean,
     collapsed?: boolean,
     withCurlyBraces?: boolean,
+    unixVariable?: {type: any, ref: any},
 }
 
 export interface AnalysisConversionOptions {

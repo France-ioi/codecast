@@ -1,7 +1,8 @@
 import range from 'node-range';
 
-import {getVariable} from './utils';
+import {DirectiveVariableName, getVariable} from './utils';
 import {getMessage} from "../../../lang";
+import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
 
 /**
  extractView(context, name, options) looks up `name` in `stackFrame` and
@@ -57,9 +58,7 @@ import {getMessage} from "../../../lang";
  (up to `options.cursorRows` rows are used)
 
  */
-export const extractView = function(context, name, options) {
-    const {analysis} = context;
-
+export const extractView = function (context: LayoutDirectiveContext, name, options) {
     // Normalize options.
     const {dim} = options;
     let {cursors, cursorRows, maxVisibleCells, pointsByKind} = options;
@@ -88,14 +87,14 @@ export const extractView = function(context, name, options) {
         if (/^\d/.test(dim)) {
             elemCount = dim;
         } else {
-            const dimVariable = getVariable(analysis, dim);
+            const dimVariable = getVariable(context, dim);
             if (dimVariable && dimVariable.value) {
-                elemCount = dimVariable.value;
+                elemCount = Number(dimVariable.value);
             }
         }
     }
 
-    const ref = getVariable(analysis, name);
+    const ref = getVariable(context, name, elemCount);
     if (!ref) {
         return {error: getMessage('ARRAY1D_REF_UNDEFINED').format({name})};
     }
@@ -108,7 +107,7 @@ export const extractView = function(context, name, options) {
         elemCount = ref.variables.length;
     }
 
-    const cursorMap = getCursorMap(analysis, cursors, {
+    const cursorMap = getCursorMap(context, cursors, {
         minIndex: 0,
         maxIndex: elemCount
     });
@@ -129,12 +128,12 @@ export const extractView = function(context, name, options) {
 //   minIndex, maxIndex
 // Only cursors whose value is in the range [minIndex, maxIndex] are considered.
 // The calculated value is then subject to the minIndex/maxIndex constraint.
-export const getCursorMap = function(analysis, cursorNames, options) {
+export const getCursorMap = function (context: LayoutDirectiveContext, cursorNames: DirectiveVariableName[], options) {
     const {minIndex, maxIndex} = options;
     const cursorMap = [];  // spare array
 
     cursorNames.forEach(function(name) {
-        const cursorVariable = getVariable(analysis, name);
+        const cursorVariable = getVariable(context, name);
         if (!cursorVariable) {
             return;
         }

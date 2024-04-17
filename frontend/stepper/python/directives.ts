@@ -96,7 +96,7 @@ export interface Directive {
  *
  * @returns {[]}
  */
-export const parseDirectives = function(analysis: AnalysisSnapshot) {
+export const parseDirectives = function(analysis: AnalysisSnapshot): readonly Directive[] {
     /**
      * Search for directives in the current and in the global callstack.
      * Put the current first so it overrides directives in the global scope.

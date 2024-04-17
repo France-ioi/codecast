@@ -1,10 +1,8 @@
 import React from "react";
 import {DirectiveFrame} from "./DirectiveFrame";
-import {analysisDirectiveViewDict, C_directiveViewDict} from "./index";
+import {analysisDirectiveViewDict} from "./index";
 
-import {CodecastPlatform} from '../codecast_platform';
-
-export function DirectivePanel({scale, directive, controls, context, functionCallStack, platform, onChange, allocatedWidth, allocatedHeight}) {
+export function DirectivePanel({scale, directive, controls, context, onChange, allocatedWidth, allocatedHeight}) {
     const {kind} = directive;
     const hide = controls.hide;
     if (hide) {
@@ -29,7 +27,7 @@ export function DirectivePanel({scale, directive, controls, context, functionCal
     //     directiveDescription = C_directiveViewDict[kind];
     // }
 
-    const props = directiveDescription.selector({scale, directive, context, controls, functionCallStack, allocatedWidth, allocatedHeight});
+    const props = directiveDescription.selector({scale, directive, context, controls, allocatedWidth, allocatedHeight});
 
     return (
         <directiveDescription.View

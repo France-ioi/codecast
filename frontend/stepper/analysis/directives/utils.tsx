@@ -1,46 +1,79 @@
 import React from 'react';
 import {
-    CodecastAnalysisSnapshot,
     CodecastAnalysisStackFrame,
-    CodecastAnalysisVariable
+    CodecastAnalysisVariable, convertVariableDAPToCodecastFormat
 } from "../analysis";
+import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
+import {evalExpr, readValue, stringifyExpr} from '../../views/c/utils';
+import {convertUnixValueToDAPVariable} from '../../c/analysis';
+import * as C from '@france-ioi/persistent-c';
+import {getMessage} from '../../../lang';
+import {getOpsArray1D} from '../../views/c/array_utils';
 
-/**
- * Gets a variable by name in analysis.
- *
- * @param {object} analysis The analysis.
- * @param {string} name     The name.
- *
- * @return {object|null}
- */
-export const getVariable = function(analysis: CodecastAnalysisSnapshot, name: string): CodecastAnalysisVariable {
+export type DirectiveVariableName = string|[string, string];
+
+export const getVariable = function (context: LayoutDirectiveContext, name: DirectiveVariableName, elemCount?: number): CodecastAnalysisVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
+    const variableName = Array.isArray(name) ? name[1] : name;
+    const analysis = context.analysis;
     const nbScopes = analysis.stackFrames.length;
-    let variable = null;
+    let variable: CodecastAnalysisVariable = null;
     if (nbScopes) {
-        variable = getVariableInScope(analysis.stackFrames[nbScopes - 1], name);
+        variable = getVariableInScope(analysis.stackFrames[nbScopes - 1], variableName);
     }
     if (!variable && nbScopes > 1) {
-        variable = getVariableInScope(analysis.stackFrames[0], name);
+        variable = getVariableInScope(analysis.stackFrames[0], variableName);
+    }
+
+    if (variable && undefined !== elemCount) {
+        const programState = context.programState;
+        const unixVariable = variable.unixVariable;
+        const localMap = new Map([[variableName, unixVariable]]);
+        const refExpr = name;
+        const cursorValue = evalExpr(programState, localMap, refExpr, false);
+        console.log('get var', {name, variable, unixVariable, analysis: analysis.stackFrames, nbScopes, elemCount, cursorValue})
+
+        const {type, ref} = unixVariable;
+        // const limits = {scalars: 0, maxScalars: 15};
+        // const value =  readValue(context, C.pointerType(type), ref.address, limits);
+
+        if (ref.type.kind !== 'pointer') {
+            throw getMessage('ARRAY1D_EXPR_NOPTR').format({expr: stringifyExpr(refExpr)});
+        }
+        if (elemCount === undefined) {
+            if ('orig' in ref.type) {
+                // The array size can be obtained from the original type.
+                elemCount = ref.type.orig.count.toInteger();
+            } else {
+                throw getMessage('ARRAY1D_DIM_UNK').format({expr: stringifyExpr(refExpr)});
+            }
+        }
+        const address = ref.address;
+        const elemType = ref.type.pointee;
+        if (!/^(builtin|pointer|array)$/.test(elemType.kind)) {
+            throw getMessage('ARRAY1D_ELT_UNSUP').format({expr: stringifyExpr(refExpr)});
+        }
+        const cellOpsMap = getOpsArray1D(programState, address, elemCount, elemType.size);
+
+        const typeDecl = '';
+        // const typeDecl = renderDeclType(type, '', 0);
+
+        // const convertedVariable = convertUnixValueToDAPVariable(variableName, typeDecl, value, ref.address, {});
+        console.log('converted variable', cellOpsMap);
+
+        // return convertedVariable;
+
     }
 
     return variable;
 };
 
-/**
- * Gets variables by name in analysis.
- *
- * @param {object} analysis The analysis.
- * @param {Array}  names    The names.
- *
- * @return {object|null}
- */
-export const getVariables = function(analysis: CodecastAnalysisSnapshot, names: string[]): {name: string, value: CodecastAnalysisVariable}[] {
+export const getVariables = function (context: LayoutDirectiveContext, names: DirectiveVariableName[]): {name: DirectiveVariableName, value: CodecastAnalysisVariable}[] {
     return names.map((name) => {
         return {
             name,
-            value: getVariable(analysis, name)
+            value: getVariable(context, name)
         }
     });
 };

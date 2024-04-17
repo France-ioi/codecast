@@ -433,11 +433,12 @@ export const readArray1D = function(context, arrayBase, elemType, elemCount, sel
 
 // Returns a map keyed by cell index, and whose values are objects giving
 // the greatest rank in the memory log of a 'load' or 'store' operation.
-const getOpsArray1D = function(programState, address, elemCount, elemSize) {
+export const getOpsArray1D = function(programState, address, elemCount, elemSize) {
     // Go through the memory log, translate memory-operation references into
     // array cells indexes, and save the cell load/store operations in cellOps.
     const cellOpsMap = [];
     const forEachCell = mapArray1D(address, elemCount, elemSize);
+    console.log('foreachcell', forEachCell);
     programState.memoryLog.forEach(function(entry, i) {
         const op = entry[0]; // 'load' or 'store'
         forEachCell(entry[1], function(index) {

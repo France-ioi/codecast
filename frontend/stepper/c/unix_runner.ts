@@ -4,7 +4,7 @@ import * as C from '@france-ioi/persistent-c';
 import {StepperState} from "../index";
 import log from 'loglevel';
 import {ActionTypes, ContextEnrichingTypes} from '../actionTypes';
-import {analyseState, collectDirectives, convertUnixStateToAnalysisSnapshot} from './analysis';
+import {analyseState, convertUnixStateToAnalysisSnapshot} from './analysis';
 import {TaskAnswer} from '../../task/task_types';
 import {appSelect} from '../../hooks';
 import {documentToString} from '../../buffers/document';
@@ -15,9 +15,7 @@ import {CodecastPlatform} from '../codecast_platform';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
-import {convertSkulptStateToAnalysisSnapshot} from '../python/analysis';
 import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
-import {Codecast} from '../../app_types';
 import {parseDirectives} from '../python/directives';
 
 const RETURN_TYPE_CONVERSION = {
@@ -135,13 +133,11 @@ export default class UnixRunner extends AbstractRunner {
         stepperState.analysis = convertUnixStateToAnalysisSnapshot(stepperState.programState, stepperState.lastProgramState);
         const focusDepth = controls.stack.focusDepth;
         const analysisBack = analyseState(programState);
-        stepperState.directives = collectDirectives(analysisBack.functionCallStack, focusDepth);
+        console.log('stepper state directives', stepperState.directives, {analysisBack, focusDepth});
 
-        stepperState.directives = {
-            ordered: parseDirectives(stepperState.analysis),
-            functionCallStackMap: null,
-            functionCallStack: null
-        };
+        stepperState.directives = parseDirectives(stepperState.analysis);
+
+        console.log('stepper state directives 2', stepperState.directives);
 
         if (!stepperState.lastAnalysis) {
             stepperState.lastAnalysis = {

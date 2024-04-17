@@ -132,7 +132,6 @@ function Threshold({view, threshold}: ThresholdProps) {
 interface SortViewProps {
     controls: StepperControls,
     directive: any,
-    functionCallStack: any,
     context: any,
     scale: any,
     onChange: Function
@@ -141,9 +140,9 @@ interface SortViewProps {
 export class SortView extends React.PureComponent<SortViewProps> {
 
     render() {
-        const {controls, directive, functionCallStack, context, scale} = this.props;
+        const {controls, directive, context, scale} = this.props;
         const {programState} = context;
-        const topStackFrame = functionCallStack[0];
+        const topStackFrame = null;
 
         // Controls
         //   - fullView: read and render all cells

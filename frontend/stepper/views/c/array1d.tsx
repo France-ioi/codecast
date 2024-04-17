@@ -114,7 +114,6 @@ function Cursor({view, cursor}) {
 interface Array1DProps {
     controls: StepperControls,
     directive: any,
-    functionCallStack: any,
     context: any,
     scale: any,
     onChange: Function
@@ -124,8 +123,8 @@ export class Array1D extends React.PureComponent<Array1DProps> {
     _cellWidth = 28;
 
     render() {
-        const {controls, directive, functionCallStack, context, scale} = this.props;
-        const topStackFrame = functionCallStack[0];
+        const {controls, directive, context, scale} = this.props;
+        const topStackFrame = null; // functionCallStack[0];
         const fullView = controls.fullView;
         const cellPan = this.getPosition();
         const {byName, byPos} = directive;
