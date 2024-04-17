@@ -12,6 +12,17 @@ const localLanguageStrings = {
             log: "log(texte) ajoute une ligne de debug sur le terminal",
         },
     },
+    en: {
+        label: {
+            log: "add a debug line",
+        },
+        code: {
+            log: "log",
+        },
+        description: {
+            log: "log(text) adds a debug line on the terminal",
+        },
+    },
 };
 
 export interface DebugLibState {
