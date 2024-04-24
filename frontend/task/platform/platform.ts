@@ -335,7 +335,8 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
                     yield* put(platformTaskRefresh());
                 }
             }
-            yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, success, error, true));
+            // Grade with updateScore = true and showResult = false
+            yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, success, error, true, false));
             yield* call(taskAnswerReloadedSaga);
         } else if (answer) {
             const answerObject = yield* call(backwardCompatibilityConvert, JSON.parse(answer));
@@ -481,7 +482,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     }
 }
 
-export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, silent}}: ReturnType<typeof taskGradeAnswerEvent>) {
+export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, updateScore, showResult}}: ReturnType<typeof taskGradeAnswerEvent>) {
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);
@@ -513,7 +514,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
                     currentScoreToken = scoreToken;
                 }
 
-                if (!silent) {
+                if (updateScore) {
                     yield* put(platformSaveScore({level, score, answer: answerObject[level]}));
                 }
             }
@@ -525,7 +526,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             const reconciledScore = computeReconciledScore(levelScores);
             const scoreWithPlatformParameters = minScore + (maxScore - minScore) * reconciledScore;
 
-            if (!silent) {
+            if (showResult) {
                 yield* put(platformAnswerGraded({score: currentScore, message: currentMessage}));
             }
 
@@ -543,7 +544,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer: answerObject});
             const scoreWithPlatformParameters = minScore + (maxScore - minScore) * score;
 
-            if (!silent) {
+            if (showResult) {
                 yield* put(platformAnswerGraded({score, message}));
             }
             log.getLogger('tests').debug('[Tests] Evaluation result', {scoreWithPlatformParameters, message});
@@ -552,7 +553,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
     } catch (ex: any) {
         const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
             : (ex.message ? ex.message : ex.toString());
-        if (!silent) {
+        if (showResult) {
             yield* put(platformAnswerGraded({error: message}));
         }
         console.error(ex);
@@ -605,8 +606,8 @@ function* platformValidateEventSaga({payload: {mode}}: ReturnType<typeof platfor
     } else {
         const answer = stringify(yield* getTaskAnswerAggregated());
 
-        // Grade in mode silent = false
-        yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, () => {}, () => {}, false));
+        // Grade with updateScore = true and showResult = true
+        yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, () => {}, () => {}, true, true));
     }
 }
 

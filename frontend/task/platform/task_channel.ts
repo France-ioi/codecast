@@ -69,7 +69,7 @@ function makeTask (emit, state: AppStore) {
             } else {
                 silent = true;
             }
-            emit(taskGradeAnswerEvent(answer, answerToken, success ?? (() => {}), error ?? (() => {}), silent));
+            emit(taskGradeAnswerEvent(answer, answerToken, success ?? (() => {}), error ?? (() => {}), !silent, !silent));
         },
     };
 }

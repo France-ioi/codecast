@@ -67,13 +67,14 @@ export const taskReloadAnswerEvent = createAction('taskEventReloadAnswer', (answ
         error,
     },
 }));
-export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer, answerToken, success, error, silent) => ({
+export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer, answerToken, success, error, updateScore: boolean, showResult: boolean) => ({
     payload: {
         answer,
         answerToken,
         success,
         error,
-        silent,
+        updateScore,
+        showResult,
     },
 }));
 export const taskGetResourcesPost = createAction('taskEventGetResourcesPost', (resources, callback) => ({

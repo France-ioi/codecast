@@ -521,9 +521,9 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     const oldAnswer = selectAnswer(state);
     yield* put(platformSaveAnswer({level: currentLevel, answer: oldAnswer}));
 
-    // Grade old answer
+    // Grade old answer with updateScore = true and showResult = false
     const answer = stringify(yield* getTaskAnswerAggregated());
-    yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, () => {}, () => {}, true));
+    yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, () => {}, () => {}, true, false));
     log.getLogger('task').debug('grading finished');
 
     // Change level
