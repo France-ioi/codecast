@@ -321,6 +321,9 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             }
             const convertedAnswer = {};
             for (let {level} of Object.values(taskLevels)) {
+                if (!answerObject[level]) {
+                    continue;
+                }
                 convertedAnswer[level] = yield* call(backwardCompatibilityConvert, answerObject[level]);
                 if (!(yield* call(canReloadAnswer, convertedAnswer[level]))) {
                     throw new Error("This answer is not accepted: " + answer)
