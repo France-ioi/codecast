@@ -191,7 +191,14 @@ export const checkBlocklyCode = function (answer: Document, context: QuickAlgoLi
         return;
     }
 
-    const blocks = getBlocksFromXml(blockly);
+    let blocks;
+    try {
+        // This method can fail if Blockly is not loaded in the DOM. In this case it's ok we don't make the check
+        blocks = getBlocksFromXml(blockly);
+    } catch (e) {
+        console.error(e);
+        return;
+    }
 
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
     const totalCount = blocklyCount(blocks, context);
@@ -276,7 +283,18 @@ export const getBlocklyBlocksUsage = function (answer: Document, context: QuickA
 
     log.getLogger('blockly_runner').debug('blocks usage', answer);
 
-    const blocks = getBlocksFromXml(blockly);
+    let blocks;
+    try {
+        // This method can fail if Blockly is not loaded in the DOM. In this case it's ok we don't make the check
+        blocks = getBlocksFromXml(blockly);
+    } catch (e) {
+        console.error(e);
+        return {
+            blocksCurrent: 0,
+            limitations: [],
+        };
+    }
+
     const blocksUsed = blocklyCount(blocks, context);
     const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
 
