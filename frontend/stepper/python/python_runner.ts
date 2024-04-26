@@ -108,7 +108,7 @@ export default class PythonRunner extends AbstractRunner {
         handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
 
         // Count actions
-        if(type == 'actions') {
+        if (type == 'actions') {
             handler += "\n\tCodecast.runner._nbActions += 1;";
         }
 
@@ -216,6 +216,7 @@ export default class PythonRunner extends AbstractRunner {
     };
 
     checkArgs(name, generatorName, blockName, args) {
+        console.log('check function args', {name});
         let msg = '';
 
         // Check the number of arguments corresponds to a variant of the function
@@ -259,19 +260,53 @@ export default class PythonRunner extends AbstractRunner {
         if (val instanceof Sk.builtin.bool) {
             return !!val.v;
         } else if (val instanceof Sk.builtin.func) {
-            return () => {
+            const self = this;
+
+            return (...innerArgs) => {
                 let args = [];
-                for (let i = 0; i < arguments.length; i++) {
-                    args.push(this._createPrimitive(arguments[i]));
+                for (let i = 0; i < innerArgs.length; i++) {
+                    args.push(self._createPrimitive(innerArgs[i]));
                 }
 
-                return new Promise((resolve, reject) => {
-                    Sk.misceval.asyncToPromise(() => {
+                try {
+                    // let susp_handlers = {};
+                    // susp_handlers['*'] = this._debugger.suspension_handler.bind(this);
+                    // let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), susp_handlers, this._debugger);
+                    const suspendableFn = () => {
+                        console.log('call to suspendable');
                         return val.tp$call(args);
-                    }).then((val) => {
-                        resolve(this.skToJs(val));
+                    };
+                    let promise = this._debugger.asyncToPromise(suspendableFn, null, this._debugger);
+                    promise.then((response) => {
+                        console.log('thened', response);
+                        this._debugger.success.bind(this._debugger);
+                    }, (error) => {
+                        console.log('errored', error);
+                        this._debugger.error.bind(this._debugger);
+
+                        this.context.onError(error + "\n");
                     });
-                });
+
+                    // this._debugger.resume.call(this._debugger, function (res) {
+                    //     // Will be executed only a
+                    //     console.log('resolve');
+                    // }, () => {
+                    //     console.log('reject');
+                    // });
+
+                    return promise;
+                } catch (e) {
+                    console.error(e);
+                    this.context.onError(e.toString() + "\n");
+                }
+
+                // return new Promise((resolve, reject) => {
+                //     Sk.misceval.asyncToPromise(() => {
+                //         return val.tp$call(args);
+                //     }).then((val) => {
+                //         resolve(self.skToJs(val));
+                //     });
+                // });
             }
         } else if (val instanceof Sk.builtin.dict) {
             let dictKeys = Object.keys(val);
@@ -327,7 +362,6 @@ export default class PythonRunner extends AbstractRunner {
             // Apparently when we create a new primitive, the debugger adds a call to
             // the callstack.
             this._resetCallstackOnNextStep = true;
-            this.reportValue(value);
         }
         callback(primitive);
     }
@@ -435,10 +469,11 @@ export default class PythonRunner extends AbstractRunner {
         }
 
         try {
-            let susp_handlers = {};
-            susp_handlers['*'] = this._debugger.suspension_handler.bind(this);
-            let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), susp_handlers, this._debugger);
+            // let susp_handlers = {};
+            // susp_handlers['*'] = this._debugger.suspension_handler.bind(this);
+            let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), null, this._debugger);
             promise.then((response) => {
+                console.log('on final response');
                 this._debugger.success.bind(this._debugger);
             }, (error) => {
                 this._debugger.error.bind(this._debugger);
@@ -457,11 +492,19 @@ export default class PythonRunner extends AbstractRunner {
 
     runStep(quickAlgoCallsExecutor, noInteractive = false) {
         this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
+
+        console.log('check event listeners before running step', {running: this._isRunning, progress: this._stepInProgress});
+        console.log('start running step');
+
         return new Promise((resolve, reject) => {
-            this.stepMode = !noInteractive;
-            if (this._isRunning && !this._stepInProgress) {
-                this.step(resolve, reject);
-            }
+            this.context.checkEventListeners()
+                .then(() => {
+                    this.stepMode = !noInteractive;
+                    console.log('step', {running: this._isRunning, progress: this._stepInProgress});
+                    if (this._isRunning && !this._stepInProgress) {
+                        this.step(resolve, reject);
+                    }
+                });
         }).then(() => {
             if (this.hasCalledHandler) {
                 // Fix for Python: when Skulpt executes a custom handler it counts this as two execution steps.
@@ -474,16 +517,7 @@ export default class PythonRunner extends AbstractRunner {
         })
     }
 
-    reportValue(origValue, varName = null) {
-        // Show a popup displaying the value of a block in step-by-step mode
-        if (origValue === undefined
-            || (origValue && origValue.constructor === Sk.builtin.func)
-            || !this._editorMarker
-            || !this.context.display
-            || !this.stepMode) {
-            return origValue;
-        }
-
+    reportValue (origValue) {
         return origValue;
     }
 

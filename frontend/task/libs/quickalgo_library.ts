@@ -12,6 +12,12 @@ import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App, Codecast} from '../../app_types';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
 
+export interface LibraryEventListener {
+    condition: (callback: (result: boolean) => void) => void,
+    callback: () => Promise<void>,
+    justActivated: boolean,
+}
+
 export abstract class QuickAlgoLibrary {
     display: boolean;
     infos: QuickalgoLibraryInfos;
@@ -49,6 +55,8 @@ export abstract class QuickAlgoLibrary {
     plannedNewDelay: number = null;
     childContexts: QuickAlgoLibrary[] = [];
     forceGradingWithoutDisplay?: boolean;
+    eventListeners: LibraryEventListener[] = [];
+    waitingEventListener: boolean = false;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -398,6 +406,65 @@ export abstract class QuickAlgoLibrary {
 
     getDefaultEmptyTest() {
         return null;
+    }
+
+    waitForEvent(condition: (callback: (result: boolean) => void) => void, callback: () => void) {
+        this.eventListeners.push({
+            condition,
+            callback,
+            justActivated: false,
+        });
+        console.log('event listeners', this.eventListeners);
+    }
+
+    async checkEventListeners() {
+        console.log('check event listeners', this.waitingEventListener);
+        if (this.waitingEventListener) {
+            return;
+        }
+        for (let listener of this.eventListeners) {
+            const result = await this.isEventListenerConditionActive(listener);
+            console.log('button is ', result);
+            if (result) {
+                if (!listener.justActivated) {
+                    listener.justActivated = true;
+                    console.log('before trigger event listener');
+                    this.triggerEventListener(listener);
+                    console.log('after trigger event listener');
+                }
+            } else {
+                listener.justActivated = false;
+            }
+        }
+    }
+
+    isEventListenerConditionActive(listener: LibraryEventListener) {
+        return new Promise((resolve) => {
+            listener.condition((result) => {
+                // TODO: support other languages than Python
+                this.runner._resetCallstackOnNextStep = false;
+                const realResult = this.runner.skToJs(result);
+                console.log({result, realResult})
+                resolve(realResult);
+            })
+        });
+    }
+
+    triggerEventListener(listener: LibraryEventListener) {
+        // TODO: Pause current execution and then do:
+        this.waitingEventListener = true;
+        console.log('trigger event listener', listener.callback);
+
+        return new Promise<void>((resolve) => {
+            const result = listener.callback();
+            console.log('callback result', result);
+            result
+                .then((aaa) => {
+                    console.log('aaa', aaa);
+                    this.waitingEventListener = false;
+                    resolve();
+                })
+        });
     }
 }
 
