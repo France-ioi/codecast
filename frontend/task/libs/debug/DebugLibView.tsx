@@ -21,7 +21,7 @@ export function DebugLibView() {
             {taskState?.linesLogged.map((line, lineIndex) =>
                 <div className="debug-lib-line" key={lineIndex}>
                     <FontAwesomeIcon icon={faChevronRight}/>
-                    <span>{line}</span>
+                    <span>{Array.isArray(line) ? `[${line.join(', ')}]` : line}</span>
                 </div>
             )}
         </div>
