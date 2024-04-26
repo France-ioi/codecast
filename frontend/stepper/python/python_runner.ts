@@ -269,9 +269,6 @@ export default class PythonRunner extends AbstractRunner {
                 }
 
                 try {
-                    // let susp_handlers = {};
-                    // susp_handlers['*'] = this._debugger.suspension_handler.bind(this);
-                    // let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), susp_handlers, this._debugger);
                     const suspendableFn = () => {
                         console.log('call to suspendable');
                         return val.tp$call(args);
@@ -286,13 +283,6 @@ export default class PythonRunner extends AbstractRunner {
 
                         this.context.onError(error + "\n");
                     });
-
-                    // this._debugger.resume.call(this._debugger, function (res) {
-                    //     // Will be executed only a
-                    //     console.log('resolve');
-                    // }, () => {
-                    //     console.log('reject');
-                    // });
 
                     return promise;
                 } catch (e) {
@@ -572,8 +562,9 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     step(resolve, reject) {
-        log.getLogger('python_runner').debug('continue step', resolve, reject);
+        log.getLogger('python_runner').debug('continue step', resolve, reject, this._resetCallstackOnNextStep);
         this._resetCallstack();
+        console.log('change step in progress', {previous: this._stepInProgress, next: true});
         this._stepInProgress = true;
 
         this.realStep(resolve, reject);
@@ -594,6 +585,7 @@ export default class PythonRunner extends AbstractRunner {
     // Used in Skulpt
     _onStepSuccess(callback) {
         // If there are still timeouts, there's still a step in progress
+        console.log('change step on step success', {previous: this._stepInProgress, next: !!this._timeouts.length});
         this._stepInProgress = !!this._timeouts.length;
         this._continue();
 
