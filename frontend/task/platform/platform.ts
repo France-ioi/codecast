@@ -299,13 +299,16 @@ export function* canReloadAnswer(answer: TaskAnswer) {
         return false;
     }
 
-    const canChangePlatform = yield* appSelect(state => state.options.canChangePlatform);
-    const platform = yield* appSelect(state => state.options.platform);
+    const state = yield* appSelect();
+    const canChangePlatform = state.options.canChangePlatform;
+    const platform = state.options.platform;
     if (!canChangePlatform && answer.platform !== platform) {
         return false;
     }
 
-    yield* call(importPlatformModules, answer.platform, window.modulesPath);
+    if (!state.options.preload) {
+        yield* call(importPlatformModules, answer.platform, window.modulesPath);
+    }
 
     return true;
 }
