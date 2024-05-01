@@ -5,6 +5,7 @@ const SRC = path.resolve(__dirname, "frontend");
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CopyPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 // To analyse webpack speed and build size
 const CircularDependencyPlugin = require('circular-dependency-plugin');
@@ -232,6 +233,15 @@ module.exports = (env, argv) => {
             removeAvailableModules: false,
             removeEmptyChunks: false,
             splitChunks: false,
+            minimizer: [
+                new TerserPlugin({
+                    terserOptions: {
+                        compress: {
+                            unused: false,
+                        },
+                    },
+                }),
+            ],
         },
         stats: {
             assets: false,
