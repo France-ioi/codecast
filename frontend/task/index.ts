@@ -604,8 +604,11 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
         const currentState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
         const taskResetDone = state.task.resetDone;
         const allTaskTests = state.task.taskTests;
-        const realTestIndex = allTaskTests.indexOf(taskTests[state.task.previousTestId]);
-        yield* put(updateTestContextState({testIndex: realTestIndex, contextState: currentState, contextStateResetDone: taskResetDone}));
+        const realTestIndex = allTaskTests.findIndex(test => taskTests[state.task.previousTestId].id === test.id);
+        log.getLogger('tests').debug('update current test context state', {allTaskTests, previous: state.task.previousTestId, current: state.task.currentTestId, taskTests, previousTest: taskTests[state.task.previousTestId], realTestIndex});
+        if (-1 !== realTestIndex) {
+            yield* put(updateTestContextState({testIndex: realTestIndex, contextState: currentState, contextStateResetDone: taskResetDone}));
+        }
     }
 
     // Stop current execution if there is one
