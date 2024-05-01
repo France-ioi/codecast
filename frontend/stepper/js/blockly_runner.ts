@@ -381,7 +381,8 @@ export default class BlocklyRunner extends AbstractRunner {
             let wasPaused = interpreter.paused_;
             while(!this.context.programEnded[iInterpreter]) {
                 if(!this.context.allowInfiniteLoop &&
-                    (this.context.curSteps[iInterpreter].total >= this.maxIter || this.context.curSteps[iInterpreter].withoutAction >= this.maxIterWithoutAction)) {
+                    (this.context.curSteps[iInterpreter].total + this.context.curSteps[iInterpreter].microSteps >= this.maxIter
+                        || this.context.curSteps[iInterpreter].withoutAction + this.context.curSteps[iInterpreter].microSteps >= this.maxIterWithoutAction)) {
                     break;
                 }
                 if (!interpreter.step() || this.toStopInterpreter[iInterpreter]) {
@@ -389,10 +390,13 @@ export default class BlocklyRunner extends AbstractRunner {
                     this.isRunningInterpreter[iInterpreter] = false;
                     return;
                 }
+                // Temporarily count micro-steps until each step, which will count as actual steps against the limits
+                this.context.curSteps[iInterpreter].microSteps++;
                 if (interpreter.paused_) {
                     // @ts-ignore
                     if (false === this._stepInProgress) {
                         this.context.curSteps[iInterpreter].total++;
+                        this.context.curSteps[iInterpreter].microSteps = 0;
                         if(this.context.curSteps[iInterpreter].lastNbMoves != this.nbActions) {
                             this.context.curSteps[iInterpreter].lastNbMoves = this.nbActions;
                             this.context.curSteps[iInterpreter].withoutAction = 0;
@@ -409,10 +413,10 @@ export default class BlocklyRunner extends AbstractRunner {
             }
 
             if (!this.context.programEnded[iInterpreter] && !this.context.allowInfiniteLoop) {
-                if (this.context.curSteps[iInterpreter].total >= this.maxIter) {
+                if (this.context.curSteps[iInterpreter].total + this.context.curSteps[iInterpreter].microSteps >= this.maxIter) {
                     this.isRunningInterpreter[iInterpreter] = false;
                     throw this.context.blocklyHelper.strings.tooManyIterations;
-                } else if(this.context.curSteps[iInterpreter].withoutAction >= this.maxIterWithoutAction) {
+                } else if(this.context.curSteps[iInterpreter].withoutAction + this.context.curSteps[iInterpreter].microSteps >= this.maxIterWithoutAction) {
                     this.isRunningInterpreter[iInterpreter] = false;
                     throw this.context.blocklyHelper.strings.tooManyIterationsWithoutAction;
                 }
@@ -508,6 +512,7 @@ export default class BlocklyRunner extends AbstractRunner {
         for (let iInterpreter = 0; iInterpreter < codes.length; iInterpreter++) {
             this.context.curSteps[iInterpreter] = {
                 total: 0,
+                microSteps: 0,
                 withoutAction: 0,
                 lastNbMoves: 0
             };
