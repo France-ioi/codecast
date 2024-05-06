@@ -415,23 +415,26 @@ export abstract class QuickAlgoLibrary {
             callback,
             justActivated: false,
         });
-        console.log('event listeners', this.eventListeners);
+        log.getLogger('multithread').debug('[multithread] event listeners', this.eventListeners);
+    }
+
+    async multiThreadingPreExecute() {
+        log.getLogger('multithread').debug('[multithread] multi-threading pre-execute');
+        await this.checkEventListeners();
+        this.scheduleAppropriateThread();
     }
 
     async checkEventListeners() {
-        console.log('check event listeners', this.waitingEventListener);
-        if (this.waitingEventListener) {
-            return;
-        }
+        log.getLogger('multithread').debug('[multithread] check event listeners');
         for (let listener of this.eventListeners) {
             const result = await this.isEventListenerConditionActive(listener);
-            console.log('button is ', result);
+            log.getLogger('multithread').debug('button is ', result);
             if (result) {
                 if (!listener.justActivated) {
                     listener.justActivated = true;
-                    console.log('before trigger event listener');
+                    log.getLogger('multithread').debug('[multithread] before trigger event listener');
                     this.triggerEventListener(listener);
-                    console.log('after trigger event listener');
+                    log.getLogger('multithread').debug('[multithread] after trigger event listener');
                 }
             } else {
                 listener.justActivated = false;
@@ -447,9 +450,17 @@ export abstract class QuickAlgoLibrary {
 
     triggerEventListener(listener: LibraryEventListener) {
         // this.waitingEventListener = true;
-        console.log('trigger event listener', listener.callback);
+        log.getLogger('multithread').debug('[multithread] trigger event listener', listener.callback);
 
         this.runner.createNewThread(listener.callback);
+    }
+
+    scheduleAppropriateThread() {
+        const threads = this.runner.getAllThreads();
+        let currentThreadId = this.runner.getCurrentThreadId();
+        currentThreadId = (currentThreadId + 1) % threads.length;
+        log.getLogger('multithread').debug('[multithread] schedule thread', {threads, currentThreadId});
+        this.runner.swapCurrentThreadId(currentThreadId);
     }
 }
 

@@ -13,6 +13,8 @@ export default abstract class AbstractRunner {
     public _nbActions = 0;
     public _allowStepsWithoutDelay = 0;
     protected _timeouts = [];
+    protected threads: any[] = [];
+    protected currentThreadId = null;
 
     constructor(context) {
         context.runner = this;
@@ -118,5 +120,21 @@ export default abstract class AbstractRunner {
     }
 
     public createNewThread(threadData: any) {
+    }
+
+    public registerNewThread(threadData: any) {
+        this.threads.push(threadData);
+        this.currentThreadId = this.threads.length - 1;
+    }
+
+    public getAllThreads() {
+        return this.threads;
+    }
+
+    public getCurrentThreadId() {
+        return this.currentThreadId;
+    }
+
+    public swapCurrentThreadId(newThreadId: number) {
     }
 }

@@ -475,6 +475,7 @@ export default class PythonRunner extends AbstractRunner {
         }
 
         this._resetInterpreterState();
+        this.registerNewThread(this._debugger.suspension_stack);
 
         Sk.running = true;
         this._isRunning = true;
@@ -736,11 +737,22 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     public createNewThread(threadData) {
-        const result = threadData();
-        console.log('callback result', result);
-        result
+        const promise = threadData();
+        log.getLogger('multithread').debug('create new thread -> promise', promise);
+
+        this.registerNewThread(promise);
+
+        promise
             .then((aaa) => {
-                console.log('aaa', aaa);
+                log.getLogger('multithread').debug('end of thread', aaa);
             })
+    }
+
+    public swapCurrentThreadId(newThreadId: number) {
+        this.currentThreadId = newThreadId;
+        const threads = this.getAllThreads();
+        const stack = threads[newThreadId];
+        console.log('change current thread', stack);
+
     }
 }

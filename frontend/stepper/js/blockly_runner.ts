@@ -388,8 +388,12 @@ export default class BlocklyRunner extends AbstractRunner {
                     break;
                 }
                 if (!interpreter.step() || this.toStopInterpreter[iInterpreter]) {
-                    log.getLogger('blockly_runner').debug('interpreter not running');
-                    this.isRunningInterpreter[iInterpreter] = false;
+                    log.getLogger('blockly_runner').debug('interpreter not running', this.toStopInterpreter[iInterpreter]);
+                    this._stepInProgress = false;
+                    this.currentThreadFinished();
+                    if (this.executeOnResolve) {
+                        this.executeOnResolve();
+                    }
                     return;
                 }
                 // Temporarily count micro-steps until each step, which will count as actual steps against the limits
@@ -527,6 +531,7 @@ export default class BlocklyRunner extends AbstractRunner {
             this.nodesReady.push(true);
             this.isRunningInterpreter[iInterpreter] = true;
             this.toStopInterpreter[iInterpreter] = false;
+            this.registerNewThread(this.interpreters[0].stateStack);
 
             if(iInterpreter > 0) {
                 // This is a fix for pseudoToNative identity comparisons (===),
@@ -655,20 +660,25 @@ export default class BlocklyRunner extends AbstractRunner {
     }
 
     public createNewThread(threadData: any) {
-        console.log('create thread', threadData);
+        log.getLogger('multithread').debug('[multithread] create thread', threadData);
 
         const globalScope = this.interpreters[0].global;
         const node = threadData.node;
         const stack = new window.Interpreter.State(node['body'], globalScope);
-        console.log('stack', stack);
+        log.getLogger('multithread').debug('[multithread] stack', stack);
 
-        this.swapCurrentThread(stack);
-
-        return 5;
+        this.registerNewThread([stack]);
     }
 
-    public swapCurrentThread(stack) {
-        // var stack = threads[n];
-        this.interpreters[0].stateStack = [stack];
+    public swapCurrentThreadId(newThreadId: number) {
+        this.currentThreadId = newThreadId;
+        const threads = this.getAllThreads();
+        const stack = threads[newThreadId];
+        log.getLogger('multithread').debug('[multithread] change current thread', stack);
+        this.interpreters[0].stateStack = stack;
+    }
+
+    public currentThreadFinished() {
+        this.threads.splice(this.currentThreadId, 1);
     }
 }

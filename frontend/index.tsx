@@ -53,6 +53,7 @@ log.getLogger('editor').setDefaultLevel('info');
 log.getLogger('hints').setDefaultLevel('info');
 log.getLogger('layout').setDefaultLevel('info');
 log.getLogger('libraries').setDefaultLevel('info');
+log.getLogger('multithread').setDefaultLevel('info');
 log.getLogger('performance').setDefaultLevel('info');
 log.getLogger('platform').setDefaultLevel('info');
 log.getLogger('player').setDefaultLevel('info');
