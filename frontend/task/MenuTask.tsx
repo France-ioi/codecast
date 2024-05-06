@@ -29,6 +29,7 @@ export function MenuTask() {
     const screen = useAppSelector(state => state.screen);
     const platform = useAppSelector(state => state.options.platform);
     const canRecord = useAppSelector(state => state.options.canRecord);
+    const hideSettings = useAppSelector(state => state.options.hideSettings);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
 
     const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
@@ -110,10 +111,10 @@ export function MenuTask() {
                     />
                 </div>}
             <div className={`task-menu`}>
-                <div className="menu-item" onClick={() => setSettingsOpen(!settingsOpen)}>
+                {!hideSettings && <div className="menu-item" onClick={() => setSettingsOpen(!settingsOpen)}>
                     <Icon icon="cog"/>
                     <span>{getMessage('MENU_SETTINGS')}</span>
-                </div>
+                </div>}
                 {!playerEnabled && canRecord && <div className="menu-item" onClick={toggleRecording}>
                     <Icon icon="record" color="#ff001f"/>
                     <span>{getMessage('MENU_RECORDER')}</span>
