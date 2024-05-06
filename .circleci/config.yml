@@ -55,7 +55,9 @@ jobs:
             git commit --allow-empty -m "Upgrade Codecast 7.4"
       - run:
           name: "Push changes"
-          command: git push -u origin master
+          command: |
+            cd bebras-modules
+            git push -u origin master
 
 workflows:
   deploy:
