@@ -222,11 +222,12 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const updateDocumentConditionnally = () => {
         const newDocument = currentValue.current ?? BlockBufferHandler.getEmptyDocument();
-        log.getLogger('editor').debug('[blockly.editor] load document', {newDocument, previousValue: previousValue.current});
-
         if (previousValue.current === newDocument?.content?.blockly) {
+            log.getLogger('editor').debug('[blockly.editor] documents are identical');
             return;
         }
+
+        log.getLogger('editor').debug('[blockly.editor] load document', {newDocument, previousValue: previousValue.current});
 
         reset(newDocument);
     };
@@ -234,7 +235,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const onLoadDocument = useDebounce(updateDocumentConditionnally, 100);
 
     useEffect(() => {
-        log.getLogger('editor').debug('[blockly.editor] document has changed', {
+        log.getLogger('editor').debug('[blockly.editor] document has changed, check differences', {
             oldDocument: currentValue.current,
             newDocument: props.state?.document,
         });
@@ -253,10 +254,12 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         highlight(selection);
     }, [props.highlight]);
 
+    // Don't reload selection in Scratch because in Scratch there is no notion of selection. You can only glow a block (which
+    // corresponds to the highlight)
     useEffect(() => {
         const selection = props.state?.selection;
         log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, highlightedBlock.current);
-        if (selection === highlightedBlock.current) {
+        if (selection === highlightedBlock.current || context.blocklyHelper?.scratchMode) {
             return;
         }
 
