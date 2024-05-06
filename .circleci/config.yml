@@ -9,7 +9,10 @@ jobs:
     steps:
       - checkout
       - run:
-          command: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          command: |
+            echo "@france-ioi:registry=https://npm.pkg.github.com/" > ~/.npmrc
+            echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+            cat ~/.npmrc
           name: "Setup Node auth token"
       - run:
           command: git submodule update --init
