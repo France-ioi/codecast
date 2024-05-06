@@ -1,0 +1,29 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.0.2
+
+jobs:
+  build:
+    executor: node/default
+    steps:
+      - checkout
+      - run:
+          command: git submodule update --init
+          name: Fetch submodules
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          command: cp config.json.template config.json
+          name: Copy config
+      - run:
+          command: yarn build-lib
+          name: Build Codecast lib
+
+workflows:
+  deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: lib
