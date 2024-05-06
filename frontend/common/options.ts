@@ -65,6 +65,9 @@ export function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('noMenu' in query) {
         options.showMenu = false;
     }
+    if ('noSettings' in query) {
+        options.hideSettings = true;
+    }
     if ('noDoc' in query) {
         options.showDocumentation = false;
     }
