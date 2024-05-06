@@ -35,15 +35,17 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: "Commit changes"
           command: |
             ls -asl build
+            git clone git@github.com:France-ioi/bebras-modules.git
+            cd bebras-modules
             git config credential.helper cache
             git config user.email "admin@france-ioi.org"
             git config user.name "Deployment"
-            git clone git@github.com:France-ioi/bebras-modules.git
-            cp build/index.js bebras-modules/ext/codecast/7.4/index.js
-            cp build/index.css bebras-modules/ext/codecast/7.4/index.css
-            cp build/index.worker.worker.js bebras-modules/ext/codecast/7.4/index.worker.worker.js
+            cp ../build/index.js ext/codecast/7.4/index.js
+            cp ../build/index.css ext/codecast/7.4/index.css
+            cp ../index.worker.worker.js ext/codecast/7.4/index.worker.worker.js
             git commit --allow-empty -m "Upgrade Codecast 7.4"
 
 workflows:
