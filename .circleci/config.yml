@@ -9,22 +9,22 @@ jobs:
     steps:
       - checkout
       - run:
+          name: "Setup Node auth token"
           command: |
             echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
             echo "@france-ioi:registry=https://npm.pkg.github.com/" >> ~/.npmrc
             echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
-          name: "Setup Node auth token"
       - run:
+          name: "Fetch submodules"
           command: git submodule update --init
-          name: Fetch submodules
       - node/install-packages:
           pkg-manager: yarn
       - run:
+          name: "Copy config"
           command: cp config.json.template config.json
-          name: Copy config
       - run:
+          name: "Build Codecast lib"
           command: yarn build-lib
-          name: Build Codecast lib
       - persist_to_workspace:
           root: .
           paths:
@@ -36,8 +36,7 @@ jobs:
           at: .
       - run:
           name: "Clone bebras-modules"
-          command: |
-            git clone git@github.com:France-ioi/bebras-modules.git
+          command: git clone https://${GITHUB_USERNAME}:${NODE_AUTH_TOKEN}@github.com/France-ioi/bebras-modules.git
       - run:
           name: "Copy new files"
           command: |
@@ -52,7 +51,11 @@ jobs:
             git config credential.helper cache
             git config user.email "admin@france-ioi.org"
             git config user.name "Deployment"
+            git add .
             git commit --allow-empty -m "Upgrade Codecast 7.4"
+      - run:
+          name: "Push changes"
+          command: git push -u origin master
 
 workflows:
   deploy:
