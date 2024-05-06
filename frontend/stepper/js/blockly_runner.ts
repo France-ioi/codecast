@@ -206,7 +206,9 @@ export default class BlocklyRunner extends AbstractRunner {
             return function () {
                 let args = [];
                 for(let i=0; i < arguments.length-1; i++) {
-                    if(typeof arguments[i] != 'undefined' && arguments[i].isObject) {
+                    if (typeof arguments[i] != 'undefined' && arguments[i].isObject && 'Function' === arguments[i].class) {
+                        args.push(arguments[i]);
+                    } else if(typeof arguments[i] != 'undefined' && arguments[i].isObject) {
                         args.push(interpreter.pseudoToNative(arguments[i]));
                     } else {
                         args.push(arguments[i]);
@@ -650,5 +652,23 @@ export default class BlocklyRunner extends AbstractRunner {
         log.getLogger('stepper').debug('last analysis', stepperState.lastAnalysis);
         stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
         log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
+    }
+
+    public createNewThread(threadData: any) {
+        console.log('create thread', threadData);
+
+        const globalScope = this.interpreters[0].global;
+        const node = threadData.node;
+        const stack = new window.Interpreter.State(node['body'], globalScope);
+        console.log('stack', stack);
+
+        this.swapCurrentThread(stack);
+
+        return 5;
+    }
+
+    public swapCurrentThread(stack) {
+        // var stack = threads[n];
+        this.interpreters[0].stateStack = [stack];
     }
 }

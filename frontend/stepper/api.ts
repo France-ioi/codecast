@@ -293,6 +293,10 @@ async function executeSingleStep(stepperContext: StepperContext) {
 
     stepperContext.hasMadeFinalInteract = false;
 
+    if (stepperContext.quickAlgoContext) {
+        await stepperContext.quickAlgoContext.checkEventListeners();
+    }
+
     await Codecast.runner.runNewStep(stepperContext, stepperContext.noInteractive);
 
     if (!stepperContext.hasMadeFinalInteract && stepperContext.noInteractive && makeInteraction) {

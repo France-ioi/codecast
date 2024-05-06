@@ -438,7 +438,7 @@ export default class PythonRunner extends AbstractRunner {
         this._resetInterpreterState();
 
         if (Sk.running) {
-            log.getLogger('python_runner').debug('running aleady');
+            log.getLogger('python_runner').debug('running already');
             if (typeof Sk.runQueue === 'undefined') {
                 Sk.runQueue = [];
             }
@@ -464,9 +464,9 @@ export default class PythonRunner extends AbstractRunner {
             let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), null, this._debugger);
             promise.then((response) => {
                 console.log('on final response');
-                this._debugger.success.bind(this._debugger);
+                // this._debugger.success.bind(this._debugger);
             }, (error) => {
-                this._debugger.error.bind(this._debugger);
+                // this._debugger.error.bind(this._debugger);
 
                 this.context.onError(error + "\n");
             });
@@ -487,14 +487,11 @@ export default class PythonRunner extends AbstractRunner {
         console.log('start running step');
 
         return new Promise((resolve, reject) => {
-            this.context.checkEventListeners()
-                .then(() => {
-                    this.stepMode = !noInteractive;
-                    console.log('step', {running: this._isRunning, progress: this._stepInProgress});
-                    if (this._isRunning && !this._stepInProgress) {
-                        this.step(resolve, reject);
-                    }
-                });
+            this.stepMode = !noInteractive;
+            console.log('step', {running: this._isRunning, progress: this._stepInProgress});
+            if (this._isRunning && !this._stepInProgress) {
+                this.step(resolve, reject);
+            }
         }).then(() => {
             if (this.hasCalledHandler) {
                 // Fix for Python: when Skulpt executes a custom handler it counts this as two execution steps.
@@ -728,5 +725,22 @@ export default class PythonRunner extends AbstractRunner {
                 type: ActionTypes.CompileSucceeded,
             });
         }
+    }
+
+    public makeQuickalgoCall(quickalgoMethod, callback) {
+        quickalgoMethod((result: any) => {
+            this._resetCallstackOnNextStep = false;
+            const realResult = this.skToJs(result);
+            callback(realResult);
+        });
+    }
+
+    public createNewThread(threadData) {
+        const result = threadData();
+        console.log('callback result', result);
+        result
+            .then((aaa) => {
+                console.log('aaa', aaa);
+            })
     }
 }

@@ -101,6 +101,11 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
     };
 
+    if (context.infos.multithread) {
+        // Make generation of all blocks
+        blocklyHelper.startingBlock = false;
+    }
+
     context.blocklyHelper = blocklyHelper;
     context.onChange = () => {};
 

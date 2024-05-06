@@ -112,4 +112,11 @@ export default abstract class AbstractRunner {
 
     public async programInitialization(stepperContext: StepperContext): Promise<void> {
     }
+
+    public makeQuickalgoCall(quickalgoMethod, callback) {
+        quickalgoMethod(callback);
+    }
+
+    public createNewThread(threadData: any) {
+    }
 }

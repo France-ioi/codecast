@@ -11,6 +11,7 @@ import {TaskSubmissionServerTestResult} from '../../submission/submission_types'
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App, Codecast} from '../../app_types';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
+import AbstractRunner from '../../stepper/abstract_runner';
 
 export interface LibraryEventListener {
     condition: (callback: (result: boolean) => void) => void,
@@ -32,7 +33,7 @@ export abstract class QuickAlgoLibrary {
     conceptList: any[];
     conceptDisabledList?: string[];
     notionsList: NotionArborescence;
-    runner: any;
+    runner: AbstractRunner;
     curNode: any;
     lost: boolean = false;
     aceEditor: any;
@@ -408,7 +409,7 @@ export abstract class QuickAlgoLibrary {
         return null;
     }
 
-    waitForEvent(condition: (callback: (result: boolean) => void) => void, callback: () => void) {
+    waitForEvent(condition: (callback: (result: boolean) => void) => void, callback: () => Promise<void>) {
         this.eventListeners.push({
             condition,
             callback,
@@ -440,31 +441,15 @@ export abstract class QuickAlgoLibrary {
 
     isEventListenerConditionActive(listener: LibraryEventListener) {
         return new Promise((resolve) => {
-            listener.condition((result) => {
-                // TODO: support other languages than Python
-                this.runner._resetCallstackOnNextStep = false;
-                const realResult = this.runner.skToJs(result);
-                console.log({result, realResult})
-                resolve(realResult);
-            })
+            this.runner.makeQuickalgoCall(listener.condition, resolve);
         });
     }
 
     triggerEventListener(listener: LibraryEventListener) {
-        // TODO: Pause current execution and then do:
-        this.waitingEventListener = true;
+        // this.waitingEventListener = true;
         console.log('trigger event listener', listener.callback);
 
-        return new Promise<void>((resolve) => {
-            const result = listener.callback();
-            console.log('callback result', result);
-            result
-                .then((aaa) => {
-                    console.log('aaa', aaa);
-                    this.waitingEventListener = false;
-                    resolve();
-                })
-        });
+        this.runner.createNewThread(listener.callback);
     }
 }
 

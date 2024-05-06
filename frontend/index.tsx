@@ -36,6 +36,7 @@ import {TaskLevelName} from "./task/platform/platform_slice";
 import {SmartContractConfigType} from './task/libs/smart_contract/smart_contract_lib';
 import {App, CodecastType} from './app_types';
 import {CodecastPlatform} from './stepper/codecast_platform';
+import AbstractRunner from './stepper/abstract_runner';
 
 // Disabling auto-freeze is recommended by proxy-memoize, cf https://github.com/dai-shi/proxy-memoize
 // This is because JavaScript does not support nested proxies of frozen objects
@@ -78,7 +79,7 @@ declare global {
         store: EnhancedStore<AppStore>,
         replayStore: EnhancedStore<AppStore>,
         Codecast: CodecastType,
-        currentPythonRunner: any,
+        currentPythonRunner: AbstractRunner,
         languageStrings: any,
         currentPlatform?: CodecastPlatform,
         __REDUX_DEVTOOLS_EXTENSION__: any,
