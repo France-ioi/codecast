@@ -83,6 +83,14 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         try {
             context.blocklyHelper.highlightBlock(range);
+
+            if (null !== range) {
+                let block = context.blocklyHelper.workspace.getBlockById(range);
+                if (block) {
+                    // Tell Blockly that this block is currently selected
+                    window.Blockly.selected = block;
+                }
+            }
         } catch (e) {
             console.error(e);
         }
