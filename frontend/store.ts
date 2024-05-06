@@ -64,6 +64,7 @@ export interface CodecastOptions {
     showFullScreen: boolean,
     showDirectives: boolean,
     showMenu: boolean,
+    hideSettings: boolean,
     canDownload: boolean,
     canRecord: boolean,
     user: typeof initialStateUser // TODO: Why is this in options AND in store.user and not only in store.user ?
