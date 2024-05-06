@@ -75,7 +75,7 @@ export abstract class QuickAlgoLibrary {
     }
 
     // Set the localLanguageStrings for this context
-    setLocalLanguageStrings(localLanguageStrings) {
+    setLocalLanguageStrings(localLanguageStrings = {}) {
         log.getLogger('libraries').debug('set local language strings', localLanguageStrings, this.infos.blocksLanguage, window.currentPlatform);
         const stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
 
