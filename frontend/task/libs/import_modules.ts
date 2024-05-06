@@ -310,8 +310,8 @@ async function importModules(modulesList, modulesPath) {
             if(curModule.type == 'stylesheet') {
                 getStyle(modSrc, modId, modClass);
             } else {
-                await new Promise(resolve => {
-                    getScript(modSrc, modId, modClass, resolve);
+                await new Promise((resolve, reject) => {
+                    getScript(modSrc, modId, modClass, resolve, reject);
                 });
             }
         } else {
@@ -362,7 +362,7 @@ export function getJsLibLoaded() {
     return jsLibLoaded;
 }
 
-function getScript(modSrc, modId, modClass, callback) {
+function getScript(modSrc, modId, modClass, callback, reject) {
     let script = document.createElement('script');
     script.setAttribute('type', 'text/javascript');
     script.setAttribute('id', modId);
@@ -380,6 +380,9 @@ function getScript(modSrc, modId, modClass, callback) {
             if(!isAbort && callback) setTimeout(callback, 0);
         }
     };
+    script.onerror = () => {
+        reject(`Unable to load module "${modId}" (${modSrc})`);
+    }
 
     script.src = modSrc;
     head.appendChild(script);
