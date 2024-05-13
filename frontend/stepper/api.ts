@@ -294,7 +294,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
     stepperContext.hasMadeFinalInteract = false;
 
     if (stepperContext.quickAlgoContext) {
-        await stepperContext.quickAlgoContext.multiThreadingPreExecute();
+        stepperContext.quickAlgoContext.multiThreadingPreExecute();
     }
 
     await Codecast.runner.runNewStep(stepperContext, stepperContext.noInteractive);

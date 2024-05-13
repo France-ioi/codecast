@@ -136,7 +136,6 @@ export default class BlocklyRunner extends AbstractRunner {
                 displayStr = varName + ' = ' + displayStr;
             }
 
-            console.log('report value', {id, displayStr})
             this.context.blocklyHelper.workspace.reportValue(id, displayStr);
             debounceHideBlocklyDropdown();
         }

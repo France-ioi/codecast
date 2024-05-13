@@ -418,9 +418,9 @@ export abstract class QuickAlgoLibrary {
         log.getLogger('multithread').debug('[multithread] event listeners', this.eventListeners);
     }
 
-    async multiThreadingPreExecute() {
+    multiThreadingPreExecute() {
         log.getLogger('multithread').debug('[multithread] multi-threading pre-execute');
-        await this.checkEventListeners();
+        this.triggerEventListenersIfNecessary();
         this.scheduleAppropriateThread();
     }
 
@@ -429,15 +429,9 @@ export abstract class QuickAlgoLibrary {
         for (let listener of this.eventListeners) {
             const result = await this.isEventListenerConditionActive(listener);
             log.getLogger('multithread').debug('button is ', result);
-            if (result) {
-                if (!listener.justActivated) {
-                    listener.justActivated = true;
-                    log.getLogger('multithread').debug('[multithread] before trigger event listener');
-                    this.triggerEventListener(listener);
-                    log.getLogger('multithread').debug('[multithread] after trigger event listener');
-                }
-            } else {
-                listener.justActivated = false;
+            if (result &&!listener.justActivated) {
+                listener.justActivated = true;
+                log.getLogger('multithread').debug('[multithread] listener just activated');
             }
         }
     }
@@ -453,6 +447,16 @@ export abstract class QuickAlgoLibrary {
         log.getLogger('multithread').debug('[multithread] trigger event listener', listener.callback);
 
         this.runner.createNewThread(listener.callback);
+    }
+
+    triggerEventListenersIfNecessary() {
+        for (let listener of this.eventListeners) {
+            if (listener.justActivated) {
+                log.getLogger('multithread').debug('[multithread] before trigger event listener');
+                listener.justActivated = false;
+                this.triggerEventListener(listener);
+            }
+        }
     }
 
     scheduleAppropriateThread() {
