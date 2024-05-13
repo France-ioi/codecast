@@ -490,10 +490,6 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 }
 
-const debounceHideBlocklyDropdown = debounce(() => {
-    window.Blockly?.DropDownDiv?.hideWithoutAnimation();
-}, 1000);
-
 function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
@@ -506,13 +502,6 @@ function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void 
     state.stepper.currentStepperState = stepperContext.state;
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;
-
-    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && 'main' === state.environment) {
-        // Cancel reported value because in Scratch, as long as there's a reported value,
-        // the first click on the workspace only removes the reported value, and therefore
-        // it prevents moving a block. One would have to make two clicks to move a block in this case.
-        debounceHideBlocklyDropdown();
-    }
 }
 
 export function stepperExitReducer(state: AppStoreReplay): void {

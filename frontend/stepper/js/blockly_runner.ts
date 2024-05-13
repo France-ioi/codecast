@@ -8,6 +8,11 @@ import {getMessage} from '../../lang';
 import {Codecast} from '../../app_types';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {ContextEnrichingTypes} from '../actionTypes';
+import debounce from 'lodash.debounce';
+
+const debounceHideBlocklyDropdown = debounce(() => {
+    window.Blockly?.DropDownDiv?.hideWithoutAnimation();
+}, 500);
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
@@ -131,7 +136,9 @@ export default class BlocklyRunner extends AbstractRunner {
                 displayStr = varName + ' = ' + displayStr;
             }
 
+            console.log('report value', {id, displayStr})
             this.context.blocklyHelper.workspace.reportValue(id, displayStr);
+            debounceHideBlocklyDropdown();
         }
         return value;
     };
