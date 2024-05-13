@@ -490,6 +490,7 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     initCodes(codes, availableBlocks) {
+        super.initCodes(codes, availableBlocks);
         log.getLogger('blockly_runner').debug('init codes', codes);
         this.delayFactory.destroyAll();
         this.interpreters = [];
@@ -676,9 +677,5 @@ export default class BlocklyRunner extends AbstractRunner {
         const stack = threads[newThreadId];
         log.getLogger('multithread').debug('[multithread] change current thread', stack);
         this.interpreters[0].stateStack = stack;
-    }
-
-    public currentThreadFinished() {
-        this.threads.splice(this.currentThreadId, 1);
     }
 }

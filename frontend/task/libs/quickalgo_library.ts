@@ -459,7 +459,7 @@ export abstract class QuickAlgoLibrary {
         const threads = this.runner.getAllThreads();
         let currentThreadId = this.runner.getCurrentThreadId();
         currentThreadId = (currentThreadId + 1) % threads.length;
-        log.getLogger('multithread').debug('[multithread] schedule thread', {threads, currentThreadId});
+        log.getLogger('multithread').debug('[multithread] schedule thread', {threads: [...threads], currentThreadId});
         this.runner.swapCurrentThreadId(currentThreadId);
     }
 }

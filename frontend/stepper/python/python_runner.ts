@@ -216,7 +216,6 @@ export default class PythonRunner extends AbstractRunner {
     };
 
     checkArgs(name, generatorName, blockName, args) {
-        console.log('check function args', {name});
         let msg = '';
 
         // Check the number of arguments corresponds to a variant of the function
@@ -270,19 +269,18 @@ export default class PythonRunner extends AbstractRunner {
 
                 try {
                     const suspendableFn = () => {
-                        console.log('call to suspendable');
                         return val.tp$call(args);
                     };
                     let promise = this._debugger.asyncToPromise(suspendableFn, null, this._debugger);
-                    promise.then((response) => {
-                        console.log('thened', response);
-                        this._debugger.success.bind(this._debugger);
-                    }, (error) => {
-                        console.log('errored', error);
-                        this._debugger.error.bind(this._debugger);
-
-                        this.context.onError(error + "\n");
-                    });
+                    // promise.then((response) => {
+                    //     console.log('thened', response);
+                    //     this._debugger.success.bind(this._debugger);
+                    // }, (error) => {
+                    //     console.log('errored', error);
+                    //     this._debugger.error.bind(this._debugger);
+                    //
+                    //     this.context.onError(error + "\n");
+                    // });
 
                     return promise;
                 } catch (e) {
@@ -432,6 +430,8 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     public initCodes(codes, availableBlocks) {
+        super.initCodes(codes, availableBlocks);
+
         // For reportValue in Skulpt.
         window.currentPythonRunner = this;
 
@@ -463,7 +463,6 @@ export default class PythonRunner extends AbstractRunner {
             // susp_handlers['*'] = this._debugger.suspension_handler.bind(this);
             let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), null, this._debugger);
             promise.then((response) => {
-                console.log('on final response');
                 // this._debugger.success.bind(this._debugger);
             }, (error) => {
                 // this._debugger.error.bind(this._debugger);
@@ -484,12 +483,8 @@ export default class PythonRunner extends AbstractRunner {
     runStep(quickAlgoCallsExecutor, noInteractive = false) {
         this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
 
-        console.log('check event listeners before running step', {running: this._isRunning, progress: this._stepInProgress});
-        console.log('start running step');
-
         return new Promise((resolve, reject) => {
             this.stepMode = !noInteractive;
-            console.log('step', {running: this._isRunning, progress: this._stepInProgress});
             if (this._isRunning && !this._stepInProgress) {
                 this.step(resolve, reject);
             }
@@ -505,7 +500,7 @@ export default class PythonRunner extends AbstractRunner {
         })
     }
 
-    reportValue (origValue) {
+    reportValue(origValue) {
         return origValue;
     }
 
@@ -562,7 +557,6 @@ export default class PythonRunner extends AbstractRunner {
     step(resolve, reject) {
         log.getLogger('python_runner').debug('continue step', resolve, reject, this._resetCallstackOnNextStep);
         this._resetCallstack();
-        console.log('change step in progress', {previous: this._stepInProgress, next: true});
         this._stepInProgress = true;
 
         this.realStep(resolve, reject);
@@ -583,7 +577,6 @@ export default class PythonRunner extends AbstractRunner {
     // Used in Skulpt
     _onStepSuccess(callback) {
         // If there are still timeouts, there's still a step in progress
-        console.log('change step on step success', {previous: this._stepInProgress, next: !!this._timeouts.length});
         this._stepInProgress = !!this._timeouts.length;
         this._continue();
 
@@ -736,23 +729,48 @@ export default class PythonRunner extends AbstractRunner {
         });
     }
 
-    public createNewThread(threadData) {
-        const promise = threadData();
-        log.getLogger('multithread').debug('create new thread -> promise', promise);
+    public createNewThread(promiseCreator) {
+        log.getLogger('multithread').debug('[multithread] create new thread -> promise', promiseCreator);
 
-        this.registerNewThread(promise);
+        // Save previous state
+        this.saveCurrentThreadData([...this._debugger.suspension_stack]);
+
+        // Execute promise to get new state
+        const promise = promiseCreator();
+
+        // Add main suspension stack before this one, so that when this thread finishes, the program does not finishes
+        const mainThreadStack = this.getAllThreads()[0];
+
+        const newSuspensionStack = [
+            ...mainThreadStack,
+        ];
+
+        const lastSuspension = this._debugger.suspension_stack[0];
+        newSuspensionStack[newSuspensionStack.length - 1] = {
+            ...newSuspensionStack[newSuspensionStack.length - 1],
+            child: lastSuspension,
+        };
+        newSuspensionStack.push(lastSuspension);
+
+        // Register new thread
+        this.registerNewThread(newSuspensionStack);
+
+        // Restore previous state, since we haven't switched yet to the new thread
+        this._debugger.suspension_stack = this.getAllThreads()[this.currentThreadId];
 
         promise
-            .then((aaa) => {
-                log.getLogger('multithread').debug('end of thread', aaa);
+            .then(() => {
+                log.getLogger('multithread').debug('[multithread] end of thread');
+                this.currentThreadFinished();
             })
     }
 
     public swapCurrentThreadId(newThreadId: number) {
+        this.saveCurrentThreadData([...this._debugger.suspension_stack]);
         this.currentThreadId = newThreadId;
         const threads = this.getAllThreads();
-        const stack = threads[newThreadId];
-        console.log('change current thread', stack);
-
+        const suspensionStack = threads[newThreadId];
+        log.getLogger('multithread').debug('[multithread] change current thread', suspensionStack);
+        this._debugger.suspension_stack = suspensionStack;
     }
 }

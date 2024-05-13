@@ -51,7 +51,7 @@ export default abstract class AbstractRunner {
     }
 
     public initCodes(codes, availableBlocks = null) {
-
+        this.threads = [];
     }
 
     public stop() {
@@ -120,15 +120,23 @@ export default abstract class AbstractRunner {
     }
 
     public createNewThread(threadData: any) {
+        log.getLogger('multithread').debug('[multithread] default create new thread');
     }
 
     public registerNewThread(threadData: any) {
-        this.threads.push(threadData);
-        this.currentThreadId = this.threads.length - 1;
+        log.getLogger('multithread').debug('[multithread] register new thread', threadData, threadData.length);
+        this.threads.push([...threadData]);
+        // this.currentThreadId = this.threads.length - 1;
     }
 
     public getAllThreads() {
+        log.getLogger('multithread').debug('[multithread] all threads', [...this.threads]);
         return this.threads;
+    }
+
+    public saveCurrentThreadData(threadData: any) {
+        log.getLogger('multithread').debug('[multithread] save thread data', {threadId: this.currentThreadId, threadData});
+        this.threads[this.currentThreadId] = threadData;
     }
 
     public getCurrentThreadId() {
@@ -136,5 +144,10 @@ export default abstract class AbstractRunner {
     }
 
     public swapCurrentThreadId(newThreadId: number) {
+    }
+
+    public currentThreadFinished() {
+        this.threads.splice(this.currentThreadId, 1);
+        log.getLogger('multithread').debug('[multithread] new threads', [...this.threads]);
     }
 }
