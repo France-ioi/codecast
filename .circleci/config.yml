@@ -52,7 +52,7 @@ jobs:
             git config user.email "admin@france-ioi.org"
             git config user.name "Deployment"
             git add .
-            git commit --allow-empty -m "Upgrade Codecast 7.4"
+            git commit --allow-empty -m "Upgrade Codecast 7.4 ($CIRCLE_SHA1)"
       - run:
           name: "Push changes"
           command: |
