@@ -57,7 +57,6 @@ export abstract class QuickAlgoLibrary {
     childContexts: QuickAlgoLibrary[] = [];
     forceGradingWithoutDisplay?: boolean;
     eventListeners: LibraryEventListener[] = [];
-    waitingEventListener: boolean = false;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -222,6 +221,7 @@ export abstract class QuickAlgoLibrary {
     onStepperInit() {
         this.delaysStartedCount = 0;
         this.delaysEndedCount = 0;
+        this.eventListeners = [];
     }
 
     callCallback (callback, value) {
@@ -421,14 +421,14 @@ export abstract class QuickAlgoLibrary {
     multiThreadingPreExecute() {
         log.getLogger('multithread').debug('[multithread] multi-threading pre-execute');
         this.triggerEventListenersIfNecessary();
-        this.scheduleAppropriateThread();
+        this.scheduleNextThread();
     }
 
     async checkEventListeners() {
         log.getLogger('multithread').debug('[multithread] check event listeners');
         for (let listener of this.eventListeners) {
             const result = await this.isEventListenerConditionActive(listener);
-            log.getLogger('multithread').debug('button is ', result);
+            log.getLogger('multithread').debug('[multithread] button is ', result);
             if (result &&!listener.justActivated) {
                 listener.justActivated = true;
                 log.getLogger('multithread').debug('[multithread] listener just activated');
@@ -459,12 +459,10 @@ export abstract class QuickAlgoLibrary {
         }
     }
 
-    scheduleAppropriateThread() {
-        const threads = this.runner.getAllThreads();
-        let currentThreadId = this.runner.getCurrentThreadId();
-        currentThreadId = (currentThreadId + 1) % threads.length;
-        log.getLogger('multithread').debug('[multithread] schedule thread', {threads: [...threads], currentThreadId});
-        this.runner.swapCurrentThreadId(currentThreadId);
+    scheduleNextThread() {
+        const nextThreadId = this.runner.getNextThreadId();
+        log.getLogger('multithread').debug('[multithread] schedule thread', {nextThreadId});
+        this.runner.swapCurrentThreadId(nextThreadId);
     }
 }
 

@@ -6,7 +6,6 @@
 import log from "loglevel";
 import AbstractRunner from "../abstract_runner";
 import {StepperContext} from "../api";
-import {StepperState} from "../index";
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {ActionTypes, ContextEnrichingTypes} from '../actionTypes';
 import {Codecast} from '../../app_types';
@@ -677,7 +676,9 @@ export default class PythonRunner extends AbstractRunner {
 
         log.getLogger('stepper').debug('python analysis', stepperState.analysis);
         stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
+
         log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
+        super.enrichStepperState(stepperState, context, stepperContext);
     }
 
     public *compileAnswer(answer: TaskAnswer) {

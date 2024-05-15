@@ -346,6 +346,12 @@ span + .value-previous {
   z-index: 20;
 }
 
+.other-thread-highlight {
+  position: absolute;
+  background-color: rgba(100,200,100, 0.12);
+  z-index: 20;
+}
+
 .error-highlight {
   position: absolute;
   background-color: rgba(255, 18, 18, 0.25);

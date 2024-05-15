@@ -53,7 +53,7 @@ export interface StepperContext {
     speed?: number,
     unixNextStepCondition?: 0,
     makeDelay?: boolean,
-    quickAlgoContext?: any,
+    quickAlgoContext?: QuickAlgoLibrary,
     environment?: string,
     noInteractive?: boolean,
     delayToWait?: number,

@@ -1,8 +1,9 @@
 import {StepperApi, StepperContext} from "./api";
-import {StepperState} from "./index";
+import {getNodeRange, StepperState} from "./index";
 import {ContextEnrichingTypes} from './actionTypes';
 import {TaskAnswer} from '../task/task_types';
 import log from 'loglevel';
+import {Codecast} from '../app_types';
 
 export default abstract class AbstractRunner {
     //TODO: improve this
@@ -15,6 +16,7 @@ export default abstract class AbstractRunner {
     protected _timeouts = [];
     protected threads: any[] = [];
     protected currentThreadId = null;
+    protected nextThreadId = null;
 
     constructor(context) {
         context.runner = this;
@@ -28,6 +30,10 @@ export default abstract class AbstractRunner {
         return false;
     }
 
+    public static hasBlocks(): boolean {
+        return false;
+    }
+
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState): void {
         if (state.analysis) {
             stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
@@ -35,6 +41,40 @@ export default abstract class AbstractRunner {
     }
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext): void {
+        // @ts-ignore
+        if (!this.constructor.hasBlocks()) {
+            const sourceHighlight = getNodeRange(stepperState);
+            stepperState.sourceHighlight = sourceHighlight ? {range: sourceHighlight} : null;
+        }
+
+        if (!stepperState.threadsAnalysis) {
+            stepperState.threadsAnalysis = {};
+        }
+        stepperState.threadsAnalysis[this.getCurrentThreadId()] = {
+            ...(stepperState.threadsAnalysis[this.getCurrentThreadId()] ?? {}),
+            sourceHighlight: stepperState.sourceHighlight,
+        };
+
+        Codecast.runner.decideNextThread();
+        this.extractSourceHighlight(stepperState);
+    }
+
+    public extractSourceHighlight(stepperState: StepperState) {
+        const computedSourceHighlight = [];
+        const nextThreadId = Codecast.runner.getNextThreadId();
+        for (let threadId of Codecast.runner.getAllThreads().keys()) {
+            if (threadId in stepperState.threadsAnalysis) {
+                const sourceHighlight = stepperState.threadsAnalysis[threadId].sourceHighlight;
+                if (sourceHighlight) {
+                    computedSourceHighlight.push({
+                        highlight: sourceHighlight,
+                        className: nextThreadId === threadId ? 'code-highlight' : 'other-thread-highlight',
+                    });
+                }
+            }
+        }
+
+        stepperState.computedSourceHighlight = computedSourceHighlight;
     }
 
     public isStuck(stepperState: StepperState): boolean {
@@ -135,6 +175,9 @@ export default abstract class AbstractRunner {
     }
 
     public saveCurrentThreadData(threadData: any) {
+        if (!(this.currentThreadId in this.threads)) {
+            return;
+        }
         log.getLogger('multithread').debug('[multithread] save thread data', {threadId: this.currentThreadId, threadData});
         this.threads[this.currentThreadId] = threadData;
     }
@@ -143,11 +186,21 @@ export default abstract class AbstractRunner {
         return this.currentThreadId;
     }
 
+    public getNextThreadId() {
+        return this.nextThreadId;
+    }
+
     public swapCurrentThreadId(newThreadId: number) {
     }
 
     public currentThreadFinished() {
         this.threads.splice(this.currentThreadId, 1);
         log.getLogger('multithread').debug('[multithread] new threads', [...this.threads]);
+    }
+
+    decideNextThread() {
+        const threads = this.getAllThreads();
+        let currentThreadId = this.getCurrentThreadId();
+        this.nextThreadId = (currentThreadId + 1) % threads.length;
     }
 }

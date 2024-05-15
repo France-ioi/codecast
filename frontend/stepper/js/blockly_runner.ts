@@ -70,6 +70,10 @@ export default class BlocklyRunner extends AbstractRunner {
         this.delayFactory = new window.DelayFactory();
     }
 
+    public static hasBlocks(): boolean {
+        return true;
+    }
+
     public static needsCompilation(): boolean {
         return false;
     }
@@ -634,8 +638,10 @@ export default class BlocklyRunner extends AbstractRunner {
     }
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
-        stepperState.currentBlockId = (Codecast.runner as BlocklyRunner).getCurrentBlockId();
-        log.getLogger('stepper').debug('got block id', stepperState.currentBlockId);
+        stepperState.sourceHighlight = {
+            blockId: (Codecast.runner as BlocklyRunner).getCurrentBlockId(),
+        };
+
         if (context === ContextEnrichingTypes.StepperProgress) {
             stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
 
@@ -664,6 +670,7 @@ export default class BlocklyRunner extends AbstractRunner {
         log.getLogger('stepper').debug('last analysis', stepperState.lastAnalysis);
         stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
         log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
+        super.enrichStepperState(stepperState, context, stepperContext);
     }
 
     public createNewThread(threadData: any) {

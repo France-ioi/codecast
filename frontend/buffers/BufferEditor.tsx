@@ -23,7 +23,7 @@ import {
     TextPosition
 } from './buffer_types';
 import {useAppSelector} from '../hooks';
-import {getSourceHighlightFromStateSelector} from '../stepper';
+import {getComputedSourceHighlightFromStateSelector} from '../stepper';
 import {createEmptyBufferState} from './document';
 
 interface BufferEditorProps {
@@ -46,7 +46,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     const {bufferName, width, height} = props;
     const bufferState = useAppSelector(state => state.buffers.buffers[bufferName] ? state.buffers.buffers[bufferName] : createEmptyBufferState(BufferType.Text));
     const bufferType = bufferState.type;
-    const highlight = bufferState.source ? useAppSelector(getSourceHighlightFromStateSelector) : null;
+    const highlights = bufferState.source ? useAppSelector(getComputedSourceHighlightFromStateSelector) : null;
     const [prevWidth, setPrevWidth] = useState(0);
     const [prevHeight, setPrevHeight] = useState(0);
 
@@ -89,7 +89,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
             key={bufferName}
             name={bufferName}
             state={bufferState as BlockBufferState}
-            highlight={highlight as string}
+            highlights={highlights}
             onInit={onInit}
             onSelect={onSelect}
             onEditPlain={onEditPlain}
@@ -101,7 +101,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         key={bufferName}
         name={bufferName}
         state={bufferState as TextBufferState}
-        highlight={highlight as Range}
+        highlights={highlights}
         onInit={onInit}
         onEdit={onEdit}
         onEditPlain={onEditPlain}
