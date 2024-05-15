@@ -81,15 +81,10 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     };
     // Override this function to add x="0" y="0" so that cleanBlockAttributes works correctly by detecting x is not null
     blocklyHelper.getEmptyContent = function() {
-        if (this.startingBlock) {
-            if(this.scratchMode) {
-                return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
-            } else {
-                return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
-            }
-        }
-        else {
-            return '<xml></xml>';
+        if (this.scratchMode) {
+            return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
+        } else {
+            return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
         }
     };
     // Override this function to change parameters

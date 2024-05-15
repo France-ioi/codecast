@@ -20,6 +20,7 @@ import {put} from 'typed-redux-saga';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
 import {TaskAnswer} from '../../task/task_types';
 import {documentToString} from '../../buffers/document';
+import {StepperState} from '../index';
 
 function definePythonNumber() {
     // Create a class which behaves as a Number, but can have extra properties

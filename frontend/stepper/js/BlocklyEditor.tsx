@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef} from "react";
+import React, {useEffect, useRef} from "react";
 import {useAppSelector, useDebounce} from "../../hooks";
 import {BlockBufferHandler} from "../../buffers/document";
 import log from 'loglevel';
@@ -8,10 +8,11 @@ import {getMessage} from '../../lang';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {BlockBufferState, BlockDocument} from '../../buffers/buffer_types';
 import {bufferResetToDefaultSourceCode} from '../../buffers/buffer_actions';
+import {ComputedSourceHighlight, SourceHighlightBlock} from '../index';
 
 export interface BlocklyEditorProps {
     name?: string,
-    highlight?: string,
+    highlights?: ComputedSourceHighlight[]|null,
     state?: BlockBufferState,
     onInit: Function,
     onEditPlain: Function,
@@ -28,11 +29,12 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentValue = useRef(null);
     const previousValue = useRef(null);
-    const highlightedBlock = useRef(null);
+    const highlightedBlocks = useRef<{[className: string]: string[]}>({});
+    const selectedBlockId = useRef<string>(null);
     const loaded = useRef(false);
     const dispatch = useDispatch();
 
-    log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlight: props.highlight});
+    log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlights: props.highlights});
 
     const reset = (document: BlockDocument) => {
         if (!context?.blocklyHelper) {
@@ -69,32 +71,64 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
     };
 
-    const highlight = (range) => {
-        log.getLogger('editor').debug('[blockly.editor] highlight', range);
+    const highlight = (blockId: string, className: string = 'blocklySelected', add: boolean = false) => {
+        log.getLogger('editor').debug('[blockly.editor] highlight', blockId);
         if (!context?.blocklyHelper?.workspace) {
             return;
         }
-        // Fix of a code in blockly_interface.js making double consecutive highlight for the same block not working
-        if (null !== range) {
-            window.Blockly.selected = null;
-        }
 
-        highlightedBlock.current = range;
+        const workspace = context?.blocklyHelper?.workspace;
 
         try {
-            context.blocklyHelper.highlightBlock(range);
+            if (!blockId) {
+                add = false;
+            }
 
-            if (null !== range) {
-                let block = context.blocklyHelper.workspace.getBlockById(range);
-                if (block) {
-                    // Tell Blockly that this block is currently selected
-                    window.Blockly.selected = block;
+            if (!add) {
+                clearHighlights(className);
+            }
+
+            if (context.blocklyHelper?.scratchMode) {
+                if (blockId) {
+                    workspace.glowBlock(blockId, true);
                 }
+            } else {
+                const block = workspace.getBlockById(blockId);
+                if (block) {
+                    window.Blockly.addClass_(block.svgGroup_, className);
+                }
+            }
+
+            if (null !== blockId) {
+                if (!(className in highlightedBlocks.current)) {
+                    highlightedBlocks.current[className] = [];
+                }
+                highlightedBlocks.current[className].push(blockId);
             }
         } catch (e) {
             console.error(e);
         }
     };
+
+    const clearHighlights = (className: string) => {
+        if (highlightedBlocks.current && className in highlightedBlocks.current) {
+            const workspace = context?.blocklyHelper?.workspace;
+            for (let blockId of highlightedBlocks.current[className]) {
+                if (context.blocklyHelper?.scratchMode) {
+                    try {
+                        workspace.glowBlock(blockId, false);
+                    } catch(e) {}
+                } else {
+                    const block = workspace.getBlockById(blockId);
+                    if (block) {
+                        window.Blockly.removeClass_(block.svgGroup_, className);
+                    }
+                }
+            }
+
+            delete highlightedBlocks.current[className];
+        }
+    }
 
     const resize = () => {
         log.getLogger('editor').debug('[blockly.editor] resize');
@@ -115,9 +149,9 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             eventType === window.Blockly.Events.Change) : true;
 
         if ('selected' === event.element) {
-            if (event.newValue !== highlightedBlock.current) {
+            if (event.newValue !== selectedBlockId.current) {
                 log.getLogger('editor').debug('is selected');
-                highlightedBlock.current = event.newValue;
+                selectedBlockId.current = event.newValue;
                 props.onSelect(event.newValue);
             }
             return;
@@ -245,25 +279,40 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     }, [props.state?.document]);
 
     useEffect(() => {
-        const selection = props.highlight;
-        log.getLogger('editor').debug('[blockly.editor] highlight changed', selection, props, highlightedBlock.current);
-        if (selection === highlightedBlock.current) {
-            return;
-        }
+        const highlights = props.highlights;
+        log.getLogger('editor').debug('[blockly.editor] highlight changed', highlights, props, highlightedBlocks.current);
 
-        highlight(selection);
-    }, [props.highlight]);
+        clearHighlights('code-highlight');
+        clearHighlights('other-thread-highlight');
+        if (props.highlights) {
+            let add = false;
+            for (let highlightElement of props.highlights) {
+                highlight((highlightElement.highlight as SourceHighlightBlock).blockId, highlightElement.className, add);
+                add = true;
+            }
+        }
+    }, [props.highlights]);
 
     // Don't reload selection in Scratch because in Scratch there is no notion of selection. You can only glow a block (which
     // corresponds to the highlight)
     useEffect(() => {
         const selection = props.state?.selection;
-        log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, highlightedBlock.current);
-        if (selection === highlightedBlock.current || context.blocklyHelper?.scratchMode) {
+        log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, selectedBlockId.current);
+        if (selection === selectedBlockId.current || context.blocklyHelper?.scratchMode) {
             return;
         }
 
-        highlight(selection);
+        window.Blockly.selected = null;
+
+        clearHighlights('blocklySelected');
+        const workspace = context?.blocklyHelper?.workspace;
+        if (selection && workspace) {
+            const block = workspace.getBlockById(selection);
+            if (block) {
+                window.Blockly.addClass_(block.svgGroup_, 'blocklySelected');
+                window.Blockly.selected = block;
+            }
+        }
     }, [props.state?.selection]);
 
     useEffect(() => {
