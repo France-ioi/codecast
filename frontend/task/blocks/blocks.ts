@@ -1,6 +1,6 @@
 import {AppStore, AppStoreReplay} from "../../store";
 import {Bundle} from "../../linker";
-import {call, debounce, put, take, takeEvery} from "typed-redux-saga";
+import {call, debounce, delay, put, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {BlocksUsage} from "../task_types";
 import {taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
@@ -253,19 +253,19 @@ function* checkSourceSaga() {
     yield* put(taskSetBlocksUsage(blocksUsage));
 }
 
-function* selectorChangeSaga(selector, saga) {
-    let previous = yield* appSelect(selector)
-    while (true) {
-        yield* take();
-        const next = yield* appSelect(selector)
-        if (JSON.stringify(next) !== JSON.stringify(previous)) {
-            yield* saga(next, previous)
+function* selectorChangeSaga<T>(selector: (state: AppStore) => T, isEqual: (previousState: T, nextState: T) => boolean, waitDelay: number, saga) {
+    let previous = yield* appSelect(selector);
+    yield* takeLatest('*', function*() {
+        // Wait delay, if we receive a new action during the delay, this one will be canceled
+        // It creates a natural debouncing
+        yield* delay(waitDelay);
+        const next = yield* appSelect(selector);
+        if (!isEqual(previous, next)) {
             previous = next;
+            yield* saga();
         }
-    }
+    });
 }
-
-export const checkSource = createAction('checkSource');
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
@@ -273,17 +273,17 @@ export default function (bundle: Bundle) {
             return;
         }
 
-        yield* debounce(500, checkSource, checkSourceSaga);
-
-        // Debounce 500ms each time answer changes before checking source
+        // Debounce 500ms before checking if it's a different answer
         yield* selectorChangeSaga((state: AppStore) => {
             return {
                 answer: selectAnswer(state),
                 level: state.task.currentLevel,
                 task: state.task.currentTask,
             };
-        }, function* () {
-            yield* put(checkSource());
-        })
+        }, (previousState, nextState) => {
+            return JSON.stringify(previousState.answer) === JSON.stringify(nextState.answer)
+                && previousState.level === nextState.level
+                && previousState.task === nextState.task;
+        }, 500, checkSourceSaga);
     });
 }
