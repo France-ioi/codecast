@@ -14,9 +14,10 @@ export default abstract class AbstractRunner {
     public _nbActions = 0;
     public _allowStepsWithoutDelay = 0;
     protected _timeouts = [];
-    protected threads: any[] = [];
-    protected currentThreadId = null;
-    protected nextThreadId = null;
+    protected threads: {[threadId: string]: any} = {};
+    protected currentThreadId: number|null = null;
+    protected nextThreadId: number|null = null;
+    protected maxThreadId = 0;
 
     constructor(context) {
         context.runner = this;
@@ -62,13 +63,13 @@ export default abstract class AbstractRunner {
     public extractSourceHighlight(stepperState: StepperState) {
         const computedSourceHighlight = [];
         const nextThreadId = Codecast.runner.getNextThreadId();
-        for (let threadId of Codecast.runner.getAllThreads().keys()) {
+        for (let threadId of Object.keys(Codecast.runner.getAllThreads())) {
             if (threadId in stepperState.threadsAnalysis) {
                 const sourceHighlight = stepperState.threadsAnalysis[threadId].sourceHighlight;
                 if (sourceHighlight) {
                     computedSourceHighlight.push({
                         highlight: sourceHighlight,
-                        className: nextThreadId === threadId ? 'code-highlight' : 'other-thread-highlight',
+                        className: nextThreadId === Number(threadId) ? 'code-highlight' : 'other-thread-highlight',
                     });
                 }
             }
@@ -91,7 +92,8 @@ export default abstract class AbstractRunner {
     }
 
     public initCodes(codes, availableBlocks = null) {
-        this.threads = [];
+        this.threads = {};
+        this.maxThreadId = 0;
     }
 
     public stop() {
@@ -159,22 +161,25 @@ export default abstract class AbstractRunner {
         quickalgoMethod(callback);
     }
 
-    public createNewThread(threadData: any) {
+    public createNewThread(threadData: any): void {
         log.getLogger('multithread').debug('[multithread] default create new thread');
     }
 
-    public registerNewThread(threadData: any) {
+    public registerNewThread(threadData: any): number {
         log.getLogger('multithread').debug('[multithread] register new thread', threadData, threadData.length);
-        this.threads.push([...threadData]);
-        // this.currentThreadId = this.threads.length - 1;
+        const newThreadId = this.maxThreadId;
+        this.threads[newThreadId] = [...threadData];
+        this.maxThreadId++;
+
+        return newThreadId;
     }
 
     public getAllThreads() {
-        log.getLogger('multithread').debug('[multithread] all threads', [...this.threads]);
+        log.getLogger('multithread').debug('[multithread] all threads', {...this.threads});
         return this.threads;
     }
 
-    public saveCurrentThreadData(threadData: any) {
+    public saveCurrentThreadData(threadData: any): void {
         if (!(this.currentThreadId in this.threads)) {
             return;
         }
@@ -182,25 +187,32 @@ export default abstract class AbstractRunner {
         this.threads[this.currentThreadId] = threadData;
     }
 
-    public getCurrentThreadId() {
+    public getCurrentThreadId(): number {
         return this.currentThreadId;
     }
 
-    public getNextThreadId() {
+    public getNextThreadId(): number {
         return this.nextThreadId;
     }
 
-    public swapCurrentThreadId(newThreadId: number) {
+    public swapCurrentThreadId(newThreadId: number): void {
     }
 
-    public currentThreadFinished() {
-        this.threads.splice(this.currentThreadId, 1);
-        log.getLogger('multithread').debug('[multithread] new threads', [...this.threads]);
+    public currentThreadFinished(newThreadId: number): void {
+        log.getLogger('multithread').debug('[multithread] thread finished', {finishedId: newThreadId, current: this.currentThreadId});
+        delete this.threads[newThreadId];
+        log.getLogger('multithread').debug('[multithread] new threads after finished', {...this.threads});
     }
 
-    decideNextThread() {
+    decideNextThread(): void {
         const threads = this.getAllThreads();
         let currentThreadId = this.getCurrentThreadId();
-        this.nextThreadId = (currentThreadId + 1) % threads.length;
+        const threadIds = Object.keys(threads);
+        let currentThreadPosition = threadIds.indexOf(String(currentThreadId));
+        if (-1 === currentThreadPosition) {
+            currentThreadPosition = 0;
+        }
+        const nextThreadPosition = (currentThreadPosition + 1) % threadIds.length;
+        this.nextThreadId = Number(threadIds[nextThreadPosition]);
     }
 }

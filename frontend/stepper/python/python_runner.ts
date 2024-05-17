@@ -747,7 +747,7 @@ export default class PythonRunner extends AbstractRunner {
             ...mainThreadStack,
         ];
 
-        const lastSuspension = this._debugger.suspension_stack[0];
+        const lastSuspension = this._debugger.suspension_stack[this._debugger.suspension_stack.length - 1];
         newSuspensionStack[newSuspensionStack.length - 1] = {
             ...newSuspensionStack[newSuspensionStack.length - 1],
             child: lastSuspension,
@@ -755,7 +755,7 @@ export default class PythonRunner extends AbstractRunner {
         newSuspensionStack.push(lastSuspension);
 
         // Register new thread
-        this.registerNewThread(newSuspensionStack);
+        const newThreadId = this.registerNewThread(newSuspensionStack);
 
         // Restore previous state, since we haven't switched yet to the new thread
         this._debugger.suspension_stack = this.getAllThreads()[this.currentThreadId];
@@ -763,7 +763,7 @@ export default class PythonRunner extends AbstractRunner {
         promise
             .then(() => {
                 log.getLogger('multithread').debug('[multithread] end of thread');
-                this.currentThreadFinished();
+                this.currentThreadFinished(newThreadId);
             })
     }
 
