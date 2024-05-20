@@ -461,7 +461,8 @@ export abstract class QuickAlgoLibrary {
 
     scheduleNextThread() {
         const nextThreadId = this.runner.getNextThreadId();
-        log.getLogger('multithread').debug('[multithread] schedule thread', {nextThreadId});
+        log.getLogger('multithread').debug('[multithread] -----------------------------------------------');
+        log.getLogger('multithread').debug('[multithread] schedule thread', nextThreadId);
         this.runner.swapCurrentThreadId(nextThreadId);
     }
 }

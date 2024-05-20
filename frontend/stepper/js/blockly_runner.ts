@@ -400,7 +400,7 @@ export default class BlocklyRunner extends AbstractRunner {
                 if (!interpreter.step() || this.toStopInterpreter[iInterpreter]) {
                     log.getLogger('blockly_runner').debug('interpreter not running', this.toStopInterpreter[iInterpreter]);
                     this._stepInProgress = false;
-                    this.currentThreadFinished();
+                    this.currentThreadFinished(null);
                     if (this.executeOnResolve) {
                         this.executeOnResolve();
                     }
@@ -678,6 +678,13 @@ export default class BlocklyRunner extends AbstractRunner {
 
         const globalScope = this.interpreters[0].global;
         const node = threadData.node;
+
+        // TODO: define a local scope for this thread
+        // The goal would be to have local variables for each thread instanc
+        // particularly if we execute twice the same functions:
+        // we want to differentiate the different "loop" variables" to avoid
+        // relying on the same global loop counter
+
         const stack = new window.Interpreter.State(node['body'], globalScope);
         log.getLogger('multithread').debug('[multithread] stack', stack);
 
@@ -685,6 +692,7 @@ export default class BlocklyRunner extends AbstractRunner {
     }
 
     public swapCurrentThreadId(newThreadId: number) {
+        this.saveCurrentThreadData([...this.interpreters[0].stateStack]);
         this.currentThreadId = newThreadId;
         const threads = this.getAllThreads();
         const stack = threads[newThreadId];
