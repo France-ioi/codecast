@@ -244,7 +244,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
         return outcome.received;
     }
 
-    public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes) {
+    public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
         stepperState.analysis = this.currentAnalysis;
         if (stepperState.analysis.terminated) {
             stepperState.isFinished = true;
@@ -256,5 +256,7 @@ export class RemoteDebugExecutor extends AbstractRunner {
         if (stepperState.analysis.stackFrames?.length && (context === ContextEnrichingTypes.StepperProgress || context === ContextEnrichingTypes.StepperRestart)) {
             stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
         }
+
+        super.enrichStepperState(stepperState, context, stepperContext);
     }
 }

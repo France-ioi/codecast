@@ -1,8 +1,9 @@
 import {StepperApi, StepperContext} from "./api";
-import {StepperState} from "./index";
+import {getNodeRange, StepperState} from "./index";
 import {ContextEnrichingTypes} from './actionTypes';
 import {TaskAnswer} from '../task/task_types';
 import log from 'loglevel';
+import {Codecast} from '../app_types';
 
 export default abstract class AbstractRunner {
     //TODO: improve this
@@ -13,6 +14,10 @@ export default abstract class AbstractRunner {
     public _nbActions = 0;
     public _allowStepsWithoutDelay = 0;
     protected _timeouts = [];
+    protected threads: {[threadId: string]: any} = {};
+    protected currentThreadId: number|null = null;
+    protected nextThreadId: number|null = null;
+    protected maxThreadId = 0;
 
     constructor(context) {
         context.runner = this;
@@ -26,6 +31,10 @@ export default abstract class AbstractRunner {
         return false;
     }
 
+    public static hasBlocks(): boolean {
+        return false;
+    }
+
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState): void {
         if (state.analysis) {
             stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
@@ -33,6 +42,40 @@ export default abstract class AbstractRunner {
     }
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext): void {
+        // @ts-ignore
+        if (!this.constructor.hasBlocks()) {
+            const sourceHighlight = getNodeRange(stepperState);
+            stepperState.sourceHighlight = sourceHighlight ? {range: sourceHighlight} : null;
+        }
+
+        if (!stepperState.threadsAnalysis) {
+            stepperState.threadsAnalysis = {};
+        }
+        stepperState.threadsAnalysis[this.getCurrentThreadId()] = {
+            ...(stepperState.threadsAnalysis[this.getCurrentThreadId()] ?? {}),
+            sourceHighlight: stepperState.sourceHighlight,
+        };
+
+        Codecast.runner.decideNextThread();
+        this.extractSourceHighlight(stepperState);
+    }
+
+    public extractSourceHighlight(stepperState: StepperState) {
+        const computedSourceHighlight = [];
+        const nextThreadId = Codecast.runner.getNextThreadId();
+        for (let threadId of Object.keys(Codecast.runner.getAllThreads())) {
+            if (threadId in stepperState.threadsAnalysis) {
+                const sourceHighlight = stepperState.threadsAnalysis[threadId].sourceHighlight;
+                if (sourceHighlight) {
+                    computedSourceHighlight.push({
+                        highlight: sourceHighlight,
+                        className: nextThreadId === Number(threadId) ? 'code-highlight' : 'other-thread-highlight',
+                    });
+                }
+            }
+        }
+
+        stepperState.computedSourceHighlight = computedSourceHighlight;
     }
 
     public isStuck(stepperState: StepperState): boolean {
@@ -49,7 +92,8 @@ export default abstract class AbstractRunner {
     }
 
     public initCodes(codes, availableBlocks = null) {
-
+        this.threads = {};
+        this.maxThreadId = 0;
     }
 
     public stop() {
@@ -111,5 +155,64 @@ export default abstract class AbstractRunner {
     }
 
     public async programInitialization(stepperContext: StepperContext): Promise<void> {
+    }
+
+    public makeQuickalgoCall(quickalgoMethod, callback) {
+        quickalgoMethod(callback);
+    }
+
+    public createNewThread(threadData: any): void {
+        log.getLogger('multithread').debug('[multithread] default create new thread');
+    }
+
+    public registerNewThread(threadData: any): number {
+        log.getLogger('multithread').debug('[multithread] register new thread', threadData, threadData.length);
+        const newThreadId = this.maxThreadId;
+        this.threads[newThreadId] = [...threadData];
+        this.maxThreadId++;
+
+        return newThreadId;
+    }
+
+    public getAllThreads() {
+        log.getLogger('multithread').debug('[multithread] all threads', {...this.threads});
+        return this.threads;
+    }
+
+    public saveCurrentThreadData(threadData: any): void {
+        if (!(this.currentThreadId in this.threads)) {
+            return;
+        }
+        log.getLogger('multithread').debug('[multithread] save thread data', {threadId: this.currentThreadId, threadData});
+        this.threads[this.currentThreadId] = threadData;
+    }
+
+    public getCurrentThreadId(): number {
+        return this.currentThreadId;
+    }
+
+    public getNextThreadId(): number {
+        return this.nextThreadId;
+    }
+
+    public swapCurrentThreadId(newThreadId: number): void {
+    }
+
+    public currentThreadFinished(newThreadId: number): void {
+        log.getLogger('multithread').debug('[multithread] thread finished', {finishedId: newThreadId, current: this.currentThreadId});
+        delete this.threads[newThreadId];
+        log.getLogger('multithread').debug('[multithread] new threads after finished', {...this.threads});
+    }
+
+    decideNextThread(): void {
+        const threads = this.getAllThreads();
+        let currentThreadId = this.getCurrentThreadId();
+        const threadIds = Object.keys(threads);
+        let currentThreadPosition = threadIds.indexOf(String(currentThreadId));
+        if (-1 === currentThreadPosition) {
+            currentThreadPosition = 0;
+        }
+        const nextThreadPosition = (currentThreadPosition + 1) % threadIds.length;
+        this.nextThreadId = Number(threadIds[nextThreadPosition]);
     }
 }

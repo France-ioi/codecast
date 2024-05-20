@@ -15,6 +15,7 @@ import {documentToString} from './document';
 import debounce from 'lodash.debounce';
 import {useCursorPositionTracking} from '../task/layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from '../task/layout/actionTypes';
+import {ComputedSourceHighlight, SourceHighlightRange} from '../stepper';
 
 const AceRange = window.ace.acequire('ace/range').Range;
 
@@ -27,7 +28,7 @@ export interface EditorProps {
     mode?: string,
     width?: any,
     height?: any,
-    highlight?: Range|null,
+    highlights?: ComputedSourceHighlight[]|null,
     hasAutocompletion?: boolean,
     hasScrollMargin?: boolean,
     onInit?: Function,
@@ -78,7 +79,7 @@ export function Editor(props: EditorProps) {
     const editor = useRef(null);
     const mute = useRef(false);
     const selection = useRef(null);
-    const markers = useRef({});
+    const markers = useRef<{[className: string]: any[]}>({});
     const scrollTop = useRef(0);
     const firstVisibleRow = useRef(0);
 
@@ -265,17 +266,19 @@ export function Editor(props: EditorProps) {
         });
     };
 
-    const highlight = (range: Range|null, className = 'code-highlight') => {
+    const highlight = (range: Range|null, className = 'code-highlight', add: boolean = false) => {
         log.getLogger('editor').debug('[editor] make highlight', {name: props.name, range, className});
         wrapModelToEditor(() => {
             const session = editor.current.session;
-            if (markers.current && className in markers.current) {
-                session.removeMarker(markers.current[className]);
-                delete markers.current[className];
+            if (!add) {
+                clearHighlights(className);
             }
             if (range && range.start && range.end) {
                 // Add (and save) the marker.
-                markers.current[className] = session.addMarker(toRange(range), className, 'text');
+                if (!(className in markers.current)) {
+                    markers.current[className] = [];
+                }
+                markers.current[className].push(session.addMarker(toRange(range), className, 'text'));
                 if (!props.shield) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
@@ -285,6 +288,16 @@ export function Editor(props: EditorProps) {
             }
         });
     };
+
+    const clearHighlights = (className: string) => {
+        if (markers.current && className in markers.current) {
+            const session = editor.current.session;
+            for (let classMarker of markers.current[className]) {
+                session.removeMarker(classMarker);
+            }
+            delete markers.current[className];
+        }
+    }
 
     const initEditor = () => {
         if (props.hasAutocompletion && availableBlocks && contextStrings) {
@@ -478,9 +491,11 @@ export function Editor(props: EditorProps) {
             log.getLogger('editor').debug('[buffer] done reset', {name: props.name, firstVisibleRow: firstVisibleRow.current, scrollTop: editor.current.getSession().getScrollTop()})
             // Clear a previously set marker, if any.
             if (markers.current && Object.keys(markers.current).length) {
-                for (let [className, marker] of Object.entries<any>(markers.current)) {
-                    editor.current.session.removeMarker(marker);
-                    delete(markers.current[className]);
+                for (let [className, classMarkers] of Object.entries<any>(markers.current)) {
+                    for (let classMarker of classMarkers) {
+                        editor.current.session.removeMarker(classMarker);
+                    }
+                    delete markers.current[className];
                 }
             }
         });
@@ -517,8 +532,16 @@ export function Editor(props: EditorProps) {
     }, [props.state?.selection]);
 
     useEffect(() => {
-        highlight(props.highlight);
-    }, [props.highlight]);
+        clearHighlights('code-highlight');
+        clearHighlights('other-thread-highlight');
+        if (props.highlights) {
+            let add = false;
+            for (let highlightElement of props.highlights) {
+                highlight((highlightElement.highlight as SourceHighlightRange).range, highlightElement.className, add);
+                add = true;
+            }
+        }
+    }, [props.highlights]);
 
     useEffect(() => {
         highlight(props.errorHighlight, 'error-highlight');

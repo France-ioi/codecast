@@ -11,6 +11,13 @@ import {TaskSubmissionServerTestResult} from '../../submission/submission_types'
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App, Codecast} from '../../app_types';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
+import AbstractRunner from '../../stepper/abstract_runner';
+
+export interface LibraryEventListener {
+    condition: (callback: (result: boolean) => void) => void,
+    callback: () => Promise<void>,
+    justActivated: boolean,
+}
 
 export abstract class QuickAlgoLibrary {
     display: boolean;
@@ -26,7 +33,7 @@ export abstract class QuickAlgoLibrary {
     conceptList: any[];
     conceptDisabledList?: string[];
     notionsList: NotionArborescence;
-    runner: any;
+    runner: AbstractRunner;
     curNode: any;
     lost: boolean = false;
     aceEditor: any;
@@ -49,6 +56,7 @@ export abstract class QuickAlgoLibrary {
     plannedNewDelay: number = null;
     childContexts: QuickAlgoLibrary[] = [];
     forceGradingWithoutDisplay?: boolean;
+    eventListeners: LibraryEventListener[] = [];
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -213,6 +221,7 @@ export abstract class QuickAlgoLibrary {
     onStepperInit() {
         this.delaysStartedCount = 0;
         this.delaysEndedCount = 0;
+        this.eventListeners = [];
     }
 
     callCallback (callback, value) {
@@ -398,6 +407,63 @@ export abstract class QuickAlgoLibrary {
 
     getDefaultEmptyTest() {
         return null;
+    }
+
+    waitForEvent(condition: (callback: (result: boolean) => void) => void, callback: () => Promise<void>) {
+        this.eventListeners.push({
+            condition,
+            callback,
+            justActivated: false,
+        });
+        log.getLogger('multithread').debug('[multithread] event listeners', this.eventListeners);
+    }
+
+    multiThreadingPreExecute() {
+        log.getLogger('multithread').debug('[multithread] multi-threading pre-execute');
+        this.triggerEventListenersIfNecessary();
+        this.scheduleNextThread();
+    }
+
+    async checkEventListeners() {
+        log.getLogger('multithread').debug('[multithread] check event listeners');
+        for (let listener of this.eventListeners) {
+            const result = await this.isEventListenerConditionActive(listener);
+            log.getLogger('multithread').debug('[multithread] button is ', result);
+            if (result &&!listener.justActivated) {
+                listener.justActivated = true;
+                log.getLogger('multithread').debug('[multithread] listener just activated');
+            }
+        }
+    }
+
+    isEventListenerConditionActive(listener: LibraryEventListener) {
+        return new Promise((resolve) => {
+            this.runner.makeQuickalgoCall(listener.condition, resolve);
+        });
+    }
+
+    triggerEventListener(listener: LibraryEventListener) {
+        // this.waitingEventListener = true;
+        log.getLogger('multithread').debug('[multithread] trigger event listener', listener.callback);
+
+        this.runner.createNewThread(listener.callback);
+    }
+
+    triggerEventListenersIfNecessary() {
+        for (let listener of this.eventListeners) {
+            if (listener.justActivated) {
+                log.getLogger('multithread').debug('[multithread] before trigger event listener');
+                listener.justActivated = false;
+                this.triggerEventListener(listener);
+            }
+        }
+    }
+
+    scheduleNextThread() {
+        const nextThreadId = this.runner.getNextThreadId();
+        log.getLogger('multithread').debug('[multithread] -----------------------------------------------');
+        log.getLogger('multithread').debug('[multithread] schedule thread', nextThreadId);
+        this.runner.swapCurrentThreadId(nextThreadId);
     }
 }
 

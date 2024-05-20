@@ -340,10 +340,29 @@ span + .value-previous {
   max-height: 12px;
 }
 
-.code-highlight {
-  position: absolute;
-  background-color: rgba(100,200,100, 0.25);
-  z-index: 20;
+.blockly-editor {
+  .code-highlight > .blocklyPath {
+    stroke: rgba(255, 204, 51, 1);
+    stroke-width: 3px;
+  }
+  .other-thread-highlight > .blocklyPath {
+    stroke: rgba(255, 204, 51, 0.5);
+    stroke-width: 3px;
+  }
+}
+
+.editor {
+  .code-highlight {
+    position: absolute;
+    background-color: rgba(100,200,100, 0.25);
+    z-index: 20;
+  }
+
+  .other-thread-highlight {
+    position: absolute;
+    background-color: rgba(100,200,100, 0.12);
+    z-index: 20;
+  }
 }
 
 .error-highlight {

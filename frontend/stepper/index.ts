@@ -96,6 +96,7 @@ import {memoize} from 'proxy-memoize';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import debounce from 'lodash.debounce';
 import {RemoteDebugExecutor} from './remote/remote_debug_executer';
+import {Range} from '../buffers/buffer_types';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -133,6 +134,11 @@ export const initialStepperStateControls = {
 
 let currentStepperTask;
 
+export type SourceHighlightBlock = {blockId: string};
+export type SourceHighlightRange = {range: Range};
+export type SourceHighlight = SourceHighlightBlock|SourceHighlightRange;
+export type ComputedSourceHighlight = {highlight: SourceHighlight, className: string};
+
 /**
  * TODO: This type is used in directives but it may actually be a different type that is used there.
  */
@@ -154,6 +160,8 @@ const initialStateStepperState = {
     codecastAnalysis: null as CodecastAnalysisSnapshot,
     analysis: null as any,
     lastAnalysis: null as AnalysisSnapshot, // Only used for python
+    threadsAnalysis: {} as {[threadId: string]: {sourceHighlight: SourceHighlight}},
+    computedSourceHighlight: [] as ComputedSourceHighlight[],
     directives: {
         ordered: [],
         functionCallStack: null,
@@ -170,6 +178,7 @@ const initialStateStepperState = {
     },
     isFinished: false, // Only used for python
     currentBlockId: null as string|null, // Only used for Blockly
+    sourceHighlight: null as SourceHighlight|null,
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -472,7 +481,7 @@ function stepperStartedReducer(state: AppStoreReplay, action): void {
     state.stepper.undo.unshift(state.stepper.currentStepperState);
 }
 
-function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext, progress}}): void {
+function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext, progress}}: {payload: {stepperContext: StepperContext, progress: boolean}}): void {
     /**
      * TODO: stepperState comes from an action so it's not an immer draft.
      */
@@ -490,10 +499,6 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 }
 
-const debounceHideBlocklyDropdown = debounce(() => {
-    window.Blockly?.DropDownDiv?.hideWithoutAnimation();
-}, 1000);
-
 function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
@@ -506,13 +511,6 @@ function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void 
     state.stepper.currentStepperState = stepperContext.state;
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;
-
-    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && 'main' === state.environment) {
-        // Cancel reported value because in Scratch, as long as there's a reported value,
-        // the first click on the workspace only removes the reported value, and therefore
-        // it prevents moving a block. One would have to make two clicks to move a block in this case.
-        debounceHideBlocklyDropdown();
-    }
 }
 
 export function stepperExitReducer(state: AppStoreReplay): void {
@@ -908,6 +906,7 @@ function* stepperStepSaga(app: App, action) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
                     } catch (executionResult: unknown) {
+                        log.getLogger('stepper').debug('end condition result', {executionResult});
                         // Update test context state with latest data from checkEndCondition
                         const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
                         yield* put(taskUpdateState(contextState));
@@ -997,18 +996,14 @@ function* stepperExitSaga() {
     yield* put({type: ActionTypes.CompileClear});
 }
 
-export const getSourceHighlightFromStateSelector = memoize((state: AppStore) => {
+export const getComputedSourceHighlightFromStateSelector = memoize<AppStore, ComputedSourceHighlight[]|null>((state: AppStore) => {
     const stepperState = state.stepper.currentStepperState;
     log.getLogger('stepper').debug('update source highlight', stepperState);
     if (!stepperState) {
         return null;
     }
 
-    if (hasBlockPlatform(selectActiveBufferPlatform(state))) {
-        return stepperState.currentBlockId;
-    } else {
-        return getNodeRange(stepperState);
-    }
+    return stepperState.computedSourceHighlight;
 });
 
 function* stepperRunBackgroundSaga({payload: {callback}}) {

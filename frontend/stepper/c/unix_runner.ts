@@ -151,6 +151,8 @@ export default class UnixRunner extends AbstractRunner {
         stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis, {
             displayType: true,
         });
+
+        super.enrichStepperState(stepperState, context, stepperContext);
     }
 
     public isStuck(stepperState: StepperState): boolean {
