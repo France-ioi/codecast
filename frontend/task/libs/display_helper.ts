@@ -33,10 +33,15 @@ export class DisplayHelper {
         }
     }
 
-    async showPopupDialog(message) {
+    async showPopupDialog(message, callback) {
         const dialog = `<div id="popupMessage" class="dialog-message" style="display: block">${message}</div>`;
         const mainStore = Codecast.environments['main'].store;
         mainStore.dispatch(displayModal({message: dialog, mode: ModalType.dialog}));
+
+        // Wait next tick to make sure modal is rendered
+        if (callback) {
+            setTimeout(callback);
+        }
     }
 
     async showKeypad(initialValue, position, callbackModify, callbackFinished, options) {
