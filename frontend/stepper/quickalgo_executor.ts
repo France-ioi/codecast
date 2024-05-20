@@ -24,7 +24,7 @@ class QuickalgoExecutor {
     }
     
     async execute(module: string, action: string, args: any[], callback?: Function) {
-        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] call quickalgo', module, action, args, callback);
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] call quickalgo', module, action, args, callback, Codecast.runner.getCurrentThreadId());
         let libraryCallResult;
         const context = this.stepperContext.quickAlgoContext;
 

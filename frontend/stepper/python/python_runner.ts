@@ -6,7 +6,6 @@
 import log from "loglevel";
 import AbstractRunner from "../abstract_runner";
 import {StepperContext} from "../api";
-import {StepperState} from "../index";
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {ActionTypes, ContextEnrichingTypes} from '../actionTypes';
 import {Codecast} from '../../app_types';
@@ -21,6 +20,7 @@ import {put} from 'typed-redux-saga';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
 import {TaskAnswer} from '../../task/task_types';
 import {documentToString} from '../../buffers/document';
+import {StepperState} from '../index';
 
 function definePythonNumber() {
     // Create a class which behaves as a Number, but can have extra properties
@@ -108,7 +108,7 @@ export default class PythonRunner extends AbstractRunner {
         handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
 
         // Count actions
-        if(type == 'actions') {
+        if (type == 'actions') {
             handler += "\n\tCodecast.runner._nbActions += 1;";
         }
 
@@ -259,19 +259,42 @@ export default class PythonRunner extends AbstractRunner {
         if (val instanceof Sk.builtin.bool) {
             return !!val.v;
         } else if (val instanceof Sk.builtin.func) {
-            return () => {
+            const self = this;
+
+            return (...innerArgs) => {
                 let args = [];
-                for (let i = 0; i < arguments.length; i++) {
-                    args.push(this._createPrimitive(arguments[i]));
+                for (let i = 0; i < innerArgs.length; i++) {
+                    args.push(self._createPrimitive(innerArgs[i]));
                 }
 
-                return new Promise((resolve, reject) => {
-                    Sk.misceval.asyncToPromise(() => {
+                try {
+                    const suspendableFn = () => {
                         return val.tp$call(args);
-                    }).then((val) => {
-                        resolve(this.skToJs(val));
-                    });
-                });
+                    };
+                    let promise = this._debugger.asyncToPromise(suspendableFn, null, this._debugger);
+                    // promise.then((response) => {
+                    //     console.log('thened', response);
+                    //     this._debugger.success.bind(this._debugger);
+                    // }, (error) => {
+                    //     console.log('errored', error);
+                    //     this._debugger.error.bind(this._debugger);
+                    //
+                    //     this.context.onError(error + "\n");
+                    // });
+
+                    return promise;
+                } catch (e) {
+                    console.error(e);
+                    this.context.onError(e.toString() + "\n");
+                }
+
+                // return new Promise((resolve, reject) => {
+                //     Sk.misceval.asyncToPromise(() => {
+                //         return val.tp$call(args);
+                //     }).then((val) => {
+                //         resolve(self.skToJs(val));
+                //     });
+                // });
             }
         } else if (val instanceof Sk.builtin.dict) {
             let dictKeys = Object.keys(val);
@@ -327,7 +350,6 @@ export default class PythonRunner extends AbstractRunner {
             // Apparently when we create a new primitive, the debugger adds a call to
             // the callstack.
             this._resetCallstackOnNextStep = true;
-            this.reportValue(value);
         }
         callback(primitive);
     }
@@ -408,13 +430,15 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     public initCodes(codes, availableBlocks) {
+        super.initCodes(codes, availableBlocks);
+
         // For reportValue in Skulpt.
         window.currentPythonRunner = this;
 
         this._resetInterpreterState();
 
         if (Sk.running) {
-            log.getLogger('python_runner').debug('running aleady');
+            log.getLogger('python_runner').debug('running already');
             if (typeof Sk.runQueue === 'undefined') {
                 Sk.runQueue = [];
             }
@@ -435,13 +459,13 @@ export default class PythonRunner extends AbstractRunner {
         }
 
         try {
-            let susp_handlers = {};
-            susp_handlers['*'] = this._debugger.suspension_handler.bind(this);
-            let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), susp_handlers, this._debugger);
+            // let susp_handlers = {};
+            // susp_handlers['*'] = this._debugger.suspension_handler.bind(this);
+            let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), null, this._debugger);
             promise.then((response) => {
-                this._debugger.success.bind(this._debugger);
+                // this._debugger.success.bind(this._debugger);
             }, (error) => {
-                this._debugger.error.bind(this._debugger);
+                // this._debugger.error.bind(this._debugger);
 
                 this.context.onError(error + "\n");
             });
@@ -450,6 +474,7 @@ export default class PythonRunner extends AbstractRunner {
         }
 
         this._resetInterpreterState();
+        this.registerNewThread(this._debugger.suspension_stack);
 
         Sk.running = true;
         this._isRunning = true;
@@ -457,6 +482,7 @@ export default class PythonRunner extends AbstractRunner {
 
     runStep(quickAlgoCallsExecutor, noInteractive = false) {
         this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
+
         return new Promise((resolve, reject) => {
             this.stepMode = !noInteractive;
             if (this._isRunning && !this._stepInProgress) {
@@ -474,16 +500,7 @@ export default class PythonRunner extends AbstractRunner {
         })
     }
 
-    reportValue(origValue, varName = null) {
-        // Show a popup displaying the value of a block in step-by-step mode
-        if (origValue === undefined
-            || (origValue && origValue.constructor === Sk.builtin.func)
-            || !this._editorMarker
-            || !this.context.display
-            || !this.stepMode) {
-            return origValue;
-        }
-
+    reportValue(origValue) {
         return origValue;
     }
 
@@ -538,7 +555,7 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     step(resolve, reject) {
-        log.getLogger('python_runner').debug('continue step', resolve, reject);
+        log.getLogger('python_runner').debug('continue step', resolve, reject, this._resetCallstackOnNextStep);
         this._resetCallstack();
         this._stepInProgress = true;
 
@@ -660,7 +677,9 @@ export default class PythonRunner extends AbstractRunner {
 
         log.getLogger('stepper').debug('python analysis', stepperState.analysis);
         stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
+
         log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
+        super.enrichStepperState(stepperState, context, stepperContext);
     }
 
     public *compileAnswer(answer: TaskAnswer) {
@@ -702,5 +721,58 @@ export default class PythonRunner extends AbstractRunner {
                 type: ActionTypes.CompileSucceeded,
             });
         }
+    }
+
+    public makeQuickalgoCall(quickalgoMethod, callback) {
+        quickalgoMethod((result: any) => {
+            this._resetCallstackOnNextStep = false;
+            const realResult = this.skToJs(result);
+            callback(realResult);
+        });
+    }
+
+    public createNewThread(promiseCreator) {
+        log.getLogger('multithread').debug('[multithread] create new thread -> promise', promiseCreator);
+
+        // Save previous state
+        this.saveCurrentThreadData([...this._debugger.suspension_stack]);
+
+        // Execute promise to get new state
+        const promise = promiseCreator();
+
+        // Add main suspension stack before this one, so that when this thread finishes, the program does not finishes
+        const mainThreadStack = this.getAllThreads()[0];
+
+        const newSuspensionStack = [
+            ...mainThreadStack,
+        ];
+
+        const lastSuspension = this._debugger.suspension_stack[this._debugger.suspension_stack.length - 1];
+        newSuspensionStack[newSuspensionStack.length - 1] = {
+            ...newSuspensionStack[newSuspensionStack.length - 1],
+            child: lastSuspension,
+        };
+        newSuspensionStack.push(lastSuspension);
+
+        // Register new thread
+        const newThreadId = this.registerNewThread(newSuspensionStack);
+
+        // Restore previous state, since we haven't switched yet to the new thread
+        this._debugger.suspension_stack = this.getAllThreads()[this.currentThreadId];
+
+        promise
+            .then(() => {
+                log.getLogger('multithread').debug('[multithread] end of thread');
+                this.currentThreadFinished(newThreadId);
+            })
+    }
+
+    public swapCurrentThreadId(newThreadId: number) {
+        this.saveCurrentThreadData([...this._debugger.suspension_stack]);
+        this.currentThreadId = newThreadId;
+        const threads = this.getAllThreads();
+        const suspensionStack = threads[newThreadId];
+        log.getLogger('multithread').debug('[multithread] change current thread', suspensionStack);
+        this._debugger.suspension_stack = suspensionStack;
     }
 }

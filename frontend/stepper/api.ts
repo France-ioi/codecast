@@ -53,7 +53,7 @@ export interface StepperContext {
     speed?: number,
     unixNextStepCondition?: 0,
     makeDelay?: boolean,
-    quickAlgoContext?: any,
+    quickAlgoContext?: QuickAlgoLibrary,
     environment?: string,
     noInteractive?: boolean,
     delayToWait?: number,
@@ -292,6 +292,10 @@ async function executeSingleStep(stepperContext: StepperContext) {
     // context.display = false;
 
     stepperContext.hasMadeFinalInteract = false;
+
+    if (stepperContext.quickAlgoContext) {
+        stepperContext.quickAlgoContext.multiThreadingPreExecute();
+    }
 
     await Codecast.runner.runNewStep(stepperContext, stepperContext.noInteractive);
 

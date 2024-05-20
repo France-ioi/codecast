@@ -8,6 +8,11 @@ import {getMessage} from '../../lang';
 import {Codecast} from '../../app_types';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {ContextEnrichingTypes} from '../actionTypes';
+import debounce from 'lodash.debounce';
+
+const debounceHideBlocklyDropdown = debounce(() => {
+    window.Blockly?.DropDownDiv?.hideWithoutAnimation();
+}, 500);
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
@@ -63,6 +68,10 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context = context;
         this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;
         this.delayFactory = new window.DelayFactory();
+    }
+
+    public static hasBlocks(): boolean {
+        return true;
     }
 
     public static needsCompilation(): boolean {
@@ -132,6 +141,7 @@ export default class BlocklyRunner extends AbstractRunner {
             }
 
             this.context.blocklyHelper.workspace.reportValue(id, displayStr);
+            debounceHideBlocklyDropdown();
         }
         return value;
     };
@@ -206,7 +216,9 @@ export default class BlocklyRunner extends AbstractRunner {
             return function () {
                 let args = [];
                 for(let i=0; i < arguments.length-1; i++) {
-                    if(typeof arguments[i] != 'undefined' && arguments[i].isObject) {
+                    if (typeof arguments[i] != 'undefined' && arguments[i].isObject && 'Function' === arguments[i].class) {
+                        args.push(arguments[i]);
+                    } else if(typeof arguments[i] != 'undefined' && arguments[i].isObject) {
                         args.push(interpreter.pseudoToNative(arguments[i]));
                     } else {
                         args.push(arguments[i]);
@@ -386,8 +398,12 @@ export default class BlocklyRunner extends AbstractRunner {
                     break;
                 }
                 if (!interpreter.step() || this.toStopInterpreter[iInterpreter]) {
-                    log.getLogger('blockly_runner').debug('interpreter not running');
-                    this.isRunningInterpreter[iInterpreter] = false;
+                    log.getLogger('blockly_runner').debug('interpreter not running', this.toStopInterpreter[iInterpreter]);
+                    this._stepInProgress = false;
+                    this.currentThreadFinished(null);
+                    if (this.executeOnResolve) {
+                        this.executeOnResolve();
+                    }
                     return;
                 }
                 // Temporarily count micro-steps until each step, which will count as actual steps against the limits
@@ -484,6 +500,7 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     initCodes(codes, availableBlocks) {
+        super.initCodes(codes, availableBlocks);
         log.getLogger('blockly_runner').debug('init codes', codes);
         this.delayFactory.destroyAll();
         this.interpreters = [];
@@ -525,6 +542,7 @@ export default class BlocklyRunner extends AbstractRunner {
             this.nodesReady.push(true);
             this.isRunningInterpreter[iInterpreter] = true;
             this.toStopInterpreter[iInterpreter] = false;
+            this.registerNewThread(this.interpreters[0].stateStack);
 
             if(iInterpreter > 0) {
                 // This is a fix for pseudoToNative identity comparisons (===),
@@ -620,8 +638,10 @@ export default class BlocklyRunner extends AbstractRunner {
     }
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
-        stepperState.currentBlockId = (Codecast.runner as BlocklyRunner).getCurrentBlockId();
-        log.getLogger('stepper').debug('got block id', stepperState.currentBlockId);
+        stepperState.sourceHighlight = {
+            blockId: (Codecast.runner as BlocklyRunner).getCurrentBlockId(),
+        };
+
         if (context === ContextEnrichingTypes.StepperProgress) {
             stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
 
@@ -650,5 +670,33 @@ export default class BlocklyRunner extends AbstractRunner {
         log.getLogger('stepper').debug('last analysis', stepperState.lastAnalysis);
         stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
         log.getLogger('stepper').debug('codecast analysis', stepperState.codecastAnalysis);
+        super.enrichStepperState(stepperState, context, stepperContext);
+    }
+
+    public createNewThread(threadData: any) {
+        log.getLogger('multithread').debug('[multithread] create thread', threadData);
+
+        const globalScope = this.interpreters[0].global;
+        const node = threadData.node;
+
+        // TODO: define a local scope for this thread
+        // The goal would be to have local variables for each thread instanc
+        // particularly if we execute twice the same functions:
+        // we want to differentiate the different "loop" variables" to avoid
+        // relying on the same global loop counter
+
+        const stack = new window.Interpreter.State(node['body'], globalScope);
+        log.getLogger('multithread').debug('[multithread] stack', stack);
+
+        this.registerNewThread([stack]);
+    }
+
+    public swapCurrentThreadId(newThreadId: number) {
+        this.saveCurrentThreadData([...this.interpreters[0].stateStack]);
+        this.currentThreadId = newThreadId;
+        const threads = this.getAllThreads();
+        const stack = threads[newThreadId];
+        log.getLogger('multithread').debug('[multithread] change current thread', stack);
+        this.interpreters[0].stateStack = stack;
     }
 }
