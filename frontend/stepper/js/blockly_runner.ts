@@ -63,6 +63,8 @@ export default class BlocklyRunner extends AbstractRunner {
     private firstHighlight = true;
     public _isFinished: boolean = false;
 
+    private localThreadProperties: {[property: string]: any} = {};
+
     constructor(context) {
         super(context);
         this.context = context;
@@ -523,6 +525,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.localVariables = {};
         this.context.callCallback = this.noDelay.bind(this);
         this._isFinished = false;
+        this.localThreadProperties = {};
         let highlightBlocks = [...codes[0].matchAll(/highlightBlock\('(.+)'\)/g)];
         this.currentBlockId = highlightBlocks.length > 1 ? highlightBlocks[1][1] : null;
         // this.reset(true);
@@ -536,9 +539,14 @@ export default class BlocklyRunner extends AbstractRunner {
             this.context.programEnded[iInterpreter] = false;
             this.interpreterEnded[iInterpreter] = false;
 
-            this.interpreters.push(new window.Interpreter(codes[iInterpreter], (interpreter, scope) => {
+
+            const interpreter = new window.Interpreter(codes[iInterpreter], (interpreter, scope) => {
                 this.initInterpreter(interpreter, scope);
-            }));
+            });
+
+            interpreter.global.properties = this.createInterpreterThreadProxy(interpreter.global.properties);
+
+            this.interpreters.push(interpreter);
             this.nodesReady.push(true);
             this.isRunningInterpreter[iInterpreter] = true;
             this.toStopInterpreter[iInterpreter] = false;
@@ -678,13 +686,6 @@ export default class BlocklyRunner extends AbstractRunner {
 
         const globalScope = this.interpreters[0].global;
         const node = threadData.node;
-
-        // TODO: define a local scope for this thread
-        // The goal would be to have local variables for each thread instanc
-        // particularly if we execute twice the same functions:
-        // we want to differentiate the different "loop" variables" to avoid
-        // relying on the same global loop counter
-
         const stack = new window.Interpreter.State(node['body'], globalScope);
         log.getLogger('multithread').debug('[multithread] stack', stack);
 
@@ -702,5 +703,48 @@ export default class BlocklyRunner extends AbstractRunner {
 
     public isRunning(): boolean {
         return this.isRunningInterpreter[0];
+    }
+
+    /**
+     * We create this proxy because in Blockly multi-threading we use the same interpreter
+     * with the same global scope object. So when we execute simultaneously twice the same
+     * function, they use the same variables and in particular the same loop counter variable,
+     * which is then increased twice as fast in this case. To prevent this,
+     * we create a proxy of the global scope properties object, and maintain
+     * a local thread properties specific for each thread for variables defined inside each thread
+     */
+    public createInterpreterThreadProxy(propertiesObject: any) {
+        const self = this;
+        return new Proxy(propertiesObject, {
+            has(target: any, p: string | symbol): boolean {
+                const currentThreadId = self.getCurrentThreadId();
+                if (self.localThreadProperties[currentThreadId] && p in self.localThreadProperties[currentThreadId]) {
+                    return true;
+                }
+
+                return p in target;
+            },
+            get(target: any, p: string | symbol): any {
+                const currentThreadId = self.getCurrentThreadId();
+                if (self.localThreadProperties[currentThreadId] && p in self.localThreadProperties[currentThreadId]) {
+                    return self.localThreadProperties[currentThreadId][p];
+                }
+
+                return target[p];
+            },
+            set(target: any, p: string | symbol, newValue: any): boolean {
+                const currentThreadId = self.getCurrentThreadId();
+                if (0 === currentThreadId || p in target) {
+                    target[p] = newValue;
+                } else {
+                    if (!(currentThreadId in self.localThreadProperties)) {
+                        self.localThreadProperties[currentThreadId] = {};
+                    }
+                    self.localThreadProperties[currentThreadId][p] = newValue;
+                }
+
+                return true;
+            }
+        });
     }
 }
