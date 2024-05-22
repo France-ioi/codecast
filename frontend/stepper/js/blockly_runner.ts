@@ -699,4 +699,8 @@ export default class BlocklyRunner extends AbstractRunner {
         log.getLogger('multithread').debug('[multithread] change current thread', stack);
         this.interpreters[0].stateStack = stack;
     }
+
+    public isRunning(): boolean {
+        return this.isRunningInterpreter[0];
+    }
 }

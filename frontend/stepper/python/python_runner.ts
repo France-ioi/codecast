@@ -504,6 +504,10 @@ export default class PythonRunner extends AbstractRunner {
         return origValue;
     }
 
+    public isRunning(): boolean {
+        return this._isRunning;
+    }
+
     stop() {
         for (let i = 0; i < this._timeouts.length; i += 1) {
             window.clearTimeout(this._timeouts[i]);
