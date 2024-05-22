@@ -109,7 +109,6 @@ export default abstract class AbstractRunner {
     }
 
     public isRunning(): boolean {
-        // TODO: implement this if necessary
         return false;
     }
 
