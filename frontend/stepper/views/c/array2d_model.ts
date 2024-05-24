@@ -6,7 +6,7 @@ import {getMessage, getMessageFormat} from "../../../lang";
 
 export const extractView = function(context, stackFrame, refExpr, options) {
     const {programState} = context;
-    const localMap = stackFrame.get('localMap');
+    const localMap = stackFrame['localMap'];
     let ref;
     try {
         ref = evalExpr(programState, localMap, refExpr, false);

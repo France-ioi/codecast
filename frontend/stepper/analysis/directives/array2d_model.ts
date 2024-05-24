@@ -1,16 +1,16 @@
-import {DirectiveVariableName, getVariable} from './utils';
+import {DirectiveVariableName} from './utils';
 import {getCursorMap} from './array_utils';
 import {getMessage} from "../../../lang";
 import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
 
 export const extractView = function (context: LayoutDirectiveContext, name: DirectiveVariableName, options) {
-    const ref = getVariable(context, name);
+    const ref = context.variableFetcher.getVariable(context, name);
     if (!ref) {
-        return {error: getMessage('ARRAY2D_REF_UNDEFINED').format({name})};
+        return {error: getMessage('ARRAY2D_REF_UNDEFINED').format({name: context.variableFetcher.stringifyVariableName(name)})};
     }
 
     if (!ref.variables) {
-        return {error: getMessage('ARRAY2D_REF_NOT_LIST').format({name})};
+        return {error: getMessage('ARRAY2D_REF_NOT_LIST').format({name: context.variableFetcher.stringifyVariableName(name)})};
     }
 
     const rowCount = (options.rowCount) ? options.rowCount : ref.variables.length;

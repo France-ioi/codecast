@@ -17,6 +17,7 @@ import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
 import {parseDirectives} from '../python/directives';
+import UnixVariableFetcher from './unix_variable_fetcher';
 
 const RETURN_TYPE_CONVERSION = {
     'bool': 'int',
@@ -131,13 +132,7 @@ export default class UnixRunner extends AbstractRunner {
 
         stepperState.isFinished = !stepperState.programState.control;
         stepperState.analysis = convertUnixStateToAnalysisSnapshot(stepperState.programState, stepperState.lastProgramState);
-        const focusDepth = controls.stack.focusDepth;
-        const analysisBack = analyseState(programState);
-        console.log('stepper state directives', stepperState.directives, {analysisBack, focusDepth});
-
         stepperState.directives = parseDirectives(stepperState.analysis);
-
-        console.log('stepper state directives 2', stepperState.directives);
 
         if (!stepperState.lastAnalysis) {
             stepperState.lastAnalysis = {
@@ -259,5 +254,9 @@ export default class UnixRunner extends AbstractRunner {
                 lastResult = await this.executeEffects(stepperContext, this.effectHandlers.get(name)(stepperContext, ...value.slice(1)));
             }
         }
+    }
+
+    public getVariableFetcher() {
+        return new UnixVariableFetcher();
     }
 }

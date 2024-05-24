@@ -1,8 +1,9 @@
 import range from 'node-range';
 
-import {DirectiveVariableName, getVariable} from './utils';
+import {DirectiveVariableName} from './utils';
 import {getMessage} from "../../../lang";
 import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
+import {stringifyExpr} from '../../views/c/utils';
 
 /**
  extractView(context, name, options) looks up `name` in `stackFrame` and
@@ -61,7 +62,7 @@ import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
 export const extractView = function (context: LayoutDirectiveContext, name, options) {
     // Normalize options.
     const {dim} = options;
-    let {cursors, cursorRows, maxVisibleCells, pointsByKind} = options;
+    let {cursors, cursorRows, maxVisibleCells, pointsByKind, thresholds} = options;
     if (cursors === undefined) {
         cursors = [];
     }
@@ -87,20 +88,22 @@ export const extractView = function (context: LayoutDirectiveContext, name, opti
         if (/^\d/.test(dim)) {
             elemCount = dim;
         } else {
-            const dimVariable = getVariable(context, dim);
+            const dimVariable = context.variableFetcher.getVariable(context, dim);
             if (dimVariable && dimVariable.value) {
                 elemCount = Number(dimVariable.value);
+            } else {
+                return {error: getMessage('ARRAY1D_DIM_INVALID').format({dim: stringifyExpr(dim)})};
             }
         }
     }
 
-    const ref = getVariable(context, name, elemCount);
+    const ref = context.variableFetcher.getVariable(context, name, elemCount);
     if (!ref) {
-        return {error: getMessage('ARRAY1D_REF_UNDEFINED').format({name})};
+        return {error: getMessage('ARRAY1D_REF_UNDEFINED').format({name: context.variableFetcher.stringifyVariableName(name)})};
     }
 
     if (!ref.variables) {
-        return {error: getMessage('ARRAY1D_REF_NOT_LIST').format({name})};
+        return {error: getMessage('ARRAY1D_REF_NOT_LIST').format({name: context.variableFetcher.stringifyVariableName(name)})};
     }
 
     if (elemCount === undefined) {
@@ -112,12 +115,15 @@ export const extractView = function (context: LayoutDirectiveContext, name, opti
         maxIndex: elemCount
     });
 
+    const thresholdsMap = thresholds ? getCursorMap(context, thresholds, {}) : [];
+
     const selection = range(0, elemCount + 1);
     finalizeCursors(selection, cursorMap, cursorRows);
 
     return {
         ref,
         cursorMap,
+        thresholdsMap,
     };
 };
 
@@ -133,7 +139,7 @@ export const getCursorMap = function (context: LayoutDirectiveContext, cursorNam
     const cursorMap = [];  // spare array
 
     cursorNames.forEach(function(name) {
-        const cursorVariable = getVariable(context, name);
+        const cursorVariable = context.variableFetcher.getVariable(context, name);
         if (!cursorVariable) {
             return;
         }
@@ -142,18 +148,19 @@ export const getCursorMap = function (context: LayoutDirectiveContext, cursorNam
             return;
         }
 
+        const cursorLabel = context.variableFetcher.stringifyVariableName(name);
+
         const index = cursorVariable.value;
 
-        if (index >= minIndex && index <= maxIndex) {
-            // TODO: We currently do not attempt to find the previous value of the cursor (and when it changed) ?
+        if (undefined === minIndex || undefined === maxIndex || (index >= minIndex && index <= maxIndex)) {
             if (!(index in cursorMap)) {
                 cursorMap[index] = {
                     index,
-                    labels: []
+                    labels: [],
                 };
             }
 
-            cursorMap[index].labels.push(name);
+            cursorMap[index].labels.push(cursorLabel);
         }
     });
 

@@ -4,6 +4,8 @@ import {ContextEnrichingTypes} from './actionTypes';
 import {TaskAnswer} from '../task/task_types';
 import log from 'loglevel';
 import {Codecast} from '../app_types';
+import AbstractVariableFetcher from './analysis/abstract_variable_fetcher';
+import DefaultVariableFetcher from './analysis/default_variable_fetcher';
 
 export default abstract class AbstractRunner {
     //TODO: improve this
@@ -214,5 +216,9 @@ export default abstract class AbstractRunner {
         }
         const nextThreadPosition = (currentThreadPosition + 1) % threadIds.length;
         this.nextThreadId = Number(threadIds[nextThreadPosition]);
+    }
+
+    public getVariableFetcher(): AbstractVariableFetcher {
+        return new DefaultVariableFetcher();
     }
 }

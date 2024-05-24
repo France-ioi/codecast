@@ -147,7 +147,7 @@ function convertUnixStackFrameToAnalysisStackFrame(unixStackFrame: StackFrameUni
     };
 }
 
-function renderDeclType(type, subject, prec): string {
+export function renderDeclType(type, subject, prec): string {
     switch (type.kind) {
         case 'function':
             // TODO: print param types?

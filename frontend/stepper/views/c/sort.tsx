@@ -5,6 +5,7 @@ import {extractView} from './array_utils';
 import {SvgPan} from '../SvgPan';
 import {DirectiveFrame} from "../DirectiveFrame";
 import {StepperControls} from "../../index";
+import {analyseState} from '../../c/analysis';
 
 const marginLeft = 100;
 const marginTop = 4;
@@ -132,6 +133,7 @@ function Threshold({view, threshold}: ThresholdProps) {
 interface SortViewProps {
     controls: StepperControls,
     directive: any,
+    functionCallStack: any,
     context: any,
     scale: any,
     onChange: Function
@@ -142,7 +144,8 @@ export class SortView extends React.PureComponent<SortViewProps> {
     render() {
         const {controls, directive, context, scale} = this.props;
         const {programState} = context;
-        const topStackFrame = null;
+        const functionCallStack = analyseState(programState).functionCallStack;
+        const topStackFrame = functionCallStack[functionCallStack.length - 1];
 
         // Controls
         //   - fullView: read and render all cells

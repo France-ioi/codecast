@@ -11,6 +11,9 @@ import {CodecastAnalysisSnapshot} from "../../stepper/analysis/analysis";
 import log from 'loglevel';
 
 import {CodecastPlatform} from '../../stepper/codecast_platform';
+import AbstractRunner from '../../stepper/abstract_runner';
+import {Codecast} from '../../app_types';
+import AbstractVariableFetcher from '../../stepper/analysis/abstract_variable_fetcher';
 
 interface LayoutDirectiveProps {
     directive: any,
@@ -21,6 +24,7 @@ export interface LayoutDirectiveContext {
     analysis: CodecastAnalysisSnapshot,
     programState: any,
     lastProgramState: any,
+    variableFetcher: AbstractVariableFetcher,
 }
 
 export function LayoutDirective(props: LayoutDirectiveProps) {
@@ -41,7 +45,14 @@ export function LayoutDirective(props: LayoutDirectiveProps) {
     }
 
     const {codecastAnalysis, programState, lastProgramState, controls, platform} = stepperState;
-    const context: LayoutDirectiveContext = {analysis: codecastAnalysis, programState, lastProgramState};
+
+    const variableFetcher = Codecast.runner.getVariableFetcher();
+    const context: LayoutDirectiveContext = {
+        analysis: codecastAnalysis,
+        programState,
+        lastProgramState,
+        variableFetcher,
+    };
     const {key} = props.directive;
     const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : initialStepperStateControls;
 

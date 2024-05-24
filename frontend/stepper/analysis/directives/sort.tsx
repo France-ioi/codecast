@@ -1,11 +1,10 @@
 import React from 'react';
 
-import {getVariables, renderArrow, renderValue} from './utils';
+import {renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
 import {SvgPan} from '../../views/SvgPan';
 import {DirectiveFrame} from "../../views/DirectiveFrame";
 import {StepperControls} from "../../index";
-import {CodecastAnalysisVariable} from "../analysis";
 import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
 
 const DEFAULT_MAX_VISIBLE_CELLS = 40;
@@ -34,7 +33,8 @@ interface SortViewParams {
     nbCells?: any,
     ref?: any,
     maxValue?: any,
-    cursorMap?: any
+    cursorMap?: any,
+    thresholdsMap?: any,
 }
 
 function getValueClass(view, index) {
@@ -123,22 +123,22 @@ interface ThresholdProps {
 }
 
 function Threshold({view, threshold}: ThresholdProps) {
-    const {name, value}: {name: string, value: CodecastAnalysisVariable} = threshold;
+    const {index, labels}: {index: string, labels: string[]} = threshold;
 
-    if (!value || !value.value) {
+    if (!index) {
         return null;
     }
 
     const x0 = MARGIN_LEFT - THRESHOLD_LINE_EXT;
     const x1 = MARGIN_LEFT + (BAR_WIDTH + BAR_SPACING) * view.nbCells + THRESHOLD_LINE_EXT;
     const x2 = MARGIN_LEFT - THRESHOLD_MARGIN_RIGHT;
-    const y0 = MARGIN_TOP + BAR_HEIGHT * Number(value.value) / view.maxValue;
+    const y0 = MARGIN_TOP + BAR_HEIGHT * Number(index) / view.maxValue;
     const y1 = y0 + TEXT_BASELINE;
 
     return (
         <g className="threshold">
             <line x1={x0} x2={x1} y1={y0} y2={y0}/>
-            <text x={x2} y={y1}>{name}</text>
+            <text x={x2} y={y1}>{labels.join(',')}</text>
         </g>
     );
 }
@@ -183,16 +183,17 @@ export class SortView extends React.PureComponent<SortViewProps> {
 
         const {dim} = byName;
         const cellPan = this.getPosition();
-        const thresholds = (byName.thresholds) ? byName.thresholds : [];
-        const cursors = (byName.cursors) ? byName.cursors : [];
-        const cursorRows = (byName.cursorRows) ? byName.cursorRows : 1;
-        const maxVisibleCells = (byName.n) ? byName.n : DEFAULT_MAX_VISIBLE_CELLS;
+        const thresholds = byName.thresholds ? context.variableFetcher.getList(byName.thresholds, []) : [];
+        const cursors = byName.cursors ? context.variableFetcher.getList(byName.cursors, []) : [];
+        const cursorRows = byName.cursorRows ? context.variableFetcher.getNumber(byName.cursorRows, 1) : 1;
+        const maxVisibleCells = byName.n ? context.variableFetcher.getNumber(byName.n, DEFAULT_MAX_VISIBLE_CELLS) : DEFAULT_MAX_VISIBLE_CELLS;
         const svgHeight = MARGIN_TOP + BAR_HEIGHT + BAR_MARGIN_BOTTOM + TEXT_LINE_HEIGHT + MIN_ARROW_HEIGHT + TEXT_LINE_HEIGHT * cursorRows + MARGIN_BOTTOM;
 
         const view: SortViewParams = {
             dim,
             fullView,
             cursors,
+            thresholds,
             maxVisibleCells,
             cursorRows,
         };
@@ -201,7 +202,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
             return <DirectiveFrame {...this.props}>{view.error}</DirectiveFrame>;
         }
 
-        view.thresholds = getVariables(context, thresholds);
+        view.thresholds = context.variableFetcher.getVariables(context, thresholds);
 
         const list = view.ref.variables;
         view.nbCells = list.length;
@@ -227,7 +228,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
                                 {list.map((element, index) => <Bar key={index} index={index} view={view}/>)}
                             </g>
                             <g className="thresholds">
-                                {view.thresholds.map((threshold, i) => <Threshold key={i} view={view}
+                                {view.thresholdsMap.map(threshold => <Threshold key={threshold.index} view={view}
                                     threshold={threshold}/>)}
                             </g>
                         </g>

@@ -145,7 +145,7 @@ export const refsIntersect = function(ref1, ref2) {
 export const evalExpr = function(programState, localMap, expr, asRef?) {
     if (expr[0] === 'ident') {
         const name = expr[1];
-        const decl = localMap.get(name);
+        const decl = localMap[name];
         if (!decl) {
             if (name in programState.globalMap) {
                 const value = programState.globalMap[name];
@@ -245,7 +245,7 @@ export const stringifyExpr = function(expr, precedence?) {
 };
 
 export const viewExprs = function(programState, stackFrame, exprs) {
-    const localMap = stackFrame.get('localMap');
+    const localMap = stackFrame['localMap'];
     const views = [];
     exprs.forEach(function(expr) {
         const label = stringifyExpr(expr, 0);
@@ -286,7 +286,7 @@ export const getNumber = function(expr, options) {
     const programState = options.programState;
     const stackFrame = options.stackFrame;
     if (expr[0] === 'ident' && programState && stackFrame) {
-        const decl = stackFrame.get('localMap').get(expr[1]);
+        const decl = stackFrame['localMap'][expr[1]];
         if (decl && decl.type.kind === 'builtin') {
             const value = C.readValue(programState, decl.ref);
             if (value) {

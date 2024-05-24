@@ -8,6 +8,8 @@ import {DirectiveFrame} from '../../views/DirectiveFrame';
 import {StepperControls} from "../../index";
 import {CodecastAnalysisVariable} from "../analysis";
 import {LayoutDirectiveContext} from '../../../task/layout/LayoutDirective';
+import {Codecast} from '../../../app_types';
+import {getList} from '../../views/c/utils';
 
 const TEXT_LINE_HEIGHT = 18;
 const TEXT_BASELINE = 5; // from bottom
@@ -165,14 +167,14 @@ export class Array1D extends React.PureComponent<Array1DProps> {
 
         const cellPan = this.getPosition();
         const {byName, byPos} = directive;
-        const cursors = (byName.cursors) ? byName.cursors : [];
+        const cursors = byName.cursors ? context.variableFetcher.getList(byName.cursors, []) : [];
 
-        const cursorRows = (byName.cursorRows) ? byName.cursorRows : DEFAULT_CURSOR_ROWS;
+        const cursorRows = byName.cursorRows ? context.variableFetcher.getNumber(byName.cursorRows, DEFAULT_CURSOR_ROWS) : DEFAULT_CURSOR_ROWS;
         const cellHeight = (3 + cursorRows) * TEXT_LINE_HEIGHT + MIN_ARROW_HEIGHT;
 
-        const cellWidth = this._cellWidth = (byName.cw) ? byName.cw : DEFAULT_CELL_WIDTH;
+        const cellWidth = this._cellWidth = byName.cw ? context.variableFetcher.getNumber(byName.cw, DEFAULT_CELL_WIDTH) : DEFAULT_CELL_WIDTH;
 
-        const maxVisibleCells = (byName.n) ? byName.n : DEFAULT_MAX_VISIBLE_CELLS;
+        const maxVisibleCells = byName.n ? context.variableFetcher.getNumber(byName.n, DEFAULT_MAX_VISIBLE_CELLS) : DEFAULT_MAX_VISIBLE_CELLS;
 
         const {dim} = byName;
 

@@ -3,7 +3,6 @@ import {connect} from "react-redux";
 import {AppStore, CodecastOptions} from "../../store";
 import {createLayout, selectActiveView} from "./layout";
 import {StepperStatus} from "../../stepper";
-import {ActionTypes} from "./actionTypes";
 import {withResizeDetector} from 'react-resize-detector';
 import {Directive} from "../../stepper/python/directives";
 import {Screen} from "../../common/screens";

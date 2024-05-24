@@ -71,7 +71,7 @@ interface HeapNode {
  */
 export const extractView = function(context, stackFrame, refExpr, options) {
     const {programState} = context;
-    const localMap = stackFrame.get('localMap');
+    const localMap = stackFrame['localMap'];
     // Normalize options.
     const {fullView, dimExpr} = options;
     let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind} = options;
@@ -438,7 +438,6 @@ export const getOpsArray1D = function(programState, address, elemCount, elemSize
     // array cells indexes, and save the cell load/store operations in cellOps.
     const cellOpsMap = [];
     const forEachCell = mapArray1D(address, elemCount, elemSize);
-    console.log('foreachcell', forEachCell);
     programState.memoryLog.forEach(function(entry, i) {
         const op = entry[0]; // 'load' or 'store'
         forEachCell(entry[1], function(index) {
