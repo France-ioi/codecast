@@ -49,6 +49,8 @@ export default class UnixRunner extends AbstractRunner {
     }
 
     public async programInitialization(stepperContext: StepperContext): Promise<void> {
+        this.registerNewThread();
+
         while (!inUserCode(stepperContext.state)) {
             /* Mutate the stepper context to advance execution by a single step. */
             const effects = C.step(stepperContext.state.programState);

@@ -164,10 +164,10 @@ export default abstract class AbstractRunner {
         log.getLogger('multithread').debug('[multithread] default create new thread');
     }
 
-    public registerNewThread(threadData: any): number {
-        log.getLogger('multithread').debug('[multithread] register new thread', threadData, threadData.length);
+    public registerNewThread(threadData: any = null): number {
+        log.getLogger('multithread').debug('[multithread] register new thread', threadData);
         const newThreadId = this.maxThreadId;
-        this.threads[newThreadId] = [...threadData];
+        this.threads[newThreadId] = threadData ? [...threadData] : null;
         this.maxThreadId++;
 
         return newThreadId;
@@ -195,6 +195,7 @@ export default abstract class AbstractRunner {
     }
 
     public swapCurrentThreadId(newThreadId: number): void {
+        this.currentThreadId = newThreadId;
     }
 
     public currentThreadFinished(newThreadId: number): void {
