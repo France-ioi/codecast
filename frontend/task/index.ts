@@ -47,7 +47,7 @@ import BlocksBundle from "./blocks/blocks";
 import PlatformBundle, {
     getTaskAnswerAggregated,
     platformApi,
-    setPlatformBundleParameters,
+    setPlatformBundleParameters, subscribePlatformHelper,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
@@ -95,7 +95,7 @@ import {hasBlockPlatform} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {getMessage, Languages} from '../lang';
-import {TaskServer, TaskTest} from './task_types';
+import {isServerTask, TaskServer, TaskTest} from './task_types';
 import {extractTestsFromTask} from '../submission/tests';
 import {taskChangeLevel, taskLoad} from './task_actions';
 import {App, Codecast} from '../app_types';
@@ -272,9 +272,11 @@ function* taskLoadSaga(app: App, action) {
     //     },
     // ]));
 
-
-
     const currentTask = yield* appSelect(state => state.task.currentTask);
+    if (!isServerTask(currentTask)) {
+        yield* call(subscribePlatformHelper);
+    }
+
     if (currentTask) {
         if (currentTask?.gridInfos?.documentationOpenByDefault) {
             yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
