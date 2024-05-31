@@ -121,12 +121,6 @@ function* linkTaskPlatformSaga() {
 
     platformApi = makePlatformAdapter(window.platform);
 
-    const platformHelperChannel = yield* call(makePlatformHelperChannel);
-    const platformHelper = ((yield* take(platformHelperChannel)) as {platformHelper: any}).platformHelper;
-    platformApi.subscribe(platformHelper);
-
-    yield* takeEvery(platformHelperChannel, dispatchActionToStore);
-
     window.onerror = sendErrorLog;
 
     const taskChannel = yield* call(makeTaskChannel);
@@ -143,6 +137,13 @@ function* linkTaskPlatformSaga() {
     window.taskGetResourcesPost = (res, callback) => {
         Codecast.environments['main'].store.dispatch(taskGetResourcesPost(res, callback));
     };
+}
+
+export function* subscribePlatformHelper() {
+    const platformHelperChannel = yield* call(makePlatformHelperChannel);
+    const platformHelper = ((yield* take(platformHelperChannel)) as {platformHelper: any}).platformHelper;
+    platformApi.subscribe(platformHelper);
+    yield* takeEvery(platformHelperChannel, dispatchActionToStore);
 }
 
 export function isTaskPlatformLinked(): boolean {
