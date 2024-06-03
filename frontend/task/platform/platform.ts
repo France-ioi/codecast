@@ -49,7 +49,7 @@ import {Codecast} from '../../app_types';
 import {Document} from '../../buffers/buffer_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
-import {TaskAnswer} from '../task_types';
+import {isServerTask, TaskAnswer} from '../task_types';
 import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
@@ -57,6 +57,7 @@ import {hasBlockPlatform} from '../../stepper/platforms';
 import {callPlatformValidate} from '../../submission/submission_actions';
 import {loadOptionsFromQuery} from '../../common/options';
 import {CodecastOptions} from '../../store';
+import {asyncGetFile} from '../../utils/api';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -365,6 +366,31 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
     yield* call(success, strDump);
 }
 
+function* taskGetResourcesImportCorrectSolutions(resources) {
+    let taskSettingsParsed = getTaskMetadata();
+    const task = yield* appSelect(state => state.task.currentTask);
+    if (isServerTask(task)) {
+        const taskSettings = yield* call(asyncGetFile, 'taskSettings.json');
+        if (!taskSettings) {
+            return;
+        }
+        taskSettingsParsed = JSON.parse(taskSettings);
+    }
+
+    if (!taskSettingsParsed?.correctSolutions) {
+        return;
+    }
+
+    const {correctSolutions} = taskSettingsParsed;
+    resources.correct_solutions = [];
+    for (let correctSolution of correctSolutions) {
+        const {path, language, grade} = correctSolution;
+        const correctedPath = path.replace(/\$TASK_PATH\/?/, '');
+        const solution = yield* call(asyncGetFile, correctedPath);
+        resources.correct_solutions.push({type: 'solution', solution, id: path, language, grade});
+    }
+}
+
 function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType<typeof taskGetResourcesPost>) {
     const options = yield* appSelect(state => state.options);
     let optionsToPreload = {};
@@ -387,6 +413,13 @@ function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType
             resources.task_modules.push({type: 'javascript', url: scriptSrc, id: window.jQuery(this).attr('id')});
         }
     });
+
+    try {
+        yield* call(taskGetResourcesImportCorrectSolutions, resources);
+    } catch (e) {
+        // Avoid blocking errors here
+        console.error(e);
+    }
 
     // For Castor platform, we need to add custom scripts that will be added to the assets during the generation of the task
     const castorScriptInject = `window.codecastPreload = JSON.parse('${JSON.stringify(optionsToPreload)}');
