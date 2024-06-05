@@ -331,7 +331,6 @@ export async function importPlatformModules(platform, modulesPath) {
     if (null !== jsLibLoaded) {
         return;
     }
-    jsLibLoaded = platform;
 
     const modulesToImport = {
         blockly: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface', 'quickAlgo_i18n'],
@@ -339,6 +338,8 @@ export async function importPlatformModules(platform, modulesPath) {
     }
 
     await importModules(modulesToImport[platform], modulesPath);
+
+    jsLibLoaded = platform;
 }
 
 export function loadFonts(theme: string, task: Task|null) {
