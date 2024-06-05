@@ -238,7 +238,7 @@ function* checkSourceSaga() {
         blocksUsage.error = e.toString();
     }
 
-    const currentUsage = getBlocksUsage(answer);
+    const currentUsage = getBlocksUsage(answer, state);
     if (currentUsage) {
         const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
 

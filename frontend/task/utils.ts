@@ -152,7 +152,7 @@ export function checkCompilingCode(answer: TaskAnswer|null, state: AppStore, dis
     }
 }
 
-export function getBlocksUsage(answer: TaskAnswer|null) {
+export function getBlocksUsage(answer: TaskAnswer|null, state: AppStore) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     if (!context || !answer) {
         return null;
@@ -161,7 +161,7 @@ export function getBlocksUsage(answer: TaskAnswer|null) {
     const {document, platform} = answer;
 
     if (platformsList[platform].getBlocksUsage) {
-        return platformsList[platform].getBlocksUsage(document, context);
+        return platformsList[platform].getBlocksUsage(document, context, state);
     }
 
     return null;

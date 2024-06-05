@@ -20,10 +20,9 @@ let originalFireNow;
 let originalSetBackgroundPathVertical_;
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
-    let blocklyHelper;
-
-    if (!context) { return; }
-
+    if (!context) {
+        return;
+    }
     if (context && context.blocklyHelper && !context.blocklyHelper.fake) {
         context.blocklyHelper.unloadLevel();
     }
@@ -73,7 +72,32 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         };
     }
 
-    blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
+    context.blocklyHelper = createBlocklyHelper(context);
+    context.onChange = () => {};
+
+    // There is a setTimeout delay in Blockly lib between blockly program loading and Blockly firing events.
+    // We overload this function to catch the Blockly firing event instant so that we know when the program
+    // is successfully reloaded and that the events won't trigger an editor content update which would trigger
+    // a stepper.exit
+    if ('main' === state.environment) {
+        window.Blockly.Events.fireNow_ = () => {
+            originalFireNow();
+            context.blocklyHelper.reloading = false;
+        };
+    }
+
+    const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
+    if (groupsCategory && 'tralalere' === options.app) {
+        overrideBlocklyFlyoutForCategories(isMobile);
+    } else if (originalSetBackgroundPathVertical_) {
+        window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
+    }
+
+    yield* put(taskIncreaseContextId());
+}
+
+export function createBlocklyHelper(context: QuickAlgoLibrary) {
+    const blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
     // during loadPrograms at the start of the program execution
@@ -101,36 +125,15 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         blocklyHelper.startingBlock = false;
     }
 
-    context.blocklyHelper = blocklyHelper;
-    context.onChange = () => {};
-
     if (!originalFireNow) {
         originalFireNow = window.Blockly.Events.fireNow_;
-    }
-
-    // There is a setTimeout delay in Blockly lib between blockly program loading and Blockly firing events.
-    // We overload this function to catch the Blockly firing event instant so that we know when the program
-    // is successfully reloaded and that the events won't trigger an editor content update which would trigger
-    // a stepper.exit
-    if ('main' === state.environment) {
-        window.Blockly.Events.fireNow_ = () => {
-            originalFireNow();
-            blocklyHelper.reloading = false;
-        };
     }
 
     log.getLogger('blockly_runner').debug('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);
     blocklyHelper.setIncludeBlocks(context.infos.includeBlocks);
 
-    const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
-    if (groupsCategory && 'tralalere' === options.app) {
-        overrideBlocklyFlyoutForCategories(isMobile);
-    } else if (originalSetBackgroundPathVertical_) {
-        window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
-    }
-
-    yield* put(taskIncreaseContextId());
+    return blocklyHelper;
 }
 
 export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
@@ -192,7 +195,7 @@ export const checkBlocklyCode = function (answer: Document, context: QuickAlgoLi
     let blocks;
     try {
         // This method can fail if Blockly is not loaded in the DOM. In this case it's ok we don't make the check
-        blocks = getBlocksFromXml(blockly);
+        blocks = getBlocksFromXml(state, context, blockly);
     } catch (e) {
         console.error(e);
         return;
@@ -268,7 +271,7 @@ const getBlockCount = function (block, context: QuickAlgoLibrary) {
     return 1;
 }
 
-export const getBlocklyBlocksUsage = function (answer: Document, context: QuickAlgoLibrary) {
+export const getBlocklyBlocksUsage = function (answer: Document, context: QuickAlgoLibrary, state: AppStore) {
     // We cannot evaluate blocks as long as the answer has not been loaded into Blockly
     // Thus we wait that context.blocklyHelper.programs is filled (by BlocklyEditor)
     const blockly = (answer as unknown as BlockDocument)?.content?.blockly;
@@ -284,7 +287,7 @@ export const getBlocklyBlocksUsage = function (answer: Document, context: QuickA
     let blocks;
     try {
         // This method can fail if Blockly is not loaded in the DOM. In this case it's ok we don't make the check
-        blocks = getBlocksFromXml(blockly);
+        blocks = getBlocksFromXml(state, context, blockly);
     } catch (e) {
         console.error(e);
         return {
@@ -320,13 +323,20 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
     return blocksUsed;
 }
 
-const getBlocksFromXml = function (xmlText) {
-    const xml = window.Blockly.Xml.textToDom(xmlText)
-    const tmpOptions = new window.Blockly.Options({});
-    const tmpWorkspace = new window.Blockly.Workspace(tmpOptions);
-    window.Blockly.Xml.domToWorkspace(xml, tmpWorkspace);
+const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, xmlText: string) {
+    const xml = window.Blockly.Xml.textToDom(xmlText);
 
-    return tmpWorkspace.getAllBlocks();
+    const blocklyHelper = createBlocklyHelper(context);
+    const language = state.options.language.split('-')[0];
+    blocklyHelper.load(language, false, 1, {});
+
+    if (!window.Blockly.mainWorkspace) {
+        window.Blockly.mainWorkspace = blocklyHelper.workspace;
+    }
+
+    window.Blockly.Xml.domToWorkspace(xml, blocklyHelper.workspace);
+
+    return blocklyHelper.workspace.getAllBlocks();
 };
 
 export const blocklyFindLimited = (blocks, limitedUses, context) => {
