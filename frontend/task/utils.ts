@@ -154,7 +154,7 @@ export function checkCompilingCode(answer: TaskAnswer|null, state: AppStore, dis
 
 export function getBlocksUsage(answer: TaskAnswer|null) {
     const context = quickAlgoLibraries.getContext(null, 'main');
-    if (!context) {
+    if (!context || !answer) {
         return null;
     }
 

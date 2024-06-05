@@ -231,8 +231,8 @@ export default function(bundle: Bundle) {
             if (false !== reloadTask) {
                 yield* put({type: StepperActionTypes.StepperExit});
 
-                if (!state.options.tabsEnabled) {
-                    const activeBufferName = state.buffers.activeBufferName;
+                const activeBufferName = state.buffers.activeBufferName;
+                if (!state.options.tabsEnabled && null !== activeBufferName) {
                     yield* put(bufferChangePlatform(activeBufferName, newPlatform));
                 }
             }

@@ -274,7 +274,7 @@ function* taskLoadSaga(app: App, action) {
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
     if (!isServerTask(currentTask)) {
-        yield* call(subscribePlatformHelper);
+        yield* fork(subscribePlatformHelper);
     }
 
     if (currentTask) {
@@ -985,10 +985,10 @@ export default function (bundle: Bundle) {
                 return;
             }
             const state = yield* appSelect();
+            const currentBuffer = state.buffers.activeBufferName;
             if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
                 yield* call(createSourceBufferFromDocument, answer.document, answer.platform);
-            } else {
-                const currentBuffer = state.buffers.activeBufferName;
+            } else if (null !== currentBuffer) {
                 if (state.buffers.buffers[currentBuffer].platform !== answer.platform) {
                     yield* put(bufferChangePlatform(currentBuffer, answer.platform, answer.document));
                 } else {

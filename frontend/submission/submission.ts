@@ -241,7 +241,9 @@ export default function (bundle: Bundle) {
 
             // Refresh test visualization
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
-            yield* put(updateCurrentTestId({testId: currentTestId, record: false}));
+            if (null !== currentTestId) {
+                yield* put(updateCurrentTestId({testId: currentTestId, record: false}));
+            }
         });
 
         yield* takeEvery(submissionChangeDisplayedError, function* ({payload}) {

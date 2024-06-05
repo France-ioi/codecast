@@ -51,3 +51,24 @@ export const asyncGetJson = function (path, withToken: boolean = false) {
 
     return promise;
 };
+
+export const asyncGetFile = function(path) {
+    let req;
+    const promise = new Promise<string>(function(resolve, reject) {
+        req = request.get(path);
+
+        req.end(function(err, res) {
+            if (err || !res.ok) {
+                return reject({err, res});
+            }
+
+            resolve(res.text);
+        });
+    });
+
+    promise[CANCEL] = () => {
+        req.abort();
+    };
+
+    return promise;
+};

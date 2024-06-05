@@ -31,7 +31,7 @@ import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {selectAvailableExecutionModes} from '../../submission/submission_selectors';
 import {submissionChangeExecutionMode} from '../../submission/submission_slice';
 
-export function* createQuickalgoLibrary() {
+export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false) {
     let state = yield* appSelect();
     let oldContext = quickAlgoLibraries.getContext(null, state.environment);
     log.getLogger('libraries').debug('Create a context', state.environment);
@@ -124,9 +124,13 @@ export function* createQuickalgoLibrary() {
         availablePlatforms = availablePlatforms.filter(platform => -1 !== taskAvailablePlatforms.indexOf(platform));
     }
     if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
+        if (platformAlreadyChanged) {
+            throw new Error("Platform has already changed once, cannot converge to a valid platform");
+        }
+
         yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: true}});
 
-        return false;
+        return yield* call(createQuickalgoLibrary, true);
     }
 
     yield* put(taskSetAvailablePlatforms(availablePlatforms));
