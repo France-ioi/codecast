@@ -274,7 +274,7 @@ function* taskLoadSaga(app: App, action) {
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
     if (!isServerTask(currentTask)) {
-        yield* call(subscribePlatformHelper);
+        yield* fork(subscribePlatformHelper);
     }
 
     if (currentTask) {

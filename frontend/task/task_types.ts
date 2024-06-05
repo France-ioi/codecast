@@ -223,7 +223,7 @@ export interface TaskServer extends TaskNormalized {
 export type Task = QuickalgoTask & Partial<TaskServer>;
 
 export function isServerTask(object: Task|null): boolean {
-    return (object && null !== object.id && undefined !== object.id) || window.PEMTaskMetaData;
+    return !!((object && null !== object.id && undefined !== object.id) || window.PEMTaskMetaData);
 }
 
 export function isServerTest(object: TaskTest): boolean {
