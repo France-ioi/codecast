@@ -109,7 +109,7 @@ import {
     bufferDissociateFromSubmission,
     bufferEdit,
     bufferEditPlain,
-    bufferResetDocument
+    bufferResetDocument, buffersInitialState
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
@@ -795,6 +795,11 @@ export default function (bundle: Bundle) {
     });
 
     bundle.addSaga(watchRecordingProgressSaga);
+
+    bundle.defineAction(TaskActionTypes.TaskRunExecution);
+    bundle.addReducer(TaskActionTypes.TaskRunExecution, (state: AppStore) => {
+        state.buffers = buffersInitialState;
+    });
 
     bundle.addSaga(function* (app: App) {
         log.getLogger('task').debug('INIT TASK SAGAS');
