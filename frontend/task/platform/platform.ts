@@ -384,10 +384,10 @@ function* taskGetResourcesImportCorrectSolutions(resources) {
     const {correctSolutions} = taskSettingsParsed;
     resources.correct_solutions = [];
     for (let correctSolution of correctSolutions) {
-        const {path, language, grade} = correctSolution;
+        const {path} = correctSolution;
         const correctedPath = path.replace(/\$TASK_PATH\/?/, '');
         const solution = yield* call(asyncGetFile, correctedPath);
-        resources.correct_solutions.push({type: 'solution', solution, id: path, language, grade});
+        resources.correct_solutions.push({type: 'solution', solution, id: path, ...correctSolution});
     }
 }
 
