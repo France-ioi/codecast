@@ -24,7 +24,7 @@ export interface PlatformData {
     getSpecificBlocks?: (notionsBag: NotionsBag, includeBlocks?: QuickalgoTaskIncludeBlocks) => Block[],
     runner?: typeof AbstractRunner,
     checkCode?: (document: Document, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[]) => void,
-    getBlocksUsage?: (document: Document, context: QuickAlgoLibrary) => BlocksUsage,
+    getBlocksUsage?: (document: Document, context: QuickAlgoLibrary, state?: AppStore) => BlocksUsage,
 }
 
 const platformBundles = {
