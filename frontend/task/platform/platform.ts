@@ -96,6 +96,7 @@ export function getTaskMetadata() {
     };
     metadata.autoHeight = true;
     metadata.disablePlatformProgress = true;
+    metadata.usesTokens = true; // To receive task token
 
     return metadata;
 }

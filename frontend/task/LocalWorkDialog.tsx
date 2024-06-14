@@ -21,8 +21,22 @@ export function LocalWorkDialog(props: LocalWorkDialogProps) {
 
     const handleFocus = (event) => event.target.select();
 
+    const unsecuredCopyToClipboard = (text: string) => {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Unable to copy to clipboard', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
     const copyCommand = () => {
-        navigator.clipboard.writeText(shellCommand);
+        unsecuredCopyToClipboard(shellCommand);
         setCopied(true);
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
