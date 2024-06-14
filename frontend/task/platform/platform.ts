@@ -237,8 +237,8 @@ function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof
     yield* call(success);
 }
 
-function* taskUpdateTokenEventSaga ({payload: {success}}: ReturnType<typeof taskUpdateTokenEvent>) {
-    //TODO: Do something specific? We haven't implemented it into react-task-lib yet it works
+function* taskUpdateTokenEventSaga ({payload: {token, success}}: ReturnType<typeof taskUpdateTokenEvent>) {
+    yield* put(platformTokenUpdated(token));
     yield* call(success);
 }
 
