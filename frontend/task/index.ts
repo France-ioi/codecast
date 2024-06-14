@@ -70,24 +70,24 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {platformAnswerGraded, platformAnswerLoaded, taskGradeAnswerEvent,} from "./platform/actionTypes";
 import {
-    getDefaultTaskLevel,
+    getDefaultTaskLevel, platformChangeName,
     platformSaveAnswer,
-    platformSetTaskLevels, platformTaskParamsUpdated,
+    platformSetTaskLevels, platformTaskParamsUpdated, platformTaskRandomSeedUpdated,
     platformTokenUpdated, platformUnlockLevel,
     TaskLevelName,
     taskLevelsList
 } from "./platform/platform_slice";
-import {getTaskTokenForLevel} from "./platform/task_token";
 import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
-import {createEmptyBufferState, isEmptyDocument} from "../buffers/document";
+import {isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {convertServerTaskToCodecastFormat, getTaskFromId} from "../submission/task_platform";
 import {
     submissionChangePaneOpen,
-    submissionChangePlatformName, submissionCloseCurrentSubmission, SubmissionExecutionScope,
+    submissionCloseCurrentSubmission,
+    SubmissionExecutionScope,
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
 import {selectTaskTests} from '../submission/submission_selectors';
@@ -119,6 +119,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import {Screen} from '../common/screens';
 import {DeferredPromise} from '../utils/app';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
+import jwt from 'jsonwebtoken';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -175,7 +176,10 @@ function* taskLoadSaga(app: App, action) {
             const convertedTask = convertServerTaskToCodecastFormat(task);
             yield* put(currentTaskChange(convertedTask));
             if (urlParameters.has('sPlatform')) {
-                yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));
+                yield* put(platformChangeName(urlParameters.get('sPlatform')));
+            }
+            if (urlParameters.has('sToken')) {
+                yield* put(platformTokenUpdated(urlParameters.get('sToken')));
             }
             if (convertedTask?.gridInfos?.hints?.length) {
                 yield* put(hintsLoaded(convertedTask.gridInfos.hints));
@@ -536,10 +540,6 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(taskCurrentLevelChange({level: newLevel}));
 
     yield* put({type: LayoutActionTypes.LayoutInstructionsIndexChanged, payload: {tabIndex: 0, pageIndex: 0}});
-
-    const randomSeed = yield* appSelect(state => state.platform.taskRandomSeed);
-    const taskToken = getTaskTokenForLevel(newLevel, randomSeed);
-    yield* put(platformTokenUpdated(taskToken));
 
     const deferredPromise = new DeferredPromise();
     yield* put(updateCurrentTestId({testId: 0, record: false, recreateContext: true, callback: deferredPromise.resolve}));
@@ -995,6 +995,17 @@ export default function (bundle: Bundle) {
                     yield* put(bufferChangePlatform(currentBuffer, answer.platform, answer.document));
                 } else {
                     yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
+                }
+            }
+        });
+
+        yield* takeEvery(platformTokenUpdated, function*() {
+            const newToken = yield* appSelect(state => state.platform.taskToken);
+            if (newToken) {
+                const payload = jwt.decode(newToken);
+                if (payload && null !== payload.randomSeed && undefined !== payload.randomSeed) {
+                    const randomSeed = String(payload.randomSeed);
+                    yield* put(platformTaskRandomSeedUpdated(randomSeed));
                 }
             }
         });

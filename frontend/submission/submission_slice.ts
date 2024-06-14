@@ -21,7 +21,6 @@ export enum SubmissionErrorType {
 export interface SubmissionState {
     executionMode: TaskSubmissionEvaluateOn,
     executionScope: SubmissionExecutionScope,
-    platformName: string,
     taskSubmissions: TaskSubmission[],
     submissionsPaneOpen: boolean,
     currentSubmissionId: number|null,
@@ -31,7 +30,6 @@ export interface SubmissionState {
 export const submissionInitialState = {
     executionMode: TaskSubmissionEvaluateOn.Client,
     executionScope: SubmissionExecutionScope.Submit,
-    platformName: null,
     taskSubmissions: [],
     submissionsPaneOpen: false,
     currentSubmissionId: null,
@@ -48,9 +46,7 @@ export const submissionSlice = createSlice({
         submissionChangeExecutionScope(state, action: PayloadAction<SubmissionExecutionScope>) {
             state.executionScope = action.payload;
         },
-        submissionChangePlatformName(state, action: PayloadAction<string>) {
-            state.platformName = action.payload;
-        },
+
         submissionAddNewTaskSubmission(state, action: PayloadAction<TaskSubmission>) {
             state.taskSubmissions.push(action.payload);
         },
@@ -86,7 +82,6 @@ export const submissionSlice = createSlice({
 
 export const {
     submissionChangeExecutionMode,
-    submissionChangePlatformName,
     submissionAddNewTaskSubmission,
     submissionUpdateTaskSubmission,
     submissionChangePaneOpen,
