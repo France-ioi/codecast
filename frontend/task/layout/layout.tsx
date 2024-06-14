@@ -584,10 +584,7 @@ function buildZonesLayout(node: XmlParserNode, data: BuildZoneLayoutData): React
     });
 
     recursivelyPruneReactTree(node, data.documentationOpen);
-
-    if (data.width && data.height) {
-        recursivelyAllocateSpace(node, data, {width: data.width, height: data.height});
-    }
+    recursivelyAllocateSpace(node, data, {width: data.width, height: data.height});
 
     const reactTree = recursivelyConvertToReactElements(node);
     log.getLogger('layout').debug('final node', {node, reactTree});
