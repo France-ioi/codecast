@@ -14,6 +14,7 @@ import {appSelect} from '../../hooks';
 import {PlayerInstant} from '../../player';
 import {CodecastPlatform} from '../codecast_platform';
 import {App} from '../../app_types';
+import {PrinterLibAction} from '../../task/libs/printer/printer_lib';
 
 export enum IoMode {
     Terminal = 'terminal',
@@ -127,13 +128,13 @@ export default function(bundle: Bundle) {
             const executor = stepperContext.quickAlgoCallsExecutor;
 
             let result;
-            const executorPromise = executor('printer', 'read', [], (res) => {
-                log.getLogger('stepper').debug('callback', res);
+            const executorPromise = executor('printer', 'read', [PrinterLibAction.readLineWithNewLine], (res) => {
+                log.getLogger('printer_lib').debug('callback', res);
                 result = res;
             });
 
             yield ['promise', executorPromise];
-            log.getLogger('stepper').debug('the result', executorPromise, result, result.split('').map(function (char) {
+            log.getLogger('printer_lib').debug('the result', executorPromise, result, result.split('').map(function (char) {
                 return char.charCodeAt(0);
             }).join('/'));
 

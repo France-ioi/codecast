@@ -29,9 +29,8 @@ export function InputOutputView() {
     const taskState: PrinterLibState = useAppSelector(state => state.task.state?.printer);
     const libOutput = PrinterLib.getOutputTextFromEvents(taskState && taskState.ioEvents ? taskState.ioEvents : []);
     const libExpectedOutput = taskState ? taskState.expectedOutput : '';
-    const consumedInput = PrinterLib.getInputTextFromEvents(taskState && taskState.ioEvents ? taskState.ioEvents : []);
+    const consumedInput = PrinterLib.getConsumedTextFromEvents(taskState);
     const consumedInputLines = consumedInput.split("\n").length;
-
     const consumedHighlight: Range = {
         start: {row: 0, column: 0},
         end: {row: consumedInputLines - 1, column: consumedInput.split("\n")[consumedInputLines - 1].length},

@@ -33,7 +33,8 @@ function buildApp(config, store, callback) {
     app.set('view engine', 'pug');
     app.set('views', path.join(__dirname, 'views'));
 
-    console.log('IS DEVELOPMENT ? ', config.isDevelopment);
+    console.log('Is development? ', config.isDevelopment);
+    console.log(`Local URL: ${config.baseUrl}/task?platform=c&ioMode=split`)
     if (config.isDevelopment) {
         // Development route: /build is managed by webpack
         const webpack = require('webpack');
