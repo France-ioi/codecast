@@ -35,8 +35,9 @@ export function getTerminalText(events) {
         .join("");
 }
 
-enum PrinterLibAction {
+export enum PrinterLibAction {
     readLine = 'readLine',
+    readLineWithNewLine = 'readLineWithNewLine',
     getInput = 'getInput',
     reset = 'reset',
 }
@@ -436,7 +437,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 const ioEvent = this.innerState.ioEvents[eventId];
                 log.getLogger('printer_lib').debug('[printer_lib] check input', eventId, ioEvent, pos);
                 if (PrinterLineEventType.input === ioEvent.type) {
-                    remaining += this.innerState.ioEvents[eventId].content.substring(this.innerState.inputPosition.pos).trim();
+                    remaining += this.innerState.ioEvents[eventId].content.substring(this.innerState.inputPosition.pos);
                     log.getLogger('printer_lib').debug('[printer_lib] new remaining', remaining);
                     this.innerState.inputPosition.pos = 0;
                     lastEventId = eventId;
@@ -460,6 +461,8 @@ export class PrinterLib extends QuickAlgoLibrary {
     *commonRead(action: PrinterLibAction = PrinterLibAction.readLine) {
         const context = this;
         log.getLogger('printer_lib').debug('MAKE READ - BEFORE INTERACT', action, context.ioMode, context.innerState.inputPosition);
+
+        const possibleNewLineEnding = PrinterLibAction.readLineWithNewLine === action ? "\n" : "";
 
         const inputBuffer = this.getCurrentInputBuffer();
         if (null !== inputBuffer) {
@@ -493,7 +496,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 pos: context.innerState.ioEvents[context.innerState.ioEvents.length - 1].content.length,
             });
 
-            return readResult;
+            return readResult + possibleNewLineEnding;
         } else {
             let hasResult = false;
             let iterations = 0;
@@ -515,12 +518,12 @@ export class PrinterLib extends QuickAlgoLibrary {
 
             log.getLogger('printer_lib').debug('MAKE READ - AFTER INTERACT', readResult);
 
-            return readResult;
+            return readResult + possibleNewLineEnding;
         }
     }
 
-    *read() {
-        return yield* this.commonRead();
+    *read(action: PrinterLibAction = PrinterLibAction.readLine) {
+        return yield* this.commonRead(action);
     }
 
     *readInteger() {
@@ -554,7 +557,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                     inputPosition = createDraft({event: eventId, pos: event.content.length});
                 }
 
-                inputPosition.pos -= count - 1;
+                inputPosition.pos -= count;
                 if (inputPosition.pos >= 0) {
                     break;
                 }
@@ -601,18 +604,29 @@ export class PrinterLib extends QuickAlgoLibrary {
         return true;
     }
 
-    static getOutputTextFromEvents(ioEvents: PrinterLineEvent[],) {
+    static getOutputTextFromEvents(ioEvents: PrinterLineEvent[]) {
         return ioEvents
             .filter(event => PrinterLineEventType.output === event.type)
             .map(event => event.content)
             .join("");
     }
 
-    static getInputTextFromEvents(ioEvents: PrinterLineEvent[],) {
-        return ioEvents
-            .filter(event => PrinterLineEventType.input === event.type)
-            .map(event => event.content)
-            .join("");
+    static getConsumedTextFromEvents(taskState: PrinterLibState) {
+        let consumedText = [];
+        for (let eventId = 0; eventId < taskState.ioEvents.length; eventId++) {
+            const event = taskState.ioEvents[eventId];
+            if (PrinterLineEventType.input !== event.type) {
+                continue;
+            }
+
+            if (eventId < taskState.inputPosition.event) {
+                consumedText.push(event.content);
+            } else if (eventId === taskState.inputPosition.event) {
+                consumedText.push(event.content.substring(0, taskState.inputPosition.pos));
+            }
+        }
+
+        return consumedText.join();
     }
 
     checkOutputHelper() {
