@@ -30,8 +30,9 @@ export function getTerminalText(events) {
         .join("");
 }
 
-enum PrinterLibAction {
+export enum PrinterLibAction {
     readLine = 'readLine',
+    readLineWithNewLine = 'readLineWithNewLine',
     getInput = 'getInput',
     printLine = 'printLine',
     reset = 'reset',
@@ -427,7 +428,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 const ioEvent = this.innerState.ioEvents[eventId];
                 log.getLogger('printer_lib').debug('[printer_lib] check input', eventId, ioEvent, pos);
                 if (PrinterLineEventType.input === ioEvent.type) {
-                    remaining += this.innerState.ioEvents[eventId].content.substring(this.innerState.inputPosition.pos).trim();
+                    remaining += this.innerState.ioEvents[eventId].content.substring(this.innerState.inputPosition.pos);
                     log.getLogger('printer_lib').debug('[printer_lib] new remaining', remaining);
                     this.innerState.inputPosition.pos = 0;
                     lastEventId = eventId;
@@ -451,6 +452,8 @@ export class PrinterLib extends QuickAlgoLibrary {
     *commonRead(action: PrinterLibAction = PrinterLibAction.readLine) {
         const context = this;
         log.getLogger('printer_lib').debug('MAKE READ - BEFORE INTERACT', action, context.ioMode, context.innerState.inputPosition);
+
+        const possibleNewLineEnding = PrinterLibAction.readLineWithNewLine === action ? "\n" : "";
 
         const inputBuffer = this.getCurrentInputBuffer();
         if (null !== inputBuffer) {
@@ -493,7 +496,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 }];
             }
 
-            return readResult;
+            return readResult + possibleNewLineEnding;
         } else {
             let hasResult = false;
             let iterations = 0;
@@ -523,12 +526,12 @@ export class PrinterLib extends QuickAlgoLibrary {
 
             log.getLogger('printer_lib').debug('MAKE READ - AFTER INTERACT', readResult);
 
-            return readResult;
+            return readResult + possibleNewLineEnding;
         }
     }
 
-    *read() {
-        return yield* this.commonRead();
+    *read(action: PrinterLibAction = PrinterLibAction.readLine) {
+        return yield* this.commonRead(action);
     }
 
     *readInteger() {
@@ -562,7 +565,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                     inputPosition = createDraft({event: eventId, pos: event.content.length});
                 }
 
-                inputPosition.pos -= count - 1;
+                inputPosition.pos -= count;
                 if (inputPosition.pos >= 0) {
                     break;
                 }

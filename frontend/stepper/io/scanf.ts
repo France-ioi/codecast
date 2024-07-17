@@ -110,7 +110,7 @@ export function* scanf(fmt, ...args) {
                 if (buffer.length !== 0) break scanning;
                 line = yield ['gets'];
                 if (typeof line !== 'string') break scanning;
-                buffer = buffer + line + '\n';
+                buffer = buffer + line;
             }
         }
 
@@ -124,7 +124,7 @@ export function* scanf(fmt, ...args) {
                 if (buffer.length !== 0) break;
                 line = yield ['gets'];
                 if (typeof line !== 'string') break scanning;
-                buffer = buffer + line + '\n';
+                buffer = buffer + line;
             }
         }
 
@@ -150,7 +150,7 @@ export function* scanf(fmt, ...args) {
             more_input: while (buffer.length < width) {
                 line = yield ['gets'];
                 if (typeof line !== 'string') break;
-                buffer = buffer + line + '\n';
+                buffer = buffer + line;
             }
             skip = Math.min(buffer.length, width);
             nRead += skip;
@@ -184,7 +184,7 @@ export function* scanf(fmt, ...args) {
                 if (buffer.length === 0) {
                     line = yield ['gets'];
                     if (typeof line !== 'string') break scanning;
-                    buffer = buffer + line + '\n';
+                    buffer = buffer + line;
 
                 }
             }

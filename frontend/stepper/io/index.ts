@@ -12,6 +12,7 @@ import {StepperContext} from "../api";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
+import {PrinterLibAction} from '../../task/libs/printer/printer_lib';
 
 export enum IoMode {
     Terminal = 'terminal',
@@ -139,7 +140,7 @@ export default function(bundle: Bundle) {
             const executor = stepperContext.quickAlgoCallsExecutor;
 
             let result;
-            const executorPromise = executor('printer', 'read', [], (res) => {
+            const executorPromise = executor('printer', 'read', [PrinterLibAction.readLineWithNewLine], (res) => {
                 console.log('callback', res);
                 result = res;
             });
