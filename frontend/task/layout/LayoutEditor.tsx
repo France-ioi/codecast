@@ -21,6 +21,7 @@ import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
 import {getMessage} from '../../lang';
 import {bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
+import {TaskRestartButton} from '../TaskRestartButton';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -101,7 +102,10 @@ export function LayoutEditor(props: LayoutEditorProps) {
                         editorProps={editorProps}
                     />
                 </div>
-                {'tralalere' !== options.app && <BlocksUsage/>}
+                {'tralalere' !== options.app && <div className={`blocks-usage-container platform-${platform}`}>
+                    <TaskRestartButton/>
+                    <BlocksUsage/>
+                </div>}
             </div>}
         </div>
     );

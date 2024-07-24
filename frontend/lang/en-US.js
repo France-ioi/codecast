@@ -190,6 +190,7 @@ module.exports = {
 
     TASK_DESCRIPTION: 'Instructions',
     TASK_VARIABLES: 'Variables',
+    TASK_RESTART : 'Restart',
     TASK_DOCUMENTATION: 'Informations',
     TASK_INSTRUCTIONS_MORE: 'More details',
     TASK_INSTRUCTIONS_LESS: 'Hide details',
