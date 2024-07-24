@@ -42,7 +42,7 @@ import taskSlice, {
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
-import DocumentationBundle from "./documentation/doc";
+import DocumentationBundle, {openDocumentationIfNecessary} from "./documentation/doc";
 import BlocksBundle from "./blocks/blocks";
 import PlatformBundle, {
     getTaskAnswerAggregated,
@@ -282,10 +282,6 @@ function* taskLoadSaga(app: App, action) {
     }
 
     if (currentTask) {
-        if (currentTask?.gridInfos?.documentationOpenByDefault) {
-            yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
-        }
-
         const language = yield* appSelect(state => state.options.language.split('-')[0]);
         if (
             currentTask?.strings?.length
@@ -387,6 +383,8 @@ function* taskLoadSaga(app: App, action) {
     context = quickAlgoLibraries.getContext(null, state.environment);
     const tabsEnabled = context?.infos?.tabsEnabled;
     yield* put({type: ActionTypes.TabsEnabledChanged, payload: {tabsEnabled}});
+
+    yield* call(openDocumentationIfNecessary);
 
     oldSagasTasks[app.environment] = yield* fork(function* () {
         try {
@@ -559,6 +557,8 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
         }
     }
     yield* put(platformAnswerLoaded(newLevelAnswer));
+
+    yield* call(openDocumentationIfNecessary);
 
     yield* call(taskLevelLoadedSaga);
 }
