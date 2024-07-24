@@ -142,7 +142,7 @@
   }
 }
 
-.blocks-usage {
+.blocks-usage-container {
   position: absolute;
   bottom: 20px;
   right: 20px;
@@ -153,23 +153,30 @@
   &.platform-blockly, &.platform-scratch {
     bottom: 100px;
   }
-  background: var(--primary-color);
-  font-weight: bold;
-  font-size: 16px;
-  color: white;
-  padding: 7px 20px;
-  border-radius: 50px;
   z-index: 5;
-  cursor: pointer;
-  transition: width 0.3s ease-in-out;
-  user-select: none;
-  text-align: center;
-  &.has-error {
-    background: #e8092c;
-    cursor: auto;
-  }
-  code {
-    color: yellow;
-    padding: 0 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+
+  .blocks-usage {
+    background: var(--primary-color);
+    font-weight: bold;
+    font-size: 16px;
+    color: white;
+    padding: 7px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: width 0.3s ease-in-out;
+    user-select: none;
+    text-align: center;
+    &.has-error {
+      background: #e8092c;
+      cursor: auto;
+    }
+    code {
+      color: yellow;
+      padding: 0 3px;
+    }
   }
 }

@@ -42,7 +42,7 @@ export function BlocksUsage() {
     }).join(', ') : null;
 
     return (
-        <div ref={wrapperRef} className={`blocks-usage ${blocksUsage.error ? 'has-error' : ''} ${collapsed ? 'is-collapsed' : ''} platform-${platform}`} onClick={toggleCollapsed}>
+        <div ref={wrapperRef} className={`blocks-usage ${blocksUsage.error ? 'has-error' : ''} ${collapsed ? 'is-collapsed' : ''}`} onClick={toggleCollapsed}>
             {collapsed ?
                 <React.Fragment>
                     {blocksUsage.error
