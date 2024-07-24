@@ -1,7 +1,6 @@
 import {call, fork, put, select, take, takeEvery} from 'typed-redux-saga';
 import stringify from 'json-stable-stringify-without-jsonify';
 import {getHeight, windowHeightMonitorSaga} from "./window_height_monitor";
-import {generateTokenUrl, getTaskTokenForLevel} from "./task_token";
 import jwt from "jsonwebtoken";
 import {Bundle} from "../../linker";
 import makeTaskChannel from './task_channel';
@@ -97,6 +96,7 @@ export function getTaskMetadata() {
     };
     metadata.autoHeight = true;
     metadata.disablePlatformProgress = true;
+    metadata.usesTokens = true; // To receive task token
 
     return metadata;
 }
@@ -237,8 +237,8 @@ function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof
     yield* call(success);
 }
 
-function* taskUpdateTokenEventSaga ({payload: {success}}: ReturnType<typeof taskUpdateTokenEvent>) {
-    //TODO: Do something specific? We haven't implemented it into react-task-lib yet it works
+function* taskUpdateTokenEventSaga ({payload: {token, success}}: ReturnType<typeof taskUpdateTokenEvent>) {
+    yield* put(platformTokenUpdated(token));
     yield* call(success);
 }
 
@@ -450,21 +450,11 @@ function* taskReloadStateEventSaga ({payload: {success, error}}: ReturnType<type
 function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnType<typeof taskLoadEvent>) {
     const taskParams = yield* call(platformApi.getTaskParams, null, null);
     let {randomSeed, options} = taskParams;
-    // Fix issue with too large randomSeed that overflow int capacity
-    randomSeed = String(randomSeed);
-    if ('0' === randomSeed) {
-        randomSeed = String(Math.floor(Math.random() * 10));
-        if (window.task_token) {
-            const token = window.task_token.get();
-            if (token) {
-                const payload = jwt.decode(token);
-                if (null !== payload.randomSeed && undefined !== payload.randomSeed) {
-                    randomSeed = String(payload.randomSeed);
-                }
-            }
-        }
+    if (randomSeed) {
+        // Fix issue with too large randomSeed that overflow int capacity
+        randomSeed = String(randomSeed);
+        yield* put(platformTaskRandomSeedUpdated(randomSeed));
     }
-    yield* put(platformTaskRandomSeedUpdated(randomSeed));
 
     const taskVariant = yield* appSelect(state => state.options.taskVariant);
     const randomTaskVariants = yield* appSelect(state => state.options.randomTaskVariants);
@@ -476,28 +466,6 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         });
     }
 
-    let level = yield* appSelect(state => state.task.currentLevel);
-    if (!level) {
-        const urlParameters = new URLSearchParams(window.location.search);
-        const query = Object.fromEntries(urlParameters);
-
-        if (options && options.version) {
-            level = options.version;
-        } else {
-            if (!query['version'] && window.options) {
-                query['taskID'] = window.options.defaults.taskID;
-                query['version'] = window.options.defaults.version;
-                window.location.href = generateTokenUrl(query);
-                return;
-            } else {
-                level = query['version'] as TaskLevelName;
-            }
-        }
-    }
-
-    const taskToken = getTaskTokenForLevel(level, randomSeed);
-    yield* put(platformTokenUpdated(taskToken));
-
     try {
         const taskLoadParameters: {level?: TaskLevelName} = {};
         if (options.level) {
@@ -505,12 +473,6 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
         }
         yield* put(taskLoad(taskLoadParameters));
         yield* take(taskLoaded);
-
-        // if (serverApi) {
-        //     const taskData = yield* call(serverApi, 'tasks', 'taskData', {task: taskToken});
-        //     //yield* put({type: taskInit, payload: {taskData}});
-        // }
-
         yield* call(success);
         yield* fork(windowHeightMonitorSaga, platformApi);
     } catch (ex) {
@@ -519,7 +481,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     }
 }
 
-export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, updateScore, showResult}}: ReturnType<typeof taskGradeAnswerEvent>) {
+export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, success, error, updateScore, showResult}}: ReturnType<typeof taskGradeAnswerEvent>) {
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);
@@ -570,11 +532,6 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, up
             log.getLogger('tests').debug('[Tests] Evaluation result', {scoreWithPlatformParameters, currentMessage});
             yield* call(success, scoreWithPlatformParameters, currentMessage, currentScoreToken);
         } else {
-            // if (!answerToken) {
-            //     const answer = yield getTaskAnswer();
-            //     answerToken = window.task_token.getAnswerToken(stringify(answer));
-            // }
-
             const answerObject = JSON.parse(answer);
 
             // Score is between 0 and 1
@@ -651,6 +608,7 @@ function* platformValidateEventSaga({payload: {mode}}: ReturnType<typeof platfor
 export interface PlatformTaskGradingParameters {
     level?: TaskLevelName,
     answer?: TaskAnswer,
+    answerToken?: string,
     scope?: SubmissionExecutionScope,
 }
 

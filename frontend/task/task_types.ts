@@ -122,7 +122,6 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     taskStrings?: any,
     showViews?: boolean,
     tabsEnabled?: boolean,
-    documentationOpenByDefault?: boolean,
     remoteDebugEnabled?: boolean,
     hideVariantsInDocumentation?: boolean,
     blocksLanguage?: {[platform: string]: string},
@@ -135,6 +134,7 @@ export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDe
     limitedUses?: {[level: string]: {blocks: string[], nbUses: number}[]},
     includeBlocks?: QuickalgoTaskIncludeBlocksAllLevels,
     hiddenTests?: boolean|{[level: string]: boolean},
+    documentationOpenByDefault?: boolean|{[level: string]: boolean},
 }
 
 export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDependent {
@@ -143,6 +143,7 @@ export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDep
     limitedUses?: {blocks: string[], nbUses: number}[],
     includeBlocks?: QuickalgoTaskIncludeBlocks,
     hiddenTests?: boolean,
+    documentationOpenByDefault?: boolean,
 }
 
 export interface QuickalgoTask {

@@ -77,6 +77,21 @@ function getConceptsFromChannel() {
     })
 }
 
+export function* openDocumentationIfNecessary() {
+    const environment = yield* appSelect(state => state.environment);
+    if ('main' !== environment) {
+        return;
+    }
+
+    const documentationOpen = yield* appSelect(state => Screen.DocumentationSmall === state.screen || Screen.DocumentationBig === state.screen);
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    if (context.infos.documentationOpenByDefault && !documentationOpen) {
+        yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
+    } else if (!context.infos.documentationOpenByDefault && documentationOpen) {
+        yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
+    }
+}
+
 export function sendCodeExampleToOpener(code, language) {
     if (!openerChannel) {
         openerChannel = window.Channel.build({window: window.opener, origin: '*', scope: 'test'});

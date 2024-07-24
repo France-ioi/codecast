@@ -214,7 +214,7 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {level, answer, scope} = parameters;
+        const {level, answer, answerToken, scope} = parameters;
         const state = yield* appSelect();
         const platform = answer.platform;
         const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
@@ -239,18 +239,35 @@ class TaskSubmissionExecutor {
 
         yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
 
-        const submissionData = yield* makeServerSubmission(answer, level, platform, userTests);
-        if (!submissionData.success) {
-            yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
+        try {
+            const submissionData = yield* makeServerSubmission(answer, answerToken, platform, userTests);
+            if (!submissionData.success) {
+                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 
-            return {score: 0};
+                return {score: 0};
+            }
+
+            const submissionId = submissionData.submissionId;
+            submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId);
+            yield submissionExecutionTasks[submissionIndex].toPromise();
+
+            return submissionExecutionTasks[submissionIndex].result();
+        } catch (ex: any) {
+            yield* put(submissionUpdateTaskSubmission({
+                id: submissionIndex,
+                submission: {...serverSubmission, crashed: true}
+            }));
+
+            console.error(ex);
+
+            const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
+                : (ex.res?.body?.error ?? ex.message ?? ex.toString());
+            yield* put(platformAnswerGraded({error: message}));
+
+            return {
+                error: message,
+            }
         }
-
-        const submissionId = submissionData.submissionId;
-        submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId);
-        yield submissionExecutionTasks[submissionIndex].toPromise();
-
-        return submissionExecutionTasks[submissionIndex].result();
     }
 
     *gradeAnswerLongPolling(submissionIndex: number, serverSubmission: TaskSubmissionServer, submissionId: string) {
@@ -286,18 +303,6 @@ class TaskSubmissionExecutor {
                 return {
                     score: 0,
                 };
-            }
-        } catch (ex: any) {
-            yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
-
-            console.error(ex);
-
-            const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
-                : (ex.res?.body?.error ?? ex.message ?? ex.toString());
-            yield* put(platformAnswerGraded({error: message}));
-
-            return {
-                error: message,
             }
         } finally {
             if (yield* cancelled()) {

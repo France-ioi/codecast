@@ -101,6 +101,7 @@ module.exports = {
     MENU_ABOUT: "About",
     MENU_DOWNLOAD: "Save",
     MENU_RELOAD: "Reload",
+    MENU_LOCAL: "Work locally",
     EXAMPLES_LABEL: "Examples: ",
     EXAMPLES_BUTTON_TITLE: "View list",
     EXAMPLES_MESSAGE: "Loading an example interrupts any pending action",
@@ -340,4 +341,6 @@ module.exports = {
     SUBMISSION_RESULT_OUTPUT_PROGRAM: "Your program displayed:",
     SUBMISSION_RESULT_OUTPUT_EXPECTED: "While the expected answer was:",
     SUBMISSION_RESULT_OUTPUT_HELP: "To help you, the first differing character is highlighted in red.<br><br>Check that you display exactly what is required and nothing else; check newlines as well. Output comparison may ignore punctuation and case.",
+    LOCAL_WORK_URL: "Use this command line to submit:",
+    COPIED: "Copied!",
 };
