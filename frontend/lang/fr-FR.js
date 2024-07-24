@@ -194,7 +194,7 @@ module.exports = {
     TASK_DESCRIPTION: 'Énoncé',
     TASK_VARIABLES: 'Variables',
     TASK_EDITOR: 'Éditeur',
-    TASK_RESTART : 'Redémarrer',
+    TASK_RESTART : 'Recommencer',
     TASK_DOCUMENTATION: 'Informations',
     TASK_INSTRUCTIONS_MORE: 'Plus de détails',
     TASK_INSTRUCTIONS_LESS: 'Masquer les détails',
