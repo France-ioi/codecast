@@ -24,6 +24,7 @@ import {bufferDownload, bufferReload} from '../buffers/buffer_actions';
 import {isServerTask} from './task_types';
 import {LocalWorkDialog} from './LocalWorkDialog';
 import {IconNames} from '@blueprintjs/icons';
+import { SmartContractLib } from './libs/smart_contract/smart_contract_lib';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -47,6 +48,10 @@ export function MenuTask() {
     const [localWorkOpen, setLocalWorkOpen] = useState(false);
 
     const controls = useAppSelector(state => state.options.controls);
+
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    // Display the local work button by default for smart contract tasks
+    const canLocalWork = serverTask && ('localwork' in controls || (context && context instanceof SmartContractLib));
 
     const wrapperRef = useRef<HTMLDivElement>();
     const dispatch = useDispatch();
@@ -145,7 +150,7 @@ export function MenuTask() {
                         </div>
                     </React.Fragment>
                 }
-                {serverTask && <div className="menu-item" onClick={() => setLocalWorkOpen(!localWorkOpen)}>
+                {canLocalWork && <div className="menu-item" onClick={() => setLocalWorkOpen(!localWorkOpen)}>
                     <Icon icon={IconNames.Console}/>
                     <span>{getMessage('MENU_LOCAL')}</span>
                 </div>}

@@ -342,6 +342,8 @@ module.exports = {
     SUBMISSION_RESULT_OUTPUT_PROGRAM: "Your program displayed:",
     SUBMISSION_RESULT_OUTPUT_EXPECTED: "While the expected answer was:",
     SUBMISSION_RESULT_OUTPUT_HELP: "To help you, the first differing character is highlighted in red.<br><br>Check that you display exactly what is required and nothing else; check newlines as well. Output comparison may ignore punctuation and case.",
+    LOCAL_WORK_DESCRIPTION: "You can work on this task locally. To do so, download the fioi.py script below and use it to submit your code from the command-line.",
+    LOCAL_WORK_DOWNLOAD_BUTTON: "Download the fioi.py script",
     LOCAL_WORK_URL: "Use this command line to submit:",
     COPIED: "Copied!",
 };
