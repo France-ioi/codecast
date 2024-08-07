@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse, json, os, requests, time
 
-ENDPOINT_URL = 'https://codecast-dev.france-ioi.org/tp'
+ENDPOINT_URL = 'https://codecast-backend.france-ioi.org'
 HISTORY_FILE = os.path.expanduser('~/.fioi_history.json')
 
 
@@ -50,7 +50,7 @@ def make_payload_from_args(args):
         "answer": {
             "sourceCode": source_code,
             "fileName": os.path.basename(args.file_path),
-            "language": "python"
+            "language": args.language
         },
         "sLocale": "fr"
     }
@@ -109,7 +109,7 @@ def display_submission_info(data, verbose):
         print()
 
     if not verbose:
-        print("Use ./fioi display 0 -v to display individual test information.")
+        print("Use ./fioi.py display 0 -v to display individual test information.")
         return
 
     print()
@@ -170,6 +170,7 @@ if __name__ == '__main__':
     # Create the parser for the "submit" command
     parser_submit = subparser.add_parser('submit', help='Submit a file')
     parser_submit.add_argument('file_path', help='Path to the file')
+    parser_submit.add_argument('--language', help='Language name', required=True)
     parser_submit.add_argument('--platform', help='Platform name')
     parser_submit.add_argument('--token', help='Token')
     parser_submit.add_argument('-v', '--verbose', action='store_true', help='Display verbose output')
