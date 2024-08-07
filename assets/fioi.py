@@ -103,6 +103,12 @@ def check_submission_status(submission_id):
 
 def display_submission_info(data, verbose):
     print(f"Score: {data['score']}")
+
+    if data["compilationError"]:
+        print("Your submission did not compile:")
+        print(data["compilationMessage"])
+        return
+
     print(f"Passed {data['passedTestsCount']} out of {data['totalTestsCount']} tests.")
     if len(data["subTasks"]) > 0:
         print(f"Scores per subtask: {'+'.join(map(lambda x: str(x['score']), data['subTasks']))}")
