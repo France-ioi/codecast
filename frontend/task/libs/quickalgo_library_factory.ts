@@ -203,15 +203,20 @@ export function* mergeQuickalgoLibrary(libName: string, parentContext: QuickAlgo
 
     parentContext.childContexts.push(childContext);
 
-    parentContext.customBlocks = {
-        ...parentContext.customBlocks,
-        ...childContext.customBlocks,
-    };
+    const fieldsToMerge = [
+        'customBlocks',
+        'customConstants',
+        'customClasses',
+        'customClassInstances',
+        'notionsList',
+    ];
 
-    parentContext.notionsList = {
-        ...parentContext.notionsList,
-        ...childContext.notionsList,
-    };
+    for (let fieldToMerge of fieldsToMerge) {
+        parentContext[fieldToMerge] = {
+            ...parentContext[fieldToMerge],
+            ...childContext[fieldToMerge],
+        };
+    }
 
     parentContext.strings = window.languageStrings;
 

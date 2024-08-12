@@ -92,37 +92,68 @@ export default class PythonRunner extends AbstractRunner {
         log.getLogger('python_runner').debug('AFTER FINAL INTERACT');
     }
 
-    private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type) {
-        let handler = '';
-        handler += "\tCodecast.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
-        handler += "\tCodecast.runner.hasCalledHandler = true;";
+    private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type, toExecute) {
+        return `
+mod.${name} = new Sk.builtin.func(function () {
+    Codecast.runner.checkArgs('${name}', '${generatorName}', '${blockName}', arguments);
+    Codecast.runner.hasCalledHandler = true;
+    console.log('received arguments', arguments);
+    
+    var susp = new Sk.misceval.Suspension();
+    var result = Sk.builtin.none.none$;
+    var args = Array.prototype.slice.call(arguments);
+    for (var i=0; i<args.length; i++) {
+        args[i] = Codecast.runner.skToJs(args[i]);
+    }
+    
+    susp.resume = function() {
+        return result;
+    };
+    susp.data = {
+        type: 'Sk.promise',
+        promise: new Promise(function (resolve) {
+            ${'actions' === type ? `Codecast.runner._nbActions += 1;` : ''}
+            
+            try {
+                const result = Codecast.runner.quickAlgoCallsExecutor("${generatorName}", "${toExecute}", args);
+                if (result instanceof Promise) {
+                    result.then(resolve).catch((e) => { Codecast.runner._onStepError(e) })
+                }
+            } catch (e) {
+                Codecast.runner._onStepError(e)
+            }
+        }).then(function (value) {
+            result = value;
+            
+            return value;
+        })
+    };
+    
+    return susp;
+});
+`;
+    }
 
-        handler += "\n\tvar susp = new Sk.misceval.Suspension();";
-        handler += "\n\tvar result = Sk.builtin.none.none$;";
+    private static _skulptifyClassHandler(methodName, generatorName, blockName, nbArgs, type, className: string) {
+        const handler = PythonRunner._skulptifyHandler(methodName, generatorName, blockName, nbArgs, type, `${className}->${methodName}`);
 
-        // If there are arguments, convert them from Skulpt format to the libs format
-        handler += "\n\tvar args = Array.prototype.slice.call(arguments);";
-        handler += "\n\tfor(var i=0; i<args.length; i++) { args[i] = Codecast.runner.skToJs(args[i]); };";
+        return handler.replace(/mod\./, '$loc.');
+    }
 
-        handler += "\n\tsusp.resume = function() { return result; };";
-        handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
+    private static _skulptifyClassInstance(classInstance: string, className: string) {
+        return `
+mod.${classInstance} = Sk.misceval.callsimArray(mod.${className});
+`;
+    }
 
-        // Count actions
-        if (type == 'actions') {
-            handler += "\n\tCodecast.runner._nbActions += 1;";
-        }
+    private static _skulptifyClass(className: string, classMethods: string[]) {
+        return `
+newClass${className} = function ($gbl, $loc) {
+    ${classMethods.join("")}
+};
 
-        handler += "\n\ttry {";
-        handler += '\n\t\tconst result = Codecast.runner.quickAlgoCallsExecutor("' + generatorName + '", "' + blockName + '", args);';
-        handler += '\n\t\tif (result instanceof Promise) {';
-        handler += '\n\t\t\tresult.then(resolve).catch((e) => { Codecast.runner._onStepError(e) })';
-        handler += '\n\t\t}';
-        handler += "\n\t} catch (e) {";
-        handler += "\n\t\tCodecast.runner._onStepError(e)}";
-        handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
-        handler += '\n\treturn susp;';
-
-        return '\nmod.' + name + ' = new Sk.builtin.func(function () {\n' + handler + '\n});\n';
+mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${className}", []);
+`;
     }
 
     private _createBuiltin(name, generatorName, blockName, nbArgs, type) {
@@ -197,17 +228,39 @@ export default class PythonRunner extends AbstractRunner {
 
             for (let block of blocks.filter(block => block.type === BlockType.Function)) {
                 const {code, generatorName, name, params, type} = block;
-                modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type);
+                modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type, name);
                 // We do want to override Python's naturel input and output to replace them with our own modules
                 if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
                     Sk.builtins[code] = this._createBuiltin(code, generatorName, name, params, type);
                 }
             }
 
+            const classInstancesToAdd: {[classInstance: string]: string} = {};
+            const classMethods: {[className: string]: string[]} = {};
+            for (let block of blocks.filter(block => block.type === BlockType.ClassFunction)) {
+                const {code, generatorName, name, params, type, methodName, className, classInstance} = block;
+                classInstancesToAdd[classInstance] = className;
+                if (!(className in classMethods)) {
+                    classMethods[className] = [];
+                }
+                const classHandler = PythonRunner._skulptifyClassHandler(methodName, generatorName, name, params, type, className);
+                classMethods[className].push(classHandler);
+            }
+
+            for (let [className, classMethodsList] of Object.entries(classMethods)) {
+                modContents += PythonRunner._skulptifyClass(className, classMethodsList);
+            }
+
+            for (let [classInstance, className] of Object.entries(classInstancesToAdd)) {
+                modContents += PythonRunner._skulptifyClassInstance(classInstance, className);
+            }
+
             for (let block of blocks.filter(block => block.type === BlockType.Constant)) {
                 const {name, value} = block;
                 modContents += PythonRunner._skulptifyConst(name, value);
             }
+
+            console.log(modContents);
 
             modContents += "\nreturn mod;\n};";
             Sk.builtinFiles["files"]["src/lib/" + generatorName + ".js"] = modContents;
@@ -225,6 +278,14 @@ export default class PythonRunner extends AbstractRunner {
             return;
         }
         let params = block.paramsCount;
+        if (block.type === BlockType.ClassFunction) {
+            // The class handler received self as first argument
+            params = params.map(a => a + 1);
+            if (0 === params.length) {
+                params = [1];
+            }
+        }
+
         if (params.length === 0) {
             // This function doesn't have arguments
             if (args.length > 0) {
@@ -429,7 +490,7 @@ export default class PythonRunner extends AbstractRunner {
         }
     }
 
-    public initCodes(codes, availableBlocks) {
+    public initCodes(codes, availableBlocks: Block[]) {
         super.initCodes(codes, availableBlocks);
 
         // For reportValue in Skulpt.

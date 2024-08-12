@@ -1,5 +1,6 @@
 export enum BlockType {
     Function = 'function',
+    ClassFunction = 'class_function',
     Constant = 'constant',
     Token = 'token',
     Directive = 'directive',
@@ -16,8 +17,11 @@ export interface Block {
     category?: string,
     generatorName?: string,
     value?: string, // for constant
-    paramsCount?: any,
+    paramsCount?: number[],
     params?: string[], // for function
     showInBlocks?: boolean,
-    returnType?: string,
+    returnType?: string|boolean,
+    methodName?: string,
+    className?: string,
+    classInstance?: string,
 }
