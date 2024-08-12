@@ -1,11 +1,11 @@
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStore} from "../../store";
 import {Bundle} from "../../linker";
-import {call, debounce, delay, put, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {delay, put, takeLatest} from "typed-redux-saga";
 import {BlocksUsage} from "../task_types";
 import {taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
-import {QuickAlgoLibrary} from "../libs/quickalgo_library";
+import {QuickAlgoLibrary, QuickalgoLibraryBlock} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
 import {appSelect} from '../../hooks';
 import {hasBlockPlatform, platformsList} from '../../stepper/platforms';
@@ -13,9 +13,7 @@ import {getNotionsBagFromIncludeBlocks} from './notions';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {Block, BlockType} from './block_types';
-import {bufferEdit, bufferEditPlain, bufferInit, bufferReset} from '../../buffers/buffers_slice';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
-import {createAction} from '@reduxjs/toolkit';
 
 export interface DraggableBlockItem {
     block: Block,
@@ -60,6 +58,59 @@ function getSnippet(block: Block, platform: CodecastPlatform) {
     }
 }
 
+interface BlockInfo {
+    nbArgs: number,
+    type: string,
+    yieldsValue: string|boolean,
+    params: any[],
+    nbsArgs: any[],
+}
+
+export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string): BlockInfo {
+    const blockInfo = {
+        nbArgs: 0, // handled below
+        type: typeName,
+        yieldsValue: block.yieldsValue,
+        params: block.params ?? [],
+        nbsArgs: [],
+    };
+    if (block.anyArgs) {
+        // Allows to specify the function can accept any number of arguments
+        blockInfo.nbsArgs.push(Infinity);
+    }
+    let variants = block.variants ? block.variants : (block.params ? [block.params] : []);
+    if (variants.length) {
+        for (let i = 0; i < variants.length; i++) {
+            blockInfo.nbsArgs.push(variants[i].length);
+        }
+    }
+
+    return blockInfo;
+}
+
+function getBlockFromBlockInfo(generatorName: string, blockName: string, blockInfo: BlockInfo|undefined, contextStrings): Block {
+    let code = contextStrings.code[blockName];
+    if ('undefined' === typeof code) {
+        code = blockName;
+    }
+    let nbsArgs = blockInfo ? (blockInfo.nbsArgs ? blockInfo.nbsArgs : []) : [];
+    let params = blockInfo ? blockInfo.params : [];
+    let type = blockInfo ? blockInfo.type : 'actions';
+    let returnType = blockInfo ? blockInfo.yieldsValue : null;
+
+    return {
+        generatorName,
+        name: blockName,
+        type: BlockType.Function,
+        category: type,
+        paramsCount: nbsArgs,
+        params,
+        caption: code,
+        code,
+        returnType,
+    }
+}
+
 export const getContextBlocksDataSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}): Block[] => {
     const contextIncludeBlocks = state.task.contextIncludeBlocks;
     const contextStrings = state.task.contextStrings;
@@ -74,23 +125,19 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             for (let typeName in context.customBlocks[generatorName]) {
                 let blockList = context.customBlocks[generatorName][typeName];
                 for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
-                    let blockInfo = blockList[iBlock];
-                    blocksInfos[blockInfo.name] = {
-                        nbArgs: 0, // handled below
-                        type: typeName,
-                        yieldsValue: blockInfo.yieldsValue,
-                        params: blockInfo.params ?? [],
-                    };
-                    blocksInfos[blockInfo.name].nbsArgs = [];
-                    if (blockInfo.anyArgs) {
-                        // Allows to specify the function can accept any number of arguments
-                        blocksInfos[blockInfo.name].nbsArgs.push(Infinity);
-                    }
-                    let variants = blockInfo.variants ? blockInfo.variants : (blockInfo.params ? [blockInfo.params] : []);
-                    if (variants.length) {
-                        for (let i = 0; i < variants.length; i++) {
-                            blocksInfos[blockInfo.name].nbsArgs.push(variants[i].length);
-                        }
+                    let block = blockList[iBlock];
+                    blocksInfos[block.name] = generateBlockInfo(block, typeName);
+                }
+            }
+        }
+
+        for (let generatorName in context.customClasses) {
+            for (let typeName in context.customClasses[generatorName]) {
+                for (let className in context.customClasses[generatorName][typeName]) {
+                    let classRepresentation = context.customClasses[generatorName][typeName][className];
+                    for (let iBlock = 0; iBlock < classRepresentation.length; iBlock++) {
+                        let block = classRepresentation[iBlock];
+                        blocksInfos[className + '.' + block.name] = generateBlockInfo(block, typeName);
                     }
                 }
             }
@@ -105,30 +152,24 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
 
             for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                 let blockName = blockList[iBlock];
-                let code = contextStrings.code[blockName];
-                if ('undefined' === typeof code) {
-                    code = blockName;
+                if ('string' === typeof blockName) {
+                    const newBlock = getBlockFromBlockInfo(generatorName, blockName, blocksInfos[blockName], contextStrings);
+                    availableBlocks.push(newBlock);
+                } else {
+                    const {className, classInstances, methods} = blockName;
+                    for (let classInstance of classInstances) {
+                        for (let method of methods) {
+                            const totalBlockName = `${className}.${method}`;
+                            const instanceBlockName = `${classInstance}.${method}`;
+                            const newBlock = getBlockFromBlockInfo(generatorName, instanceBlockName, blocksInfos[totalBlockName], contextStrings);
+                            newBlock.type = BlockType.ClassFunction;
+                            newBlock.methodName = method;
+                            newBlock.className = className;
+                            newBlock.classInstance = classInstance;
+                            availableBlocks.push(newBlock);
+                        }
+                    }
                 }
-                let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
-                let params = blocksInfos[blockName] ? blocksInfos[blockName].params : [];
-                let type = blocksInfos[blockName] ? blocksInfos[blockName].type : 'actions';
-                let returnType = blocksInfos[blockName] ? blocksInfos[blockName].yieldsValue : null;
-
-                if (type == 'actions') {
-                    // this._hasActions = true;
-                }
-
-                availableBlocks.push({
-                    generatorName,
-                    name: blockName,
-                    type: BlockType.Function,
-                    category: type,
-                    paramsCount: nbsArgs,
-                    params,
-                    caption: code,
-                    code,
-                    returnType,
-                });
             }
 
             if (context.customConstants && context.customConstants[generatorName]) {
@@ -217,6 +258,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             block.description = block.description.substring(block.description.indexOf(':') + 1).trim();
         }
     }));
+
+    console.log({availableBlocks})
 
     return availableBlocks;
 });
