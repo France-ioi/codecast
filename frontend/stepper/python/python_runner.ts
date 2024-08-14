@@ -143,6 +143,7 @@ mod.${name} = new Sk.builtin.func(function () {
     private static _skulptifyClassInstance(classInstance: string, className: string) {
         return `
 mod.${classInstance} = Sk.misceval.callsimArray(mod.${className});
+mod.${classInstance}.__variableName = '${classInstance}';
 `;
     }
 
@@ -366,6 +367,27 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                     continue;
                 }
                 let subItems = val[key].items;
+                for (let j = 0; j < subItems.length; j++) {
+                    let subItem = subItems[j];
+
+                    retVal[subItem.lhs.v] = this.skToJs(subItem.rhs);
+                }
+            }
+
+            return retVal;
+        } else if (val instanceof Sk.builtin.object && val.hasOwnProperty('$d')) {
+            let dictKeys = Object.keys(val.$d.entries);
+            let retVal: any = {};
+            if (val.__variableName) {
+                retVal.__variableName = val.__variableName;
+            }
+
+            for (let i = 0; i < dictKeys.length; i++) {
+                let key = dictKeys[i];
+                if (key == 'size' || key == '__class__') {
+                    continue;
+                }
+                let subItems = val.$d.entries[key];
                 for (let j = 0; j < subItems.length; j++) {
                     let subItem = subItems[j];
 
