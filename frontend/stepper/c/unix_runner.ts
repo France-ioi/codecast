@@ -83,6 +83,7 @@ export default class UnixRunner extends AbstractRunner {
                 const argsSection = block.params.map(param => {
                     return param in PARAM_TYPE_CONVERSION ? PARAM_TYPE_CONVERSION[param] : 'int';
                 }).join(', ');
+                // @ts-ignore
                 headers[code] = `${block.returnType in RETURN_TYPE_CONVERSION ? RETURN_TYPE_CONVERSION[block.returnType] : 'void'} ${code}(${argsSection});`;
             }
 
