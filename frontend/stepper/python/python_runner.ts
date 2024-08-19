@@ -14,7 +14,7 @@ import {parseDirectives} from './directives';
 import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
 import {appSelect} from '../../hooks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
-import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
+import {CONSTRUCTOR_NAME, getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {delay} from '../../player/sagas';
 import {put} from 'typed-redux-saga';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
@@ -92,12 +92,11 @@ export default class PythonRunner extends AbstractRunner {
         log.getLogger('python_runner').debug('AFTER FINAL INTERACT');
     }
 
-    private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type, toExecute) {
+    private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type, toExecute, moduleMethodName?: string) {
         return `
-mod.${name} = new Sk.builtin.func(function () {
+mod.${moduleMethodName ?? name} = new Sk.builtin.func(function () {
     Codecast.runner.checkArgs('${name}', '${generatorName}', '${blockName}', arguments);
     Codecast.runner.hasCalledHandler = true;
-    console.log('received arguments', arguments);
     
     var susp = new Sk.misceval.Suspension();
     var result = Sk.builtin.none.none$;
@@ -134,8 +133,8 @@ mod.${name} = new Sk.builtin.func(function () {
 `;
     }
 
-    private static _skulptifyClassHandler(methodName, generatorName, blockName, nbArgs, type, className: string) {
-        const handler = PythonRunner._skulptifyHandler(methodName, generatorName, blockName, nbArgs, type, `${className}->${methodName}`);
+    private static _skulptifyClassHandler(methodName, generatorName, blockName, nbArgs, type, className: string, moduleMethodName: string) {
+        const handler = PythonRunner._skulptifyHandler(methodName, generatorName, blockName, nbArgs, type, `${className}->${methodName}`, moduleMethodName);
 
         return handler.replace(/mod\./, '$loc.');
     }
@@ -251,9 +250,14 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                     classParts[className] = {};
                 }
                 if (!(methodName in classParts[className])) {
-                    classParts[className][methodName] = PythonRunner._skulptifyClassHandler(methodName, generatorName, name, params, type, className);
+                    let moduleMethodName = methodName;
+                    if (CONSTRUCTOR_NAME === methodName) {
+                        moduleMethodName = '__init__';
+                    }
+                    classParts[className][methodName] = PythonRunner._skulptifyClassHandler(methodName, generatorName, name, params, type, className, moduleMethodName);
                 }
             }
+
 
             for (let block of blocks.filter(block => block.type === BlockType.ClassConstant)) {
                 const {name, value, className, methodName} = block;
@@ -264,6 +268,8 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                     classParts[className][name] = PythonRunner._skulptifyClassConstHandler(methodName, value);
                 }
             }
+
+            console.log({classParts})
 
             for (let [className, classPartsList] of Object.entries(classParts)) {
                 modContents += PythonRunner._skulptifyClass(className, Object.values(classPartsList));
@@ -303,6 +309,8 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 params = [1];
             }
         }
+
+        console.log('check args', block, params);
 
         if (params.length === 0) {
             // This function doesn't have arguments
