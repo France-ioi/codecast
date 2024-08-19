@@ -96,9 +96,30 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             for (let typeName in context.customClasses[generatorName]) {
                 for (let className in context.customClasses[generatorName][typeName]) {
                     let classRepresentation = context.customClasses[generatorName][typeName][className];
-                    for (let iBlock = 0; iBlock < classRepresentation.length; iBlock++) {
-                        let block = classRepresentation[iBlock];
-                        blocksInfos[className + '.' + block.name] = generateBlockInfo(block, typeName);
+                    if (classRepresentation.constructor) {
+                        blocksInfos[className + '.init'] = generateBlockInfo(classRepresentation.constructor, typeName);
+                    }
+                    if (classRepresentation.blocks) {
+                        for (let iBlock = 0; iBlock < classRepresentation.blocks.length; iBlock++) {
+                            let block = classRepresentation.blocks[iBlock];
+                            blocksInfos[className + '.' + block.name] = generateBlockInfo(block, typeName);
+                        }
+                    }
+                    if (classRepresentation.constants) {
+                        for (let iConst = 0; iConst < classRepresentation.constants.length; iConst++) {
+                            let name = classRepresentation.constants[iConst].name;
+                            availableBlocks.push({
+                                generatorName,
+                                name: `${className}.${name}`,
+                                caption: `${className}.${name}`,
+                                code: `${className}.${name}`,
+                                category: 'constants',
+                                type: BlockType.ClassConstant,
+                                methodName: name,
+                                className,
+                                value: classRepresentation.constants[iConst].value,
+                            });
+                        }
                     }
                 }
             }
