@@ -19,45 +19,6 @@ export interface DraggableBlockItem {
     block: Block,
 }
 
-function getSnippet(block: Block, platform: CodecastPlatform) {
-    const proto = block.caption;
-    let parenthesisOpenIndex = proto.indexOf("(");
-    let finalCharacter = -1 !== [CodecastPlatform.C, CodecastPlatform.Cpp].indexOf(platform) && BlockType.Function === block.type && block.category !== 'sensors' ? ';' : '';
-    if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
-        return proto + finalCharacter;
-    } else {
-        let ret = proto.substring(0, parenthesisOpenIndex + 1);
-        let commaIndex = parenthesisOpenIndex;
-        let snippetIndex = 1;
-        while (proto.indexOf(',', commaIndex + 1) != -1) {
-            let newCommaIndex = proto.indexOf(',', commaIndex + 1);
-            // we want to keep the space.
-            if (proto.charAt(commaIndex + 1) == ' ') {
-                commaIndex += 1;
-                ret += ' ';
-            }
-            ret += "${" + snippetIndex + ':';
-            ret += proto.substring(commaIndex + 1, newCommaIndex);
-            ret += "},";
-
-            commaIndex = newCommaIndex;
-            snippetIndex += 1;
-        }
-
-        // the last one is with the closing parenthesis.
-        let parenthesisCloseIndex = proto.indexOf(')');
-        if (proto.charAt(commaIndex + 1) == ' ') {
-            commaIndex += 1;
-            ret += ' ';
-        }
-        ret += "${" + snippetIndex + ':';
-        ret += proto.substring(commaIndex + 1, parenthesisCloseIndex);
-        ret += "})";
-
-        return ret + finalCharacter;
-    }
-}
-
 interface BlockInfo {
     nbArgs: number,
     type: string,
@@ -150,13 +111,20 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                 continue;
             }
 
+            //TODO: add parameter for pin.off()
+
             for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                 let blockName = blockList[iBlock];
                 if ('string' === typeof blockName) {
                     const newBlock = getBlockFromBlockInfo(generatorName, blockName, blocksInfos[blockName], contextStrings);
                     availableBlocks.push(newBlock);
                 } else {
-                    const {className, classInstances, methods} = blockName;
+                    let {className, classInstances, methods} = blockName;
+                    let placeholderClassInstance = false;
+                    if (!classInstances || !classInstances.length) {
+                        classInstances = [`${className.substring(0, 1).toLocaleLowerCase() + className.substring(1)}`];
+                        placeholderClassInstance = true;
+                    }
                     for (let classInstance of classInstances) {
                         for (let method of methods) {
                             const totalBlockName = `${className}.${method}`;
@@ -166,6 +134,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                             newBlock.methodName = method;
                             newBlock.className = className;
                             newBlock.classInstance = classInstance;
+                            newBlock.placeholderClassInstance = placeholderClassInstance;
                             availableBlocks.push(newBlock);
                         }
                     }
@@ -204,7 +173,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             block.description = contextStrings.description[block.name];
         }
 
-        if (BlockType.Function !== block.type) {
+        if (BlockType.Function !== block.type && BlockType.ClassFunction !== block.type) {
             return;
         }
 
@@ -295,6 +264,53 @@ function* checkSourceSaga() {
 
     yield* put(taskSetBlocksUsage(blocksUsage));
 }
+
+function getSnippet(block: Block, platform: CodecastPlatform) {
+    const proto = block.caption;
+    let parenthesisOpenIndex = proto.indexOf("(");
+    let finalCharacter = -1 !== [CodecastPlatform.C, CodecastPlatform.Cpp].indexOf(platform) && BlockType.Function === block.type && block.category !== 'sensors' ? ';' : '';
+    if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
+        return proto + finalCharacter;
+    } else {
+        let snippetIndex = 1;
+        let ret = proto.substring(0, parenthesisOpenIndex + 1);
+        if (BlockType.ClassFunction === block.type && block.placeholderClassInstance) {
+            ret = ret.replace(new RegExp(`${block.classInstance}( ?(=|\.))`, 'ug'), (group, complement) => {
+                return "\${" + snippetIndex + ":" + block.classInstance + `}${complement}`;
+            });
+            snippetIndex++;
+        }
+
+        let commaIndex = parenthesisOpenIndex;
+        while (proto.indexOf(',', commaIndex + 1) != -1) {
+            let newCommaIndex = proto.indexOf(',', commaIndex + 1);
+            // we want to keep the space.
+            if (proto.charAt(commaIndex + 1) == ' ') {
+                commaIndex += 1;
+                ret += ' ';
+            }
+            ret += "${" + snippetIndex + ':';
+            ret += proto.substring(commaIndex + 1, newCommaIndex);
+            ret += "},";
+
+            commaIndex = newCommaIndex;
+            snippetIndex += 1;
+        }
+
+        // the last one is with the closing parenthesis.
+        let parenthesisCloseIndex = proto.indexOf(')');
+        if (proto.charAt(commaIndex + 1) == ' ') {
+            commaIndex += 1;
+            ret += ' ';
+        }
+        ret += "${" + snippetIndex + ':';
+        ret += proto.substring(commaIndex + 1, parenthesisCloseIndex);
+        ret += "})";
+
+        return ret + finalCharacter;
+    }
+}
+
 
 function* selectorChangeSaga<T>(selector: (state: AppStore) => T, isEqual: (previousState: T, nextState: T) => boolean, waitDelay: number, saga) {
     let previous = yield* appSelect(selector);
