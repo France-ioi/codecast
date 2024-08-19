@@ -26,6 +26,7 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
                 });
                 break;
             case BlockType.Constant:
+            case BlockType.ClassConstant:
                 let name = block.name;
                 if (strings.constant && strings.constant[name]) {
                     name = strings.constant[name];
