@@ -402,26 +402,20 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
 
             return retVal;
         } else if (val instanceof Sk.builtin.object && val.hasOwnProperty('$d')) {
-            let dictKeys = Object.keys(val.$d.entries);
-            let retVal: any = {};
-            if (val.__variableName) {
-                retVal.__variableName = val.__variableName;
-            }
+            return new Proxy(val, {
+                get: (target, prop) => {
+                    const value = target.$d.entries[prop];
+                    console.log('getter', {target, prop, value})
 
-            for (let i = 0; i < dictKeys.length; i++) {
-                let key = dictKeys[i];
-                if (key == 'size' || key == '__class__') {
-                    continue;
-                }
-                let subItems = val.$d.entries[key];
-                for (let j = 0; j < subItems.length; j++) {
-                    let subItem = subItems[j];
+                    return value && value.length ? this.skToJs(value[1]) : null;
+                },
+                set: (target, prop, value) => {
+                    console.log('update', {target, prop, value});
+                    Sk.abstr.objectSetItem(target['$d'], new Sk.builtin.str(prop),this._createPrimitive(value));
 
-                    retVal[subItem.lhs.v] = this.skToJs(subItem.rhs);
-                }
-            }
-
-            return retVal;
+                    return true;
+                },
+            });
         } else {
             let retVal = val.v;
             if (val instanceof Sk.builtin.tuple || val instanceof Sk.builtin.list) {
