@@ -24,4 +24,5 @@ export interface Block {
     methodName?: string,
     className?: string,
     classInstance?: string,
+    placeholderClassInstance?: boolean, // if this is a placeholder class instance that we generate for the sole purpose of creating blocks for this class
 }

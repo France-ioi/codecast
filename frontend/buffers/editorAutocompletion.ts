@@ -17,6 +17,7 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
 
         switch (block.type) {
             case BlockType.Function:
+            case BlockType.ClassFunction:
                 completions.push({
                     caption: block.caption,
                     snippet: block.snippet,
