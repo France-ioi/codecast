@@ -147,14 +147,35 @@ mod.${classInstance}.__variableName = '${classInstance}';
 `;
     }
 
-    private static _skulptifyClass(className: string, classMethods: string[]) {
+    private static _skulptifyClass(className: string, classComponents: string[]) {
         return `
 newClass${className} = function ($gbl, $loc) {
-    ${classMethods.join("")}
+    ${classComponents.join("")}
 };
 
 mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${className}", []);
 `;
+    }
+
+    private static _skulptifyConst(name, value) {
+        let handler = '';
+        if (typeof value === "number") {
+            handler = 'Sk.builtin.int_(' + value + ');';
+        } else if (typeof value === "boolean") {
+            handler = 'Sk.builtin.bool(' + value.toString() + ');';
+        } else if (typeof value === "string") {
+            handler = 'Sk.builtin.str(' + JSON.stringify(value) + ');';
+        } else {
+            throw "Unable to translate value '" + value + "' into a Skulpt constant.";
+        }
+
+        return '\nmod.' + name + ' = new ' + handler + '\n';
+    }
+
+    private static _skulptifyClassConstHandler(name, value) {
+        const handler = PythonRunner._skulptifyConst(name, value);
+
+        return handler.replace(/mod\./, '$loc.');
     }
 
     private _createBuiltin(name, generatorName, blockName, nbArgs, type) {
@@ -195,21 +216,6 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
         }
     }
 
-    private static _skulptifyConst(name, value) {
-        let handler = '';
-        if (typeof value === "number") {
-            handler = 'Sk.builtin.int_(' + value + ');';
-        } else if (typeof value === "boolean") {
-            handler = 'Sk.builtin.bool(' + value.toString() + ');';
-        } else if (typeof value === "string") {
-            handler = 'Sk.builtin.str(' + JSON.stringify(value) + ');';
-        } else {
-            throw "Unable to translate value '" + value + "' into a Skulpt constant.";
-        }
-
-        return '\nmod.' + name + ' = new ' + handler + '\n';
-    }
-
     private _injectFunctions() {
         // Generate Python custom libraries from all generated blocks
         log.getLogger('python_runner').debug('inject functions', this.availableBlocks);
@@ -237,20 +243,30 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             }
 
             const classInstancesToAdd: {[classInstance: string]: string} = {};
-            const classMethods: {[className: string]: {[methodName: string]: string}} = {};
+            const classParts: {[className: string]: {[methodName: string]: string}} = {};
             for (let block of blocks.filter(block => block.type === BlockType.ClassFunction)) {
-                const {code, generatorName, name, params, type, methodName, className, classInstance} = block;
+                const {generatorName, name, params, type, methodName, className, classInstance} = block;
                 classInstancesToAdd[classInstance] = className;
-                if (!(className in classMethods)) {
-                    classMethods[className] = {};
+                if (!(className in classParts)) {
+                    classParts[className] = {};
                 }
-                if (!(methodName in classMethods[className])) {
-                    classMethods[className][methodName] = PythonRunner._skulptifyClassHandler(methodName, generatorName, name, params, type, className);
+                if (!(methodName in classParts[className])) {
+                    classParts[className][methodName] = PythonRunner._skulptifyClassHandler(methodName, generatorName, name, params, type, className);
                 }
             }
 
-            for (let [className, classMethodsList] of Object.entries(classMethods)) {
-                modContents += PythonRunner._skulptifyClass(className, Object.values(classMethodsList));
+            for (let block of blocks.filter(block => block.type === BlockType.ClassConstant)) {
+                const {name, value, className, methodName} = block;
+                if (!(className in classParts)) {
+                    classParts[className] = {};
+                }
+                if (!(name in classParts[className])) {
+                    classParts[className][name] = PythonRunner._skulptifyClassConstHandler(methodName, value);
+                }
+            }
+
+            for (let [className, classPartsList] of Object.entries(classParts)) {
+                modContents += PythonRunner._skulptifyClass(className, Object.values(classPartsList));
             }
 
             for (let [classInstance, className] of Object.entries(classInstancesToAdd)) {

@@ -2,6 +2,7 @@ export enum BlockType {
     Function = 'function',
     ClassFunction = 'class_function',
     Constant = 'constant',
+    ClassConstant = 'class_constant',
     Token = 'token',
     Directive = 'directive',
 }
