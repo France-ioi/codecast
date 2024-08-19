@@ -15,9 +15,7 @@ import {CodecastPlatform} from '../codecast_platform';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
-import {convertSkulptStateToAnalysisSnapshot} from '../python/analysis';
 import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
-import {Codecast} from '../../app_types';
 import {parseDirectives} from '../python/directives';
 
 const RETURN_TYPE_CONVERSION = {
