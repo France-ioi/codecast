@@ -98,8 +98,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             for (let typeName in context.customClasses[generatorName]) {
                 for (let className in context.customClasses[generatorName][typeName]) {
                     let classRepresentation = context.customClasses[generatorName][typeName][className];
-                    if (classRepresentation.constructor) {
-                        blocksInfos[`${className}.${CONSTRUCTOR_NAME}`] = generateBlockInfo(classRepresentation.constructor, typeName);
+                    if (classRepresentation.init) {
+                        blocksInfos[`${className}.${CONSTRUCTOR_NAME}`] = generateBlockInfo(classRepresentation.init, typeName);
                     }
                     if (classRepresentation.blocks) {
                         for (let iBlock = 0; iBlock < classRepresentation.blocks.length; iBlock++) {
@@ -140,8 +140,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     const newBlock = getBlockFromBlockInfo(generatorName, blockName, blocksInfos[blockName], contextStrings);
                     availableBlocks.push(newBlock);
                 } else {
-                    let {className, classInstances, methods, constructor} = blockName;
-                    if (constructor) {
+                    let {className, classInstances, methods, init} = blockName;
+                    if (init) {
                         methods = [...methods, CONSTRUCTOR_NAME];
                     }
                     let placeholderClassInstance = false;
