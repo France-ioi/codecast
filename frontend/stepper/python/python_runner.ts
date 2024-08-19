@@ -245,7 +245,9 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             const classParts: {[className: string]: {[methodName: string]: string}} = {};
             for (let block of blocks.filter(block => block.type === BlockType.ClassFunction)) {
                 const {generatorName, name, params, type, methodName, className, classInstance} = block;
-                classInstancesToAdd[classInstance] = className;
+                if (!block.placeholderClassInstance) {
+                    classInstancesToAdd[classInstance] = className;
+                }
                 if (!(className in classParts)) {
                     classParts[className] = {};
                 }
@@ -257,7 +259,6 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                     classParts[className][methodName] = PythonRunner._skulptifyClassHandler(methodName, generatorName, name, params, type, className, moduleMethodName);
                 }
             }
-
 
             for (let block of blocks.filter(block => block.type === BlockType.ClassConstant)) {
                 const {name, value, className, methodName} = block;
