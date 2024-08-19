@@ -29,7 +29,7 @@ export interface QuickalgoLibraryBlock {
 }
 
 interface QuickAlgoCustomClass {
-    constructor: QuickalgoLibraryBlock,
+    init: QuickalgoLibraryBlock,
     blocks: QuickalgoLibraryBlock[],
     constants: {name: string, value: any}[],
 }
