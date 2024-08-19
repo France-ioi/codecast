@@ -119,7 +119,7 @@ export const convertVariableDAPToCodecastFormat = (stackFrameId: number, scopeId
     let previousValue = previousValueHash in previousValues ? previousValues[previousValueHash] : null;
 
     let variables = null;
-    if (variable.variables) {
+    if (Array.isArray(variable.variables)) {
         const innerVariables = [];
         for (let innerVariable of variable.variables) {
             if (typeof innerVariable === 'string') {
@@ -131,9 +131,8 @@ export const convertVariableDAPToCodecastFormat = (stackFrameId: number, scopeId
                 innerVariables.push(result);
             }
         }
-        if (innerVariables.length) {
-            variables = innerVariables;
-        }
+
+        variables = innerVariables;
     }
 
     return {
