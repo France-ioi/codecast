@@ -206,6 +206,9 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                 if (!hasBlockPlatform(platform)) {
                     block.caption = funcCode + '()';
                 }
+                if (BlockType.ClassFunction === block.type && 'init' === block.methodName) {
+                    block.caption = `${block.classInstance} = ${block.className}()`;
+                }
             } else if (blockDesc.indexOf('</code>') < 0) {
                 let funcProtoEnd = blockDesc.indexOf(')') + 1;
                 if (funcProtoEnd > 0) {
@@ -269,18 +272,19 @@ function getSnippet(block: Block, platform: CodecastPlatform) {
     const proto = block.caption;
     let parenthesisOpenIndex = proto.indexOf("(");
     let finalCharacter = -1 !== [CodecastPlatform.C, CodecastPlatform.Cpp].indexOf(platform) && BlockType.Function === block.type && block.category !== 'sensors' ? ';' : '';
-    if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
-        return proto + finalCharacter;
-    } else {
-        let snippetIndex = 1;
-        let ret = proto.substring(0, parenthesisOpenIndex + 1);
-        if (BlockType.ClassFunction === block.type && block.placeholderClassInstance) {
-            ret = ret.replace(new RegExp(`${block.classInstance}( ?(=|\.))`, 'ug'), (group, complement) => {
-                return "\${" + snippetIndex + ":" + block.classInstance + `}${complement}`;
-            });
-            snippetIndex++;
-        }
 
+    let snippetIndex = 1;
+    let ret = proto.substring(0, parenthesisOpenIndex + 1);
+    if (BlockType.ClassFunction === block.type && block.placeholderClassInstance) {
+        ret = ret.replace(new RegExp(`${block.classInstance}( ?(=|\.))`, 'ug'), (group, complement) => {
+            return "\${" + snippetIndex + ":" + block.classInstance + `}${complement}`;
+        });
+        snippetIndex++;
+    }
+
+    if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
+        return ret + ")" + finalCharacter;
+    } else {
         let commaIndex = parenthesisOpenIndex;
         while (proto.indexOf(',', commaIndex + 1) != -1) {
             let newCommaIndex = proto.indexOf(',', commaIndex + 1);
