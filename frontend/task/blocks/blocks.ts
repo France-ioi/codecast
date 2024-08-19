@@ -27,6 +27,8 @@ interface BlockInfo {
     nbsArgs: any[],
 }
 
+export const CONSTRUCTOR_NAME = '__constructor';
+
 export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string): BlockInfo {
     const blockInfo = {
         nbArgs: 0, // handled below
@@ -97,12 +99,12 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                 for (let className in context.customClasses[generatorName][typeName]) {
                     let classRepresentation = context.customClasses[generatorName][typeName][className];
                     if (classRepresentation.constructor) {
-                        blocksInfos[className + '.init'] = generateBlockInfo(classRepresentation.constructor, typeName);
+                        blocksInfos[`${className}.${CONSTRUCTOR_NAME}`] = generateBlockInfo(classRepresentation.constructor, typeName);
                     }
                     if (classRepresentation.blocks) {
                         for (let iBlock = 0; iBlock < classRepresentation.blocks.length; iBlock++) {
                             let block = classRepresentation.blocks[iBlock];
-                            blocksInfos[className + '.' + block.name] = generateBlockInfo(block, typeName);
+                            blocksInfos[`${className}.${block.name}`] = generateBlockInfo(block, typeName);
                         }
                     }
                     if (classRepresentation.constants) {
@@ -132,15 +134,16 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                 continue;
             }
 
-            //TODO: add parameter for pin.off()
-
             for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                 let blockName = blockList[iBlock];
                 if ('string' === typeof blockName) {
                     const newBlock = getBlockFromBlockInfo(generatorName, blockName, blocksInfos[blockName], contextStrings);
                     availableBlocks.push(newBlock);
                 } else {
-                    let {className, classInstances, methods} = blockName;
+                    let {className, classInstances, methods, constructor} = blockName;
+                    if (constructor) {
+                        methods = [...methods, CONSTRUCTOR_NAME];
+                    }
                     let placeholderClassInstance = false;
                     if (!classInstances || !classInstances.length) {
                         classInstances = [`${className.substring(0, 1).toLocaleLowerCase() + className.substring(1)}`];
