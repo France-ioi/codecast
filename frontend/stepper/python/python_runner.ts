@@ -302,24 +302,23 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             console.error("Couldn't find the number of arguments for " + generatorName + "/" + blockName + ".");
             return;
         }
+
+        let argsGivenCount = args.length;
         let params = block.paramsCount;
         if (block.type === BlockType.ClassFunction) {
             // The class handler received self as first argument
-            params = params.map(a => a + 1);
-            if (0 === params.length) {
-                params = [1];
-            }
+            argsGivenCount--;
         }
 
         console.log('check args', block, params);
 
         if (params.length === 0) {
             // This function doesn't have arguments
-            if (args.length > 0) {
-                msg = name + "() takes no arguments (" + args.length + " given)";
+            if (argsGivenCount > 0) {
+                msg = name + "() takes no arguments (" + argsGivenCount + " given)";
                 throw new Sk.builtin.TypeError(msg);
             }
-        } else if (params.indexOf(args.length) === -1 && params.indexOf(Infinity) === -1) {
+        } else if (params.indexOf(argsGivenCount) === -1 && params.indexOf(Infinity) === -1) {
             let minArgs = params[0];
             let maxArgs = params[0];
             for (let i = 1; i < params.length; i++) {
@@ -329,17 +328,19 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
 
             if (minArgs === maxArgs) {
                 msg = name + "() takes exactly " + minArgs + " arguments";
-            } else if (args.length < minArgs) {
+            } else if (argsGivenCount < minArgs) {
                 msg = name + "() takes at least " + minArgs + " arguments";
-            } else if (args.length > maxArgs) {
+            } else if (argsGivenCount > maxArgs) {
                 msg = name + "() takes at most " + maxArgs + " arguments";
             } else {
                 msg = name + "() doesn't have a variant accepting this number of arguments";
             }
-            msg += " (" + args.length + " given)";
+            msg += " (" + argsGivenCount + " given)";
 
             throw new Sk.builtin.TypeError(msg);
         }
+
+        console.log('check successful');
     }
 
     skToJs (val) {
