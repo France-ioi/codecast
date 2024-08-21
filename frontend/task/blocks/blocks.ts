@@ -5,7 +5,7 @@ import {BlocksUsage} from "../task_types";
 import {taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
-import {QuickAlgoLibrary, QuickalgoLibraryBlock} from "../libs/quickalgo_library";
+import {QuickAlgoCustomClass, QuickAlgoLibrary, QuickalgoLibraryBlock} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
 import {appSelect} from '../../hooks';
 import {hasBlockPlatform, platformsList} from '../../stepper/platforms';
@@ -94,10 +94,12 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             }
         }
 
+        const classRepresentations: {[className: string]: QuickAlgoCustomClass} = {};
         for (let generatorName in context.customClasses) {
             for (let typeName in context.customClasses[generatorName]) {
                 for (let className in context.customClasses[generatorName][typeName]) {
                     let classRepresentation = context.customClasses[generatorName][typeName][className];
+                    classRepresentations[className] = classRepresentation;
                     if (classRepresentation.init) {
                         blocksInfos[`${className}.${CONSTRUCTOR_NAME}`] = generateBlockInfo(classRepresentation.init, typeName);
                     }
@@ -141,12 +143,17 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     availableBlocks.push(newBlock);
                 } else {
                     let {className, classInstances, methods, init} = blockName;
+                    let classRepresentation = classRepresentations[className];
+                    if (!classRepresentation) {
+                        throw `Unknown class name: ${className}`;
+                    }
+
                     if (init) {
                         methods = [...methods, CONSTRUCTOR_NAME];
                     }
                     let placeholderClassInstance = false;
                     if (!classInstances || !classInstances.length) {
-                        classInstances = [`${className.substring(0, 1).toLocaleLowerCase() + className.substring(1)}`];
+                        classInstances = [classRepresentation.defaultInstanceName ?? `${className.substring(0, 1).toLocaleLowerCase() + className.substring(1)}`];
                         placeholderClassInstance = true;
                     }
                     for (let classInstance of classInstances) {
