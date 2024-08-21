@@ -43,6 +43,8 @@ function definePythonNumber() {
     return pythonNumber;
 }
 
+const PROXY_IDENTITY = Symbol('proxy_target_identity');
+
 const PythonNumber = definePythonNumber();
 
 export default class PythonRunner extends AbstractRunner {
@@ -405,6 +407,10 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
         } else if (val instanceof Sk.builtin.object && val.hasOwnProperty('$d')) {
             return new Proxy(val, {
                 get: (target, prop) => {
+                    if (PROXY_IDENTITY === prop) {
+                        return target
+                    }
+
                     const value = target.$d.entries[prop];
                     console.log('getter', {target, prop, value})
 
@@ -412,7 +418,7 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 },
                 set: (target, prop, value) => {
                     console.log('update', {target, prop, value});
-                    Sk.abstr.objectSetItem(target['$d'], new Sk.builtin.str(prop),this._createPrimitive(value));
+                    Sk.abstr.objectSetItem(target['$d'], new Sk.builtin.str(prop), value[PROXY_IDENTITY] ?? this._createPrimitive(value));
 
                     return true;
                 },
