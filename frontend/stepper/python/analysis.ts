@@ -127,6 +127,11 @@ export const analyseSkulptScope = function(suspension: any): AnalysisScope {
             continue;
         }
 
+        // This is an object of a class exported by a module, we don't want to display it in analysis
+        if ('object' === typeof value && value.__variableName) {
+            continue;
+        }
+
         if (typeof value === 'function') {
             if (!value.prototype || !value.prototype.tp$name) {
                 continue;

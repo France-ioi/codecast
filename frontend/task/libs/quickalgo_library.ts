@@ -19,6 +19,22 @@ export interface LibraryEventListener {
     justActivated: boolean,
 }
 
+export interface QuickalgoLibraryBlock {
+    name?: string,
+    yieldsValue?: boolean,
+    params?: string[],
+    blocklyJson?: any,
+    anyArgs?: boolean,
+    variants?: any,
+}
+
+export interface QuickAlgoCustomClass {
+    defaultInstanceName?: string,
+    init?: QuickalgoLibraryBlock,
+    blocks: QuickalgoLibraryBlock[],
+    constants?: {name: string, value: any}[],
+}
+
 export abstract class QuickAlgoLibrary {
     display: boolean;
     infos: QuickalgoLibraryInfos;
@@ -28,8 +44,10 @@ export abstract class QuickAlgoLibrary {
     nbNodes: number;
     nbMoves?: number;
     strings: any;
-    customBlocks: any;
-    customConstants: any;
+    customBlocks: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}};
+    customConstants: {[generatorName: string]: {name: string, value: any}[]};
+    customClasses: {[generatorName: string]: {[categoryName: string]: {[className: string]: QuickAlgoCustomClass}}};
+    customClassInstances: {[generatorName: string]: {[instanceName: string]: string}};
     conceptList: any[];
     conceptDisabledList?: string[];
     notionsList: NotionArborescence;
@@ -68,6 +86,8 @@ export abstract class QuickAlgoLibrary {
         this.strings = {};
         this.customBlocks = {};
         this.customConstants = {};
+        this.customClasses = {};
+        this.customClassInstances = {};
         this.conceptList = [];
 
         this.aceEditor = null;
