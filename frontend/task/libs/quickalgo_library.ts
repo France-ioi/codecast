@@ -28,10 +28,11 @@ export interface QuickalgoLibraryBlock {
     variants?: any,
 }
 
-interface QuickAlgoCustomClass {
-    init: QuickalgoLibraryBlock,
+export interface QuickAlgoCustomClass {
+    defaultInstanceName?: string,
+    init?: QuickalgoLibraryBlock,
     blocks: QuickalgoLibraryBlock[],
-    constants: {name: string, value: any}[],
+    constants?: {name: string, value: any}[],
 }
 
 export abstract class QuickAlgoLibrary {
