@@ -272,8 +272,6 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 }
             }
 
-            console.log({classParts})
-
             for (let [className, classPartsList] of Object.entries(classParts)) {
                 modContents += PythonRunner._skulptifyClass(className, Object.values(classPartsList));
             }
@@ -286,8 +284,6 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 const {name, value} = block;
                 modContents += PythonRunner._skulptifyConst(name, value);
             }
-
-            console.log(modContents);
 
             modContents += "\nreturn mod;\n};";
             Sk.builtinFiles["files"]["src/lib/" + generatorName + ".js"] = modContents;
@@ -311,8 +307,6 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             // The class handler received self as first argument
             argsGivenCount--;
         }
-
-        console.log('check args', block, params);
 
         if (params.length === 0) {
             // This function doesn't have arguments
@@ -341,8 +335,6 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
 
             throw new Sk.builtin.TypeError(msg);
         }
-
-        console.log('check successful');
     }
 
     skToJs (val) {
@@ -410,14 +402,15 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                     if (PROXY_IDENTITY === prop) {
                         return target
                     }
+                    if ('__variableName' === prop) {
+                        return target.__variableName;
+                    }
 
                     const value = target.$d.entries[prop];
-                    console.log('getter', {target, prop, value})
 
                     return value && value.length ? this.skToJs(value[1]) : null;
                 },
                 set: (target, prop, value) => {
-                    console.log('update', {target, prop, value});
                     Sk.abstr.objectSetItem(target['$d'], new Sk.builtin.str(prop), value[PROXY_IDENTITY] ?? this._createPrimitive(value));
 
                     return true;

@@ -262,8 +262,6 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
         }
     }));
 
-    console.log({availableBlocks})
-
     return availableBlocks;
 });
 
