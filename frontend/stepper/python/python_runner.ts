@@ -380,42 +380,9 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 // });
             }
         } else if (val instanceof Sk.builtin.dict) {
-            let dictKeys = Object.keys(val);
-            let retVal = {};
-            for (let i = 0; i < dictKeys.length; i++) {
-                let key = dictKeys[i];
-                if (key == 'size' || key == '__class__') {
-                    continue;
-                }
-                let subItems = val[key].items;
-                for (let j = 0; j < subItems.length; j++) {
-                    let subItem = subItems[j];
-
-                    retVal[subItem.lhs.v] = this.skToJs(subItem.rhs);
-                }
-            }
-
-            return retVal;
+            return this.createSkulptProxy(val);
         } else if (val instanceof Sk.builtin.object && val.hasOwnProperty('$d')) {
-            return new Proxy(val, {
-                get: (target, prop) => {
-                    if (PROXY_IDENTITY === prop) {
-                        return target
-                    }
-                    if ('__variableName' === prop) {
-                        return target.__variableName;
-                    }
-
-                    const value = target.$d.entries[prop];
-
-                    return value && value.length ? this.skToJs(value[1]) : null;
-                },
-                set: (target, prop, value) => {
-                    Sk.abstr.objectSetItem(target['$d'], new Sk.builtin.str(prop), value[PROXY_IDENTITY] ?? this._createPrimitive(value));
-
-                    return true;
-                },
-            });
+            return this.createSkulptProxy(val.$d);
         } else {
             let retVal = val.v;
             if (val instanceof Sk.builtin.tuple || val instanceof Sk.builtin.list) {
@@ -435,6 +402,39 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             return retVal;
         }
     };
+
+    private createSkulptProxy(val: any) {
+        return new Proxy(val, {
+            get: (target, prop) => {
+                if (PROXY_IDENTITY === prop) {
+                    return target
+                }
+                if ('__variableName' === prop) {
+                    return target.__variableName;
+                }
+                if ('toJSON' === prop) {
+                    return () => {
+                        const returned = {};
+                        for (let key of Object.keys(target.entries)) {
+                            const value = this.skToJs(target.entries[key][1]);
+                            returned[key] = value && typeof value.toJSON === 'function' ? value.toJSON() : value;
+                        }
+
+                        return returned;
+                    };
+                }
+
+                const value = target.entries[prop];
+
+                return value && value.length ? this.skToJs(value[1]) : null;
+            },
+            set: (target, prop, value) => {
+                Sk.abstr.objectSetItem(target, new Sk.builtin.str(prop), value[PROXY_IDENTITY] ?? this._createPrimitive(value));
+
+                return true;
+            },
+        });
+    }
 
     waitDelay(callback, value, delay) {
         log.getLogger('python_runner').debug('WAIT DELAY', value, delay);
