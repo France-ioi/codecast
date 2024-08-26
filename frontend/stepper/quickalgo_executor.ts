@@ -168,6 +168,8 @@ class QuickalgoExecutor {
                 resolve(argumentResult);
             }]);
 
+            Promise.resolve(result).catch(reject);
+
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] MODULE RESULT', result);
             if (Symbol.iterator in Object(result)) {
                 this.iterateResult(module, action, result)
