@@ -50,6 +50,8 @@ class QuickalgoExecutor {
                 Codecast.runner.stop();
 
                 await this.stepperContext.dispatch(stepperExecutionEndConditionReached(executionResult));
+
+                return;
             }
         }
 
