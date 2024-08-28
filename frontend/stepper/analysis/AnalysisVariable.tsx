@@ -46,7 +46,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
 
         if (Array.isArray(variable.variables)) {
             let renderedElements;
-            let askedDisplayedMaxLength = props.displayMaxLength ? props.displayMaxLength : 50;
+            let askedDisplayedMaxLength = props.displayMaxLength ?? 50;
             const elementsToDisplay = Math.min(
                 variable.variables.length,
                 isOpen ? (isCollapsed ? 100 : 20) : Math.floor(askedDisplayedMaxLength / (isCollapsed ? 4 : 15))
@@ -63,7 +63,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
                                     stackFrameId={props.stackFrameId}
                                     onlyValue={isCollapsed}
                                     displayMaxLength={displayMaxLength}
-                                    recursionLevel={(props.recursionLevel ? props.recursionLevel : 0) + 1}
+                                    recursionLevel={(props.recursionLevel ?? 0) + 1}
                                 />
                                 {(index + 1) < variable.variables.length ? ', ' : null}
                             </span>
@@ -108,9 +108,9 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
 
         const hasPreviousValue = null !== variable.previousValue && undefined !== variable.previousValue && variable.value !== variable.previousValue;
 
-        const sanitizeValue = (value) => {
-            if ('string' === typeof value && value.substring(0, 1) === '"' && value.length > 100) {
-                return value.substring(0, 98) + '..."';
+        const truncateValue = (value, maxLength) => {
+            if ('string' === typeof value && value.substring(0, 1) === '"' && value.length > maxLength) {
+                return value.substring(0, maxLength - 3) + '..."';
             }
 
             return value;
@@ -119,13 +119,13 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
         return (
             <React.Fragment>
                 <span className={`value-scalar ${hasPreviousValue ? 'value-has-changed' : ''} ${!hasPreviousValue && variable.loaded ? 'value-loaded' : ''}`}>
-                    {sanitizeValue(variable.value)}
+                    {truncateValue(variable.value, props.displayMaxLength)}
                     {variable.displayType && <span className="value-type ml-1">
                         &lt;{variable.type}&gt;
                     </span>}
                 </span>
                 {hasPreviousValue ?
-                    <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{sanitizeValue(variable.previousValue)}</span>
+                    <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{truncateValue(variable.previousValue, props.displayMaxLength)}</span>
                     : null}
             </React.Fragment>
         );
@@ -137,9 +137,9 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
         return variableValue;
     }
 
-    if (!isCollapsed && props.displayMaxLength && props.displayMaxLength - 3 < variable.name.length) {
-        return <span>...</span>;
-    }
+    // if (!isCollapsed && props.displayMaxLength && props.displayMaxLength - 3 < variable.name.length) {
+    //     return <span>...</span>;
+    // }
 
     return (
         <span className="variable-container">
