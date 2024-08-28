@@ -145,7 +145,7 @@ mod.${moduleMethodName ?? name} = new Sk.builtin.func(function () {
     private static _skulptifyClassInstance(classInstance: string, className: string) {
         return `
 mod.${classInstance} = Sk.misceval.callsimArray(mod.${className});
-mod.${classInstance}.__variableName = '${classInstance}';
+mod.${classInstance}.$d.__variableName = '${classInstance}';
 `;
     }
 
