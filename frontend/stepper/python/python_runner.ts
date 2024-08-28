@@ -222,6 +222,8 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
         // Generate Python custom libraries from all generated blocks
         log.getLogger('python_runner').debug('inject functions', this.availableBlocks);
 
+        this.definedConstants = [];
+
         let blocksByGeneratorName: {[generatorName: string]: Block[]} = {};
         for (let block of this.availableBlocks) {
             if (block.generatorName) {
@@ -281,7 +283,6 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 modContents += PythonRunner._skulptifyClassInstance(classInstance, className);
             }
 
-            this.definedConstants = [];
             for (let block of blocks.filter(block => block.type === BlockType.Constant)) {
                 const {name, value} = block;
                 modContents += PythonRunner._skulptifyConst(name, value);
