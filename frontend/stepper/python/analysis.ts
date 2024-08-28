@@ -183,12 +183,9 @@ const variablesBeginWithIgnore = [
 
 /**
  * Filter the variable names by removing those used internally by Skulpt.
- *
- * @param {Array} variableNames The names.
- *
- * @returns {Array}
  */
 const filterInternalVariables = (variableNames: string[], excludedVariableNames: string[]): string[] => {
+    console.log('filter internal variables', {variableNames, excludedVariableNames})
     return variableNames.filter((name) => {
         if (-1 !== excludedVariableNames.indexOf(name)) {
             return false;
