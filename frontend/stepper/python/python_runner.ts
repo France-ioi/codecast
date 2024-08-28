@@ -145,7 +145,7 @@ mod.${moduleMethodName ?? name} = new Sk.builtin.func(function () {
     private static _skulptifyClassInstance(classInstance: string, className: string) {
         return `
 mod.${classInstance} = Sk.misceval.callsimArray(mod.${className});
-mod.${classInstance}.__variableName = '${classInstance}';
+mod.${classInstance}.$d.__variableName = '${classInstance}';
 `;
     }
 
@@ -287,6 +287,8 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 modContents += PythonRunner._skulptifyConst(name, value);
                 this.definedConstants.push(name);
             }
+
+            console.log('defined constants', blocks);
 
             modContents += "\nreturn mod;\n};";
             Sk.builtinFiles["files"]["src/lib/" + generatorName + ".js"] = modContents;
