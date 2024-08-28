@@ -462,26 +462,44 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             return Sk.builtin.none.none$;  // Reuse the same object.
         }
         let type = typeof data;
-        let result = {v: data}; // Emulate a Skulpt object as default
+
         if (type === 'number') {
             if (Math.floor(data) == data) { // isInteger isn't supported by IE
-                result = new Sk.builtin.int_(data);
+                return new Sk.builtin.int_(data);
             } else {
-                result = new Sk.builtin.float_(data);
+                return new Sk.builtin.float_(data);
             }
         } else if (type === 'string') {
-            result = new Sk.builtin.str(data);
+            return new Sk.builtin.str(data);
         } else if (type === 'boolean') {
-            result = new Sk.builtin.bool(data);
+            return new Sk.builtin.bool(data);
+        } else if ('object' === type && data['__className']) {
+            const suspensionStackFrame = this._debugger.suspension_stack[0];
+            if (suspensionStackFrame && data['__className'] in suspensionStackFrame.$loc) {
+                const constructor = suspensionStackFrame.$loc[data['__className']];
+                const args = data['arguments'].map(this._createPrimitive);
+
+                return constructor.tp$call(args, undefined);
+            } else {
+                throw `Unknown module class: ${data['__className']}`;
+            }
+        } else if ('object' === type) {
+            const dict = new Sk.builtin.dict([]);
+            for (let [name, value] of Object.entries(data)) {
+                dict.mp$ass_subscript(this._createPrimitive(name), this._createPrimitive(value));
+            }
+
+            return dict;
         } else if (typeof data.length != 'undefined') {
             let skl = [];
             for (let i = 0; i < data.length; i++) {
                 skl.push(this._createPrimitive(data[i]));
             }
 
-            result = new Sk.builtin.list(skl);
+            return new Sk.builtin.list(skl);
         }
-        return result;
+
+        return {v: data}; // Emulate a Skulpt object as default
     }
 
     private _configure() {
