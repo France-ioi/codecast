@@ -58,6 +58,7 @@ export default class PythonRunner extends AbstractRunner {
     private _stepInProgress = false;
     private stepMode = false;
     private _editorMarker = null;
+    private definedConstants = [];
     private availableModules = [];
     private availableBlocks = [] as Block[];
     public _isFinished = false;
@@ -280,9 +281,11 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 modContents += PythonRunner._skulptifyClassInstance(classInstance, className);
             }
 
+            this.definedConstants = [];
             for (let block of blocks.filter(block => block.type === BlockType.Constant)) {
                 const {name, value} = block;
                 modContents += PythonRunner._skulptifyConst(name, value);
+                this.definedConstants.push(name);
             }
 
             modContents += "\nreturn mod;\n};";
@@ -775,7 +778,7 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 stepperState.isFinished = true;
             } else {
                 log.getLogger('stepper').debug('INCREASE STEP NUM TO ', stepperState.analysis.stepNum + 1);
-                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
+                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1, this.definedConstants);
                 stepperState.directives = {
                     ordered: parseDirectives(stepperState.analysis),
                     functionCallStackMap: null,
