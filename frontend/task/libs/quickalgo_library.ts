@@ -26,6 +26,7 @@ export interface QuickalgoLibraryBlock {
     blocklyJson?: any,
     anyArgs?: boolean,
     variants?: any,
+    hidden?: boolean,
 }
 
 export interface QuickAlgoCustomClass {

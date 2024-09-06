@@ -25,12 +25,13 @@ interface BlockInfo {
     yieldsValue: string|boolean,
     params: any[],
     nbsArgs: any[],
+    hidden?: boolean,
 }
 
 export const CONSTRUCTOR_NAME = '__constructor';
 
 export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string): BlockInfo {
-    const blockInfo = {
+    const blockInfo: BlockInfo = {
         nbArgs: 0, // handled below
         type: typeName,
         yieldsValue: block.yieldsValue,
@@ -46,6 +47,9 @@ export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string
         for (let i = 0; i < variants.length; i++) {
             blockInfo.nbsArgs.push(variants[i].length);
         }
+    }
+    if (block.hidden) {
+        blockInfo.hidden = true;
     }
 
     return blockInfo;
@@ -71,6 +75,7 @@ function getBlockFromBlockInfo(generatorName: string, blockName: string, blockIn
         caption: code,
         code,
         returnType,
+        showInBlocks: !blockInfo?.hidden,
     }
 }
 
