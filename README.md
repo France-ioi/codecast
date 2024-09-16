@@ -28,7 +28,8 @@ sudo apt-get install libncurses5
 
 Copy `config.json.template` to `config.json` and edit it.
 
-If not using HTTPS, set session.cookie.secure to false.
+If not using HTTPS, set session.cookie.secure to false and remove tht `https` section.
+If you want to use HTTPS, use [mkcert](https://web.dev/articles/how-to-use-local-https) to generate your certificate.
 
 If not using oauth2, set "auth" to `{}`: you'll be able to use the guest mode only.
 
