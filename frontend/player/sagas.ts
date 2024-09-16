@@ -211,9 +211,9 @@ function* playerPrepare(app: App, action) {
     };
 
     try {
-        setTaskEventsEnvironment('replay');
+        // setTaskEventsEnvironment('replay');
         yield* call(computeInstants, replayApi, replayContext);
-        setTaskEventsEnvironment('main');
+        // setTaskEventsEnvironment('main');
 
         /* The duration of the recording is the timestamp of the last event. */
         const instants = replayContext.instants;

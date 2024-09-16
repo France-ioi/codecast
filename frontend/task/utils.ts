@@ -18,7 +18,7 @@ export enum TaskPlatformMode {
 export const recordingProgressSteps = 10;
 
 export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
-    return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
+    return state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
 }
 
 export function extractLevelSpecific(item: any, level: TaskLevelName) {
