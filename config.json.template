@@ -14,6 +14,10 @@
     "saveUninitialized": true,
     "cookie": {"secure": true, "maxAge": 604800}
   },
+  "https": {
+    "key": "localhost-key.pem",
+    "cert": "localhost.pem"
+  },
   "auth": {
     "@@AUTH_PROVIDER_NAME@@": {
       "oauth2": {
