@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
+import https from 'https';
 import express from 'express';
 import bodyParser from 'body-parser';
 import {spawn} from 'child_process';
@@ -506,7 +507,16 @@ fs.readFile('config.json', 'utf8', function (err, data) {
             rootApp.use(config.mountPath, app);
             app = rootApp;
         }
-        const server = http.createServer(app);
+
+        let server;
+        if (config.https) {
+            const key = fs.readFileSync(config.https.key, "utf-8");
+            const cert = fs.readFileSync(config.https.cert, "utf-8");
+            server = https.createServer({key, cert}, app);
+        } else {
+            server = http.createServer(app);
+        }
+
         server.listen(config.port);
         workerStore.dispatch({type: 'START'});
     });
