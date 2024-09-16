@@ -53,7 +53,6 @@ import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {hasBlockPlatform} from '../../stepper/platforms';
-import {callPlatformValidate} from '../../submission/submission_actions';
 import {loadOptionsFromQuery} from '../../common/options';
 import {CodecastOptions} from '../../store';
 import {asyncGetFile} from '../../utils/api';
@@ -67,7 +66,6 @@ let taskEventsEnvironment = 'main';
 
 export let taskApi: any;
 export let platformApi: ReturnType<typeof makePlatformAdapter> = null;
-export let serverApi = null;
 export let setTaskEventsEnvironment = (environment: string) => {
     taskEventsEnvironment = environment;
 }
@@ -326,7 +324,8 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             }
             const convertedAnswer = {};
             for (let {level} of Object.values(taskLevels)) {
-                if (!answerObject[level]) {
+                // The answer can represent the view percentage of the Codecast
+                if (!answerObject[level] || 'number' === typeof answerObject[level]) {
                     continue;
                 }
                 convertedAnswer[level] = yield* call(backwardCompatibilityConvert, answerObject[level]);
@@ -344,19 +343,24 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, success, error, true, false));
             yield* call(taskAnswerReloadedSaga);
         } else if (answer) {
-            const answerObject = yield* call(backwardCompatibilityConvert, JSON.parse(answer));
-            if (!(yield* call(canReloadAnswer, answerObject))) {
-                throw new Error("This answer is not accepted: " + answer)
+            const parsedAnswer = JSON.parse(answer);
+            if ('number' !== typeof parsedAnswer) {
+                const answerObject = yield* call(backwardCompatibilityConvert, parsedAnswer);
+                if (!(yield* call(canReloadAnswer, answerObject))) {
+                    throw new Error("This answer is not accepted: " + answer)
+                }
+                yield* put(platformAnswerLoaded(answerObject));
+                yield* put(platformTaskRefresh());
             }
-            yield* put(platformAnswerLoaded(answerObject));
-            yield* put(platformTaskRefresh());
             yield* call(success);
         } else {
             yield* call(success);
         }
     } catch (ex: any) {
-        console.error(ex);
-        yield* call(error, `Answer cannot be reloaded (${answer}): ${ex.message}`);
+        console.error(`Answer cannot be reloaded (${answer}): ${ex.message}`, ex);
+        // Reloading an error is not blocking, therefore warn that it couldn't be reloaded and proceed anyways
+        yield* call(success);
+        // yield* call(error, `Answer cannot be reloaded (${answer}): ${ex.message}`);
     }
 }
 

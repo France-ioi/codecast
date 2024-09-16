@@ -76,7 +76,7 @@ export function selectTaskSelectorEnabled(state: AppStore) {
     return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && taskTests.length > 1))
 }
 
-export function selectAvailableExecutionModes(state: AppStore): TaskSubmissionEvaluateOn[] {
+export const selectAvailableExecutionModes = memoize((state: AppStore): TaskSubmissionEvaluateOn[] => {
     const platform = state.options.platform;
     const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
     const currentTask = state.task.currentTask;
@@ -94,4 +94,4 @@ export function selectAvailableExecutionModes(state: AppStore): TaskSubmissionEv
     }
 
     return availableExecutionModes;
-}
+});

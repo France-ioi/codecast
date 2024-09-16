@@ -127,7 +127,7 @@ const defaultInstructionsHtml = `
 <!--    </div>-->
 `;
 
-export const getInstructionsForLevelSelector = (state: AppStore) => {
+export const getInstructionsForLevelSelector = memoize((state: AppStore) => {
     const taskInstructionsHtmlFromOptions = state.options.taskInstructions;
     const language = state.options.language.split('-')[0];
     const currentTask = state.task.currentTask;
@@ -142,7 +142,7 @@ export const getInstructionsForLevelSelector = (state: AppStore) => {
             newInstructionsTitle = instructions.title;
         }
         newInstructionsHtml = instructions.statement;
-    } else if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask.gridInfos.intro) {
+    } else if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask?.gridInfos.intro) {
         const strLang = window.stringsLanguage;
         if (strLang in window.algoreaInstructionsStrings) {
             const strings = window.algoreaInstructionsStrings[strLang];
@@ -159,7 +159,7 @@ export const getInstructionsForLevelSelector = (state: AppStore) => {
         html: newInstructionsHtml,
         title: newInstructionsTitle
     };
-};
+});
 
 export const getTaskSuccessMessageSelector = memoize((state: AppStore) => {
     const html = getInstructionsForLevelSelector(state).html;

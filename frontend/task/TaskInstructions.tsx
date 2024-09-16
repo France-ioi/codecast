@@ -44,7 +44,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const {
         html: newInstructionsHtml,
         title: newInstructionsTitle
-    } = useAppSelector(memoize(getInstructionsForLevelSelector));
+    } = useAppSelector(getInstructionsForLevelSelector);
 
     const toggleTaskInstructions = () => {
         if (documentationOpen) {

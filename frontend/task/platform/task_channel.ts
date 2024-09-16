@@ -27,7 +27,7 @@ export default function* () {
     }, buffers.expanding(4));
 }
 
-function makeTask (emit, state: AppStore) {
+function makeTask(emit, state: AppStore) {
     return {
         showViews: function (views, success, error) {
             emit(taskShowViewsEvent(views, success ?? (() => {}), error ?? (() => {})));
