@@ -56,6 +56,7 @@ import {hasBlockPlatform} from '../../stepper/platforms';
 import {loadOptionsFromQuery} from '../../common/options';
 import {CodecastOptions} from '../../store';
 import {asyncGetFile} from '../../utils/api';
+import {stepperDisplayError} from '../../stepper/actionTypes';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -358,6 +359,7 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
         }
     } catch (ex: any) {
         console.error(`Answer cannot be reloaded (${answer}): ${ex.message}`, ex);
+        yield* put(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE').s));
         // Reloading an error is not blocking, therefore warn that it couldn't be reloaded and proceed anyways
         yield* call(success);
         // yield* call(error, `Answer cannot be reloaded (${answer}): ${ex.message}`);
