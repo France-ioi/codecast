@@ -360,9 +360,7 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
     } catch (ex: any) {
         console.error(`Answer cannot be reloaded (${answer}): ${ex.message}`, ex);
         yield* put(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE').s));
-        // Reloading an error is not blocking, therefore warn that it couldn't be reloaded and proceed anyways
-        yield* call(success);
-        // yield* call(error, `Answer cannot be reloaded (${answer}): ${ex.message}`);
+        yield* call(error, `Answer cannot be reloaded (${answer}): ${ex.message}`);
     }
 }
 
