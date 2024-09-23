@@ -489,7 +489,7 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             } else {
                 throw `Unknown module class: ${data['__className']}`;
             }
-        } else if ('object' === type) {
+        } else if ('object' === type && !Array.isArray(data)) {
             const dict = new Sk.builtin.dict([]);
             for (let [name, value] of Object.entries(data)) {
                 dict.mp$ass_subscript(this._createPrimitive(name), this._createPrimitive(value));
