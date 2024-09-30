@@ -496,7 +496,24 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             }
 
             return dict;
-        } else if (typeof data.length != 'undefined') {
+        } else if ('object' === type && data['__className']) {
+            const suspensionStackFrame = this._debugger.suspension_stack[0];
+            if (suspensionStackFrame && data['__className'] in suspensionStackFrame.$loc) {
+                const constructor = suspensionStackFrame.$loc[data['__className']];
+                const args = data['arguments'].map(this._createPrimitive);
+
+                return constructor.tp$call(args, undefined);
+            } else {
+                throw `Unknown module class: ${data['__className']}`;
+            }
+        } else if ('object' === type && !Array.isArray(data)) {
+            const dict = new Sk.builtin.dict([]);
+            for (let [name, value] of Object.entries(data)) {
+                dict.mp$ass_subscript(this._createPrimitive(name), this._createPrimitive(value));
+            }
+
+            return dict;
+        } else if (typeof data.length != 'undefined' && 'function' !== typeof data) {
             let skl = [];
             for (let i = 0; i < data.length; i++) {
                 skl.push(this._createPrimitive(data[i]));
