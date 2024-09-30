@@ -50,6 +50,8 @@ class QuickalgoExecutor {
                 Codecast.runner.stop();
 
                 await this.stepperContext.dispatch(stepperExecutionEndConditionReached(executionResult));
+
+                return;
             }
         }
 
@@ -152,15 +154,23 @@ class QuickalgoExecutor {
     }
 
     makeLibraryCall(context: QuickAlgoLibrary, module: string, action: string, args: any) {
+        let method = context[module][action];
+        if (-1 !== action.indexOf('->')) {
+            const [className, classMethod] = action.split('->');
+            method = context[module][className][classMethod];
+        }
+
         return new Promise((resolve, reject) => {
             let callbackArguments = [];
-            let result = context[module][action].apply(context, [...args, function (a) {
+            let result = method.apply(context, [...args, function (a) {
                 log.getLogger('quickalgo_executor').debug('[quickalgo_executor] receive callback', arguments);
                 callbackArguments = [...arguments];
                 let argumentResult = callbackArguments.length ? callbackArguments[0] : undefined;
                 log.getLogger('quickalgo_executor').debug('[quickalgo_executor] set result', argumentResult);
                 resolve(argumentResult);
             }]);
+
+            Promise.resolve(result).catch(reject);
 
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] MODULE RESULT', result);
             if (Symbol.iterator in Object(result)) {

@@ -1,11 +1,11 @@
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStore} from "../../store";
 import {Bundle} from "../../linker";
-import {call, debounce, delay, put, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {delay, put, takeLatest} from "typed-redux-saga";
 import {BlocksUsage} from "../task_types";
 import {taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
-import {QuickAlgoLibrary} from "../libs/quickalgo_library";
+import {QuickAlgoCustomClass, QuickAlgoLibrary, QuickalgoLibraryBlock} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
 import {appSelect} from '../../hooks';
 import {hasBlockPlatform, platformsList} from '../../stepper/platforms';
@@ -13,50 +13,69 @@ import {getNotionsBagFromIncludeBlocks} from './notions';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {Block, BlockType} from './block_types';
-import {bufferEdit, bufferEditPlain, bufferInit, bufferReset} from '../../buffers/buffers_slice';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
-import {createAction} from '@reduxjs/toolkit';
 
 export interface DraggableBlockItem {
     block: Block,
 }
 
-function getSnippet(block: Block, platform: CodecastPlatform) {
-    const proto = block.caption;
-    let parenthesisOpenIndex = proto.indexOf("(");
-    let finalCharacter = -1 !== [CodecastPlatform.C, CodecastPlatform.Cpp].indexOf(platform) && BlockType.Function === block.type && block.category !== 'sensors' ? ';' : '';
-    if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
-        return proto + finalCharacter;
-    } else {
-        let ret = proto.substring(0, parenthesisOpenIndex + 1);
-        let commaIndex = parenthesisOpenIndex;
-        let snippetIndex = 1;
-        while (proto.indexOf(',', commaIndex + 1) != -1) {
-            let newCommaIndex = proto.indexOf(',', commaIndex + 1);
-            // we want to keep the space.
-            if (proto.charAt(commaIndex + 1) == ' ') {
-                commaIndex += 1;
-                ret += ' ';
-            }
-            ret += "${" + snippetIndex + ':';
-            ret += proto.substring(commaIndex + 1, newCommaIndex);
-            ret += "},";
+interface BlockInfo {
+    nbArgs: number,
+    type: string,
+    yieldsValue: string|boolean,
+    params: any[],
+    nbsArgs: any[],
+    hidden?: boolean,
+}
 
-            commaIndex = newCommaIndex;
-            snippetIndex += 1;
+export const CONSTRUCTOR_NAME = '__constructor';
+
+export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string): BlockInfo {
+    const blockInfo: BlockInfo = {
+        nbArgs: 0, // handled below
+        type: typeName,
+        yieldsValue: block.yieldsValue,
+        params: block.params ?? [],
+        nbsArgs: [],
+    };
+    if (block.anyArgs) {
+        // Allows to specify the function can accept any number of arguments
+        blockInfo.nbsArgs.push(Infinity);
+    }
+    let variants = block.variants ? block.variants : (block.params ? [block.params] : []);
+    if (variants.length) {
+        for (let i = 0; i < variants.length; i++) {
+            blockInfo.nbsArgs.push(variants[i].length);
         }
+    }
+    if (block.hidden) {
+        blockInfo.hidden = true;
+    }
 
-        // the last one is with the closing parenthesis.
-        let parenthesisCloseIndex = proto.indexOf(')');
-        if (proto.charAt(commaIndex + 1) == ' ') {
-            commaIndex += 1;
-            ret += ' ';
-        }
-        ret += "${" + snippetIndex + ':';
-        ret += proto.substring(commaIndex + 1, parenthesisCloseIndex);
-        ret += "})";
+    return blockInfo;
+}
 
-        return ret + finalCharacter;
+function getBlockFromBlockInfo(generatorName: string, blockName: string, blockInfo: BlockInfo|undefined, contextStrings): Block {
+    let code = contextStrings.code[blockName];
+    if ('undefined' === typeof code) {
+        code = blockName;
+    }
+    let nbsArgs = blockInfo ? (blockInfo.nbsArgs ? blockInfo.nbsArgs : []) : [];
+    let params = blockInfo ? blockInfo.params : [];
+    let type = blockInfo ? blockInfo.type : 'actions';
+    let returnType = blockInfo ? blockInfo.yieldsValue : null;
+
+    return {
+        generatorName,
+        name: blockName,
+        type: BlockType.Function,
+        category: type,
+        paramsCount: nbsArgs,
+        params,
+        caption: code,
+        code,
+        returnType,
+        showInBlocks: !blockInfo?.hidden,
     }
 }
 
@@ -74,22 +93,41 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             for (let typeName in context.customBlocks[generatorName]) {
                 let blockList = context.customBlocks[generatorName][typeName];
                 for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
-                    let blockInfo = blockList[iBlock];
-                    blocksInfos[blockInfo.name] = {
-                        nbArgs: 0, // handled below
-                        type: typeName,
-                        yieldsValue: blockInfo.yieldsValue,
-                        params: blockInfo.params ?? [],
-                    };
-                    blocksInfos[blockInfo.name].nbsArgs = [];
-                    if (blockInfo.anyArgs) {
-                        // Allows to specify the function can accept any number of arguments
-                        blocksInfos[blockInfo.name].nbsArgs.push(Infinity);
+                    let block = blockList[iBlock];
+                    blocksInfos[block.name] = generateBlockInfo(block, typeName);
+                }
+            }
+        }
+
+        const classRepresentations: {[className: string]: QuickAlgoCustomClass} = {};
+        for (let generatorName in context.customClasses) {
+            for (let typeName in context.customClasses[generatorName]) {
+                for (let className in context.customClasses[generatorName][typeName]) {
+                    let classRepresentation = context.customClasses[generatorName][typeName][className];
+                    classRepresentations[className] = classRepresentation;
+                    if (classRepresentation.init) {
+                        blocksInfos[`${className}.${CONSTRUCTOR_NAME}`] = generateBlockInfo(classRepresentation.init, typeName);
                     }
-                    let variants = blockInfo.variants ? blockInfo.variants : (blockInfo.params ? [blockInfo.params] : []);
-                    if (variants.length) {
-                        for (let i = 0; i < variants.length; i++) {
-                            blocksInfos[blockInfo.name].nbsArgs.push(variants[i].length);
+                    if (classRepresentation.blocks) {
+                        for (let iBlock = 0; iBlock < classRepresentation.blocks.length; iBlock++) {
+                            let block = classRepresentation.blocks[iBlock];
+                            blocksInfos[`${className}.${block.name}`] = generateBlockInfo(block, typeName);
+                        }
+                    }
+                    if (classRepresentation.constants) {
+                        for (let iConst = 0; iConst < classRepresentation.constants.length; iConst++) {
+                            let name = classRepresentation.constants[iConst].name;
+                            availableBlocks.push({
+                                generatorName,
+                                name: `${className}.${name}`,
+                                caption: `${className}.${name}`,
+                                code: `${className}.${name}`,
+                                category: 'constants',
+                                type: BlockType.ClassConstant,
+                                methodName: name,
+                                className,
+                                value: classRepresentation.constants[iConst].value,
+                            });
                         }
                     }
                 }
@@ -105,30 +143,38 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
 
             for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                 let blockName = blockList[iBlock];
-                let code = contextStrings.code[blockName];
-                if ('undefined' === typeof code) {
-                    code = blockName;
-                }
-                let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
-                let params = blocksInfos[blockName] ? blocksInfos[blockName].params : [];
-                let type = blocksInfos[blockName] ? blocksInfos[blockName].type : 'actions';
-                let returnType = blocksInfos[blockName] ? blocksInfos[blockName].yieldsValue : null;
+                if ('string' === typeof blockName) {
+                    const newBlock = getBlockFromBlockInfo(generatorName, blockName, blocksInfos[blockName], contextStrings);
+                    availableBlocks.push(newBlock);
+                } else {
+                    let {className, classInstances, methods, init} = blockName;
+                    let classRepresentation = classRepresentations[className];
+                    if (!classRepresentation) {
+                        throw `Unknown class name: ${className}`;
+                    }
 
-                if (type == 'actions') {
-                    // this._hasActions = true;
+                    if (init) {
+                        methods = [...methods, CONSTRUCTOR_NAME];
+                    }
+                    let placeholderClassInstance = false;
+                    if (!classInstances || !classInstances.length) {
+                        classInstances = [classRepresentation.defaultInstanceName ?? `${className.substring(0, 1).toLocaleLowerCase() + className.substring(1)}`];
+                        placeholderClassInstance = true;
+                    }
+                    for (let classInstance of classInstances) {
+                        for (let method of methods) {
+                            const totalBlockName = `${className}.${method}`;
+                            const instanceBlockName = `${classInstance}.${method}`;
+                            const newBlock = getBlockFromBlockInfo(generatorName, instanceBlockName, blocksInfos[totalBlockName], contextStrings);
+                            newBlock.type = BlockType.ClassFunction;
+                            newBlock.methodName = method;
+                            newBlock.className = className;
+                            newBlock.classInstance = classInstance;
+                            newBlock.placeholderClassInstance = placeholderClassInstance;
+                            availableBlocks.push(newBlock);
+                        }
+                    }
                 }
-
-                availableBlocks.push({
-                    generatorName,
-                    name: blockName,
-                    type: BlockType.Function,
-                    category: type,
-                    paramsCount: nbsArgs,
-                    params,
-                    caption: code,
-                    code,
-                    returnType,
-                });
             }
 
             if (context.customConstants && context.customConstants[generatorName]) {
@@ -163,7 +209,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             block.description = contextStrings.description[block.name];
         }
 
-        if (BlockType.Function !== block.type) {
+        if (BlockType.Function !== block.type && BlockType.ClassFunction !== block.type) {
             return;
         }
 
@@ -195,6 +241,9 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             if (!blockDesc) {
                 if (!hasBlockPlatform(platform)) {
                     block.caption = funcCode + '()';
+                }
+                if (BlockType.ClassFunction === block.type && 'init' === block.methodName) {
+                    block.caption = `${block.classInstance} = ${block.className}()`;
                 }
             } else if (blockDesc.indexOf('</code>') < 0) {
                 let funcProtoEnd = blockDesc.indexOf(')') + 1;
@@ -252,6 +301,54 @@ function* checkSourceSaga() {
 
     yield* put(taskSetBlocksUsage(blocksUsage));
 }
+
+function getSnippet(block: Block, platform: CodecastPlatform) {
+    const proto = block.caption;
+    let parenthesisOpenIndex = proto.indexOf("(");
+    let finalCharacter = -1 !== [CodecastPlatform.C, CodecastPlatform.Cpp].indexOf(platform) && BlockType.Function === block.type && block.category !== 'sensors' ? ';' : '';
+
+    let snippetIndex = 1;
+    let ret = proto.substring(0, parenthesisOpenIndex + 1);
+    if (BlockType.ClassFunction === block.type && block.placeholderClassInstance) {
+        ret = ret.replace(new RegExp(`${block.classInstance}( ?(=|\.))`, 'ug'), (group, complement) => {
+            return "\${" + snippetIndex + ":" + block.classInstance + `}${complement}`;
+        });
+        snippetIndex++;
+    }
+
+    if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
+        return ret + ")" + finalCharacter;
+    } else {
+        let commaIndex = parenthesisOpenIndex;
+        while (proto.indexOf(',', commaIndex + 1) != -1) {
+            let newCommaIndex = proto.indexOf(',', commaIndex + 1);
+            // we want to keep the space.
+            if (proto.charAt(commaIndex + 1) == ' ') {
+                commaIndex += 1;
+                ret += ' ';
+            }
+            ret += "${" + snippetIndex + ':';
+            ret += proto.substring(commaIndex + 1, newCommaIndex);
+            ret += "},";
+
+            commaIndex = newCommaIndex;
+            snippetIndex += 1;
+        }
+
+        // the last one is with the closing parenthesis.
+        let parenthesisCloseIndex = proto.indexOf(')');
+        if (proto.charAt(commaIndex + 1) == ' ') {
+            commaIndex += 1;
+            ret += ' ';
+        }
+        ret += "${" + snippetIndex + ':';
+        ret += proto.substring(commaIndex + 1, parenthesisCloseIndex);
+        ret += "})";
+
+        return ret + finalCharacter;
+    }
+}
+
 
 function* selectorChangeSaga<T>(selector: (state: AppStore) => T, isEqual: (previousState: T, nextState: T) => boolean, waitDelay: number, saga) {
     let previous = yield* appSelect(selector);

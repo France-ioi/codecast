@@ -14,7 +14,7 @@ import log from 'loglevel';
  */
 const SKULPT_ANALYSIS_DEBUG = 1;
 
-export const convertSkulptStateToAnalysisSnapshot = function (suspensions: readonly any[], lastAnalysis: AnalysisSnapshot, newStepNum: number): AnalysisSnapshot {
+export const convertSkulptStateToAnalysisSnapshot = function (suspensions: readonly any[], lastAnalysis: AnalysisSnapshot, newStepNum: number, excludedVariableNames: string[]): AnalysisSnapshot {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         log.getLogger('python_runner').debug('[¥¥¥¥¥¥¥] Building analysis');
@@ -57,7 +57,7 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
 
             log.getLogger('python_runner').debug('suspension loaded', suspension.$loaded_references);
 
-            const scope = analyseSkulptScope(suspension);
+            const scope = analyseSkulptScope(suspension, excludedVariableNames);
             stackFrame.scopes.push(scope);
             stackFrame.name = scope.name;
             stackFrames.push(stackFrame);
@@ -95,7 +95,7 @@ const isProgramSuspension = function(suspension): boolean {
 /**
  * Transforms the skulpt scope (one suspension) to something readable with the variables content.
  */
-export const analyseSkulptScope = function(suspension: any): AnalysisScope {
+export const analyseSkulptScope = function(suspension: any, excludedVariableNames: string[]): AnalysisScope {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         log.getLogger('python_runner').debug('////// Analyse scope...');
@@ -118,12 +118,17 @@ export const analyseSkulptScope = function(suspension: any): AnalysisScope {
         suspVariables = suspension.$loc;
     }
 
-    const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables)), suspension._argnames);
+    const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables), excludedVariableNames), suspension._argnames);
     const loadedReferences = suspension.$loaded_references ? suspension.$loaded_references : {};
 
     for (let variableName of variableNames) {
         let value = suspVariables[variableName];
         if (value === undefined) {
+            continue;
+        }
+
+        // This is an object of a class exported by a module, we don't want to display it in analysis
+        if ('object' === typeof value && value?.$d?.__variableName) {
             continue;
         }
 
@@ -178,14 +183,14 @@ const variablesBeginWithIgnore = [
 
 /**
  * Filter the variable names by removing those used internally by Skulpt.
- *
- * @param {Array} variableNames The names.
- *
- * @returns {Array}
  */
-const filterInternalVariables = (variableNames: string[]): string[] => {
+const filterInternalVariables = (variableNames: string[], excludedVariableNames: string[]): string[] => {
+    console.log('filter internal variables', {variableNames, excludedVariableNames})
     return variableNames.filter((name) => {
-        let ignore = false;
+        if (-1 !== excludedVariableNames.indexOf(name)) {
+            return false;
+        }
+
         for (let variableBeginWithIgnore of variablesBeginWithIgnore) {
             if (name.indexOf(variableBeginWithIgnore) === 0) {
                 return false;

@@ -14,7 +14,7 @@ import {parseDirectives} from './directives';
 import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
 import {appSelect} from '../../hooks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
-import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
+import {CONSTRUCTOR_NAME, getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {delay} from '../../player/sagas';
 import {put} from 'typed-redux-saga';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
@@ -43,6 +43,8 @@ function definePythonNumber() {
     return pythonNumber;
 }
 
+const PROXY_IDENTITY = Symbol('proxy_target_identity');
+
 const PythonNumber = definePythonNumber();
 
 export default class PythonRunner extends AbstractRunner {
@@ -56,6 +58,7 @@ export default class PythonRunner extends AbstractRunner {
     private _stepInProgress = false;
     private stepMode = false;
     private _editorMarker = null;
+    private definedConstants = [];
     private availableModules = [];
     private availableBlocks = [] as Block[];
     public _isFinished = false;
@@ -92,37 +95,89 @@ export default class PythonRunner extends AbstractRunner {
         log.getLogger('python_runner').debug('AFTER FINAL INTERACT');
     }
 
-    private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type) {
+    private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type, toExecute, moduleMethodName?: string) {
+        return `
+mod.${moduleMethodName ?? name} = new Sk.builtin.func(function () {
+    Codecast.runner.checkArgs('${name}', '${generatorName}', '${blockName}', arguments);
+    Codecast.runner.hasCalledHandler = true;
+    
+    var susp = new Sk.misceval.Suspension();
+    var result = Sk.builtin.none.none$;
+    var args = Array.prototype.slice.call(arguments);
+    for (var i=0; i<args.length; i++) {
+        args[i] = Codecast.runner.skToJs(args[i]);
+    }
+    
+    susp.resume = function() {
+        return result;
+    };
+    susp.data = {
+        type: 'Sk.promise',
+        promise: new Promise(function (resolve) {
+            ${'actions' === type ? `Codecast.runner._nbActions += 1;` : ''}
+            
+            try {
+                const result = Codecast.runner.quickAlgoCallsExecutor("${generatorName}", "${toExecute}", args);
+                if (result instanceof Promise) {
+                    result.then(resolve).catch((e) => { Codecast.runner._onStepError(e) })
+                }
+            } catch (e) {
+                Codecast.runner._onStepError(e)
+            }
+        }).then(function (value) {
+            result = value;
+            
+            return value;
+        })
+    };
+    
+    return susp;
+});
+`;
+    }
+
+    private static _skulptifyClassHandler(methodName, generatorName, blockName, nbArgs, type, className: string, moduleMethodName: string) {
+        const handler = PythonRunner._skulptifyHandler(methodName, generatorName, blockName, nbArgs, type, `${className}->${methodName}`, moduleMethodName);
+
+        return handler.replace(/mod\./, '$loc.');
+    }
+
+    private static _skulptifyClassInstance(classInstance: string, className: string) {
+        return `
+mod.${classInstance} = Sk.misceval.callsimArray(mod.${className});
+mod.${classInstance}.$d.__variableName = '${classInstance}';
+`;
+    }
+
+    private static _skulptifyClass(className: string, classComponents: string[]) {
+        return `
+newClass${className} = function ($gbl, $loc) {
+    ${classComponents.join("")}
+};
+
+mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${className}", []);
+`;
+    }
+
+    private static _skulptifyConst(name, value) {
         let handler = '';
-        handler += "\tCodecast.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
-        handler += "\tCodecast.runner.hasCalledHandler = true;";
-
-        handler += "\n\tvar susp = new Sk.misceval.Suspension();";
-        handler += "\n\tvar result = Sk.builtin.none.none$;";
-
-        // If there are arguments, convert them from Skulpt format to the libs format
-        handler += "\n\tvar args = Array.prototype.slice.call(arguments);";
-        handler += "\n\tfor(var i=0; i<args.length; i++) { args[i] = Codecast.runner.skToJs(args[i]); };";
-
-        handler += "\n\tsusp.resume = function() { return result; };";
-        handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
-
-        // Count actions
-        if (type == 'actions') {
-            handler += "\n\tCodecast.runner._nbActions += 1;";
+        if (typeof value === "number") {
+            handler = 'Sk.builtin.int_(' + value + ');';
+        } else if (typeof value === "boolean") {
+            handler = 'Sk.builtin.bool(' + value.toString() + ');';
+        } else if (typeof value === "string") {
+            handler = 'Sk.builtin.str(' + JSON.stringify(value) + ');';
+        } else {
+            throw "Unable to translate value '" + value + "' into a Skulpt constant.";
         }
 
-        handler += "\n\ttry {";
-        handler += '\n\t\tconst result = Codecast.runner.quickAlgoCallsExecutor("' + generatorName + '", "' + blockName + '", args);';
-        handler += '\n\t\tif (result instanceof Promise) {';
-        handler += '\n\t\t\tresult.then(resolve).catch((e) => { Codecast.runner._onStepError(e) })';
-        handler += '\n\t\t}';
-        handler += "\n\t} catch (e) {";
-        handler += "\n\t\tCodecast.runner._onStepError(e)}";
-        handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
-        handler += '\n\treturn susp;';
+        return '\nmod.' + name + ' = new ' + handler + '\n';
+    }
 
-        return '\nmod.' + name + ' = new Sk.builtin.func(function () {\n' + handler + '\n});\n';
+    private static _skulptifyClassConstHandler(name, value) {
+        const handler = PythonRunner._skulptifyConst(name, value);
+
+        return handler.replace(/mod\./, '$loc.');
     }
 
     private _createBuiltin(name, generatorName, blockName, nbArgs, type) {
@@ -163,24 +218,11 @@ export default class PythonRunner extends AbstractRunner {
         }
     }
 
-    private static _skulptifyConst(name, value) {
-        let handler = '';
-        if (typeof value === "number") {
-            handler = 'Sk.builtin.int_(' + value + ');';
-        } else if (typeof value === "boolean") {
-            handler = 'Sk.builtin.bool(' + value.toString() + ');';
-        } else if (typeof value === "string") {
-            handler = 'Sk.builtin.str(' + JSON.stringify(value) + ');';
-        } else {
-            throw "Unable to translate value '" + value + "' into a Skulpt constant.";
-        }
-
-        return '\nmod.' + name + ' = new ' + handler + '\n';
-    }
-
     private _injectFunctions() {
         // Generate Python custom libraries from all generated blocks
         log.getLogger('python_runner').debug('inject functions', this.availableBlocks);
+
+        this.definedConstants = [];
 
         let blocksByGeneratorName: {[generatorName: string]: Block[]} = {};
         for (let block of this.availableBlocks) {
@@ -197,17 +239,57 @@ export default class PythonRunner extends AbstractRunner {
 
             for (let block of blocks.filter(block => block.type === BlockType.Function)) {
                 const {code, generatorName, name, params, type} = block;
-                modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type);
+                modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type, name);
                 // We do want to override Python's naturel input and output to replace them with our own modules
                 if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
                     Sk.builtins[code] = this._createBuiltin(code, generatorName, name, params, type);
                 }
             }
 
+            const classInstancesToAdd: {[classInstance: string]: string} = {};
+            const classParts: {[className: string]: {[methodName: string]: string}} = {};
+            for (let block of blocks.filter(block => block.type === BlockType.ClassFunction)) {
+                const {generatorName, name, params, type, methodName, className, classInstance} = block;
+                if (!block.placeholderClassInstance) {
+                    classInstancesToAdd[classInstance] = className;
+                }
+                if (!(className in classParts)) {
+                    classParts[className] = {};
+                }
+                if (!(methodName in classParts[className])) {
+                    let moduleMethodName = methodName;
+                    if (CONSTRUCTOR_NAME === methodName) {
+                        moduleMethodName = '__init__';
+                    }
+                    classParts[className][methodName] = PythonRunner._skulptifyClassHandler(methodName, generatorName, name, params, type, className, moduleMethodName);
+                }
+            }
+
+            for (let block of blocks.filter(block => block.type === BlockType.ClassConstant)) {
+                const {name, value, className, methodName} = block;
+                if (!(className in classParts)) {
+                    classParts[className] = {};
+                }
+                if (!(name in classParts[className])) {
+                    classParts[className][name] = PythonRunner._skulptifyClassConstHandler(methodName, value);
+                }
+            }
+
+            for (let [className, classPartsList] of Object.entries(classParts)) {
+                modContents += PythonRunner._skulptifyClass(className, Object.values(classPartsList));
+            }
+
+            for (let [classInstance, className] of Object.entries(classInstancesToAdd)) {
+                modContents += PythonRunner._skulptifyClassInstance(classInstance, className);
+            }
+
             for (let block of blocks.filter(block => block.type === BlockType.Constant)) {
                 const {name, value} = block;
                 modContents += PythonRunner._skulptifyConst(name, value);
+                this.definedConstants.push(name);
             }
+
+            console.log('defined constants', blocks);
 
             modContents += "\nreturn mod;\n};";
             Sk.builtinFiles["files"]["src/lib/" + generatorName + ".js"] = modContents;
@@ -224,14 +306,21 @@ export default class PythonRunner extends AbstractRunner {
             console.error("Couldn't find the number of arguments for " + generatorName + "/" + blockName + ".");
             return;
         }
+
+        let argsGivenCount = args.length;
         let params = block.paramsCount;
+        if (block.type === BlockType.ClassFunction) {
+            // The class handler received self as first argument
+            argsGivenCount--;
+        }
+
         if (params.length === 0) {
             // This function doesn't have arguments
-            if (args.length > 0) {
-                msg = name + "() takes no arguments (" + args.length + " given)";
+            if (argsGivenCount > 0) {
+                msg = name + "() takes no arguments (" + argsGivenCount + " given)";
                 throw new Sk.builtin.TypeError(msg);
             }
-        } else if (params.indexOf(args.length) === -1 && params.indexOf(Infinity) === -1) {
+        } else if (params.indexOf(argsGivenCount) === -1 && params.indexOf(Infinity) === -1) {
             let minArgs = params[0];
             let maxArgs = params[0];
             for (let i = 1; i < params.length; i++) {
@@ -241,14 +330,14 @@ export default class PythonRunner extends AbstractRunner {
 
             if (minArgs === maxArgs) {
                 msg = name + "() takes exactly " + minArgs + " arguments";
-            } else if (args.length < minArgs) {
+            } else if (argsGivenCount < minArgs) {
                 msg = name + "() takes at least " + minArgs + " arguments";
-            } else if (args.length > maxArgs) {
+            } else if (argsGivenCount > maxArgs) {
                 msg = name + "() takes at most " + maxArgs + " arguments";
             } else {
                 msg = name + "() doesn't have a variant accepting this number of arguments";
             }
-            msg += " (" + args.length + " given)";
+            msg += " (" + argsGivenCount + " given)";
 
             throw new Sk.builtin.TypeError(msg);
         }
@@ -297,22 +386,9 @@ export default class PythonRunner extends AbstractRunner {
                 // });
             }
         } else if (val instanceof Sk.builtin.dict) {
-            let dictKeys = Object.keys(val);
-            let retVal = {};
-            for (let i = 0; i < dictKeys.length; i++) {
-                let key = dictKeys[i];
-                if (key == 'size' || key == '__class__') {
-                    continue;
-                }
-                let subItems = val[key].items;
-                for (let j = 0; j < subItems.length; j++) {
-                    let subItem = subItems[j];
-
-                    retVal[subItem.lhs.v] = this.skToJs(subItem.rhs);
-                }
-            }
-
-            return retVal;
+            return this.createSkulptProxy(val);
+        } else if (val instanceof Sk.builtin.object && val.hasOwnProperty('$d')) {
+            return this.createSkulptProxy(val.$d);
         } else {
             let retVal = val.v;
             if (val instanceof Sk.builtin.tuple || val instanceof Sk.builtin.list) {
@@ -332,6 +408,39 @@ export default class PythonRunner extends AbstractRunner {
             return retVal;
         }
     };
+
+    private createSkulptProxy(val: any) {
+        return new Proxy(val, {
+            get: (target, prop) => {
+                if (PROXY_IDENTITY === prop) {
+                    return target
+                }
+                if ('__variableName' === prop) {
+                    return target.__variableName;
+                }
+                if ('toJSON' === prop) {
+                    return () => {
+                        const returned = {};
+                        for (let key of Object.keys(target.entries)) {
+                            const value = this.skToJs(target.entries[key][1]);
+                            returned[key] = value && typeof value.toJSON === 'function' ? value.toJSON() : value;
+                        }
+
+                        return returned;
+                    };
+                }
+
+                const value = target.entries[prop];
+
+                return value && value.length ? this.skToJs(value[1]) : null;
+            },
+            set: (target, prop, value) => {
+                Sk.abstr.objectSetItem(target, new Sk.builtin.str(prop), value[PROXY_IDENTITY] ?? this._createPrimitive(value));
+
+                return true;
+            },
+        });
+    }
 
     waitDelay(callback, value, delay) {
         log.getLogger('python_runner').debug('WAIT DELAY', value, delay);
@@ -359,26 +468,44 @@ export default class PythonRunner extends AbstractRunner {
             return Sk.builtin.none.none$;  // Reuse the same object.
         }
         let type = typeof data;
-        let result = {v: data}; // Emulate a Skulpt object as default
+
         if (type === 'number') {
             if (Math.floor(data) == data) { // isInteger isn't supported by IE
-                result = new Sk.builtin.int_(data);
+                return new Sk.builtin.int_(data);
             } else {
-                result = new Sk.builtin.float_(data);
+                return new Sk.builtin.float_(data);
             }
         } else if (type === 'string') {
-            result = new Sk.builtin.str(data);
+            return new Sk.builtin.str(data);
         } else if (type === 'boolean') {
-            result = new Sk.builtin.bool(data);
-        } else if (typeof data.length != 'undefined') {
+            return new Sk.builtin.bool(data);
+        } else if ('object' === type && data['__className']) {
+            const suspensionStackFrame = this._debugger.suspension_stack[0];
+            if (suspensionStackFrame && data['__className'] in suspensionStackFrame.$loc) {
+                const constructor = suspensionStackFrame.$loc[data['__className']];
+                const args = data['arguments'].map(this._createPrimitive);
+
+                return constructor.tp$call(args, undefined);
+            } else {
+                throw `Unknown module class: ${data['__className']}`;
+            }
+        } else if ('object' === type && !Array.isArray(data)) {
+            const dict = new Sk.builtin.dict([]);
+            for (let [name, value] of Object.entries(data)) {
+                dict.mp$ass_subscript(this._createPrimitive(name), this._createPrimitive(value));
+            }
+
+            return dict;
+        } else if (typeof data.length != 'undefined' && 'function' !== typeof data) {
             let skl = [];
             for (let i = 0; i < data.length; i++) {
                 skl.push(this._createPrimitive(data[i]));
             }
 
-            result = new Sk.builtin.list(skl);
+            return new Sk.builtin.list(skl);
         }
-        return result;
+
+        return {v: data}; // Emulate a Skulpt object as default
     }
 
     private _configure() {
@@ -429,7 +556,7 @@ export default class PythonRunner extends AbstractRunner {
         }
     }
 
-    public initCodes(codes, availableBlocks) {
+    public initCodes(codes, availableBlocks: Block[]) {
         super.initCodes(codes, availableBlocks);
 
         // For reportValue in Skulpt.
@@ -654,7 +781,7 @@ export default class PythonRunner extends AbstractRunner {
                 stepperState.isFinished = true;
             } else {
                 log.getLogger('stepper').debug('INCREASE STEP NUM TO ', stepperState.analysis.stepNum + 1);
-                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
+                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1, this.definedConstants);
                 stepperState.directives = {
                     ordered: parseDirectives(stepperState.analysis),
                     functionCallStackMap: null,

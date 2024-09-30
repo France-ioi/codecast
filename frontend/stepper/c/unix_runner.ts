@@ -15,9 +15,7 @@ import {CodecastPlatform} from '../codecast_platform';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {getContextBlocksDataSelector} from '../../task/blocks/blocks';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
-import {convertSkulptStateToAnalysisSnapshot} from '../python/analysis';
 import {convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
-import {Codecast} from '../../app_types';
 import {parseDirectives} from '../python/directives';
 
 const RETURN_TYPE_CONVERSION = {
@@ -83,6 +81,7 @@ export default class UnixRunner extends AbstractRunner {
                 const argsSection = block.params.map(param => {
                     return param in PARAM_TYPE_CONVERSION ? PARAM_TYPE_CONVERSION[param] : 'int';
                 }).join(', ');
+                // @ts-ignore
                 headers[code] = `${block.returnType in RETURN_TYPE_CONVERSION ? RETURN_TYPE_CONVERSION[block.returnType] : 'void'} ${code}(${argsSection});`;
             }
 

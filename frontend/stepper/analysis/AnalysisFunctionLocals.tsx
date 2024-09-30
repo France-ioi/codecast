@@ -13,7 +13,7 @@ export const AnalysisFunctionLocals = (props: AnalysisFunctionLocalsProps): JSX.
 
     const variablesTemplate = variables.map((variable) => {
         const {name, value, type} = variable;
-        if (value !== undefined && 'module' !== type && 'function' !== type) {
+        if (value !== undefined && 'module' !== type && 'function' !== type && 'type' !== type) {
             return (
                 <li key={name}>
                     <AnalysisVariable
