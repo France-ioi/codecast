@@ -496,7 +496,7 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             }
 
             return dict;
-        } else if (typeof data.length != 'undefined') {
+        } else if (typeof data.length != 'undefined' && 'function' !== typeof data) {
             let skl = [];
             for (let i = 0; i < data.length; i++) {
                 skl.push(this._createPrimitive(data[i]));
