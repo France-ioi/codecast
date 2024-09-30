@@ -289,8 +289,6 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 this.definedConstants.push(name);
             }
 
-            console.log('defined constants', blocks);
-
             modContents += "\nreturn mod;\n};";
             Sk.builtinFiles["files"]["src/lib/" + generatorName + ".js"] = modContents;
             this.availableModules.push(generatorName);
