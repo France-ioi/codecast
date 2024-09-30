@@ -22,7 +22,7 @@ export default {
                 singleBlocks: ["text", "logic_compare", "controls_if_else", "controls_repeat", "lists_repeat", "lists_getIndex", "lists_setIndex", "text_length", "text_join", "text_charAt"]
             },
             variables: {},
-            pythonAdditionalFunctions: ["len"]
+            // pythonAdditionalFunctions: ["len"]
         },
         maxInstructions: {easy: 40, medium: 40, hard: 100},
         checkEndEveryTurn: false,
