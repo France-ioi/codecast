@@ -50,6 +50,9 @@ export const defaultNotions: NotionArborescence = {
         'setattr',
         'lambda',
     ],
+    'texts': [
+        'text_length',
+    ],
     'variables': [
         'variables_set',
     ],
