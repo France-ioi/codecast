@@ -40,9 +40,11 @@ export const pythonNotionsToBlocks = {
     'setattr' : ['setattr'],
     'lambda' : ['lambda'],
     'variables_set': ['var_assign'],
+    'text_length': ['len'],
 };
 
 export const pythonBlocksList = ['for', 'while', 'if', 'else', 'elif', 'not', 'and', 'or', 'list', 'set', 'list_brackets', 'dict_brackets', '__getitem__', '__setitem__', 'var_assign', 'def', 'lambda', 'break', 'continue', 'setattr', 'map', 'split'];
+export const pythonBlocksFunctionsList = ['len'];
 
 const hiddenWords = ['__getitem__', '__setitem__', 'list', 'set'];
 
@@ -100,6 +102,14 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
                     if (-1 !== pythonBlocksList.indexOf(token)) {
                         tokenCategories[token] = category;
                         allowedTokens.push(token);
+                    } else if (-1 !== pythonBlocksFunctionsList.indexOf(token)) {
+                        availableBlocks.push({
+                            name: token,
+                            caption: token,
+                            type: BlockType.Function,
+                            category,
+                            code: token + '()',
+                        });
                     }
                 }
             }
