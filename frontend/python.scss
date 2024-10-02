@@ -23,6 +23,9 @@
 
 .analysis-variable-link {
   cursor: pointer;
+  > * {
+    vertical-align: middle;
+  }
 }
 
 .function-name {

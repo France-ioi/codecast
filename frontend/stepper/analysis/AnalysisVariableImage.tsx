@@ -1,6 +1,8 @@
 import {Dialog} from '@blueprintjs/core';
 import React, {useState} from 'react';
 import {useAppSelector} from '../../hooks';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faImage} from '@fortawesome/free-solid-svg-icons';
 
 interface AnalysisVariableImageProps {
     imageUrl: string,
@@ -14,7 +16,10 @@ export function AnalysisVariableImage(props: AnalysisVariableImageProps) {
 
     return (
         <span>
-            <span onClick={() => setImageOpen(true)} className="analysis-variable-link">{props.imageUrl}</span>
+            <span onClick={() => setImageOpen(true)} className="analysis-variable-link">
+                <FontAwesomeIcon icon={faImage} className="mr-1"/>
+                <span>Image("{props.imageUrl}")</span>
+            </span>
 
             <Dialog
                 isOpen={imageOpen}
