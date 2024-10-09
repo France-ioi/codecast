@@ -1,7 +1,6 @@
-import {call, fork, put, select, take, takeEvery} from 'typed-redux-saga';
+import {call, fork, put, take, takeEvery} from 'typed-redux-saga';
 import stringify from 'json-stable-stringify-without-jsonify';
 import {getHeight, windowHeightMonitorSaga} from "./window_height_monitor";
-import jwt from "jsonwebtoken";
 import {Bundle} from "../../linker";
 import makeTaskChannel from './task_channel';
 import makePlatformAdapter, {makePlatformHelperChannel} from './platform_adapter';
@@ -57,6 +56,8 @@ import {loadOptionsFromQuery} from '../../common/options';
 import {CodecastOptions} from '../../store';
 import {asyncGetFile} from '../../utils/api';
 import {stepperDisplayError} from '../../stepper/actionTypes';
+import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
+import {getAudioTimeStep} from '../task_selectors';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -253,8 +254,14 @@ function* taskGetMetaDataEventSaga ({payload: {success, error: _error}}: ReturnT
 }
 
 function* taskGetAnswerEventSaga (action: ReturnType<typeof taskGetAnswerEvent>) {
-    const answer = yield getTaskAnswerAggregated();
-    yield* call(action.payload.success, stringify(answer));
+    const state = yield* appSelect();
+    const taskPlatformMode = getTaskPlatformMode(state);
+    if (TaskPlatformMode.RecordingProgress === taskPlatformMode) {
+        yield* call(action.payload.success, getAudioTimeStep(state));
+    } else {
+        const answer = yield getTaskAnswerAggregated();
+        yield* call(action.payload.success, stringify(answer));
+    }
 }
 
 function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, any> {
@@ -482,6 +489,12 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
 }
 
 export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, success, error, updateScore, showResult}}: ReturnType<typeof taskGradeAnswerEvent>) {
+    const state = yield* appSelect();
+    if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state) && !updateScore) {
+        yield* call(success, Number(answer) / recordingProgressSteps, '');
+        return;
+    }
+
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);

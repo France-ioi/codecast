@@ -120,6 +120,7 @@ import {Screen} from '../common/screens';
 import {DeferredPromise} from '../utils/app';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 import jwt from 'jsonwebtoken';
+import {getAudioTimeStep} from './task_selectors';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -681,17 +682,8 @@ function* getTestContextState() {
 
 function* getTaskAnswer() {
     const state = yield* appSelect();
-    const taskPlatformMode = getTaskPlatformMode(state);
 
-    if (TaskPlatformMode.RecordingProgress === taskPlatformMode) {
-        return getAudioTimeStep(state);
-    }
-
-    if (TaskPlatformMode.Source === taskPlatformMode) {
-        return selectAnswer(state) ?? '';
-    }
-
-    return null;
+    return selectAnswer(state) ?? '';
 }
 
 
@@ -705,14 +697,6 @@ function* getTaskState () {
 
 function* getTaskLevel () {
     return yield* appSelect(state => state.task.currentLevel);
-}
-
-function getAudioTimeStep(state: AppStore) {
-    if (state.player && state.player.duration) {
-        return Math.ceil(recordingProgressSteps * state.player.audioTime / state.player.duration);
-    }
-
-    return null;
 }
 
 function* watchRecordingProgressSaga(app: App) {
