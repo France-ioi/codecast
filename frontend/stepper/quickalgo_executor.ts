@@ -239,10 +239,12 @@ class QuickalgoExecutor {
     }
 
     private async recordReplayTimedLibraryCall(context: QuickAlgoLibrary, module: string, action: string, args: any[]) {
-        console.log('record call results');
-
-        // TODO find if call exists
-        // if (this.stepperContext.callsLog) ...
+        if (this.stepperContext.libraryCallsLog && this.stepperContext.libraryCallsLog.length) {
+            const nextCall = this.stepperContext.libraryCallsLog.shift();
+            if (this.checkLibraryCallsEquality(nextCall.call, {module, action, args})) {
+                return nextCall.result;
+            }
+        }
 
         const libraryCallResult = await this.makeTimedLibraryCall(context, module, action, args);
 
@@ -252,6 +254,8 @@ class QuickalgoExecutor {
             args,
         };
 
+        console.log('record call results', this.stepperContext.libraryCallsLog, {module, action, args});
+
         await this.stepperContext.dispatch(stepperRecordLibraryCall(libraryCall, libraryCallResult));
 
         return libraryCallResult;
@@ -259,6 +263,12 @@ class QuickalgoExecutor {
         // if result is a complex type like an image, store it independently
         // 1. download it from the task platform url
         // 2.
+    }
+
+    private checkLibraryCallsEquality(call1: QuickalgoLibraryCall, call2: QuickalgoLibraryCall): boolean {
+        return call1.module === call2.module
+            && call1.action === call2.action
+            && JSON.stringify(call1.args) === JSON.stringify(call2.args);
     }
 }
 

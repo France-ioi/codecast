@@ -62,6 +62,7 @@ export interface StepperContext {
     waitPreviousAnimations?: boolean,
     initStepMarker?: number,
     hasMadeFinalInteract?: boolean,
+    libraryCallsLog?: {call: QuickalgoLibraryCall, result: unknown}[],
 }
 
 export interface StepperContextParameters {

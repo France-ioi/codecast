@@ -160,8 +160,9 @@ export function addStepperRecordAndReplayHooks(app: App) {
                 log.getLogger('replay').debug('[stepper.progress] do resume');
                 replayContext.stepperContext.delayToWait = delayToWait;
                 replayContext.stepperContext.resume = null;
-                //TODO: add log calls
-                // replayContext.stepperContext.callsLog = [];
+                if (event[2].libCalls) {
+                    replayContext.stepperContext.libraryCallsLog = event[2].libCalls;
+                }
                 resume();
                 yield promise;
                 log.getLogger('replay').debug('[stepper.progress] end resume');
