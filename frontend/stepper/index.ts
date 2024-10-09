@@ -52,7 +52,7 @@ import {
     ActionTypes as StepperActionTypes,
     ActionTypes, ContextEnrichingTypes,
     stepperDisplayError, stepperExecutionEnd, stepperExecutionEndConditionReached,
-    stepperExecutionError,
+    stepperExecutionError, stepperRecordLibraryCall,
     stepperRunBackground, stepperRunBackgroundFinished
 } from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -97,6 +97,7 @@ import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import debounce from 'lodash.debounce';
 import {RemoteDebugExecutor} from './remote/remote_debug_executer';
 import {Range} from '../buffers/buffer_types';
+import {StepperProgressParameters} from './stepper_types';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -344,6 +345,9 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.StepperRunBackgroundFinished);
     bundle.addReducer(ActionTypes.StepperRunBackgroundFinished, stepperRunBackgroundFinishedReducer);
 
+    bundle.defineAction(ActionTypes.StepperRecordLibraryCall);
+    bundle.addReducer(ActionTypes.StepperRecordLibraryCall, stepperRecordLibraryCallReducer);
+
     /* END view stuff to move out of here */
 
     bundle.defineAction(ActionTypes.StepperEnabled);
@@ -380,7 +384,7 @@ export function clearStepper(stepper: Stepper, withCurrentState = false) {
     }
 }
 
-export function getNodeRange(stepperState?: StepperState) {
+export function getNodeRange(stepperState?: StepperState): Range {
     if (!stepperState || !stepperState.codecastAnalysis) {
         return null;
     }
@@ -633,6 +637,31 @@ function stepperRunBackgroundReducer(state: AppStore): void {
 function stepperRunBackgroundFinishedReducer(state: AppStore, {payload: {backgroundRunData}}): void {
     state.stepper.runningBackground = false;
     state.stepper.backgroundRunData = backgroundRunData;
+}
+
+function stepperRecordLibraryCallReducer(state: AppStore, {payload}: ReturnType<typeof stepperRecordLibraryCall>) : void {
+    const events = state.recorder.events;
+    if (!events || !events.length) {
+        return;
+    }
+
+    console.log('events', events);
+    for (let i = events.length - 1; i >= 0; i--) {
+        const event = events[i];
+        console.log({event});
+        if ('stepper.progress' === event[1]) {
+            const stepperProgressParameters: StepperProgressParameters = event[2];
+            if (!('libCalls' in stepperProgressParameters)) {
+                stepperProgressParameters.libCalls = [];
+            }
+            stepperProgressParameters.libCalls.push({
+                call: payload.libraryCall,
+                result: payload.libraryCallResult,
+            });
+            console.log('stepper progress');
+            break;
+        }
+    }
 }
 
 /* saga */

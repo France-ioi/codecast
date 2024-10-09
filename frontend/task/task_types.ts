@@ -130,7 +130,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
     maxInstructions?: number|{[level: string]: number},
-    startingExample?: any,
+    startingExample?: {[platform: string]: any},
     limitedUses?: {[level: string]: {blocks: string[], nbUses: number}[]},
     includeBlocks?: QuickalgoTaskIncludeBlocksAllLevels,
     hiddenTests?: boolean|{[level: string]: boolean},

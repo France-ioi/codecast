@@ -86,7 +86,7 @@ export function MenuTask() {
 
         if (!recordingEnabled) {
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (context && !('robot' in context || context instanceof PrinterLib || 'quickpi' in context || 'database' in context)) {
+            if (context && !('robot' in context || context instanceof PrinterLib || 'quickpi' in context || 'database' in context || 'opencv' in context)) {
                 dispatch(displayModal({message: getMessage('RECORDING_LIBRARY_NOT_WORKING'), mode: ModalType.message}));
             }
         }

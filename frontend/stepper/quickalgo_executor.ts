@@ -3,7 +3,7 @@ import {stepperThrottleDisplayDelay} from './index';
 import {
     ActionTypes as CompileActionTypes,
     stepperExecutionEndConditionReached,
-    stepperExecutionError
+    stepperExecutionError, stepperRecordLibraryCall
 } from './actionTypes';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {QuickalgoLibraryCall, StepperContext} from './api';
@@ -81,7 +81,13 @@ class QuickalgoExecutor {
                 }
             }
 
-            libraryCallResult = await this.makeTimedLibraryCall(context, module, action, args);
+            const callingMethod = this.getCallingMethod(context, module, action);
+            if (callingMethod.recordCallResults) {
+                // Replay call from recording if possible and available
+                libraryCallResult = await this.recordReplayTimedLibraryCall(context, module, action, args);
+            } else {
+                libraryCallResult = await this.makeTimedLibraryCall(context, module, action, args);
+            }
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async lib call', libraryCallResult);
 
             if (hideDisplay) {
@@ -129,6 +135,8 @@ class QuickalgoExecutor {
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async library call', libraryCallResult);
 
+        libraryCallResult = Codecast.runner?.createValuePrimitive(libraryCallResult);
+
         if (context.callsToExecute.length) {
             const newCall = context.callsToExecute.pop();
             libraryCallResult = await this.execute(module, newCall.action, newCall.args, newCall.callback);
@@ -154,15 +162,11 @@ class QuickalgoExecutor {
     }
 
     makeLibraryCall(context: QuickAlgoLibrary, module: string, action: string, args: any) {
-        let method = context[module][action];
-        if (-1 !== action.indexOf('->')) {
-            const [className, classMethod] = action.split('->');
-            method = context[module][className][classMethod];
-        }
+        const callingMethod = this.getCallingMethod(context, module, action);
 
         return new Promise((resolve, reject) => {
             let callbackArguments = [];
-            let result = method.apply(context, [...args, function (a) {
+            let result = callingMethod.apply(context, [...args, function () {
                 log.getLogger('quickalgo_executor').debug('[quickalgo_executor] receive callback', arguments);
                 callbackArguments = [...arguments];
                 let argumentResult = callbackArguments.length ? callbackArguments[0] : undefined;
@@ -170,10 +174,10 @@ class QuickalgoExecutor {
                 resolve(argumentResult);
             }]);
             if (result instanceof Promise) {
-                result.catch(reject);
+                result.then(resolve).catch(reject);
+            } else {
+                Promise.resolve(result).catch(reject);
             }
-
-            Promise.resolve(result).catch(reject);
 
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] MODULE RESULT', result);
             if (Symbol.iterator in Object(result)) {
@@ -186,6 +190,30 @@ class QuickalgoExecutor {
                     .catch(reject)
             }
         });
+    }
+
+    getCallingMethod(context: QuickAlgoLibrary, module: string, action: string) {
+        if (!(module in context)) {
+            throw new Error(`Error calling ${module}->${action}: this module does not exist: ${module}`);
+        }
+
+        let method = context[module][action];
+        if (-1 !== action.indexOf('->')) {
+            const [className, classMethod] = action.split('->');
+            if (!(className in context[module])) {
+                throw new Error(`Error calling ${module}->${className}->${classMethod}: this class is not defined: ${className}`);
+            }
+            if (!(classMethod in context[module][className])) {
+                throw new Error(`Error calling ${module}->${className}->${classMethod}: this class method is not defined: ${classMethod}`);
+            }
+            method = context[module][className][classMethod];
+        } else {
+            if (!(action in context[module])) {
+                throw new Error(`Error calling ${module}->${action}: this action is not defined: ${action}`);
+            }
+        }
+
+        return method;
     }
 
     async iterateResult (module: string, action: string, result) {
@@ -208,6 +236,29 @@ class QuickalgoExecutor {
                 await this.stepperContext.dispatch(value[1]);
             }
         }
+    }
+
+    private async recordReplayTimedLibraryCall(context: QuickAlgoLibrary, module: string, action: string, args: any[]) {
+        console.log('record call results');
+
+        // TODO find if call exists
+        // if (this.stepperContext.callsLog) ...
+
+        const libraryCallResult = await this.makeTimedLibraryCall(context, module, action, args);
+
+        const libraryCall: QuickalgoLibraryCall = {
+            module,
+            action,
+            args,
+        };
+
+        await this.stepperContext.dispatch(stepperRecordLibraryCall(libraryCall, libraryCallResult));
+
+        return libraryCallResult;
+
+        // if result is a complex type like an image, store it independently
+        // 1. download it from the task platform url
+        // 2.
     }
 }
 

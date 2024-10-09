@@ -489,12 +489,11 @@ export abstract class QuickAlgoLibrary {
     }
 
     generateRemoteHandler(libraryName: string, callName: string) {
-        const self = this;
-        return async function () {
+        const remoteHandler = async function () {
             const taskPlatformUrl = Codecast.options.taskPlatformUrl;
 
             let args = [...arguments];
-            const callback = args.pop();
+            args.pop();
 
             const body = {
                 libraryName,
@@ -504,11 +503,15 @@ export abstract class QuickAlgoLibrary {
 
             const result = (await asyncRequestJson(taskPlatformUrl + '/remote-lib-call', body, false)) as {success: boolean, result?: any, error?: string};
             if (result?.success) {
-                self.waitDelay(callback, result.result);
+                return result.result;
             } else {
                 throw(result.error);
             }
         }
+
+        remoteHandler.recordCallResults = true;
+
+        return remoteHandler;
     }
 }
 

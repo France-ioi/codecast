@@ -35,6 +35,10 @@ export default {
         //     context.success = true;
         //     throw(window.languageStrings.messages.outputCorrect);
         // },
+        startingExample: {
+            python: `from opencv import *
+a = imread('original.png')`,
+        }
     },
     data: {
         easy: [

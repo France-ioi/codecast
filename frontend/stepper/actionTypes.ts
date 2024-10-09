@@ -1,5 +1,6 @@
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {createAction} from '@reduxjs/toolkit';
+import {QuickalgoLibraryCall} from './api';
 
 export enum ActionTypes {
     StepperTaskCancelled = 'Stepper.Task.Cancelled',
@@ -35,6 +36,7 @@ export enum ActionTypes {
     StepperExecutionEnd = 'Stepper.Execution.End', // End of program without success nor error (for experiment mode)
     StepperDisplayError = 'Stepper.Execution.DisplayError',
     StepperClearError = 'Stepper.Execution.ClearError',
+    StepperRecordLibraryCall = 'Stepper.Record.Library.Call',
     Compile = 'Compile',
     CompileWait = 'Compile.Wait',
     CompileClear = 'Compile.Clear',
@@ -96,5 +98,13 @@ export const stepperRunBackgroundFinished = (backgroundRunData) => ({
     type: ActionTypes.StepperRunBackgroundFinished,
     payload: {
         backgroundRunData,
+    },
+});
+
+export const stepperRecordLibraryCall = (libraryCall: QuickalgoLibraryCall, libraryCallResult: unknown) => ({
+    type: ActionTypes.StepperRecordLibraryCall,
+    payload: {
+        libraryCall,
+        libraryCallResult,
     },
 });

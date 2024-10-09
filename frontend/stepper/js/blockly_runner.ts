@@ -174,16 +174,7 @@ export default class BlocklyRunner extends AbstractRunner {
 
     noDelay(callback, value = null) {
         log.getLogger('blockly_runner').debug('Call no delay with values', callback, value);
-        let primitive = undefined;
-        if (value !== undefined) {
-            if(value && (typeof value.length != 'undefined' ||
-                typeof value === 'object')) {
-                // It's an array, create a primitive out of it
-                primitive = this.interpreters[this.context.curNode].nativeToPseudo(value);
-            } else {
-                primitive = value;
-            }
-        }
+
         let infiniteLoopDelay = false;
         if(this.context.allowInfiniteLoop) {
             if(this.allowStepsWithoutDelay > 0) {
@@ -200,15 +191,30 @@ export default class BlocklyRunner extends AbstractRunner {
             this.stackResetting = true;
             this.delayFactory.createTimeout("wait_" + Math.random(), () => {
                 this.stackResetting = false;
-                callback(primitive);
+                callback(value);
                 // this.runSyncBlock();
             }, delay);
         } else {
             this.stackCount += 1;
-            callback(primitive);
+            callback(value);
             // this.runSyncBlock();
         }
     };
+
+    createValuePrimitive(value: any) {
+        let primitive = undefined;
+        if (value !== undefined) {
+            if(value && (typeof value.length != 'undefined' ||
+                typeof value === 'object')) {
+                // It's an array, create a primitive out of it
+                primitive = this.interpreters[this.context.curNode].nativeToPseudo(value);
+            } else {
+                primitive = value;
+            }
+        }
+
+        return primitive;
+    }
 
     initInterpreter(interpreter, scope) {
         const self = this;

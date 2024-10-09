@@ -145,6 +145,10 @@ export default abstract class AbstractRunner {
         callback(value);
     }
 
+    createValuePrimitive(value: any): any {
+
+    }
+
     public signalAction() {
         // Allows a context to signal an "action" happened
         this._stepsWithoutAction = 0;

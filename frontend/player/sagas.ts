@@ -34,6 +34,7 @@ import {taskLoad} from '../task/task_actions';
 import {App, Codecast} from '../app_types';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {LayoutPlayerMode} from '../task/layout/layout_types';
+import {StepperProgressParameters} from '../stepper/stepper_types';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -265,7 +266,7 @@ function* playerPrepare(app: App, action) {
     }
 }
 
-function ensureBackwardsCompatibility(events: any[], version?: string) {
+function ensureBackwardsCompatibility(events: any[][], version?: string) {
     let transformedEvents = [];
     let versionComponents = (version ? version : RECORDING_FORMAT_VERSION).split('.').map(Number);
 
@@ -334,6 +335,24 @@ function ensureBackwardsCompatibility(events: any[], version?: string) {
 
         if (key === 'stepper.step' && params[0] === 'run' && versionComponents[0] < 7) {
             transformedEvents.push([t, 'stepper.progress']);
+        }
+
+        if ('stepper.progress' === key && (versionComponents[0] < 7 || (versionComponents[0] === 7 && versionComponents[1] < 5))) {
+            // Since Codecast 7.5, stepper.progress only accepts an object as the 3rd parameter: time, 'stepper.progress', {range, steps, delayToWait}
+            // Before, it was a list of parameters: time, 'stepper.progress', range, steps, delayToWait
+            const stepperProgressParameters: StepperProgressParameters = {};
+            if (1 <= params.length) {
+                stepperProgressParameters.range = params[0];
+            }
+            if (2 <= params.length) {
+                stepperProgressParameters.steps = params[1];
+            }
+            if (3 <= params.length) {
+                stepperProgressParameters.delay = params[2];
+            }
+
+            event.splice(2);
+            event.push(stepperProgressParameters);
         }
     }
 

@@ -14,6 +14,7 @@ import {appSelect} from '../hooks';
 import {App, Codecast} from '../app_types';
 import {mainQuickAlgoLogger} from '../task/libs/quick_algo_logger';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
+import {StepperProgressParameters} from './stepper_types';
 
 export function addStepperRecordAndReplayHooks(app: App) {
     const {recordApi, replayApi} = app;
@@ -127,16 +128,21 @@ export function addStepperRecordAndReplayHooks(app: App) {
         }
 
         const range = getNodeRange(getCurrentStepperState(state));
-        yield* call(addEvent, 'stepper.progress', range ? range.start : null, Codecast.runner._steps, payload.stepperContext.delayToWait);
+        const stepperProgressParameters: StepperProgressParameters = {
+            range,
+            steps: Codecast.runner._steps,
+            delay: payload.stepperContext.delayToWait,
+        }
+        yield* call(addEvent, 'stepper.progress', stepperProgressParameters);
     });
 
-    replayApi.on('stepper.progress', function* (replayContext: ReplayContext, event) {
-        const delayToWait = event[4];
+    replayApi.on('stepper.progress', function* (replayContext: ReplayContext, event: [number, 'stepper.progress', StepperProgressParameters]) {
+        const delayToWait = event[2].delay;
         log.getLogger('replay').debug('[stepper.progress] start', {delayToWait});
 
         const promise = new Promise((resolve) => {
             log.getLogger('replay').debug('[stepper.progress] set onStepperDone', resolve);
-            replayContext.stepperContext.waitForProgress = (stepperContext) => {
+            replayContext.stepperContext.waitForProgress = (stepperContext: StepperContext) => {
                 return new Promise((cont) => {
                     log.getLogger('replay').debug('[stepper.progress] stepper suspend', cont);
                     stepperSuspend(stepperContext, cont);
@@ -154,6 +160,8 @@ export function addStepperRecordAndReplayHooks(app: App) {
                 log.getLogger('replay').debug('[stepper.progress] do resume');
                 replayContext.stepperContext.delayToWait = delayToWait;
                 replayContext.stepperContext.resume = null;
+                //TODO: add log calls
+                // replayContext.stepperContext.callsLog = [];
                 resume();
                 yield promise;
                 log.getLogger('replay').debug('[stepper.progress] end resume');
