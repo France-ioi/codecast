@@ -645,10 +645,8 @@ function stepperRecordLibraryCallReducer(state: AppStore, {payload}: ReturnType<
         return;
     }
 
-    console.log('events', events);
     for (let i = events.length - 1; i >= 0; i--) {
         const event = events[i];
-        console.log({event});
         if ('stepper.progress' === event[1]) {
             const stepperProgressParameters: StepperProgressParameters = event[2];
             if (!('libCalls' in stepperProgressParameters)) {
@@ -658,7 +656,6 @@ function stepperRecordLibraryCallReducer(state: AppStore, {payload}: ReturnType<
                 call: payload.libraryCall,
                 result: payload.libraryCallResult,
             });
-            console.log('stepper progress');
             break;
         }
     }

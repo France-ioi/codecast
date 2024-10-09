@@ -228,7 +228,7 @@ function* playerPrepare(app: App, action) {
             yield* call(resetToAudioTime, app, 0);
         }
     } catch (ex) {
-        console.log(ex);
+        console.error(ex);
 
         yield* put({
             type: ActionTypes.PlayerPrepareFailure,
@@ -331,12 +331,6 @@ function ensureBackwardsCompatibility(events: any[][], version?: string) {
             continue;
         }
 
-        transformedEvents.push([t, key, ...params]);
-
-        if (key === 'stepper.step' && params[0] === 'run' && versionComponents[0] < 7) {
-            transformedEvents.push([t, 'stepper.progress']);
-        }
-
         if ('stepper.progress' === key && (versionComponents[0] < 7 || (versionComponents[0] === 7 && versionComponents[1] < 5))) {
             // Since Codecast 7.5, stepper.progress only accepts an object as the 3rd parameter: time, 'stepper.progress', {range, steps, delayToWait}
             // Before, it was a list of parameters: time, 'stepper.progress', range, steps, delayToWait
@@ -351,8 +345,13 @@ function ensureBackwardsCompatibility(events: any[][], version?: string) {
                 stepperProgressParameters.delay = params[2];
             }
 
-            event.splice(2);
-            event.push(stepperProgressParameters);
+            params = [stepperProgressParameters];
+        }
+
+        transformedEvents.push([t, key, ...params]);
+
+        if (key === 'stepper.step' && params[0] === 'run' && versionComponents[0] < 7) {
+            transformedEvents.push([t, 'stepper.progress', {}]);
         }
     }
 
