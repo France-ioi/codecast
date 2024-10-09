@@ -63,13 +63,9 @@ let getTaskState: () => Generator;
 let getTaskLevel: () => Generator<unknown, TaskLevelName>;
 let taskChangeLevel: ActionCreator<Action>;
 let taskGrader: TaskGrader;
-let taskEventsEnvironment = 'main';
 
 export let taskApi: any;
 export let platformApi: ReturnType<typeof makePlatformAdapter> = null;
-export let setTaskEventsEnvironment = (environment: string) => {
-    taskEventsEnvironment = environment;
-}
 
 export function* getTaskAnswerAggregated() {
     const currentAnswer: TaskAnswer = yield getTaskAnswer();
@@ -109,7 +105,7 @@ function sendErrorLog() {
 }
 
 function* dispatchActionToStore(action: Action) {
-    const environmentStore = Codecast.environments[taskEventsEnvironment ?? 'main'].store;
+    const environmentStore = Codecast.environments['main'].store;
     yield* call(environmentStore.dispatch, action);
 }
 

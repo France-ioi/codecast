@@ -22,7 +22,7 @@ import {RECORDING_FORMAT_VERSION} from "../version";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
 import {currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
-import {isTaskPlatformLinked, setTaskEventsEnvironment} from "../task/platform/platform";
+import {isTaskPlatformLinked} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
 import {delay as delay$1} from 'typed-redux-saga';
 import {platformTaskLink} from '../task/platform/actionTypes';
