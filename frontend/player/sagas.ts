@@ -48,7 +48,7 @@ export interface ReplayContext {
     instant: PlayerInstant,
     applyEvent: any,
     addSaga: Function,
-    addQuickAlgoLibraryCall: Function,
+    addQuickAlgoLibraryCall: (call: QuickalgoLibraryCall, result: unknown) => void,
     reportProgress: any,
     stepperDone: any,
     stepperContext: StepperContext
@@ -249,13 +249,13 @@ function* playerPrepare(app: App, action) {
         sagas.push(saga);
     }
 
-    function addQuickAlgoLibraryCall(quickalgoLibraryCall: QuickalgoLibraryCall) {
+    function addQuickAlgoLibraryCall(quickalgoLibraryCall: QuickalgoLibraryCall, result: unknown) {
         let {quickalgoLibraryCalls} = replayContext.instant;
         if (!quickalgoLibraryCalls) {
             quickalgoLibraryCalls = replayContext.instant.quickalgoLibraryCalls = [];
         }
 
-        quickalgoLibraryCalls.push(quickalgoLibraryCall);
+        quickalgoLibraryCalls.push({call: quickalgoLibraryCall, result});
     }
 
     function* reportProgress(progress) {
@@ -607,7 +607,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
         }
 
         if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
-            log.getLogger('player').debug('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
+            log.getLogger('player').debug('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.call.action).join(','));
             const context = quickAlgoLibraries.getContext(null, 'main');
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
@@ -636,8 +636,16 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                 const executor = stepperContext.quickAlgoCallsExecutor;
                 log.getLogger('player').debug('Replay call with speed', stepperContext.speed, context.infos.actionDelay);
                 for (let quickalgoCall of instant.quickalgoLibraryCalls) {
-                    const {module, action, args} = quickalgoCall;
+                    const {module, action, args} = quickalgoCall.call;
                     log.getLogger('player').debug('start call execution', quickalgoCall);
+
+                    if (undefined !== quickalgoCall.result) {
+                        // Avoid re-making the call, use directly the result
+                        stepperContext.libraryCallsLog = [{
+                            call: quickalgoCall.call,
+                            result: quickalgoCall.result,
+                        }];
+                    }
 
                     // @ts-ignore
                     yield* spawn(executor, module, action, args);

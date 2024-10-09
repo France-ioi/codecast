@@ -64,7 +64,7 @@ import {
     stepperExecutionSuccess
 } from "../stepper/actionTypes";
 import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
-import {makeContext, StepperContext} from "../stepper/api";
+import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -458,8 +458,8 @@ function* handleLibrariesEventListenerSaga(app: App) {
             if (!onlyLog) {
                 const args = payload ? payload : [];
                 if (replayContextSave) {
-                    stepperContext.quickAlgoCallsLogger = (call) => {
-                        replayContextSave.addQuickAlgoLibraryCall(call);
+                    stepperContext.quickAlgoCallsLogger = (call: QuickalgoLibraryCall, result) => {
+                        replayContextSave.addQuickAlgoLibraryCall(call, result);
                     };
                 }
 

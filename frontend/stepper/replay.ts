@@ -8,7 +8,7 @@ import {
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../task/libs/quickalgo_libraries';
 import {getCurrentStepperState, isStepperInterrupting} from './selectors';
-import {StepperContext} from './api';
+import {QuickalgoLibraryCall, StepperContext} from './api';
 import {getNodeRange, initialStateStepper, stepperMaxSpeed, StepperStatus} from './index';
 import {appSelect} from '../hooks';
 import {App, Codecast} from '../app_types';
@@ -99,9 +99,9 @@ export function addStepperRecordAndReplayHooks(app: App) {
                 immediate,
                 useSpeed,
                 setStepperContext,
-                quickAlgoCallsLogger: (call) => {
+                quickAlgoCallsLogger: (call: QuickalgoLibraryCall, result: unknown) => {
                     mainQuickAlgoLogger.logQuickAlgoLibraryCall(call);
-                    replayContext.addQuickAlgoLibraryCall(call);
+                    replayContext.addQuickAlgoLibraryCall(call, result);
                 },
             },
         });

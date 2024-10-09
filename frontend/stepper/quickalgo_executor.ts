@@ -60,11 +60,7 @@ class QuickalgoExecutor {
             context.infos.actionDelay = context.plannedNewDelay;
         }
 
-        if (this.stepperContext.quickAlgoCallsLogger) {
-            const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
-            this.stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall);
-            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] call quickalgo calls logger', module, action, args);
-        }
+        const callingMethod = this.getCallingMethod(context, module, action);
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] before make async library call', {module, action});
         let hideDisplay = false;
@@ -81,7 +77,6 @@ class QuickalgoExecutor {
                 }
             }
 
-            const callingMethod = this.getCallingMethod(context, module, action);
             if (callingMethod.recordCallResults) {
                 // Replay call from recording if possible and available
                 libraryCallResult = await this.recordReplayTimedLibraryCall(context, module, action, args);
@@ -136,6 +131,12 @@ class QuickalgoExecutor {
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async library call', libraryCallResult);
 
         libraryCallResult = Codecast.runner?.createValuePrimitive(libraryCallResult);
+
+        if (this.stepperContext.quickAlgoCallsLogger) {
+            const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
+            this.stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall, callingMethod.recordCallResults ? libraryCallResult : undefined);
+            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] call quickalgo calls logger', module, action, args, libraryCallResult);
+        }
 
         if (context.callsToExecute.length) {
             const newCall = context.callsToExecute.pop();
@@ -239,9 +240,11 @@ class QuickalgoExecutor {
     }
 
     private async recordReplayTimedLibraryCall(context: QuickAlgoLibrary, module: string, action: string, args: any[]) {
+        console.log('stepper context library calls', this.stepperContext.libraryCallsLog)
         if (this.stepperContext.libraryCallsLog && this.stepperContext.libraryCallsLog.length) {
             const nextCall = this.stepperContext.libraryCallsLog.shift();
             if (this.checkLibraryCallsEquality(nextCall.call, {module, action, args})) {
+                console.log('use hit response');
                 return nextCall.result;
             }
         }

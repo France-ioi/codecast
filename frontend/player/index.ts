@@ -139,7 +139,7 @@ export interface PlayerInstant {
     range?: any, // TODO: What is this ?
     state: AppStoreReplay,
     sagas: any[],
-    quickalgoLibraryCalls: QuickalgoLibraryCall[],
+    quickalgoLibraryCalls: {call: QuickalgoLibraryCall, result?: unknown}[],
     jump?: boolean,
     mute?: boolean
 }
