@@ -9,7 +9,7 @@ import {useDrop} from "react-dnd";
 import log from 'loglevel';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {BlockType} from '../task/blocks/block_types';
-import {bufferClearBlocksToInsert, bufferClearDeltasToApply} from './buffers_slice';
+import {bufferClearBlocksToInsert, bufferClearDeltasToApply, bufferClearGoToEnd} from './buffers_slice';
 import {batch, useDispatch} from 'react-redux';
 import {documentToString} from './document';
 import debounce from 'lodash.debounce';
@@ -554,7 +554,7 @@ export function Editor(props: EditorProps) {
     useEffect(() => {
         if (0 < props.state?.actions?.goToEnd) {
             goToEnd();
-            return;
+            dispatch(bufferClearGoToEnd({buffer: props.name}));
         }
     }, [props.state?.actions?.goToEnd]);
 
