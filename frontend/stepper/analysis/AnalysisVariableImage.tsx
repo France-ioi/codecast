@@ -3,22 +3,24 @@ import React, {useState} from 'react';
 import {useAppSelector} from '../../hooks';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faImage} from '@fortawesome/free-solid-svg-icons';
+import {CodecastAnalysisVariable} from './analysis';
 
 interface AnalysisVariableImageProps {
-    imageUrl: string,
+    variables: CodecastAnalysisVariable[],
 }
 
 export function AnalysisVariableImage(props: AnalysisVariableImageProps) {
     const [imageOpen, setImageOpen] = useState(false);
-    const taskPlatformUrl = useAppSelector(state => state.options.taskPlatformUrl);
 
-    const imageUrl = `${taskPlatformUrl}/image-cache/${props.imageUrl}`;
+    const fileName = props.variables.find(variable => 'fileName' === variable.name).value;
+    const fileUrl = props.variables.find(variable => 'fileUrl' === variable.name).value.replace(/"/g, '');
+
 
     return (
         <span>
-            <span onClick={() => setImageOpen(true)} className="analysis-variable-link">
+            <span onClick={() => setImageOpen(true)} className="analysis-variable-link value-scalar">
                 <FontAwesomeIcon icon={faImage} className="mr-1"/>
-                <span>Image("{props.imageUrl}")</span>
+                <span>Image({fileName})</span>
             </span>
 
             <Dialog
@@ -27,7 +29,7 @@ export function AnalysisVariableImage(props: AnalysisVariableImageProps) {
                 canEscapeKeyClose={true}
                 onClose={() => setImageOpen(false)}
             >
-                <img src={imageUrl} className="analysis-variable-image"/>
+                <img src={fileUrl} className="analysis-variable-image"/>
             </Dialog>
         </span>
     );

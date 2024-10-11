@@ -1,3 +1,5 @@
+import {createAction} from '@reduxjs/toolkit';
+
 export enum ActionTypes {
     VumeterMounted = 'Vumeter.Mounted',
     
@@ -40,3 +42,9 @@ export enum ActionTypes {
 
     AudioContextSuspended = 'Audio.Context.Suspended'
 }
+
+export const recorderAddFile = createAction('recorderAddFile', (file: string) => ({
+    payload: {
+        file,
+    },
+}));

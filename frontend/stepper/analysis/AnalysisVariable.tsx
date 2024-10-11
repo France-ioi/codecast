@@ -45,7 +45,14 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
             return <span>...</span>;
         }
 
-        if (Array.isArray(variable.variables)) {
+
+        if (!isScalar) {
+            if (0 < variable.variables.length && variable.variables[0].name === 'fileType' && variable.variables[0].value === '"image"') {
+                return <AnalysisVariableImage
+                    variables={variable.variables}
+                />
+            }
+
             let renderedElements;
             let askedDisplayedMaxLength = props.displayMaxLength ?? 50;
             const elementsToDisplay = Math.min(
@@ -109,12 +116,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
 
         const hasPreviousValue = null !== variable.previousValue && undefined !== variable.previousValue && variable.value !== variable.previousValue;
 
-        const truncateValue = (value, maxLength) => {
-            if ('string' === typeof value && 'image' === value.replace(/"/g, '').split(':')[0]) {
-                return <AnalysisVariableImage
-                    imageUrl={value.replace(/"/g, '').split(':')[1]}
-                />;
-            }
+        const displayValue = (value, maxLength) => {
             if ('string' === typeof value && value.substring(0, 1) === '"' && value.length > maxLength) {
                 return value.substring(0, maxLength - 3) + '..."';
             }
@@ -125,13 +127,13 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
         return (
             <React.Fragment>
                 <span className={`value-scalar ${hasPreviousValue ? 'value-has-changed' : ''} ${!hasPreviousValue && variable.loaded ? 'value-loaded' : ''}`}>
-                    {truncateValue(variable.value, props.displayMaxLength)}
+                    {displayValue(variable.value, props.displayMaxLength)}
                     {variable.displayType && <span className="value-type ml-1">
                         &lt;{variable.type}&gt;
                     </span>}
                 </span>
                 {hasPreviousValue ?
-                    <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{truncateValue(variable.previousValue, props.displayMaxLength)}</span>
+                    <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{displayValue(variable.previousValue, props.displayMaxLength)}</span>
                     : null}
             </React.Fragment>
         );

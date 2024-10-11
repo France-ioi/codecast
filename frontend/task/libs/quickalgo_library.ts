@@ -12,7 +12,7 @@ import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App, Codecast} from '../../app_types';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
 import AbstractRunner from '../../stepper/abstract_runner';
-import {asyncRequestJson} from '../../utils/api';
+import {generateRemoteLibHandler} from './remote_lib_handler';
 
 export interface LibraryEventListener {
     condition: (callback: (result: boolean) => void) => void,
@@ -489,29 +489,7 @@ export abstract class QuickAlgoLibrary {
     }
 
     generateRemoteHandler(libraryName: string, callName: string) {
-        const remoteHandler = async function () {
-            const taskPlatformUrl = Codecast.options.taskPlatformUrl;
-
-            let args = [...arguments];
-            args.pop();
-
-            const body = {
-                libraryName,
-                callName,
-                args,
-            };
-
-            const result = (await asyncRequestJson(taskPlatformUrl + '/remote-lib-call', body, false)) as {success: boolean, result?: any, error?: string};
-            if (result?.success) {
-                return result.result;
-            } else {
-                throw(result.error);
-            }
-        }
-
-        remoteHandler.recordCallResults = true;
-
-        return remoteHandler;
+        return generateRemoteLibHandler(libraryName, callName);
     }
 }
 
