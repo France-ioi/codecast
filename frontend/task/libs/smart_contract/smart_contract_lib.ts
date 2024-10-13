@@ -161,9 +161,15 @@ export class SmartContractLib extends QuickAlgoLibrary {
             return null;
         }
 
+        let err = output.error;
+        try {
+            const errorValue = JSON.parse(JSON.parse(err.message).value);
+            err = errorValue ? { type: "throw", message: errorValue } : err;
+        } catch (e) { }
+
         const log = output.log;
         if (output.error && log.length) {
-            log[log.length - 1].error = output.error;
+            log[log.length - 1].error = err;
         }
         if (output.expected) {
             for (let i = 0; i < log.length; i++) {
@@ -172,7 +178,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
         }
 
         return new LibraryTestResult(
-            output.error?.message,
+            err.message,
         );
     }
 
