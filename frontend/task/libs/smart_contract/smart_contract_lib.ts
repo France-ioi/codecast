@@ -115,10 +115,19 @@ export class SmartContractLib extends QuickAlgoLibrary {
 
     getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): SmartContractLibState {
         const testResultSplit = testResult.log.trim().split("\n");
-        const jsonFirstIndex = testResultSplit.findIndex(line => line.trim().startsWith('{'));
-        const testResultJson = testResultSplit.slice(jsonFirstIndex).join("\n");
+        let output = { log: [], error: { type: "generic", message: "Unable to decode test result" } };
+        let jsonFirstIndex = 0;
+        while (jsonFirstIndex != -1) {
+            jsonFirstIndex = testResultSplit.slice(jsonFirstIndex).findIndex(line => line.trim().startsWith('{'));
+            const testResultJson = testResultSplit.slice(jsonFirstIndex).join("\n");
 
-        const output = JSON.parse(testResultJson);
+            try {
+                output = JSON.parse(testResultJson);
+                break;
+            } catch (e) {
+                jsonFirstIndex++;
+            }
+        }
 
         const log = output.log;
 
