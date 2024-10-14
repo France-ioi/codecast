@@ -14,6 +14,7 @@ import startWorker from './worker';
 import {buildOptions, parseCodecastUrl} from './options';
 import addOfflineRoutes from './offline';
 import {logCompileData, logLoadingData, logUploadData, statisticsSearch} from './statistics';
+import {getFileUploadForm} from "./upload";
 
 function buildApp(config, store, callback) {
 
@@ -204,30 +205,41 @@ function addBackendRoutes(app, config, store) {
 
         config.getUserConfig(req, function (err, userConfig) {
             console.log('user config', userConfig);
-            selectTarget(userConfig, req.body, function (err, target) {
+            selectTarget(userConfig, req.body, async function (err, target) {
                 if (err) {
                     return res.json({error: err.toString()});
                 }
 
-                const s3client = upload.makeS3UploadClient(target);
+                const s3client = upload.makeS3Client(target);
                 const {s3Bucket, uploadPath: uploadDir} = target;
                 const id = Date.now().toString();
                 const uploadPath = `${uploadDir}/${id}`;
-                upload.getJsonUploadForm(s3client, s3Bucket, uploadPath, function (err, events) {
+
+                try {
+                    const events = await upload.getFileUploadForm(s3client, s3Bucket, uploadPath + '.json');
+                    const audio = await upload.getFileUploadForm(s3client, s3Bucket, uploadPath + '.mp3');
+
+                    const additionalFiles = [];
+                    for (let fileName of req.body.additionalFiles) {
+                        const fileForm = await upload.getFileUploadForm(s3client, s3Bucket, fileName);
+                        additionalFiles.push(fileForm);
+                    }
+
                     if (err) return res.json({error: err.toString()});
-                    upload.getMp3UploadForm(s3client, s3Bucket, uploadPath, function (err, audio) {
-                        if (err) return res.json({error: err.toString()});
-                        const baseUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}`;
-                        const player_url = `${basePlayerUrl}?recording=${encodeURIComponent(baseUrl)}`;
-                        const editor_url = `${basePlayerUrl}?recording=${encodeURIComponent(baseUrl)}&mode=edit`;
-                        logUploadData(config, {
-                            userId: userConfig.user_id,
-                            playerUrl: player_url,
-                            basePlayerUrl,
-                        });
-                        res.json({player_url, editor_url, events, audio});
+                    const baseUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}`;
+                    const player_url = `${basePlayerUrl}?recording=${encodeURIComponent(baseUrl)}`;
+                    const editor_url = `${basePlayerUrl}?recording=${encodeURIComponent(baseUrl)}&mode=edit`;
+
+                    logUploadData(config, {
+                        userId: userConfig.user_id,
+                        playerUrl: player_url,
+                        basePlayerUrl,
                     });
-                });
+
+                    res.json({player_url, editor_url, events, audio, additionalFiles});
+                } catch (err) {
+                    return res.json({error: err.toString()});
+                }
             });
         });
     });
@@ -255,7 +267,7 @@ function addBackendRoutes(app, config, store) {
                 return res.json({error: 'set your target config first'});
             }
 
-            const s3client = upload.makeS3UploadClient(target);
+            const s3client = upload.makeS3Client(target);
             const {s3Bucket, uploadPath: uploadDir} = target;
             const id = (req.body.uploadId !== undefined) ? req.body.uploadId : Date.now().toString();
             const base = `${uploadDir}/${id}`;
@@ -380,8 +392,6 @@ function addBackendRoutes(app, config, store) {
     app.use('/statistics/api', statisticsApi);
 
     function selectTarget({grants}, {s3Bucket, uploadPath}, callback) {
-        console.log({grants});
-        console.log({s3Bucket, uploadPath});
         for (let grant of grants) {
             if (grant.s3Bucket === s3Bucket && grant.uploadPath === uploadPath) {
                 return callback(null, grant);

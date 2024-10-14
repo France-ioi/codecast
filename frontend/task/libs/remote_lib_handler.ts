@@ -1,6 +1,8 @@
 import {Codecast} from '../../app_types';
 import {asyncRequestJson} from '../../utils/api';
 import {recorderAddFile} from '../../recorder/actionTypes';
+import log from 'loglevel';
+import {apply, call} from 'typed-redux-saga';
 
 export interface FileDescriptor {
     fileType: string,
@@ -23,7 +25,7 @@ function getResultFileData(result: unknown): FileDescriptor|null {
 }
 
 export function generateRemoteLibHandler(libraryName: string, callName: string) {
-    const remoteHandler = async function () {
+    const remoteHandler = function* () {
         const taskPlatformUrl = Codecast.options.taskPlatformUrl;
 
         let args = [...arguments];
@@ -35,16 +37,15 @@ export function generateRemoteLibHandler(libraryName: string, callName: string) 
             args,
         };
 
-        const result = (await asyncRequestJson(taskPlatformUrl + '/remote-lib-call', body, false)) as {success: boolean, result?: any, error?: string};
+        let result;
+        yield ['interact', {saga: function* () {
+            result = (yield* call(asyncRequestJson, taskPlatformUrl + '/remote-lib-call', body, false)) as {success: boolean, result?: any, error?: string};
+        }}];
+
         if (result?.success) {
             const fileData = getResultFileData(result.result);
-            console.log('file data', {fileData}, result.result)
             if (fileData) {
-                // TODO: if it's a file type, get it from the server and add it to the current recording
-                // in the state recorder.additionalFiles.push(...)
-
-                //TODO: convert this to a function generator capable of handling Redux-saga events
-                // yield* put(recorderAddFile(fileData));
+                yield ['put', recorderAddFile(fileData)];
 
                 return fileData;
             }

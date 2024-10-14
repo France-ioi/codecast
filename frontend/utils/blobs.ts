@@ -19,21 +19,15 @@ export function getBlob(url: string): Promise<Blob> {
 
 export function uploadBlob(upload, blob: Blob) {
     return new Promise(function(resolve, reject) {
-        const formData = new FormData();
-        const params = upload.params;
-        Object.keys(params).forEach(function(key) {
-            formData.append(key, params[key]);
-        });
-        formData.append('file', blob);
-
-        superagent.post(upload.form_url)
-            .send(formData)
+        superagent.put(upload)
+            .set({"Content-Type": blob.type})
+            .send(blob)
             .end(function(err, response) {
                 if (err) {
                     return reject(err);
                 }
 
-                resolve(response);
+                resolve(upload.split('?')[0]);
             });
     });
 }

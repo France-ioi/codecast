@@ -30,6 +30,8 @@ export enum SaveStep {
     UploadEventsDone = 'upload events done',
     UploadAudioPending = 'upload audio pending',
     UploadAudioDone = 'upload audio done',
+    UploadAdditionalFilesPending = 'upload files pending',
+    UploadAdditionalFilesDone = 'upload files done',
     Done = 'done',
     Error = 'error'
 }
@@ -42,6 +44,7 @@ export const initialStateSave = {
     eventsUrl: '',
     playerUrl: '',
     editorUrl: '',
+    filesUrl: [] as {name: string, blob: string}[],
     error: '' as any,
 };
 
@@ -64,11 +67,12 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingDone);
-    bundle.addReducer(ActionTypes.SaveScreenEncodingDone, (state: AppStore, {payload: {audioUrl, wavAudioUrl, eventsUrl}}) => {
+    bundle.addReducer(ActionTypes.SaveScreenEncodingDone, (state: AppStore, {payload: {audioUrl, wavAudioUrl, eventsUrl, filesUrl}}) => {
         state.save.step = SaveStep.EncodingDone;
         state.save.audioUrl = audioUrl;
         state.save.wavAudioUrl = wavAudioUrl;
         state.save.eventsUrl = eventsUrl;
+        state.save.filesUrl = filesUrl;
         state.save.progress = 0;
     });
 
@@ -99,6 +103,16 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.SaveScreenAudioUploaded, (state: AppStore, {payload: {url}}) => {
         state.save.step = SaveStep.UploadAudioDone;
         state.save.audioUrl = url;
+    });
+
+    bundle.defineAction(ActionTypes.SaveScreenAdditionalFilesUploading);
+    bundle.addReducer(ActionTypes.SaveScreenAdditionalFilesUploading, (state: AppStore) => {
+        state.save.step = SaveStep.UploadAdditionalFilesPending;
+    });
+
+    bundle.defineAction(ActionTypes.SaveScreenAdditionalFilesUploaded);
+    bundle.addReducer(ActionTypes.SaveScreenAdditionalFilesUploaded, (state: AppStore) => {
+        state.save.step = SaveStep.UploadAdditionalFilesDone;
     });
 
     bundle.defineAction(ActionTypes.SaveScreenUploadSucceeded);
@@ -173,6 +187,16 @@ function* encodingSaga() {
     const eventsBlob = new Blob([JSON.stringify(data)], {type: "application/json;charset=UTF-8"});
     const eventsUrl = URL.createObjectURL(eventsBlob);
 
+    const additionalFiles = [];
+    for (let file of recorder.files) {
+        const result = yield* call(fetch, file.fileUrl);
+        const blob = yield* call([result, result.blob]);
+        additionalFiles.push({
+            name: file.fileUrl.split('/').pop(),
+            blob: URL.createObjectURL(blob),
+        });
+    }
+
     /* Signal that the recorder has stopped. */
     yield* put({
         type: ActionTypes.SaveScreenEncodingDone,
@@ -180,6 +204,7 @@ function* encodingSaga() {
             audioUrl: mp3Url,
             wavAudioUrl: wavUrl,
             eventsUrl: eventsUrl,
+            filesUrl: additionalFiles,
         }
     });
 
@@ -192,8 +217,9 @@ function* encodingSaga() {
 export interface UploadResponse {
     player_url: string,
     editor_url: string,
-    events: any,
-    audio: any,
+    events: string,
+    audio: string,
+    additionalFiles: string[],
     error?: string,
 }
 
@@ -206,9 +232,13 @@ function* uploadSaga(app: App, action) {
         const state = yield* appSelect();
         const save = state.save;
         const {baseUrl} = state.options;
+
+        const additionalFilesNames = save.filesUrl.map(file => file.name);
+
         const uploadParameters = {
             ...action.payload.target,
             basePlayerUrl: window.location.href.split('?')[0],
+            additionalFiles: additionalFilesNames,
         };
         const response: UploadResponse = yield* call(asyncRequestJson, `${baseUrl}/upload`, uploadParameters);
         if (response.error) {
@@ -217,17 +247,28 @@ function* uploadSaga(app: App, action) {
 
         // Upload the events file.
         yield* put({type: ActionTypes.SaveScreenEventsUploading});
-
         const eventsBlob = yield* call(getBlob, save.eventsUrl);
-        yield* call(uploadBlob, response.events, eventsBlob);
-        yield* put({type: ActionTypes.SaveScreenEventsUploaded, payload: {url: response.events.public_url}});
+        const eventsPublicUrl = yield* call(uploadBlob, response.events, eventsBlob);
+        yield* put({type: ActionTypes.SaveScreenEventsUploaded, payload: {url: eventsPublicUrl}});
 
         // Upload the audio file.
         yield* put({type: ActionTypes.SaveScreenAudioUploading});
         const audioBlob: Blob = yield* call(getBlob, save.audioUrl);
+        const audioPublicUrl = yield* call(uploadBlob, response.audio, audioBlob);
+        yield* put({type: ActionTypes.SaveScreenAudioUploaded, payload: {url: audioPublicUrl}});
 
-        yield* call(uploadBlob, response.audio, audioBlob);
-        yield* put({type: ActionTypes.SaveScreenAudioUploaded, payload: {url: response.audio.public_url}});
+        // Upload additional files
+        if (save.filesUrl?.length) {
+            yield* put({type: ActionTypes.SaveScreenAdditionalFilesUploading});
+            const additionalFilesUrls = [];
+            for (let i = 0; i < save.filesUrl.length; i++) {
+                const fileBlob: Blob = yield* call(getBlob, save.filesUrl[i].blob);
+                const filePublicUrl = yield* call(uploadBlob, response.additionalFiles[i], fileBlob);
+                additionalFilesUrls.push(filePublicUrl);
+            }
+
+            yield* put({type: ActionTypes.SaveScreenAdditionalFilesUploaded, payload: {files: additionalFilesUrls}});
+        }
 
         // Signal completion.
         yield* put({type: ActionTypes.SaveScreenUploadSucceeded, payload: {playerUrl: response.player_url, editorUrl: response.editor_url}});

@@ -25,6 +25,8 @@
     "lint": "./node_modules/.bin/eslint frontend/ --ext .tsx,.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.670.0",
+    "@aws-sdk/s3-request-presigner": "^3.670.0",
     "@babel/runtime": "^7.22.5",
     "@blueprintjs/core": "^4.20.2",
     "@blueprintjs/datetime": "^4.4.37",
@@ -43,7 +45,6 @@
     "ansi-to-html": "^0.7.2",
     "async": "^3.2.4",
     "audio-decode": "^1.4.0",
-    "aws-sdk": "^2.1401.0",
     "bennu": "^17.3.0",
     "bezier-easing": "^2.1.0",
     "body-parser": "^1.20.2",

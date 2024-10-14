@@ -1,45 +1,35 @@
-import aws from 'aws-sdk';
-import s3BrowserDirectUpload from 's3-browser-direct-upload';
+import {S3Client, PutObjectCommand} from "@aws-sdk/client-s3";
+import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
-export function makeS3UploadClient(options) {
-    const s3clientOptions = {
-        accessKeyId: options.s3AccessKeyId,
-        secretAccessKey: options.s3SecretAccessKey,
-        region: options.s3Region,
-        signatureVersion: 'v4'
-    };
-
-    return new s3BrowserDirectUpload(s3clientOptions);
-}
-
-export function getMp3UploadForm(s3client, bucket, base, callback) {
-    const uploadPostFormOptions = {
-        key: `${base}.mp3`,
-        extension: 'mp3',
-        bucket: bucket,
-        acl: 'public-read'
-    };
-
-    s3client.uploadPostForm(uploadPostFormOptions, callback);
-}
-
-export function getJsonUploadForm(s3client, bucket, base, callback) {
-    const uploadPostFormOptions = {
-        key: `${base}.json`,
-        extension: 'json',
-        bucket: bucket,
-        acl: 'public-read'
-    };
-
-    s3client.uploadPostForm(uploadPostFormOptions, callback);
-}
-
-export function makeS3Client({s3AccessKeyId, s3SecretAccessKey, s3Region}) {
-    return new aws.S3({
-        accessKeyId: s3AccessKeyId,
-        secretAccessKey: s3SecretAccessKey,
-        region: s3Region
+const generateWebFormS3URL = async (s3client, event) => {
+    const command = new PutObjectCommand({
+        Bucket: event.bucket,
+        Key: event.key,
+        ACL: event.acl,
+        ContentType: event.contentType,
     });
+
+    return await getSignedUrl(s3client, command, {expiresIn: 360});
+};
+
+export function makeS3Client(target) {
+    return new S3Client({
+        region: target.s3Region,
+        credentials: {
+            accessKeyId: target.s3AccessKeyId,
+            secretAccessKey: target.s3SecretAccessKey,
+        }
+    });
+}
+
+export async function getFileUploadForm(s3client, bucket, fileName) {
+    const uploadPostFormOptions = {
+        key: fileName,
+        bucket: bucket,
+        acl: 'public-read',
+    };
+
+    return await generateWebFormS3URL(s3client, uploadPostFormOptions);
 }
 
 export function getObject(s3, params) {
