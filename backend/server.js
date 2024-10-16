@@ -220,7 +220,7 @@ function addBackendRoutes(app, config, store) {
                     const audio = await upload.getFileUploadForm(s3client, s3Bucket, uploadPath + '.mp3');
 
                     const additionalFiles = [];
-                    for (let fileName of req.body.additionalFiles) {
+                    for (let fileName of (req.body.additionalFiles ?? [])) {
                         const fileForm = await upload.getFileUploadForm(s3client, s3Bucket, uploadPath + '-' + fileName);
                         additionalFiles.push(fileForm);
                     }

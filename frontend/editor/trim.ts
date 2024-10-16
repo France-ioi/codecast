@@ -218,10 +218,11 @@ function trimEvents(data, intervals: IntervalTree) {
     const options = data.options;
 
     return new Blob([JSON.stringify({
+        ...data,
         version: RECORDING_FORMAT_VERSION,
         options,
         events,
-        subtitles: []
+        subtitles: [],
     })], {
         type: "application/json;charset=UTF-8"
     });
