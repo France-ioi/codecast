@@ -249,11 +249,11 @@ class QuickalgoExecutor {
 
         const libraryCallResult = await this.makeTimedLibraryCall(context, module, action, args);
 
-        const libraryCall: QuickalgoLibraryCall = {
+        const libraryCall: QuickalgoLibraryCall = JSON.parse(JSON.stringify({
             module,
             action,
             args,
-        };
+        }));
 
         await this.stepperContext.dispatch(stepperRecordLibraryCall(libraryCall, libraryCallResult));
 

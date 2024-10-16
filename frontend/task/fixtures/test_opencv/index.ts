@@ -10,7 +10,7 @@ export default {
         includeBlocks: {
             groupByCategory: false,
             generatedBlocks: {
-                opencv: ["imread", "cvtColor", "imwrite"]
+                opencv: ["imread", "cvtColor", "flip", "rotate", "blur", "resize", "Canny", "imwrite"]
             },
             standardBlocks: {
                 includeAll: false,
