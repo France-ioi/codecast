@@ -221,7 +221,7 @@ function addBackendRoutes(app, config, store) {
 
                     const additionalFiles = [];
                     for (let fileName of req.body.additionalFiles) {
-                        const fileForm = await upload.getFileUploadForm(s3client, s3Bucket, fileName);
+                        const fileForm = await upload.getFileUploadForm(s3client, s3Bucket, uploadPath + '-' + fileName);
                         additionalFiles.push(fileForm);
                     }
 

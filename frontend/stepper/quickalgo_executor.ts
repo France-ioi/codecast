@@ -240,11 +240,9 @@ class QuickalgoExecutor {
     }
 
     private async recordReplayTimedLibraryCall(context: QuickAlgoLibrary, module: string, action: string, args: any[]) {
-        console.log('stepper context library calls', this.stepperContext.libraryCallsLog)
         if (this.stepperContext.libraryCallsLog && this.stepperContext.libraryCallsLog.length) {
             const nextCall = this.stepperContext.libraryCallsLog.shift();
             if (this.checkLibraryCallsEquality(nextCall.call, {module, action, args})) {
-                console.log('use hit response');
                 return nextCall.result;
             }
         }
@@ -256,8 +254,6 @@ class QuickalgoExecutor {
             action,
             args,
         };
-
-        console.log('record call results', this.stepperContext.libraryCallsLog, {module, action, args});
 
         await this.stepperContext.dispatch(stepperRecordLibraryCall(libraryCall, libraryCallResult));
 

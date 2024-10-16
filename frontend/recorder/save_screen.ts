@@ -36,16 +36,34 @@ export enum SaveStep {
     Error = 'error'
 }
 
-export const initialStateSave = {
-    step: null as SaveStep,
+export interface SaveStateFileUrl {
+    name: string,
+    blob: string,
+    originalUrl: string,
+}
+
+export interface SaveState {
+    step: SaveStep,
+    progress: number,
+    audioUrl: string,
+    wavAudioUrl: string,
+    eventsUrl: string,
+    playerUrl: string,
+    editorUrl: string,
+    filesUrl: SaveStateFileUrl[],
+    error: any,
+}
+
+export const initialStateSave: SaveState = {
+    step: null,
     progress: 0,
     audioUrl: '',
     wavAudioUrl: '',
     eventsUrl: '',
     playerUrl: '',
     editorUrl: '',
-    filesUrl: [] as {name: string, blob: string}[],
-    error: '' as any,
+    filesUrl: [],
+    error: '',
 };
 
 export default function(bundle: Bundle) {
@@ -187,11 +205,12 @@ function* encodingSaga() {
     const eventsBlob = new Blob([JSON.stringify(data)], {type: "application/json;charset=UTF-8"});
     const eventsUrl = URL.createObjectURL(eventsBlob);
 
-    const additionalFiles = [];
+    const additionalFiles: SaveStateFileUrl[] = [];
     for (let file of recorder.files) {
         const result = yield* call(fetch, file.fileUrl);
         const blob = yield* call([result, result.blob]);
         additionalFiles.push({
+            originalUrl: file.fileUrl,
             name: file.fileUrl.split('/').pop(),
             blob: URL.createObjectURL(blob),
         });
@@ -248,7 +267,16 @@ function* uploadSaga(app: App, action) {
         // Upload the events file.
         yield* put({type: ActionTypes.SaveScreenEventsUploading});
         const eventsBlob = yield* call(getBlob, save.eventsUrl);
-        const eventsPublicUrl = yield* call(uploadBlob, response.events, eventsBlob);
+        let eventsText = yield* call([eventsBlob, eventsBlob.text]);
+
+        for (let i = 0; i < save.filesUrl.length; i++) {
+            const newUrl = response.additionalFiles[i].split('?')[0];
+            eventsText = eventsText.replace(new RegExp(`"fileUrl":"${save.filesUrl[i].originalUrl}"`, 'g'), `"fileUrl":"${newUrl}"`);
+        }
+
+        const newEventsBlob = new Blob([eventsText], {type: "application/json;charset=UTF-8"});
+
+        const eventsPublicUrl = yield* call(uploadBlob, response.events, newEventsBlob);
         yield* put({type: ActionTypes.SaveScreenEventsUploaded, payload: {url: eventsPublicUrl}});
 
         // Upload the audio file.

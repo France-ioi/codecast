@@ -14,7 +14,7 @@ import {initialStatePlayer} from "./player";
 import {initialStateArduino} from "./stepper/arduino";
 import {IoMode} from "./stepper/io";
 import {SubtitlesState} from "./subtitles";
-import {initialStateSave} from "./recorder/save_screen";
+import {SaveState} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
 import {QuickalgoTask, TaskState} from "./task/task_types";
 import {LayoutState} from "./task/layout/layout";
@@ -139,7 +139,7 @@ export interface AppStore extends Store, AppStoreReplay {
     player: typeof initialStatePlayer,
     recorder: RecorderState,
     subtitles: SubtitlesState,
-    save: typeof initialStateSave,
+    save: SaveState,
     terminal: typeof initialStateTerminal,
     terminalElement: any,
     vumeterElement: any,
