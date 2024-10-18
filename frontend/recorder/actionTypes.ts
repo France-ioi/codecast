@@ -45,9 +45,3 @@ export enum ActionTypes {
 
     AudioContextSuspended = 'Audio.Context.Suspended'
 }
-
-export const recorderAddFile = createAction('recorderAddFile', (file: FileDescriptor) => ({
-    payload: {
-        file,
-    },
-}));

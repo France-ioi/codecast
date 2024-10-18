@@ -4,7 +4,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import {spawnWorker} from '../utils/worker_utils';
 // @ts-ignore
 import AudioWorker from '../audio_worker/index.worker';
-import {ActionTypes, recorderAddFile} from "./actionTypes";
+import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
@@ -18,7 +18,6 @@ import {StepperStatus} from "../stepper";
 import log from 'loglevel';
 import {appSelect} from '../hooks';
 import {App} from '../app_types';
-import {FileDescriptor} from '../task/libs/remote_lib_handler';
 
 export default function(bundle, deps) {
     bundle.use('recordApi');
@@ -38,15 +37,6 @@ export default function(bundle, deps) {
     bundle.defineAction(ActionTypes.AudioContextSuspended);
     bundle.addReducer(ActionTypes.AudioContextSuspended, (state: AppStore, {payload: {audioTime}}) => {
         state.recorder.suspendedAt = audioTime;
-    });
-
-    bundle.defineAction(recorderAddFile.type);
-    bundle.addReducer(recorderAddFile.type, (state: AppStore, {payload: {file}}) => {
-        if (RecorderStatus.Recording !== state.recorder.status) {
-            return;
-        }
-
-        state.recorder.files.push(file);
     });
 
     bundle.addSaga(function* watchRecorderPrepare() {

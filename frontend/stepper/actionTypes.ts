@@ -1,6 +1,7 @@
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {createAction} from '@reduxjs/toolkit';
 import {QuickalgoLibraryCall} from './api';
+import {FileDescriptor} from '../task/libs/remote_lib_handler';
 
 export enum ActionTypes {
     StepperTaskCancelled = 'Stepper.Task.Cancelled',
@@ -108,3 +109,9 @@ export const stepperRecordLibraryCall = (libraryCall: QuickalgoLibraryCall, libr
         libraryCallResult,
     },
 });
+
+export const stepperAddFile = createAction('stepperAddFile', (file: FileDescriptor) => ({
+    payload: {
+        file,
+    },
+}));

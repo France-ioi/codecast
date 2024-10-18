@@ -219,9 +219,11 @@ class QuickalgoExecutor {
 
     async iterateResult (module: string, action: string, result) {
         let lastResult;
+        let nextValue = undefined;
         while (true) {
             /* Pull the next effect from the builtin's iterator. */
-            const {done, value} = result.next();
+            const {done, value} = result.next(nextValue);
+            nextValue = undefined;
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ITERATOR RESULT', module, action, done, value);
             if (done) {
                 return value;
@@ -235,6 +237,9 @@ class QuickalgoExecutor {
             } else if (name == 'put') {
                 log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ask put dispatch', value[1]);
                 await this.stepperContext.dispatch(value[1]);
+            }  else if (name == 'state') {
+                log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ask put dispatch', value[1]);
+                nextValue = Codecast.environments[this.stepperContext.environment].store.getState();
             }
         }
     }

@@ -50,7 +50,7 @@ import {getSkulptSuspensionsCopy} from "./python/analysis";
 import {Directive} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
-    ActionTypes, ContextEnrichingTypes,
+    ActionTypes, ContextEnrichingTypes, stepperAddFile,
     stepperDisplayError, stepperExecutionEnd, stepperExecutionEndConditionReached,
     stepperExecutionError, stepperRecordLibraryCall,
     stepperRunBackground, stepperRunBackgroundFinished
@@ -98,6 +98,8 @@ import debounce from 'lodash.debounce';
 import {RemoteDebugExecutor} from './remote/remote_debug_executer';
 import {Range} from '../buffers/buffer_types';
 import {StepperProgressParameters} from './stepper_types';
+import {FileDescriptor} from '../task/libs/remote_lib_handler';
+import {RecorderStatus} from '../recorder/store';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -206,6 +208,7 @@ export const initialStateStepper = {
     error: null as string|LibraryTestResult,
     runningBackground: false,
     backgroundRunData: null as TaskSubmissionResultPayload,
+    files: [] as FileDescriptor[],
 };
 
 export function* createRunnerSaga(platform: CodecastPlatform): SagaIterator<AbstractRunner> {
@@ -347,6 +350,17 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.StepperRecordLibraryCall);
     bundle.addReducer(ActionTypes.StepperRecordLibraryCall, stepperRecordLibraryCallReducer);
+
+    bundle.defineAction(stepperAddFile.type);
+    bundle.addReducer(stepperAddFile.type, (state: AppStore, {payload: {file}}) => {
+        if (!state.stepper.files) {
+            state.stepper.files = [];
+        }
+        state.stepper.files.push(file);
+        if (RecorderStatus.Recording === state.recorder.status) {
+            state.recorder.files.push(file);
+        }
+    });
 
     /* END view stuff to move out of here */
 
