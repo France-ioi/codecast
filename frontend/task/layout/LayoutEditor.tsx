@@ -52,7 +52,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     };
 
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector({state, context}) : []);
+    const allBlocks = useAppSelector(state => getContextBlocksDataSelector({state, context}));
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
 
     const errorHighlight = useAppSelector(selectErrorHighlightFromSubmission);
