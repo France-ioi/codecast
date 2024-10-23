@@ -4,11 +4,11 @@ import {CodecastPlatform} from '../stepper/codecast_platform';
 import {BuffersState} from './buffers_slice';
 import {memoize} from 'proxy-memoize';
 
-export function selectSourceBuffers(state: AppStore): {[bufferName: string]: BufferState} {
+export const selectSourceBuffers = memoize((state: AppStore): {[bufferName: string]: BufferState} => {
     return selectSourceBuffersFromBufferState(state.buffers);
-}
+});
 
-export const selectSourceBuffersFromBufferState = memoize((buffers: BuffersState): {[bufferName: string]: BufferState} => {
+export function selectSourceBuffersFromBufferState (buffers: BuffersState): {[bufferName: string]: BufferState} {
     const sourceBuffers = {};
     for (let [bufferName, buffer] of Object.entries(buffers.buffers)) {
         if (buffer.source) {
@@ -17,7 +17,7 @@ export const selectSourceBuffersFromBufferState = memoize((buffers: BuffersState
     }
 
     return sourceBuffers;
-});
+}
 
 export function selectActiveBufferPlatform(state: AppStore): CodecastPlatform {
     if (null === state.buffers.activeBufferName) {
