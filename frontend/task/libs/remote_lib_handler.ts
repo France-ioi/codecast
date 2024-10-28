@@ -52,7 +52,13 @@ export function generateRemoteLibHandler(libraryName: string, callName: string) 
 
         let result;
         yield ['interact', {saga: function* () {
-            result = (yield* call(asyncRequestJson, taskPlatformUrl + '/remote-lib-call', body, false)) as {success: boolean, result?: any, error?: string};
+            try {
+                result = (yield* call(asyncRequestJson, taskPlatformUrl + '/remote-lib-call', body, false)) as {success: boolean, result?: any, error?: string};
+            } catch (ex: any) {
+                result = {
+                    error: `Impossible to make remote lib call: ${ex.err ?? ex}`
+                };
+            }
         }}];
 
         if (result?.success) {
