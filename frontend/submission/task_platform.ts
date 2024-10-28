@@ -15,7 +15,7 @@ export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> 
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
 
-    return (yield* call(asyncGetJson, taskPlatformUrl + '/tasks/' + taskId, false)) as TaskServer|null;
+    return (yield* call(asyncGetJson, taskPlatformUrl + '/tasks/' + taskId)) as TaskServer|null;
 }
 
 export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
@@ -98,7 +98,7 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
     const {taskPlatformUrl} = state.options;
 
     while (true) {
-        const result = (yield* call(asyncGetJson, taskPlatformUrl + '/submissions/' + submissionId + '?longPolling', false)) as TaskSubmissionServerResult|null;
+        const result = (yield* call(asyncGetJson, taskPlatformUrl + '/submissions/' + submissionId + '?longPolling')) as TaskSubmissionServerResult|null;
         if (result.evaluated) {
             for (let test of result.tests) {
                 test.score = test.score / 100;

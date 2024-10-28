@@ -136,7 +136,7 @@ function* playerPrepare(app: App, action) {
     if (action.payload.data) {
         data = action.payload.data;
     } else {
-        data = yield* call(asyncGetJson, action.payload.eventsUrl, false);
+        data = yield* call(asyncGetJson, action.payload.eventsUrl);
     }
     data = Object.freeze(data);
 

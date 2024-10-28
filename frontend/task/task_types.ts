@@ -2,7 +2,7 @@ import {TaskLevelName} from './platform/platform_slice';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {TaskHint} from './hints/hints_slice';
 import {CodecastPlatform} from '../stepper/codecast_platform';
-import {Document} from '../buffers/buffer_types';
+import {Document, GitSyncParams} from '../buffers/buffer_types';
 
 export interface BlocksUsage {
     error?: string,
@@ -211,6 +211,7 @@ export interface TaskAnswer {
     document: Document,
     platform?: CodecastPlatform,
     fileName?: string,
+    gitSync?: GitSyncParams,
     //submissionId: string ?
 }
 

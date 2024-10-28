@@ -130,17 +130,29 @@ export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
         document: buffer.document,
         fileName: buffer.fileName,
         platform: buffer.platform,
+        ...(buffer.gitSync ? {gitSync: buffer.gitSync} : {}),
     };
 }
 
-// export function denormalizeBufferFromAnswer(answer: TaskAnswer): BufferState {
-//
-// }
+export function* denormalizeBufferFromAnswer(answer: TaskAnswer): Generator<any, BufferStateParameters> {
+    const state: AppStore = yield* appSelect();
+
+    const platform = answer.platform ?? state.options.platform;
+    const newFileName = answer.fileName ?? getNewFileName(state, answer.platform);
+
+    return {
+        type: answer.document.type,
+        source: true,
+        document: answer.document,
+        fileName: newFileName,
+        platform,
+        ...(answer.gitSync ? {gitSync: answer.gitSync} : {}),
+    }
+}
 
 export function* createSourceBufferFromDocument(document: Document, platform?: CodecastPlatform) {
     const state: AppStore = yield* appSelect();
 
-    const newBufferName = yield* call(getNewBufferName);
     platform = platform ?? state.options.platform;
     const newFileName = getNewFileName(state, platform);
 
@@ -149,10 +161,16 @@ export function* createSourceBufferFromDocument(document: Document, platform?: C
         source: true,
         fileName: newFileName,
         platform,
+        document,
     };
 
-    yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
-    yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
+    yield* call(createSourceBufferFromBufferParameters, newBuffer);
+}
+
+export function* createSourceBufferFromBufferParameters(parameters: BufferStateParameters) {
+    const newBufferName = yield* call(getNewBufferName);
+    yield* put(bufferInit({buffer: newBufferName, ...parameters}));
+    yield* put(bufferResetDocument({buffer: newBufferName, document: parameters.document, goToEnd: true}));
     yield* put(bufferChangeActiveBufferName(newBufferName));
 }
 

@@ -42,7 +42,7 @@ export const buffersSlice = createSlice({
     reducers: {
         bufferInit(state, action: PayloadAction<{buffer: string} & BufferStateParameters>) {
             initBufferIfNeeded(state, action.payload.buffer, action.payload.type);
-            for (let item of ['source', 'fileName', 'platform', 'submissionIndex']) {
+            for (let item of ['source', 'fileName', 'platform', 'submissionIndex', 'gitSync']) {
                 if (item in action.payload) {
                     state.buffers[action.payload.buffer][item] = action.payload[item];
                 }

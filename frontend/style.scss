@@ -22,6 +22,8 @@ $alert-padding-x: 10px !default;
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
+@import "~@blueprintjs/select/lib/css/blueprint-select.css";
+@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
 
 @import "./player/style.scss";
 @import "./editor/style.scss";
@@ -783,4 +785,9 @@ button.btn-cc {
 
 .bp4-dialog:not(.simple-dialog):not(.bp4-alert) {
   padding-bottom: 0;
+}
+
+.button-group .bp4-form-content {
+  display: flex;
+  gap: 8px;
 }

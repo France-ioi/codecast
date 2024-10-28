@@ -1,0 +1,224 @@
+import {Button, Dialog, FormGroup, InputGroup, Intent, Menu, MenuItem, Spinner} from "@blueprintjs/core";
+import React, {useEffect, useState} from "react";
+import {getMessage} from "../lang";
+import {IconNames} from '@blueprintjs/icons';
+import {useAppSelector} from '../hooks';
+import {selectActiveBuffer} from '../buffers/buffer_selectors';
+import {GitSyncParams} from '../buffers/buffer_types';
+import {asyncGetJson} from '../utils/api';
+import {ItemPredicate, Select2} from '@blueprintjs/select';
+
+interface WorkWithGitDialogProps {
+    open: boolean,
+    onClose: () => void,
+}
+
+enum GitSyncStep {
+    CHOOSE_REPOSITORY = 0,
+    CHOOSE_BRANCH = 1,
+}
+
+interface FileElement {
+    name: string,
+    directory: boolean,
+}
+
+export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
+    const activeBuffer = useAppSelector(selectActiveBuffer);
+    const options = useAppSelector(state => state.options);
+
+    const [gitSync, changeGitSync] = useState<GitSyncParams>(activeBuffer?.gitSync ?? {
+        repository: '',
+        branch: null,
+        file: null,
+    });
+
+    const [availableBranches, setAvailableBranches] = useState<string[]>([]);
+    const [loadingBranches, setLoadingBranches] = useState(false);
+    const [loadingContent, setLoadingContent] = useState(false);
+    const [error, setError] = useState(null);
+    const [filesList, setFilesList] = useState<FileElement[]>([]);
+    const [activeFolder, setActiveFolder] = useState<string>(null);
+
+    const [step, setStep] = useState(GitSyncStep.CHOOSE_REPOSITORY);
+
+    const changeGitSyncParameter = (param: string, value: string) => {
+        changeGitSync({
+            ...gitSync,
+            [param]: value,
+        });
+    };
+
+    const getRepositoryBranches = async () => {
+        setLoadingBranches(true);
+        setError(null);
+
+        try {
+            const repoBranchesResult = (await asyncGetJson(options.taskPlatformUrl + '/git/repository-branches', {repository: gitSync.repository})) as {branches: string[]};
+            const branches = repoBranchesResult.branches;
+
+            setAvailableBranches(branches);
+            setStep(GitSyncStep.CHOOSE_BRANCH);
+        } catch (e: any) {
+            console.error(e);
+            setError(getMessage('GIT_ERROR_BRANCHES'));
+        } finally {
+            setLoadingBranches(false);
+        }
+    };
+
+    const filterBranch: ItemPredicate<string> = (query, branch, _index, exactMatch) => {
+        const normalizedTitle = branch.toLowerCase();
+        const normalizedQuery = query.toLowerCase();
+
+        if (exactMatch) {
+            return normalizedTitle === normalizedQuery;
+        } else {
+            return branch.indexOf(normalizedQuery) >= 0;
+        }
+    };
+
+    const getRepositoryFolderContent = async () => {
+        setLoadingContent(true);
+        setError(null);
+
+        try {
+            const folderContentResult = (await asyncGetJson(options.taskPlatformUrl + '/git/repository-folder-content', {
+                repository: gitSync.repository,
+                branch: gitSync.branch,
+                folder: activeFolder,
+            })) as {content: {name: string, directory: boolean}[]};
+
+            setFilesList(folderContentResult.content);
+        } catch (e: any) {
+            console.error(e);
+            setError(getMessage('GIT_ERROR_CONTENT'));
+        } finally {
+            setLoadingContent(false);
+        }
+    };
+
+    useEffect(() => {
+        if (gitSync.repository && gitSync.branch) {
+            getRepositoryFolderContent();
+        }
+    }, [gitSync.branch, activeFolder]);
+
+    const makeSync = () => {
+        console.log('make sync', gitSync);
+    };
+
+    const clickFileElement = (fileElement: FileElement) => {
+        const newPath = activeFolder ? activeFolder + '/' + fileElement.name : fileElement.name;
+        if (fileElement.directory) {
+            setActiveFolder(newPath);
+        } else {
+            changeGitSyncParameter('file', newPath);
+        }
+    }
+
+    return (
+        <Dialog
+            icon="menu"
+            title={getMessage('MENU_SYNC_GIT')}
+            isOpen={props.open}
+            onClose={props.onClose}
+            canEscapeKeyClose={true}
+            canOutsideClickClose={true}
+            isCloseButtonShown={true}
+        >
+            <div className='bp4-dialog-body'>
+                <FormGroup labelFor='gitRepository' label={getMessage('GIT_REPOSITORY')}>
+                    <InputGroup
+                        leftIcon={IconNames.GitRepo}
+                        type='text'
+                        placeholder={"git@github.com:..."}
+                        value={gitSync.repository}
+                        readOnly={step > GitSyncStep.CHOOSE_REPOSITORY}
+                        onChange={(e) => changeGitSyncParameter('repository', e.target.value)}
+                    />
+                </FormGroup>
+                {step >= GitSyncStep.CHOOSE_BRANCH && <FormGroup labelFor='gitBranch' label={getMessage('GIT_BRANCH')}>
+                    <div style={{display: 'inline-block'}}>
+                        <Select2
+                            items={availableBranches}
+                            itemPredicate={filterBranch}
+                            itemRenderer={(branch, {modifiers, handleFocus, handleClick}) =>
+                                <MenuItem
+                                    active={modifiers.active}
+                                    disabled={modifiers.disabled}
+                                    key={branch}
+                                    onClick={handleClick}
+                                    onFocus={handleFocus}
+                                    roleStructure="listoption"
+                                    text={branch}
+                                />
+                            }
+                            noResults={<MenuItem disabled={true} text={getMessage('GIT_BRANCH_NO_RESULT')} roleStructure="listoption" />}
+                            onItemSelect={(e) => changeGitSyncParameter('branch', e)}
+                        >
+                            <Button
+                                icon={IconNames.GitBranch}
+                                rightIcon="caret-down"
+                                text={gitSync.branch ?? getMessage('SELECT') + '...'}
+                            />
+                        </Select2>
+                    </div>
+                </FormGroup>}
+                {step >= GitSyncStep.CHOOSE_BRANCH && gitSync.branch && <FormGroup labelFor='gitFile' label={getMessage('GIT_FILE')}>
+                    <div className="project-structure">
+                        {loadingContent ? <div className="project-structure-loading">
+                            <Spinner size={40}/>
+                        </div>
+                            :
+                            <Menu>
+                                {activeFolder && <MenuItem
+                                    key={null}
+                                    icon={IconNames.FolderClose}
+                                    onClick={() => setActiveFolder(activeFolder.split('/').slice(0, -1).join('/'))}
+                                    roleStructure="listoption"
+                                    text={'..'}
+                                />}
+                                {filesList.map((fileElement, index) =>
+                                    <MenuItem
+                                        key={index}
+                                        icon={fileElement.directory ? IconNames.FolderClose : IconNames.Document}
+                                        onClick={() => clickFileElement(fileElement)}
+                                        roleStructure="listoption"
+                                        active={gitSync.file === (activeFolder ? activeFolder + '/' + fileElement.name : fileElement.name)}
+                                        text={fileElement.name}
+                                    />
+                                )}
+                            </Menu>
+                        }
+                    </div>
+                </FormGroup>}
+                {error && <div className="generic-error">
+                    {error}
+                </div>}
+                {step === GitSyncStep.CHOOSE_REPOSITORY && <FormGroup className="button-group mt-4">
+                    <Button
+                        text={getMessage('VALIDATE')}
+                        intent={Intent.PRIMARY}
+                        onClick={getRepositoryBranches}
+                        loading={loadingBranches}
+                        disabled={loadingBranches}
+                    />
+                </FormGroup>}
+                {step === GitSyncStep.CHOOSE_BRANCH && <FormGroup className="button-group mt-4">
+                    <Button
+                        text={getMessage('CANCEL')}
+                        intent={Intent.NONE}
+                        onClick={() => setStep(GitSyncStep.CHOOSE_REPOSITORY)}
+                    />
+
+                    <Button
+                        text={getMessage('VALIDATE')}
+                        intent={Intent.PRIMARY}
+                        onClick={makeSync}
+                    />
+                </FormGroup>}
+            </div>
+        </Dialog>
+    );
+}

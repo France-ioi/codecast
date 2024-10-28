@@ -133,6 +133,9 @@ export function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('ioMode' in query && 'split' === query.ioMode) {
         options.ioMode = IoMode.Split;
     }
+    if ('workWithGit' in query) {
+        options.workWithGit = true;
+    }
 }
 
 function appInitReducer(state: AppStore, {payload: {options, query}}) {
