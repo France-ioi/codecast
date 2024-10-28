@@ -5,8 +5,11 @@ import {IconNames} from '@blueprintjs/icons';
 import {useAppSelector} from '../hooks';
 import {selectActiveBuffer} from '../buffers/buffer_selectors';
 import {GitSyncParams} from '../buffers/buffer_types';
-import {asyncGetJson} from '../utils/api';
+import {asyncGetJson, asyncRequestJson} from '../utils/api';
 import {ItemPredicate, Select2} from '@blueprintjs/select';
+import {useDispatch} from 'react-redux';
+import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
+import {TextBufferHandler} from '../buffers/document';
 
 interface WorkWithGitDialogProps {
     open: boolean,
@@ -31,15 +34,17 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
         repository: '',
         branch: null,
         file: null,
+        revision: null,
     });
 
     const [availableBranches, setAvailableBranches] = useState<string[]>([]);
     const [loadingBranches, setLoadingBranches] = useState(false);
     const [loadingContent, setLoadingContent] = useState(false);
+    const [validatingSync, setValidatingSync] = useState(false);
     const [error, setError] = useState(null);
     const [filesList, setFilesList] = useState<FileElement[]>([]);
     const [activeFolder, setActiveFolder] = useState<string>(null);
-
+    const dispatch = useDispatch();
     const [step, setStep] = useState(GitSyncStep.CHOOSE_REPOSITORY);
 
     const changeGitSyncParameter = (param: string, value: string) => {
@@ -104,8 +109,32 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
         }
     }, [gitSync.branch, activeFolder]);
 
-    const makeSync = () => {
-        console.log('make sync', gitSync);
+    const makeSync = async () => {
+        setValidatingSync(true);
+        setError(null);
+
+        try {
+            const gitPullResult = (await asyncRequestJson(options.taskPlatformUrl + '/git/pull', {
+                repository: gitSync.repository,
+                branch: gitSync.branch,
+                file: gitSync.file,
+            })) as { content: string, revision: string };
+
+            const document = TextBufferHandler.documentFromString(gitPullResult.content);
+
+            dispatch(bufferCreateSourceBuffer(document, null, {
+                gitSync: {
+                    ...gitSync,
+                    revision: gitPullResult.revision,
+                },
+            }));
+            props.onClose();
+        } catch (e: any) {
+            console.error(e);
+            setError(getMessage('GIT_ERROR_CONTENT'));
+        } finally {
+            setValidatingSync(false);
+        }
     };
 
     const clickFileElement = (fileElement: FileElement) => {
@@ -215,6 +244,8 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
                     <Button
                         text={getMessage('VALIDATE')}
                         intent={Intent.PRIMARY}
+                        disabled={!gitSync.branch || !gitSync.file || validatingSync}
+                        loading={validatingSync}
                         onClick={makeSync}
                     />
                 </FormGroup>}

@@ -50,6 +50,7 @@ export interface GitSyncParams {
     repository: string,
     branch: string,
     file: string,
+    revision: string,
 }
 
 export interface BufferState extends BufferStateParameters {

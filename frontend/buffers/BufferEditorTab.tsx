@@ -12,6 +12,9 @@ import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {OverlayTrigger, Popover} from "react-bootstrap";
 import {BufferEditorTabEdit} from './BufferEditorTabEdit';
 import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
+import {faCircleUp} from '@fortawesome/free-regular-svg-icons/faCircleUp';
+import {faArrowCircleUp} from '@fortawesome/free-solid-svg-icons/faArrowCircleUp';
+import {faArrowCircleDown} from '@fortawesome/free-solid-svg-icons/faArrowCircleDown';
 
 export interface BufferEditorTabProps {
     bufferName: string,
@@ -23,6 +26,7 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
     const fileName = `${buffer.fileName}.${platformsList[buffer.platform].extension}`;
     const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
     const sourceBuffers = useAppSelector(selectSourceBuffers);
+    const sourceBuffer = sourceBuffers[bufferName];
     const isActive = activeBufferName === bufferName;
     const dispatch = useDispatch();
     const submissionIndex = buffer.submissionIndex;
@@ -67,6 +71,14 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
         '--bs-popover-bg': '#dddddd'
     } as React.CSSProperties;
 
+    const gitPull = () => {
+        console.log('git pull');
+    };
+
+    const gitPush = () => {
+        console.log('git push');
+    };
+
     return (
         <OverlayTrigger
             placement="bottom"
@@ -95,6 +107,10 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
                     </React.Fragment>}
                     {isEditable && <div {...(isActive ? triggerHandler : {})} className={isActive ? 'has-pointer' : ''}>
                         {fileName}
+                    </div>}
+                    {sourceBuffer.gitSync && <div className="git-sync-tab">
+                        <FontAwesomeIcon icon={faArrowCircleDown} onClick={gitPull} title="Pull"/>
+                        <FontAwesomeIcon icon={faArrowCircleUp} onClick={gitPush} title="Push"/>
                     </div>}
                     {closable && <div className="layout-editor-tab-close" onClick={closeTab}>
                         <FontAwesomeIcon icon={faTimes}/>

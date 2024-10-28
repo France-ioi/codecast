@@ -150,7 +150,7 @@ export function* denormalizeBufferFromAnswer(answer: TaskAnswer): Generator<any,
     }
 }
 
-export function* createSourceBufferFromDocument(document: Document, platform?: CodecastPlatform) {
+export function* createSourceBufferFromDocument(document: Document, platform?: CodecastPlatform, parameters: Partial<BufferStateParameters> = {}) {
     const state: AppStore = yield* appSelect();
 
     platform = platform ?? state.options.platform;
@@ -162,6 +162,7 @@ export function* createSourceBufferFromDocument(document: Document, platform?: C
         fileName: newFileName,
         platform,
         document,
+        ...parameters,
     };
 
     yield* call(createSourceBufferFromBufferParameters, newBuffer);
@@ -217,11 +218,11 @@ function* buffersSaga() {
         anchor.click();
     });
 
-    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document}}) {
+    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document, parameters}}) {
         const state: AppStore = yield* appSelect();
         let newDocument = document ?? getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
         log.getLogger('editor').debug('Load new source code', newDocument);
-        yield* call(createSourceBufferFromDocument, newDocument, state.options.platform);
+        yield* call(createSourceBufferFromDocument, newDocument, state.options.platform, parameters ?? {});
     });
 
     yield* takeEvery(bufferResetToDefaultSourceCode, function* ({payload: {bufferName}}) {

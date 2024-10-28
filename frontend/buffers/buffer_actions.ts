@@ -1,13 +1,14 @@
 import {createAction} from '@reduxjs/toolkit';
 import {CodecastPlatform} from '../stepper/codecast_platform';
-import {Document} from './buffer_types';
+import {BufferStateParameters, Document} from './buffer_types';
 
 export const bufferDownload = createAction('buffer/download');
 export const bufferReload = createAction('buffer/reload');
-export const bufferCreateSourceBuffer = createAction('buffer/createSourceBuffer', (document?: Document, platform?: CodecastPlatform) => ({
+export const bufferCreateSourceBuffer = createAction('buffer/createSourceBuffer', (document?: Document, platform?: CodecastPlatform, parameters: Partial<BufferStateParameters> = {}) => ({
     payload: {
         document,
         platform,
+        parameters,
     },
 }));
 export const bufferResetToDefaultSourceCode = createAction('buffer/resetToDefaultSourceCode', (bufferName: string) => ({
