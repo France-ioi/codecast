@@ -24,3 +24,15 @@ export const bufferChangePlatform = createAction('buffer/changePlatform', (buffe
         document,
     },
 }));
+
+export const bufferGitPull = createAction('buffer/gitPull', (bufferName: string) => ({
+    payload: {
+        bufferName,
+    },
+}));
+
+export const bufferGitPush = createAction('buffer/gitPush', (bufferName: string) => ({
+    payload: {
+        bufferName,
+    },
+}));

@@ -51,6 +51,7 @@ export interface GitSyncParams {
     branch: string,
     file: string,
     revision: string,
+    loading?: boolean,
 }
 
 export interface BufferState extends BufferStateParameters {

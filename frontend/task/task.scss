@@ -927,6 +927,9 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 .bp4-select-popover .bp4-input::-webkit-input-placeholder {
   color: transparent;
 }
+.bp4-select-popover .bp4-menu li {
+  font-size: 0.9em;
+}
 
 .generic-error {
   color: #e00000;

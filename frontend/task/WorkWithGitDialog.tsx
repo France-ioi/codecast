@@ -48,14 +48,15 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
     const [step, setStep] = useState(GitSyncStep.CHOOSE_REPOSITORY);
 
     const changeGitSyncParameter = (param: string, value: string) => {
-        changeGitSync({
-            ...gitSync,
+        changeGitSync((previousGitSync) => ({
+            ...previousGitSync,
             [param]: value,
-        });
+        }));
     };
 
     const getRepositoryBranches = async () => {
         setLoadingBranches(true);
+
         setError(null);
 
         try {
@@ -70,6 +71,15 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
         } finally {
             setLoadingBranches(false);
         }
+    };
+
+    const cancelRepository = () => {
+        setStep(GitSyncStep.CHOOSE_REPOSITORY);
+        setAvailableBranches([]);
+        changeGitSyncParameter('branch', null);
+        changeGitSyncParameter('revision', null);
+        changeGitSyncParameter('file', null);
+        setFilesList([]);
     };
 
     const filterBranch: ItemPredicate<string> = (query, branch, _index, exactMatch) => {
@@ -238,7 +248,7 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
                     <Button
                         text={getMessage('CANCEL')}
                         intent={Intent.NONE}
-                        onClick={() => setStep(GitSyncStep.CHOOSE_REPOSITORY)}
+                        onClick={cancelRepository}
                     />
 
                     <Button

@@ -96,9 +96,11 @@ import {selectAnswer} from '../task/selectors';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {StepperStatus} from '../stepper';
 import {canReloadAnswer} from '../task/platform/platform';
+import {bufferGitSyncSagas} from './buffer_git_sync';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
+    bundle.addSaga(bufferGitSyncSagas);
 
     bundle.defer(addRecordHooks);
     bundle.defer(addReplayHooks);
