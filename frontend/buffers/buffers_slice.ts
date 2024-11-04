@@ -116,6 +116,9 @@ export const buffersSlice = createSlice({
                 delete state.buffers[action.payload.buffer].actions.blocksToInsert.elements[id];
             }
         },
+        bufferClearGoToEnd(state, action: PayloadAction<{buffer: string}>) {
+            delete state.buffers[action.payload.buffer].actions.goToEnd;
+        },
         bufferChangeActiveBufferName(state, action: PayloadAction<string>) {
             state.activeBufferName = action.payload;
         },
@@ -159,6 +162,7 @@ export const {
     bufferRemove,
     bufferAssociateToSubmission,
     bufferDissociateFromSubmission,
+    bufferClearGoToEnd,
 } = buffersSlice.actions;
 
 export default buffersSlice;

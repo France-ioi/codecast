@@ -25,6 +25,7 @@ export interface SmartContractResultLogLine {
     command?: string,
     date?: string,
     destination?: string
+    error?: { type: string, message: string },
     fail?: string,
     failed?: boolean,
     isFailed?: boolean,
@@ -55,6 +56,13 @@ export const smartContractPlatformsList: {[key: string]: PlatformData} = {
     [SmartContractPlatform.CameLIGO]: {aceSourceMode: 'ocaml', extension: 'ml', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.CameLIGO)},
     [SmartContractPlatform.JsLIGO]: {aceSourceMode: 'javascript', extension: 'js', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.JsLIGO)},
 };
+
+interface SmartContractOutput {
+    error?: { type: string, message: string },
+    log: SmartContractResultLogLine[],
+    expected?: SmartContractResultLogLine[],
+    decoded: boolean, // Whether it was decoded from the test result output
+}
 
 interface SmartContractLibState {
     resultLog?: SmartContractResultLogLine[],
@@ -113,13 +121,28 @@ export class SmartContractLib extends QuickAlgoLibrary {
         return false;
     }
 
-    getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): SmartContractLibState {
+    getOutputFromTestResult(testResult: TaskSubmissionServerTestResult): SmartContractOutput {
         const testResultSplit = testResult.log.trim().split("\n");
-        const jsonFirstIndex = testResultSplit.findIndex(line => line.trim().startsWith('{'));
-        const testResultJson = testResultSplit.slice(jsonFirstIndex).join("\n");
+        let output = { log: [], decoded: false };
+        let jsonFirstIndex = 0;
+        while (jsonFirstIndex != -1) {
+            jsonFirstIndex = testResultSplit.slice(jsonFirstIndex).findIndex(line => line.trim().startsWith('{'));
+            const testResultJson = testResultSplit.slice(jsonFirstIndex).join("\n");
 
-        const output = JSON.parse(testResultJson);
+            try {
+                output = JSON.parse(testResultJson);
+                output.decoded = true;
+                break;
+            } catch (e) {
+                jsonFirstIndex++;
+            }
+        }
+        return output;
+    }
 
+
+    getContextStateFromTestResult(testResult: TaskSubmissionServerTestResult, test: TaskTest): SmartContractLibState {
+        const output = this.getOutputFromTestResult(testResult);
         const log = output.log;
 
         return {
@@ -130,32 +153,33 @@ export class SmartContractLib extends QuickAlgoLibrary {
     }
 
     getErrorFromTestResult(testResult: TaskSubmissionServerTestResult): LibraryTestResult {
-        try {
-            const testResultSplit = testResult.log.trim().split("\n");
-            const jsonFirstIndex = testResultSplit.findIndex(line => line.trim().startsWith('{'));
-            const testResultJson = testResultSplit.slice(jsonFirstIndex).join("\n");
-
-            const output = JSON.parse(testResultJson);
-            if (!output.error?.message) {
-                return null;
-            }
-
-            const log = output.log;
-            if (output.error && log.length) {
-                log[log.length - 1].error = output.error;
-            }
-            if (output.expected) {
-                for (let i = 0; i < log.length; i++) {
-                    log[i].expected = output.expected[i];
-                }
-            }
-
-            return new LibraryTestResult(
-                output.error?.message,
-            );
-        } catch (e) {
+        const output = this.getOutputFromTestResult(testResult);
+        if (!output.decoded) {
             return LibraryTestResult.fromString(testResult.log);
         }
+        if (!output.error?.message) {
+            return null;
+        }
+
+        let err = output.error;
+        try {
+            const errorValue = JSON.parse(JSON.parse(err.message).value);
+            err = errorValue ? { type: "throw", message: errorValue } : err;
+        } catch (e) { }
+
+        const log = output.log;
+        if (output.error && log.length) {
+            log[log.length - 1].error = err;
+        }
+        if (output.expected) {
+            for (let i = 0; i < log.length; i++) {
+                log[i].expected = output.expected[i];
+            }
+        }
+
+        return new LibraryTestResult(
+            err.message,
+        );
     }
 
     showViews() {

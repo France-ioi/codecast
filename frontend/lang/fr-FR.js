@@ -354,6 +354,8 @@ module.exports = {
     SUBMISSION_RESULT_OUTPUT_PROGRAM: "Votre programme a affiché :",
     SUBMISSION_RESULT_OUTPUT_EXPECTED: "Alors que la réponse attendue était :",
     SUBMISSION_RESULT_OUTPUT_HELP: "Pour vous aider, le premier caractère différent est mis sur fond rouge.<br><br>Vérifiez bien que vous affichez exactement ce qui est demandé et rien de plus. Vérifiez aussi les retours à la ligne.",
+    LOCAL_WORK_DESCRIPTION: "Vous pouvez travailler sur cette tâche depuis votre ordinateur. Pour cela, téléchargez le script fioi.py ci-dessous puis utilisez-le pour soumettre votre code depuis la ligne de commande.",
+    LOCAL_WORK_DOWNLOAD_BUTTON: "Télécharger le script fioi.py",
     LOCAL_WORK_URL: "Utilisez cette commande pour soumettre :",
     COPIED: "Copié !",
 };

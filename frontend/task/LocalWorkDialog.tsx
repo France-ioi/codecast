@@ -1,4 +1,4 @@
-import {Button, ControlGroup, Dialog, FormGroup, InputGroup} from "@blueprintjs/core";
+import { Button, ControlGroup, Dialog, FormGroup, Icon, InputGroup } from "@blueprintjs/core";
 import React, {useRef, useState} from "react";
 import {getMessage} from "../lang";
 import {IconNames} from '@blueprintjs/icons';
@@ -15,7 +15,7 @@ export function LocalWorkDialog(props: LocalWorkDialogProps) {
     const taskToken = useAppSelector(state => state.platform.taskToken);
     const platformName = useAppSelector(state => state.platform.platformName);
     const platform = useAppSelector(selectActiveBufferPlatform);
-    const shellCommand = `fioi submit code.${platformsList[platform].extension} --platform ${platformName} --token ${taskToken}`;
+    const shellCommand = `./fioi.py submit program.${platformsList[platform].extension} --language ${platform} --platform ${platformName} --token ${taskToken}`;
     const [copied, setCopied] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout>();
 
@@ -57,6 +57,15 @@ export function LocalWorkDialog(props: LocalWorkDialogProps) {
             isCloseButtonShown={true}
         >
             <div className='bp4-dialog-body'>
+                <FormGroup>
+                    <div id='localWorkExplanation'>
+                        {getMessage('LOCAL_WORK_DESCRIPTION')}
+                    </div>
+                    <a href="assets/fioi.py" download>
+                        <Icon icon="download" style={{ height: '20px' }} />
+                        {getMessage('LOCAL_WORK_DOWNLOAD_BUTTON')}
+                    </a>
+                </FormGroup>
                 <FormGroup labelFor='shellCommand' label={getMessage('LOCAL_WORK_URL')}>
                     <ControlGroup>
                         <InputGroup
