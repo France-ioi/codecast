@@ -56,7 +56,7 @@ export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string
 }
 
 function getBlockFromBlockInfo(generatorName: string, blockName: string, blockInfo: BlockInfo|undefined, contextStrings): Block {
-    let code = contextStrings.code[blockName];
+    let code = contextStrings.code[`${generatorName}.${blockName}`] ?? contextStrings.code[blockName];
     if ('undefined' === typeof code) {
         code = blockName;
     }
@@ -205,7 +205,9 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
     }
 
     availableBlocks.forEach((block => {
-        if (contextStrings.description && block.name in contextStrings.description) {
+        if (contextStrings.description && `${block.generatorName}.${block.name}` in contextStrings.description) {
+            block.description = contextStrings.description[`${block.generatorName}.${block.name}`];
+        } else if (contextStrings.description && block.name in contextStrings.description) {
             block.description = contextStrings.description[block.name];
         }
 
