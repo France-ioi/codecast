@@ -35,8 +35,4 @@ export const {
     analysisTogglePath,
 } = analysisSlice.actions;
 
-export const analysisRecordableActions = [
-    'analysisTogglePath',
-];
-
 export default analysisSlice;

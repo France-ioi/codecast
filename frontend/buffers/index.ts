@@ -152,7 +152,11 @@ export function* denormalizeBufferFromAnswer(answer: TaskAnswer): Generator<any,
     }
 }
 
-export function* createSourceBufferFromDocument(document: Document, platform?: CodecastPlatform, parameters: Partial<BufferStateParameters> = {}) {
+interface BufferCreationParameters {
+    noSwitch?: boolean, // Disable the automatic switch to the newly created buffer
+}
+
+export function* createSourceBufferFromDocument(document: Document, platform?: CodecastPlatform, bufferParameters: Partial<BufferStateParameters> = {}, creationParameters: BufferCreationParameters = {}) {
     const state: AppStore = yield* appSelect();
 
     platform = platform ?? state.options.platform;
@@ -164,17 +168,22 @@ export function* createSourceBufferFromDocument(document: Document, platform?: C
         fileName: newFileName,
         platform,
         document,
-        ...parameters,
+        ...bufferParameters,
     };
 
-    yield* call(createSourceBufferFromBufferParameters, newBuffer);
+    return yield* call(createSourceBufferFromBufferParameters, newBuffer, creationParameters);
 }
 
-export function* createSourceBufferFromBufferParameters(parameters: BufferStateParameters) {
+export function* createSourceBufferFromBufferParameters(parameters: BufferStateParameters, creationParameters: BufferCreationParameters = {}) {
     const newBufferName = yield* call(getNewBufferName);
     yield* put(bufferInit({buffer: newBufferName, ...parameters}));
     yield* put(bufferResetDocument({buffer: newBufferName, document: parameters.document, goToEnd: true}));
-    yield* put(bufferChangeActiveBufferName(newBufferName));
+
+    if (!creationParameters.noSwitch) {
+        yield* put(bufferChangeActiveBufferName(newBufferName));
+    }
+
+    return newBufferName;
 }
 
 function* createBufferFromSubmission(submissionId: number) {

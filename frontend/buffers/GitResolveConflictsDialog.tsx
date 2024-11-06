@@ -1,49 +1,77 @@
-import {Button, Dialog, FormGroup, Intent, TextArea} from "@blueprintjs/core";
-import React, {FormEvent, useState} from "react";
+import {Button, Dialog, Intent} from "@blueprintjs/core";
+import React, {FormEvent} from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from '../hooks';
 import {getMessage} from '../lang';
-import {bufferGitPull} from './buffer_actions';
 import {GitSyncParams} from './buffer_types';
-import {bufferInit} from './buffers_slice';
+import {bufferInit, bufferRemove, bufferResetDocument} from './buffers_slice';
+import {BufferEditor} from './BufferEditor';
+import {platformsList} from '../stepper/platforms';
 
 export function GitResolveConflictsDialog({bufferName}: {bufferName: string}) {
-    const gitSync = useAppSelector(state => state.buffers.buffers[bufferName].gitSync);
+    const bufferState = useAppSelector(state => state.buffers.buffers[bufferName]);
+    const conflictBufferState = useAppSelector(state => state.buffers.buffers[bufferState.gitSync.conflictBuffer]);
+    const {gitSync} = bufferState;
     const dispatch = useDispatch();
-    const [source, setSource] = useState<string>(gitSync.conflictedSource);
 
-    const doGitPull = (e: FormEvent<HTMLFormElement>) => {
+    const validateConflictSolve = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        dispatch(bufferGitPull(bufferName, source, gitSync.conflictedRevision));
-    };
 
-    const closeCommitDialog = () => {
+        dispatch(bufferRemove(gitSync.conflictBuffer));
+
         const newGitSync: GitSyncParams = {
             ...gitSync,
-            commitModalOpen: false,
+            conflictSource: null,
+            conflictBuffer: null,
+            conflictRevision: null,
+            revision: gitSync.conflictRevision,
+        };
+        dispatch(bufferInit({buffer: bufferName, gitSync: newGitSync}));
+        dispatch(bufferResetDocument({buffer: bufferName, document: conflictBufferState.document}));
+    };
+
+    const closeConflictsDialog = () => {
+        dispatch(bufferRemove(gitSync.conflictBuffer));
+
+        const newGitSync: GitSyncParams = {
+            ...gitSync,
+            conflictSource: null,
+            conflictBuffer: null,
+            conflictRevision: null,
         };
         dispatch(bufferInit({buffer: bufferName, gitSync: newGitSync}));
     };
 
+    const platform = bufferState.platform;
+    const sourceMode = platformsList[platform].aceSourceMode;
+
     return (
         <Dialog
             icon="menu"
-            title={getMessage('GIT_PUSH_LABEL')}
+            title={getMessage('GIT_RESOLVE_CONFLICTS')}
             isOpen={true}
             canOutsideClickClose={true}
             canEscapeKeyClose={true}
             isCloseButtonShown={true}
-            onClose={closeCommitDialog}
+            onClose={closeConflictsDialog}
         >
             <div className='bp4-dialog-body'>
-                <form onSubmit={doGitPull}>
-                    <p>solve conflicts</p>
-                    <FormGroup>
-                        <TextArea
-                            value={source}
-                            onChange={(e) => setSource(e.target.value)}
+                <form onSubmit={validateConflictSolve}>
+                    <p>
+                        {getMessage('GIT_RESOLVE_CONFLICTS_LABEL')}
+                    </p>
+
+                    <div className="git-solve-conflict-editor">
+                        <BufferEditor
+                            platform={platform}
+                            bufferName={gitSync.conflictBuffer}
+                            mode={sourceMode}
+                            requiredWidth="100%"
+                            requiredHeight="100%"
+                            hasAutocompletion
                         />
-                    </FormGroup>
+                    </div>
+
                     <Button
                         text={getMessage('VALIDATE')}
                         intent={Intent.PRIMARY}

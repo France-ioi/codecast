@@ -10,11 +10,9 @@ import {SubmissionResultsSelector} from '../submission/SubmissionResultsSelector
 import {faArrowLeft} from '@fortawesome/free-solid-svg-icons/faArrowLeft';
 import {faArrowRight} from '@fortawesome/free-solid-svg-icons/faArrowRight';
 import debounce from 'lodash.debounce';
+import {BufferState} from './buffer_types';
 
-export interface BufferEditorTabsProps {
-}
-
-export function BufferEditorTabs(props: BufferEditorTabsProps) {
+export function BufferEditorTabs() {
     const sourceBuffers = useAppSelector(selectSourceBuffers);
     const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
     const dispatch = useDispatch();

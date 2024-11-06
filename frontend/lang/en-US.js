@@ -359,6 +359,8 @@ module.exports = {
     GIT_BRANCH_NO_RESULT: 'No result',
     GIT_PUSH_LABEL: "Push changes",
     GIT_TYPE_USERNAME: "Choose the username under which you would like to publishes your changes:",
+    GIT_RESOLVE_CONFLICTS: "Resolve Git conflicts",
+    GIT_RESOLVE_CONFLICTS_LABEL: "Some modifications occurred on the Git repository since your last pull and they conflict with your local version. Resolve the conflicts to update the file.",
     GIT_FILE: "File",
     GIT_USERNAME: "Git username",
     GIT_COMMIT_MESSAGE: "Git commit message",

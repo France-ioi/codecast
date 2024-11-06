@@ -39,7 +39,6 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
     const [showEdit, setShowEdit] = useState(false);
     const [isFlashing, setFlashing] = useState(false);
     const waitingEvaluation = useRef<boolean>(false);
-    const gitSync = sourceBuffer.gitSync;
 
     useEffect(() => {
         if (isEvaluating) {
@@ -129,7 +128,7 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
                         bufferName={bufferName}
                     />}
 
-                    {sourceBuffer.gitSync?.conflictedSource && <GitResolveConflictsDialog
+                    {sourceBuffer.gitSync?.conflictSource && <GitResolveConflictsDialog
                         bufferName={bufferName}
                     />}
                 </div>

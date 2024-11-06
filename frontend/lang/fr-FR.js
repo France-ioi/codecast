@@ -371,6 +371,8 @@ module.exports = {
     GIT_ERROR_PUSH_NOT_UP_TO_DATE: "Des modifications ont été faites depuis votre dernier pull. Faites un pull pour vous mettre à jour et pouvoir envoyer vos changements.",
     GIT_TYPE_USERNAME: "Indiquez le nom d'utilisateur sous lequel vous souhaitez publier vos changements :",
     GIT_PUSH_LABEL: "Publier les changements",
+    GIT_RESOLVE_CONFLICTS: "Résoudre les conflits Git",
+    GIT_RESOLVE_CONFLICTS_LABEL: "Des modifications ont été faites sur le répertoire Git et sont en conflit avec votre version locale. Corrigez les conflits pour pouvoir mettre à jour le fichier.",
     GIT_FILE: "Fichier",
     GIT_USERNAME: "Nom d'utilisateur Git",
     GIT_COMMIT_MESSAGE: "Message indiquant les changements",

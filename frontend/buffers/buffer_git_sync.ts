@@ -8,6 +8,7 @@ import {documentToString, TextBufferHandler} from './document';
 import {stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
 import {isLocalStorageEnabled} from '../common/utils';
+import {createSourceBufferFromDocument} from './index';
 
 export function* bufferGitSyncSagas() {
     yield* takeEvery(bufferGitPull, function* ({payload: {bufferName, source, revision}}) {
@@ -29,7 +30,7 @@ export function* bufferGitSyncSagas() {
                 file: gitSync.file,
                 revision: revision ?? gitSync.revision,
                 source: source ?? documentToString(bufferState.document),
-            })) as {success: boolean, error?: string, conflictedSource?: string, content: string, revision: string};
+            })) as {success: boolean, error?: string, conflictSource?: string, content: string, revision: string};
 
             if (!gitPullResult.success) {
                 throw new Error(gitPullResult.error);
@@ -49,11 +50,21 @@ export function* bufferGitSyncSagas() {
             console.error(e);
 
             if ('conflict' === e?.res?.body?.error) {
+                const conflictSource: string = e.res.body.conflict_source;
+
+                const conflictDocument = TextBufferHandler.documentFromString(conflictSource);
+                const conflictBuffer = yield* call(createSourceBufferFromDocument, conflictDocument, bufferState.platform, {
+                    hidden: true,
+                }, {
+                    noSwitch: true,
+                });
+
                 const newGitSync: GitSyncParams = {
                     ...gitSync,
                     loading: false,
-                    conflictedSource: e.res.body.conflicted_source,
-                    conflictedRevision: e.res.body.conflicted_revision,
+                    conflictSource,
+                    conflictRevision: e.res.body.conflict_revision,
+                    conflictBuffer,
                 };
 
                 yield* put(bufferInit({buffer: bufferName, gitSync: newGitSync}));

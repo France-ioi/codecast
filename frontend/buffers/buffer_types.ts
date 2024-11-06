@@ -44,6 +44,7 @@ export interface BufferStateParameters {
     type?: BufferType,
     document?: Document,
     gitSync?: GitSyncParams,
+    hidden?: boolean,
 }
 
 export interface GitSyncParams {
@@ -53,8 +54,9 @@ export interface GitSyncParams {
     revision: string,
     loading?: boolean,
     commitModalOpen?: boolean,
-    conflictedSource?: string,
-    conflictedRevision?: string,
+    conflictSource?: string,
+    conflictRevision?: string,
+    conflictBuffer?: string,
 }
 
 export interface BufferState extends BufferStateParameters {

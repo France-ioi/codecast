@@ -1,7 +1,7 @@
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {addAutoRecordingBehaviour} from "../../recorder/record";
 import {Bundle} from "../../linker";
-import analysisSlice, {analysisRecordableActions, analysisTogglePath} from "./analysis_slice";
+import {analysisTogglePath} from "./analysis_slice";
 import {App} from '../../app_types';
 import log from 'loglevel';
 

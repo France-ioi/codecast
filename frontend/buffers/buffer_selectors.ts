@@ -11,7 +11,7 @@ export const selectSourceBuffers = memoize((state: AppStore): {[bufferName: stri
 export function selectSourceBuffersFromBufferState (buffers: BuffersState): {[bufferName: string]: BufferState} {
     const sourceBuffers = {};
     for (let [bufferName, buffer] of Object.entries(buffers.buffers)) {
-        if (buffer.source) {
+        if (buffer.source && !buffer.hidden) {
             sourceBuffers[bufferName] = buffer;
         }
     }
