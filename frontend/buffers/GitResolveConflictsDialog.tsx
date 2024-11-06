@@ -48,6 +48,7 @@ export function GitResolveConflictsDialog({bufferName}: {bufferName: string}) {
     return (
         <Dialog
             icon="menu"
+            className="git-solve-conflict-dialog"
             title={getMessage('GIT_RESOLVE_CONFLICTS')}
             isOpen={true}
             canOutsideClickClose={true}
