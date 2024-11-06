@@ -71,7 +71,12 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
             setStep(GitSyncStep.CHOOSE_BRANCH);
         } catch (e: any) {
             console.error(e);
-            setError(getMessage('GIT_ERROR_BRANCHES'));
+
+            let errorMessage = getMessage('GIT_ERROR_BRANCHES');
+            if (e?.res?.body?.publicKey) {
+                errorMessage = `${errorMessage} ${getMessage('GIT_ADD_SSH_KEY')}\n${e?.res?.body?.publicKey}`;
+            }
+            setError(errorMessage);
         } finally {
             setLoadingBranches(false);
         }
