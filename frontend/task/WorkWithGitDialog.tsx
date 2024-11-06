@@ -55,8 +55,12 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
     };
 
     const getRepositoryBranches = async () => {
-        setLoadingBranches(true);
+        if (!/[a-z0-9]+@.+\.git/.test(gitSync.repository)) {
+            setError(getMessage('GIT_ERROR_REPOSITORY_FORMAT'));
+            return;
+        }
 
+        setLoadingBranches(true);
         setError(null);
 
         try {
@@ -174,6 +178,7 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
                         placeholder={"git@github.com:..."}
                         value={gitSync.repository}
                         readOnly={step > GitSyncStep.CHOOSE_REPOSITORY}
+                        autoFocus
                         onChange={(e) => changeGitSyncParameter('repository', e.target.value)}
                     />
                 </FormGroup>

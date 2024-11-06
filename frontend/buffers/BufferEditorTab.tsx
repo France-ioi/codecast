@@ -12,10 +12,11 @@ import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {OverlayTrigger, Popover} from "react-bootstrap";
 import {BufferEditorTabEdit} from './BufferEditorTabEdit';
 import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
-import {faCircleUp} from '@fortawesome/free-regular-svg-icons/faCircleUp';
 import {faArrowCircleUp} from '@fortawesome/free-solid-svg-icons/faArrowCircleUp';
 import {faArrowCircleDown} from '@fortawesome/free-solid-svg-icons/faArrowCircleDown';
-import {bufferGitPull, bufferGitPush} from './buffer_actions';
+import {bufferGitOpenPushDialog, bufferGitPull} from './buffer_actions';
+import {GitCommitDialog} from './GitCommitDialog';
+import {GitResolveConflictsDialog} from './GitResolveConflictsDialog';
 
 export interface BufferEditorTabProps {
     bufferName: string,
@@ -38,6 +39,7 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
     const [showEdit, setShowEdit] = useState(false);
     const [isFlashing, setFlashing] = useState(false);
     const waitingEvaluation = useRef<boolean>(false);
+    const gitSync = sourceBuffer.gitSync;
 
     useEffect(() => {
         if (isEvaluating) {
@@ -77,7 +79,7 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
     };
 
     const gitPush = () => {
-        dispatch(bufferGitPush(bufferName));
+        dispatch(bufferGitOpenPushDialog(bufferName));
     };
 
     return (
@@ -122,6 +124,14 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
                     {closable && <div className="layout-editor-tab-close" onClick={closeTab}>
                         <FontAwesomeIcon icon={faTimes}/>
                     </div>}
+
+                    {sourceBuffer.gitSync?.commitModalOpen && <GitCommitDialog
+                        bufferName={bufferName}
+                    />}
+
+                    {sourceBuffer.gitSync?.conflictedSource && <GitResolveConflictsDialog
+                        bufferName={bufferName}
+                    />}
                 </div>
             )}
         </OverlayTrigger>

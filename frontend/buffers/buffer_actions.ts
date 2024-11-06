@@ -25,14 +25,22 @@ export const bufferChangePlatform = createAction('buffer/changePlatform', (buffe
     },
 }));
 
-export const bufferGitPull = createAction('buffer/gitPull', (bufferName: string) => ({
+export const bufferGitPull = createAction('buffer/gitPull', (bufferName: string, source?: string, revision?: string) => ({
+    payload: {
+        bufferName,
+        source,
+        revision,
+    },
+}));
+export const bufferGitOpenPushDialog = createAction('buffer/gitOpenPushDialog', (bufferName: string) => ({
     payload: {
         bufferName,
     },
 }));
-
-export const bufferGitPush = createAction('buffer/gitPush', (bufferName: string) => ({
+export const bufferGitPush = createAction('buffer/gitPush', (bufferName: string, gitCommitMessage: string, gitUsername: string) => ({
     payload: {
         bufferName,
+        gitCommitMessage,
+        gitUsername,
     },
 }));

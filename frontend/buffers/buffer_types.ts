@@ -52,6 +52,9 @@ export interface GitSyncParams {
     file: string,
     revision: string,
     loading?: boolean,
+    commitModalOpen?: boolean,
+    conflictedSource?: string,
+    conflictedRevision?: string,
 }
 
 export interface BufferState extends BufferStateParameters {
