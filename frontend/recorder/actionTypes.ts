@@ -1,3 +1,6 @@
+import {createAction} from '@reduxjs/toolkit';
+import {FileDescriptor} from '../task/libs/remote_lib_handler';
+
 export enum ActionTypes {
     VumeterMounted = 'Vumeter.Mounted',
     
@@ -10,6 +13,8 @@ export enum ActionTypes {
     SaveScreenEventsUploaded = 'Save.Screen.Events.Uploaded',
     SaveScreenAudioUploading = 'Save.Screen.Audio.Uploading',
     SaveScreenAudioUploaded = 'Save.Screen.Audio.Uploaded',
+    SaveScreenAdditionalFilesUploading = 'Save.Screen.AdditionalFiles.Uploading',
+    SaveScreenAdditionalFilesUploaded = 'Save.Screen.AdditionalFiles.Uploaded',
     SaveScreenUploadSucceeded = 'Save.Screen.Upload.Succeeded',
     SaveScreenUploadFailed = 'Save.Screen.Upload.Failed',
 

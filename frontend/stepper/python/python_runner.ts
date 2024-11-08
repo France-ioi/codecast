@@ -452,13 +452,18 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
 
     noDelay(callback, value) {
         log.getLogger('python_runner').debug('NO DELAY');
+        callback(value);
+    }
+
+    createValuePrimitive(value) {
         let primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             // Apparently when we create a new primitive, the debugger adds a call to
             // the callstack.
             this._resetCallstackOnNextStep = true;
         }
-        callback(primitive);
+
+        return primitive;
     }
 
     private _createPrimitive(data) {

@@ -204,7 +204,7 @@ export function TaskApp() {
             </div>
 
             <Dialog isOpen={!!progressMessage} title={progressMessage ? progressMessage : 'Info'} isCloseButtonShown={false}>
-                <div style={{margin: '20px 20px 0 20px'}}>
+                <div style={{margin: '20px 20px 20px 20px'}}>
                     <ProgressBar value={progress} intent={Intent.SUCCESS}/>
                 </div>
 

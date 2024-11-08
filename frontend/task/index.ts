@@ -64,7 +64,7 @@ import {
     stepperExecutionSuccess
 } from "../stepper/actionTypes";
 import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
-import {makeContext, StepperContext} from "../stepper/api";
+import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -120,6 +120,7 @@ import {Screen} from '../common/screens';
 import {DeferredPromise} from '../utils/app';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 import jwt from 'jsonwebtoken';
+import {getAudioTimeStep} from './task_selectors';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -277,7 +278,7 @@ function* taskLoadSaga(app: App, action) {
     // ]));
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
-    if (!isServerTask(currentTask)) {
+    if (!isServerTask(currentTask) && 'main' === app.environment) {
         yield* fork(subscribePlatformHelper);
     }
 
@@ -457,8 +458,8 @@ function* handleLibrariesEventListenerSaga(app: App) {
             if (!onlyLog) {
                 const args = payload ? payload : [];
                 if (replayContextSave) {
-                    stepperContext.quickAlgoCallsLogger = (call) => {
-                        replayContextSave.addQuickAlgoLibraryCall(call);
+                    stepperContext.quickAlgoCallsLogger = (call: QuickalgoLibraryCall, result) => {
+                        replayContextSave.addQuickAlgoLibraryCall(call, result);
                     };
                 }
 
@@ -681,17 +682,8 @@ function* getTestContextState() {
 
 function* getTaskAnswer() {
     const state = yield* appSelect();
-    const taskPlatformMode = getTaskPlatformMode(state);
 
-    if (TaskPlatformMode.RecordingProgress === taskPlatformMode) {
-        return getAudioTimeStep(state);
-    }
-
-    if (TaskPlatformMode.Source === taskPlatformMode) {
-        return selectAnswer(state) ?? '';
-    }
-
-    return null;
+    return selectAnswer(state) ?? '';
 }
 
 
@@ -705,14 +697,6 @@ function* getTaskState () {
 
 function* getTaskLevel () {
     return yield* appSelect(state => state.task.currentLevel);
-}
-
-function getAudioTimeStep(state: AppStore) {
-    if (state.player && state.player.duration) {
-        return Math.ceil(recordingProgressSteps * state.player.audioTime / state.player.duration);
-    }
-
-    return null;
 }
 
 function* watchRecordingProgressSaga(app: App) {

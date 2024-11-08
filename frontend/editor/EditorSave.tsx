@@ -59,6 +59,9 @@ export function EditorSave() {
             }
         }
     };
+
+    const handleFocus = (event) => event.target.select();
+
     const handleTargetChange = (event) => {
         setTargetUrl(event.target.value);
     };
@@ -149,6 +152,7 @@ export function EditorSave() {
                         type='text'
                         value={playerUrl}
                         readOnly
+                        onFocus={handleFocus}
                         rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
@@ -161,6 +165,7 @@ export function EditorSave() {
                         type='text'
                         value={editorUrl}
                         readOnly
+                        onFocus={handleFocus}
                         rightElement={<AnchorButton href={editorUrl} icon={IconNames.EDIT} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
@@ -173,6 +178,7 @@ export function EditorSave() {
                         type='text'
                         value={ltiUrl}
                         readOnly
+                        onFocus={handleFocus}
                         rightElement={<AnchorButton href={ltiUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>

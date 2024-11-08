@@ -30,6 +30,13 @@ import {QuickalgoLibraryInfos, QuickalgoTaskGridInfos} from '../task_types';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {selectAvailableExecutionModes} from '../../submission/submission_selectors';
 import {submissionChangeExecutionMode} from '../../submission/submission_slice';
+import {OpenCvLib} from './opencv/opencv_lib';
+
+const availableLibs = {
+    'smart_contract': SmartContractLib,
+    'printer': PrinterLib,
+    'opencv': OpenCvLib,
+};
 
 export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false) {
     let state = yield* appSelect();
@@ -85,10 +92,12 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
         }
-        if (!window.quickAlgoLibrariesList.find(lib => 'smart_contract' === lib[0])) {
-            window.quickAlgoLibrariesList.push(['smart_contract', (display, infos) => {
-                return new SmartContractLib(display, infos);
-            }]);
+        for (let [libName, libClass] of Object.entries(availableLibs)) {
+            if (!window.quickAlgoLibrariesList.find(lib => libName === lib[0])) {
+                window.quickAlgoLibrariesList.push([libName, (display, infos) => {
+                    return new libClass(display, infos);
+                }]);
+            }
         }
 
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);

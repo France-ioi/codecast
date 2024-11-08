@@ -2,6 +2,7 @@ import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {CodecastWorker} from "../utils/worker_utils";
+import {FileDescriptor} from '../task/libs/remote_lib_handler';
 
 /*
 
@@ -29,16 +30,17 @@ export enum RecorderStatus {
     Resuming = 'resuming'
 }
 
-export const initialStateRecorder = {
-    progress: 0,
-    status: null as RecorderStatus,
-    context: null as {worker: CodecastWorker, audioContext: AudioContext, scriptProcessor: ScriptProcessorNode},
-    junkTime: 0,
-    elapsed: 0,
-    suspendedAt: 0,
-    timeOffset: 0,
-    lastEventTime: 0,
-    events: [] as any[]
+export interface RecorderState {
+    progress: number,
+    status: RecorderStatus,
+    context: {worker: CodecastWorker, audioContext: AudioContext, scriptProcessor: ScriptProcessorNode},
+    junkTime: number,
+    elapsed: number,
+    suspendedAt: number,
+    timeOffset: number,
+    lastEventTime: number,
+    events: any[],
+    files: FileDescriptor[],
 }
 
 export default function(bundle: Bundle) {
@@ -73,6 +75,7 @@ export default function(bundle: Bundle) {
         state.recorder.timeOffset = 0;
         state.recorder.lastEventTime = 0;
         state.recorder.events = [];
+        state.recorder.files = [];
         state.recorder.elapsed = 0;
     });
 

@@ -50,9 +50,9 @@ import {getSkulptSuspensionsCopy} from "./python/analysis";
 import {Directive} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
-    ActionTypes, ContextEnrichingTypes,
+    ActionTypes, ContextEnrichingTypes, stepperAddFile,
     stepperDisplayError, stepperExecutionEnd, stepperExecutionEndConditionReached,
-    stepperExecutionError,
+    stepperExecutionError, stepperRecordLibraryCall,
     stepperRunBackground, stepperRunBackgroundFinished
 } from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -97,6 +97,9 @@ import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import debounce from 'lodash.debounce';
 import {RemoteDebugExecutor} from './remote/remote_debug_executer';
 import {Range} from '../buffers/buffer_types';
+import {StepperProgressParameters} from './stepper_types';
+import {FileDescriptor} from '../task/libs/remote_lib_handler';
+import {RecorderStatus} from '../recorder/store';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -205,6 +208,7 @@ export const initialStateStepper = {
     error: null as string|LibraryTestResult,
     runningBackground: false,
     backgroundRunData: null as TaskSubmissionResultPayload,
+    files: [] as FileDescriptor[],
 };
 
 export function* createRunnerSaga(platform: CodecastPlatform): SagaIterator<AbstractRunner> {
@@ -344,6 +348,20 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.StepperRunBackgroundFinished);
     bundle.addReducer(ActionTypes.StepperRunBackgroundFinished, stepperRunBackgroundFinishedReducer);
 
+    bundle.defineAction(ActionTypes.StepperRecordLibraryCall);
+    bundle.addReducer(ActionTypes.StepperRecordLibraryCall, stepperRecordLibraryCallReducer);
+
+    bundle.defineAction(stepperAddFile.type);
+    bundle.addReducer(stepperAddFile.type, (state: AppStore, {payload: {file}}) => {
+        if (!state.stepper.files) {
+            state.stepper.files = [];
+        }
+        state.stepper.files.push(file);
+        if (RecorderStatus.Recording === state.recorder.status) {
+            state.recorder.files.push(file);
+        }
+    });
+
     /* END view stuff to move out of here */
 
     bundle.defineAction(ActionTypes.StepperEnabled);
@@ -380,7 +398,7 @@ export function clearStepper(stepper: Stepper, withCurrentState = false) {
     }
 }
 
-export function getNodeRange(stepperState?: StepperState) {
+export function getNodeRange(stepperState?: StepperState): Range {
     if (!stepperState || !stepperState.codecastAnalysis) {
         return null;
     }
@@ -633,6 +651,28 @@ function stepperRunBackgroundReducer(state: AppStore): void {
 function stepperRunBackgroundFinishedReducer(state: AppStore, {payload: {backgroundRunData}}): void {
     state.stepper.runningBackground = false;
     state.stepper.backgroundRunData = backgroundRunData;
+}
+
+function stepperRecordLibraryCallReducer(state: AppStore, {payload}: ReturnType<typeof stepperRecordLibraryCall>) : void {
+    const events = state.recorder.events;
+    if (!events || !events.length) {
+        return;
+    }
+
+    for (let i = events.length - 1; i >= 0; i--) {
+        const event = events[i];
+        if ('stepper.progress' === event[1]) {
+            const stepperProgressParameters: StepperProgressParameters = event[2];
+            if (!('libCalls' in stepperProgressParameters)) {
+                stepperProgressParameters.libCalls = [];
+            }
+            stepperProgressParameters.libCalls.push({
+                call: payload.libraryCall,
+                result: payload.libraryCallResult,
+            });
+            break;
+        }
+    }
 }
 
 /* saga */

@@ -19,35 +19,25 @@ export function getBlob(url: string): Promise<Blob> {
 
 export function uploadBlob(upload, blob: Blob) {
     return new Promise(function(resolve, reject) {
-        const formData = new FormData();
-        const params = upload.params;
-        Object.keys(params).forEach(function(key) {
-            formData.append(key, params[key]);
-        });
-        formData.append('file', blob);
-
-        superagent.post(upload.form_url)
-            .send(formData)
+        superagent.put(upload)
+            .set({"Content-Type": blob.type})
+            .send(blob)
             .end(function(err, response) {
                 if (err) {
                     return reject(err);
                 }
 
-                resolve(response);
+                resolve(upload.split('?')[0]);
             });
     });
 }
 
-export function uploadBlobChannel({params, form_url}, blob) {
+export function uploadBlobChannel(form_url, blob) {
     return eventChannel<{type: string, percent?: number, error?: string, response?: any}>(function(listener) {
-        const formData = new FormData();
-        Object.keys(params).forEach(function(key) {
-            formData.append(key, params[key]);
-        });
-        formData.append('file', blob);
+        const request = superagent.put(form_url)
+            .set({"Content-Type": blob.type});
 
-        const request = superagent.post(form_url);
-        request.send(formData)
+        request.send(blob)
             .on('progress', function(event) {
                 listener({type: 'progress', percent: event.percent});
             })
@@ -55,7 +45,7 @@ export function uploadBlobChannel({params, form_url}, blob) {
                 if (error) {
                     listener({type: 'error', error});
                 } else {
-                    listener({type: 'response', response});
+                    listener({type: 'response', response: form_url.split('?')[0]});
                 }
                 listener(END);
             });

@@ -196,15 +196,7 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {answer} = parameters;
         const state = yield* appSelect();
-
-        if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
-            return {
-                score: Number(answer) / recordingProgressSteps,
-                message: '',
-            }
-        }
 
         if (isServerTask(state.task.currentTask)) {
             return yield* apply(this, this.gradeAnswerServer, [parameters]);
