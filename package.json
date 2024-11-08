@@ -30,6 +30,7 @@
     "@babel/runtime": "^7.22.5",
     "@blueprintjs/core": "^4.20.2",
     "@blueprintjs/datetime": "^4.4.37",
+    "@blueprintjs/select": "^4.9.24",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-regular-svg-icons": "^6.4.0",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",

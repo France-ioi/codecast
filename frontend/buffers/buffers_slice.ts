@@ -25,11 +25,13 @@ export const buffersInitialState = {
     activeBufferName: null,
 } as BuffersState;
 
-function initBufferIfNeeded(state: BuffersState, buffer: string, type: BufferType) {
+function initBufferIfNeeded(state: BuffersState, buffer: string, type?: BufferType) {
     if (!(buffer in state.buffers)) {
         state.buffers[buffer] = createEmptyBufferState(type);
     }
-    state.buffers[buffer].type = type;
+    if (type) {
+        state.buffers[buffer].type = type;
+    }
 }
 
 function generateNewId(elements: {nextId: number, elements: {[id: number]: unknown}}) {
@@ -42,7 +44,7 @@ export const buffersSlice = createSlice({
     reducers: {
         bufferInit(state, action: PayloadAction<{buffer: string} & BufferStateParameters>) {
             initBufferIfNeeded(state, action.payload.buffer, action.payload.type);
-            for (let item of ['source', 'fileName', 'platform', 'submissionIndex']) {
+            for (let item of ['source', 'fileName', 'platform', 'submissionIndex', 'gitSync', 'hidden']) {
                 if (item in action.payload) {
                     state.buffers[action.payload.buffer][item] = action.payload[item];
                 }

@@ -8,7 +8,8 @@
     padding: 5px 30px 5px 15px;
     background: #bfbfbf;
     color: #666;
-    display: block;
+    display: flex;
+    gap: 10px;
     text-align: center;
     position: relative;
     font-weight: 600;
@@ -28,7 +29,7 @@
     }
     .layout-editor-tab-close {
       position: absolute;
-      top: calc(50% - 12px);
+      top: calc(50% - 13px);
       right: 10px;
       cursor: pointer;
       display: none;
@@ -68,6 +69,14 @@
       cursor: pointer;
     }
   }
+}
+
+.git-sync-tab {
+  display: flex;
+  gap: 8px;
+  cursor: pointer;
+  align-items: center;
+  font-size: 24px;
 }
 
 @keyframes blinking-color {

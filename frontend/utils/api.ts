@@ -32,13 +32,14 @@ export const asyncRequestJson = function(path, body, withCredentials = true) {
     return promise;
 };
 
-export const asyncGetJson = function (path, withToken: boolean = false) {
+export const asyncGetJson = function (path, query = {}, withToken: boolean = false) {
     let req;
     const promise = new Promise(function(resolve, reject) {
         req = request.get(path);
 
         req.set('Accept', 'application/json');
         const token = isLocalStorageEnabled() && withToken ? window.localStorage.getItem('token') : null;
+        req.query(query);
         if (token) {
             req.query({token});
         }

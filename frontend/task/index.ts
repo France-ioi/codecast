@@ -108,13 +108,17 @@ import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmissi
 import {
     bufferDissociateFromSubmission,
     bufferEdit,
-    bufferEditPlain,
+    bufferEditPlain, bufferInit,
     bufferResetDocument, buffersInitialState
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
 import {callPlatformLog, callPlatformValidate, submissionCancel} from '../submission/submission_actions';
-import {createSourceBufferFromDocument} from '../buffers';
+import {
+    createSourceBufferFromBufferParameters,
+    createSourceBufferFromDocument,
+    denormalizeBufferFromAnswer
+} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {Screen} from '../common/screens';
 import {DeferredPromise} from '../utils/app';
@@ -972,12 +976,14 @@ export default function (bundle: Bundle) {
             log.getLogger('task').debug('Platform answer loaded', answer);
             const state = yield* appSelect();
             const currentBuffer = state.buffers.activeBufferName;
+            const bufferParameters = yield* call(denormalizeBufferFromAnswer, answer);
             if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
-                yield* call(createSourceBufferFromDocument, answer.document, answer.platform);
+                yield* call(createSourceBufferFromBufferParameters, bufferParameters);
             } else if (null !== currentBuffer) {
                 if (state.buffers.buffers[currentBuffer].platform !== answer.platform) {
                     yield* put(bufferChangePlatform(currentBuffer, answer.platform, answer.document));
                 } else {
+                    yield* put(bufferInit({buffer: currentBuffer, ...bufferParameters}));
                     yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
                 }
             }

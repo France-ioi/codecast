@@ -924,3 +924,41 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   }
 }
 
+.bp4-select-popover .bp4-input::-webkit-input-placeholder {
+  color: transparent;
+}
+.bp4-select-popover .bp4-menu li {
+  font-size: 0.9em;
+}
+
+.generic-error {
+  color: #e00000;
+  font-size: 90%;
+  word-wrap: break-word;
+  white-space: break-spaces;
+}
+
+.project-structure {
+  max-height: 300px;
+  overflow-y: auto;
+  .bp4-menu-item {
+    font-size: 16px;
+  }
+}
+
+.project-structure-loading {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.git-solve-conflict-editor {
+  width: 100%;
+  height: 500px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.git-solve-conflict-dialog {
+  width: 1000px;
+  max-width: 90vw;
+}

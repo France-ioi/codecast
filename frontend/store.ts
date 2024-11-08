@@ -96,6 +96,7 @@ export interface CodecastOptions {
     randomTaskVariants?: number,
     contextVisualizationDesiredSize?: string,
     tabsEnabled?: boolean,
+    workWithGit?: boolean,
 }
 
 export interface Panes {
