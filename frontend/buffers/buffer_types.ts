@@ -53,6 +53,7 @@ export interface GitSyncParams {
     file: string,
     revision: string,
     loading?: boolean,
+    pushError?: string,
     commitModalOpen?: boolean,
     conflictSource?: string,
     conflictRevision?: string,

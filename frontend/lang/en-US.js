@@ -358,7 +358,7 @@ module.exports = {
     GIT_ERROR_PUSH_NOT_UP_TO_DATE: "Some changes occurred since your last pull. Do a pull to get up to date and push your changes.",
     GIT_BRANCH_NO_RESULT: 'No result',
     GIT_PUSH_LABEL: "Push changes",
-    GIT_ADD_SSH_KEY: "If the Git repository is private, add the following key to the deploy keys of the repository, from the repository settings:",
+    GIT_ADD_SSH_KEY: "Add the following key to the deploy keys of the repository, from the repository settings:",
     GIT_TYPE_USERNAME: "Choose the username under which you would like to publishes your changes:",
     GIT_RESOLVE_CONFLICTS: "Resolve Git conflicts",
     GIT_RESOLVE_CONFLICTS_LABEL: "Some modifications occurred on the Git repository since your last pull and they conflict with your local version. Resolve the conflicts to update the file.",
