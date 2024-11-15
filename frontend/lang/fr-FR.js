@@ -371,7 +371,7 @@ module.exports = {
     GIT_ERROR_PUSH_NOT_UP_TO_DATE: "Des modifications ont été faites depuis votre dernier pull. Faites un pull pour vous mettre à jour et pouvoir envoyer vos changements.",
     GIT_TYPE_USERNAME: "Indiquez le nom d'utilisateur sous lequel vous souhaitez publier vos changements :",
     GIT_PUSH_LABEL: "Publier les changements",
-    GIT_ADD_SSH_KEY: "Si le dépôt Git est privé, ajoutez la clé suivante aux clés de déploiement du dépôt, depuis les paramètres du dépôt :",
+    GIT_ADD_SSH_KEY: "Ajoutez la clé suivante aux clés de déploiement du dépôt, depuis les paramètres du dépôt :",
     GIT_RESOLVE_CONFLICTS: "Résoudre les conflits Git",
     GIT_RESOLVE_CONFLICTS_LABEL: "Des modifications ont été faites sur le dépôt Git et sont en conflit avec votre version locale. Corrigez les conflits pour pouvoir mettre à jour le fichier.",
     GIT_FILE: "Fichier",
