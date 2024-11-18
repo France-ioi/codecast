@@ -80,6 +80,10 @@ function getBlockFromBlockInfo(generatorName: string, blockName: string, blockIn
 }
 
 export const getContextBlocksDataSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}): Block[] => {
+    if (!context) {
+        return [];
+    }
+
     const contextIncludeBlocks = state.task.contextIncludeBlocks;
     const contextStrings = state.task.contextStrings;
     const platform = selectActiveBufferPlatform(state);

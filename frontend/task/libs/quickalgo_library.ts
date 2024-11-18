@@ -12,6 +12,7 @@ import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {App, Codecast} from '../../app_types';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
 import AbstractRunner from '../../stepper/abstract_runner';
+import {generateRemoteLibHandler} from './remote_lib_handler';
 
 export interface LibraryEventListener {
     condition: (callback: (result: boolean) => void) => void,
@@ -21,7 +22,7 @@ export interface LibraryEventListener {
 
 export interface QuickalgoLibraryBlock {
     name?: string,
-    yieldsValue?: boolean,
+    yieldsValue?: boolean|string,
     params?: string[],
     blocklyJson?: any,
     anyArgs?: boolean,
@@ -485,6 +486,10 @@ export abstract class QuickAlgoLibrary {
         log.getLogger('multithread').debug('[multithread] -----------------------------------------------');
         log.getLogger('multithread').debug('[multithread] schedule thread', nextThreadId);
         this.runner.swapCurrentThreadId(nextThreadId);
+    }
+
+    generateRemoteHandler(libraryName: string, callName: string) {
+        return generateRemoteLibHandler(libraryName, callName);
     }
 }
 

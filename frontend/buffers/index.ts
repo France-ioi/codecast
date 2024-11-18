@@ -96,9 +96,11 @@ import {selectAnswer} from '../task/selectors';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {StepperStatus} from '../stepper';
 import {canReloadAnswer} from '../task/platform/platform';
+import {bufferGitSyncSagas} from './buffer_git_sync';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
+    bundle.addSaga(bufferGitSyncSagas);
 
     bundle.defer(addRecordHooks);
     bundle.defer(addReplayHooks);
@@ -130,17 +132,33 @@ export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
         document: buffer.document,
         fileName: buffer.fileName,
         platform: buffer.platform,
+        ...(buffer.gitSync ? {gitSync: buffer.gitSync} : {}),
     };
 }
 
-// export function denormalizeBufferFromAnswer(answer: TaskAnswer): BufferState {
-//
-// }
-
-export function* createSourceBufferFromDocument(document: Document, platform?: CodecastPlatform) {
+export function* denormalizeBufferFromAnswer(answer: TaskAnswer): Generator<any, BufferStateParameters> {
     const state: AppStore = yield* appSelect();
 
-    const newBufferName = yield* call(getNewBufferName);
+    const platform = answer.platform ?? state.options.platform;
+    const newFileName = answer.fileName ?? getNewFileName(state, answer.platform);
+
+    return {
+        type: answer.document.type,
+        source: true,
+        document: answer.document,
+        fileName: newFileName,
+        platform,
+        ...(answer.gitSync ? {gitSync: answer.gitSync} : {}),
+    }
+}
+
+interface BufferCreationParameters {
+    noSwitch?: boolean, // Disable the automatic switch to the newly created buffer
+}
+
+export function* createSourceBufferFromDocument(document: Document, platform?: CodecastPlatform, bufferParameters: Partial<BufferStateParameters> = {}, creationParameters: BufferCreationParameters = {}) {
+    const state: AppStore = yield* appSelect();
+
     platform = platform ?? state.options.platform;
     const newFileName = getNewFileName(state, platform);
 
@@ -149,11 +167,23 @@ export function* createSourceBufferFromDocument(document: Document, platform?: C
         source: true,
         fileName: newFileName,
         platform,
+        document,
+        ...bufferParameters,
     };
 
-    yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
-    yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
-    yield* put(bufferChangeActiveBufferName(newBufferName));
+    return yield* call(createSourceBufferFromBufferParameters, newBuffer, creationParameters);
+}
+
+export function* createSourceBufferFromBufferParameters(parameters: BufferStateParameters, creationParameters: BufferCreationParameters = {}) {
+    const newBufferName = yield* call(getNewBufferName);
+    yield* put(bufferInit({buffer: newBufferName, ...parameters}));
+    yield* put(bufferResetDocument({buffer: newBufferName, document: parameters.document, goToEnd: true}));
+
+    if (!creationParameters.noSwitch) {
+        yield* put(bufferChangeActiveBufferName(newBufferName));
+    }
+
+    return newBufferName;
 }
 
 function* createBufferFromSubmission(submissionId: number) {
@@ -199,11 +229,11 @@ function* buffersSaga() {
         anchor.click();
     });
 
-    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document}}) {
+    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document, parameters}}) {
         const state: AppStore = yield* appSelect();
         let newDocument = document ?? getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
         log.getLogger('editor').debug('Load new source code', newDocument);
-        yield* call(createSourceBufferFromDocument, newDocument, state.options.platform);
+        yield* call(createSourceBufferFromDocument, newDocument, state.options.platform, parameters ?? {});
     });
 
     yield* takeEvery(bufferResetToDefaultSourceCode, function* ({payload: {bufferName}}) {

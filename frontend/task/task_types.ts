@@ -2,7 +2,7 @@ import {TaskLevelName} from './platform/platform_slice';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
 import {TaskHint} from './hints/hints_slice';
 import {CodecastPlatform} from '../stepper/codecast_platform';
-import {Document} from '../buffers/buffer_types';
+import {Document, GitSyncParams} from '../buffers/buffer_types';
 
 export interface BlocksUsage {
     error?: string,
@@ -130,7 +130,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
     maxInstructions?: number|{[level: string]: number},
-    startingExample?: any,
+    startingExample?: {[platform: string]: any},
     limitedUses?: {[level: string]: {blocks: string[], nbUses: number}[]},
     includeBlocks?: QuickalgoTaskIncludeBlocksAllLevels,
     hiddenTests?: boolean|{[level: string]: boolean},
@@ -211,6 +211,7 @@ export interface TaskAnswer {
     document: Document,
     platform?: CodecastPlatform,
     fileName?: string,
+    gitSync?: GitSyncParams,
     //submissionId: string ?
 }
 

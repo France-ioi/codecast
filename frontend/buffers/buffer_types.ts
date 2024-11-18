@@ -43,6 +43,20 @@ export interface BufferStateParameters {
     submissionIndex?: number,
     type?: BufferType,
     document?: Document,
+    gitSync?: GitSyncParams,
+    hidden?: boolean,
+}
+
+export interface GitSyncParams {
+    repository: string,
+    branch: string,
+    file: string,
+    revision: string,
+    loading?: boolean,
+    commitModalOpen?: boolean,
+    conflictSource?: string,
+    conflictRevision?: string,
+    conflictBuffer?: string,
 }
 
 export interface BufferState extends BufferStateParameters {
@@ -55,6 +69,7 @@ export interface BufferState extends BufferStateParameters {
         blocksToInsert?: {nextId: number, elements: {[id: number]: {block: Block, pos: TextPosition}}},
         deltasToApply?: {nextId: number, elements: {[id: number]: TextDocumentDelta}},
     },
+    gitSync?: GitSyncParams,
 }
 
 export interface TextPosition {

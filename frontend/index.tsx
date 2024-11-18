@@ -224,6 +224,8 @@ window.Codecast.start = function(options) {
     // Fix bug when bundle is loaded in head before body is initialized, dialogs would not appear
     Portal.defaultProps.container = document.body;
 
+    window.Codecast.options = JSON.parse(JSON.stringify(options));
+
     const mainStore = window.Codecast.environments['main'].store;
 
     const urlParameters = new URLSearchParams(window.location.search);

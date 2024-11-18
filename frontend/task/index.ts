@@ -64,7 +64,7 @@ import {
     stepperExecutionSuccess
 } from "../stepper/actionTypes";
 import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
-import {makeContext, StepperContext} from "../stepper/api";
+import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -108,18 +108,23 @@ import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmissi
 import {
     bufferDissociateFromSubmission,
     bufferEdit,
-    bufferEditPlain,
+    bufferEditPlain, bufferInit,
     bufferResetDocument, buffersInitialState
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
 import {callPlatformLog, callPlatformValidate, submissionCancel} from '../submission/submission_actions';
-import {createSourceBufferFromDocument} from '../buffers';
+import {
+    createSourceBufferFromBufferParameters,
+    createSourceBufferFromDocument,
+    denormalizeBufferFromAnswer
+} from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {Screen} from '../common/screens';
 import {DeferredPromise} from '../utils/app';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 import jwt from 'jsonwebtoken';
+import {getAudioTimeStep} from './task_selectors';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -277,7 +282,7 @@ function* taskLoadSaga(app: App, action) {
     // ]));
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
-    if (!isServerTask(currentTask)) {
+    if (!isServerTask(currentTask) && 'main' === app.environment) {
         yield* fork(subscribePlatformHelper);
     }
 
@@ -457,8 +462,8 @@ function* handleLibrariesEventListenerSaga(app: App) {
             if (!onlyLog) {
                 const args = payload ? payload : [];
                 if (replayContextSave) {
-                    stepperContext.quickAlgoCallsLogger = (call) => {
-                        replayContextSave.addQuickAlgoLibraryCall(call);
+                    stepperContext.quickAlgoCallsLogger = (call: QuickalgoLibraryCall, result) => {
+                        replayContextSave.addQuickAlgoLibraryCall(call, result);
                     };
                 }
 
@@ -681,17 +686,8 @@ function* getTestContextState() {
 
 function* getTaskAnswer() {
     const state = yield* appSelect();
-    const taskPlatformMode = getTaskPlatformMode(state);
 
-    if (TaskPlatformMode.RecordingProgress === taskPlatformMode) {
-        return getAudioTimeStep(state);
-    }
-
-    if (TaskPlatformMode.Source === taskPlatformMode) {
-        return selectAnswer(state) ?? '';
-    }
-
-    return null;
+    return selectAnswer(state) ?? '';
 }
 
 
@@ -705,14 +701,6 @@ function* getTaskState () {
 
 function* getTaskLevel () {
     return yield* appSelect(state => state.task.currentLevel);
-}
-
-function getAudioTimeStep(state: AppStore) {
-    if (state.player && state.player.duration) {
-        return Math.ceil(recordingProgressSteps * state.player.audioTime / state.player.duration);
-    }
-
-    return null;
 }
 
 function* watchRecordingProgressSaga(app: App) {
@@ -991,12 +979,14 @@ export default function (bundle: Bundle) {
             }
             const state = yield* appSelect();
             const currentBuffer = state.buffers.activeBufferName;
+            const bufferParameters = yield* call(denormalizeBufferFromAnswer, answer);
             if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
-                yield* call(createSourceBufferFromDocument, answer.document, answer.platform);
+                yield* call(createSourceBufferFromBufferParameters, bufferParameters);
             } else if (null !== currentBuffer) {
                 if (state.buffers.buffers[currentBuffer].platform !== answer.platform) {
                     yield* put(bufferChangePlatform(currentBuffer, answer.platform, answer.document));
                 } else {
+                    yield* put(bufferInit({buffer: currentBuffer, ...bufferParameters}));
                     yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
                 }
             }

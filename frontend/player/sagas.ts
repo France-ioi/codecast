@@ -22,7 +22,7 @@ import {RECORDING_FORMAT_VERSION} from "../version";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
 import {currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
-import {isTaskPlatformLinked, setTaskEventsEnvironment} from "../task/platform/platform";
+import {isTaskPlatformLinked} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
 import {delay as delay$1} from 'typed-redux-saga';
 import {platformTaskLink} from '../task/platform/actionTypes';
@@ -34,6 +34,7 @@ import {taskLoad} from '../task/task_actions';
 import {App, Codecast} from '../app_types';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {LayoutPlayerMode} from '../task/layout/layout_types';
+import {StepperProgressParameters} from '../stepper/stepper_types';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -47,7 +48,7 @@ export interface ReplayContext {
     instant: PlayerInstant,
     applyEvent: any,
     addSaga: Function,
-    addQuickAlgoLibraryCall: Function,
+    addQuickAlgoLibraryCall: (call: QuickalgoLibraryCall, result: unknown) => void,
     reportProgress: any,
     stepperDone: any,
     stepperContext: StepperContext
@@ -135,7 +136,7 @@ function* playerPrepare(app: App, action) {
     if (action.payload.data) {
         data = action.payload.data;
     } else {
-        data = yield* call(asyncGetJson, action.payload.eventsUrl, false);
+        data = yield* call(asyncGetJson, action.payload.eventsUrl);
     }
     data = Object.freeze(data);
 
@@ -227,7 +228,7 @@ function* playerPrepare(app: App, action) {
             yield* call(resetToAudioTime, app, 0);
         }
     } catch (ex) {
-        console.log(ex);
+        console.error(ex);
 
         yield* put({
             type: ActionTypes.PlayerPrepareFailure,
@@ -248,13 +249,13 @@ function* playerPrepare(app: App, action) {
         sagas.push(saga);
     }
 
-    function addQuickAlgoLibraryCall(quickalgoLibraryCall: QuickalgoLibraryCall) {
+    function addQuickAlgoLibraryCall(quickalgoLibraryCall: QuickalgoLibraryCall, result: unknown) {
         let {quickalgoLibraryCalls} = replayContext.instant;
         if (!quickalgoLibraryCalls) {
             quickalgoLibraryCalls = replayContext.instant.quickalgoLibraryCalls = [];
         }
 
-        quickalgoLibraryCalls.push(quickalgoLibraryCall);
+        quickalgoLibraryCalls.push({call: quickalgoLibraryCall, result});
     }
 
     function* reportProgress(progress) {
@@ -265,7 +266,7 @@ function* playerPrepare(app: App, action) {
     }
 }
 
-function ensureBackwardsCompatibility(events: any[], version?: string) {
+function ensureBackwardsCompatibility(events: any[][], version?: string) {
     let transformedEvents = [];
     let versionComponents = (version ? version : RECORDING_FORMAT_VERSION).split('.').map(Number);
 
@@ -330,10 +331,27 @@ function ensureBackwardsCompatibility(events: any[], version?: string) {
             continue;
         }
 
+        if ('stepper.progress' === key && (versionComponents[0] < 7 || (versionComponents[0] === 7 && versionComponents[1] < 5))) {
+            // Since Codecast 7.5, stepper.progress only accepts an object as the 3rd parameter: time, 'stepper.progress', {range, steps, delayToWait}
+            // Before, it was a list of parameters: time, 'stepper.progress', range, steps, delayToWait
+            const stepperProgressParameters: StepperProgressParameters = {};
+            if (1 <= params.length) {
+                stepperProgressParameters.range = params[0];
+            }
+            if (2 <= params.length) {
+                stepperProgressParameters.steps = params[1];
+            }
+            if (3 <= params.length) {
+                stepperProgressParameters.delay = params[2];
+            }
+
+            params = [stepperProgressParameters];
+        }
+
         transformedEvents.push([t, key, ...params]);
 
         if (key === 'stepper.step' && params[0] === 'run' && versionComponents[0] < 7) {
-            transformedEvents.push([t, 'stepper.progress']);
+            transformedEvents.push([t, 'stepper.progress', {}]);
         }
     }
 
@@ -589,7 +607,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
         }
 
         if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
-            log.getLogger('player').debug('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
+            log.getLogger('player').debug('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.call.action).join(','));
             const context = quickAlgoLibraries.getContext(null, 'main');
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
@@ -618,8 +636,16 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                 const executor = stepperContext.quickAlgoCallsExecutor;
                 log.getLogger('player').debug('Replay call with speed', stepperContext.speed, context.infos.actionDelay);
                 for (let quickalgoCall of instant.quickalgoLibraryCalls) {
-                    const {module, action, args} = quickalgoCall;
+                    const {module, action, args} = quickalgoCall.call;
                     log.getLogger('player').debug('start call execution', quickalgoCall);
+
+                    if (undefined !== quickalgoCall.result) {
+                        // Avoid re-making the call, use directly the result
+                        stepperContext.libraryCallsLog = [{
+                            call: quickalgoCall.call,
+                            result: quickalgoCall.result,
+                        }];
+                    }
 
                     // @ts-ignore
                     yield* spawn(executor, module, action, args);

@@ -25,6 +25,7 @@ import {isServerTask} from './task_types';
 import {LocalWorkDialog} from './LocalWorkDialog';
 import {IconNames} from '@blueprintjs/icons';
 import { SmartContractLib } from './libs/smart_contract/smart_contract_lib';
+import {WorkWithGitDialog} from './WorkWithGitDialog';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -46,12 +47,15 @@ export function MenuTask() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);
     const [localWorkOpen, setLocalWorkOpen] = useState(false);
+    const [workWithGitOpen, setWorkWithGitOpen] = useState(false);
 
     const controls = useAppSelector(state => state.options.controls);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     // Display the local work button by default for smart contract tasks
     const canLocalWork = serverTask && ('localwork' in controls || (context && context instanceof SmartContractLib));
+
+    const canWorkWithGit = useAppSelector(state => serverTask && state.options.workWithGit);
 
     const wrapperRef = useRef<HTMLDivElement>();
     const dispatch = useDispatch();
@@ -86,7 +90,7 @@ export function MenuTask() {
 
         if (!recordingEnabled) {
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (context && !('robot' in context || context instanceof PrinterLib || 'quickpi' in context || 'database' in context)) {
+            if (context && !('robot' in context || context instanceof PrinterLib || 'quickpi' in context || 'database' in context || 'opencv' in context)) {
                 dispatch(displayModal({message: getMessage('RECORDING_LIBRARY_NOT_WORKING'), mode: ModalType.message}));
             }
         }
@@ -154,6 +158,10 @@ export function MenuTask() {
                     <Icon icon={IconNames.Console}/>
                     <span>{getMessage('MENU_LOCAL')}</span>
                 </div>}
+                {canWorkWithGit && <div className="menu-item" onClick={() => setWorkWithGitOpen(!workWithGitOpen)}>
+                    <Icon icon={IconNames.GIT_BRANCH}/>
+                    <span>{getMessage('MENU_SYNC_GIT')}</span>
+                </div>}
             </div>
             <SettingsDialog
                 open={settingsOpen || forceSettingsOpen}
@@ -167,6 +175,10 @@ export function MenuTask() {
             <LocalWorkDialog
                 open={localWorkOpen}
                 onClose={() => setLocalWorkOpen(false)}
+            />
+            <WorkWithGitDialog
+                open={workWithGitOpen}
+                onClose={() => setWorkWithGitOpen(false)}
             />
             <Dialog title={getMessage('MENU_ABOUT')} isOpen={aboutOpen} onClose={() => setAboutOpen(false)}>
                 <div className='bp4-dialog-body'>

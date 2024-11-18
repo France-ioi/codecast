@@ -16,6 +16,18 @@
   word-break: break-all;
 }
 
+.analysis-variable-image {
+  max-width: 90vw;
+  height: auto;
+}
+
+.analysis-variable-link {
+  cursor: pointer;
+  > * {
+    vertical-align: middle;
+  }
+}
+
 .function-name {
   color: #53b846;
 }
