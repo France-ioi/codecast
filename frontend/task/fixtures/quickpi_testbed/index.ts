@@ -3,7 +3,8 @@ import {QuickalgoTask} from '../../task_types';
 export default {
     gridInfos: {
         context: 'quickpi',
-        importModules: ['quickpi-board', 'quickpi-connection', 'quickpi-screen', 'blockly-quickpi', 'font-awesome'],
+        // quickPiBoard: "galaxia",
+        importModules: ['connected-boards', 'font-awesome'],
         hideSaveOrLoad: false,
         actionDelay: 0,
         conceptViewer: [
