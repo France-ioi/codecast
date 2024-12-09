@@ -224,6 +224,7 @@ module.exports = {
     TASK_BLOCKS_LIMIT_BLOCK: '{remaining} block "{name}"|{remaining} blocks "{name}"',
     TASK_BLOCKS_REMAINING_BLOCKS: '{remaining} Block|{remaining} Blocks',
     TASK_BLOCKS_LIMIT_REMAINING: 'remaining:',
+    TASK_BLOCKS_LIMIT_EXECUTE_ONLY_WITH: 'Execution only with',
     TASK_BLOCKS_OVER_LIMIT: '{overLimit} extra block used out of {limit} authorized|{overLimit} extra blocks used out of {limit} authorized',
     TASK_POST_COMPILATION_ERROR: "However, your program does not validate this task: ",
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",

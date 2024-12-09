@@ -1158,7 +1158,7 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
         }
     }
 
-    if (!stepperControlsState.canStep) {
+    if (!stepperControlsState.canStep && !stepperControlsState.canStepInto) {
         yield* put({type: ActionTypes.StepperInterrupting, payload: {}});
         yield* take(ActionTypes.StepperInterrupted);
     }

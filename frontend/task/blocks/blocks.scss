@@ -169,10 +169,15 @@
     cursor: pointer;
     transition: width 0.3s ease-in-out;
     user-select: none;
-    text-align: center;
+    text-align: left;
     &.has-error {
       background: #e8092c;
       cursor: auto;
+    }
+    &.has-warning {
+      background: #efa124;
+      cursor: auto;
+      color: black;
     }
     code {
       color: yellow;
