@@ -110,9 +110,9 @@ export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, l
 
 export const convertVariableDAPToCodecastFormat = (stackFrameId: number, scopeId: number, path: string, variable: AnalysisVariable, previousValues, variableDetails: {[reference: string]: AnalysisVariable}, displayType?: boolean): CodecastAnalysisVariable|null => {
     log.getLogger('analysis').debug('Convert variable', {stackFrameId, scopeId, variable, previousValues});
-    if (variable.presentationHint) {
-        return null;
-    }
+    // if (variable.presentationHint) {
+    //     return null;
+    // }
 
     const newPath = null !== path ? path + '.' + variable.name : variable.name;
     let previousValueHash = `${stackFrameId}.${scopeId}.${newPath}`;
