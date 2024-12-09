@@ -101,11 +101,11 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
                 <div className={`layout-editor-tab ${isActive ? 'is-active' : ''} ${isFlashing ? 'is-flashing' : ''}`} onClick={changeTab} ref={ref}>
                     {hasResults && <React.Fragment>
                         <FontAwesomeIcon icon={faBell} className={`icon-bell ${isFlashing ? 'is-animated' : ''}`}/>
-                        <span className="ml-2">{fileName}</span>
+                        <span>{fileName}</span>
                     </React.Fragment>}
                     {isEvaluating && <React.Fragment>
                         <FontAwesomeIcon icon={faSpinner} className="fa-spin"/>
-                        <span className="ml-2">{fileName}</span>
+                        <span>{fileName}</span>
                     </React.Fragment>}
                     {isEditable && <div {...(isActive ? triggerHandler : {})} className={isActive ? 'has-pointer' : ''}>
                         {fileName}
