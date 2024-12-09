@@ -22,7 +22,7 @@ import {LoginScreen} from "../common/LoginScreen";
 import {EditorSaveState} from "./index";
 import {getMessage} from "../lang";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {parseCodecastUrl} from '../../backend/options';
+import {parseCodecastUrl} from '../common/options';
 
 export function EditorSave() {
     const editor = useAppSelector(state => state.editor);

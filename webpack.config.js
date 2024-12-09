@@ -98,12 +98,27 @@ module.exports = (env, argv) => {
                 },
                 {
                     test: /\.js$/,
-                    include: SRC,
+                    include: [
+                        SRC,
+                        path.resolve(__dirname, "node_modules/react-dnd-multi-backend"),
+                        path.resolve(__dirname, "node_modules/dnd-multi-backend"),
+                    ],
                     use: [
                         {
                             loader: 'babel-loader',
                             options: {
-                                babelrc: true,
+                                targets: "Chrome <= 60",
+                                presets: [
+                                    ['@babel/preset-env'],
+                                    ["@babel/preset-react"],
+                                    {
+                                        "plugins": [
+                                            "@babel/plugin-proposal-class-properties",
+                                            "@babel/plugin-proposal-object-rest-spread",
+                                            "@babel/plugin-transform-runtime"
+                                        ]
+                                    }
+                                ]
                             }
                         }
                     ]

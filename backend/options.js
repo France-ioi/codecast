@@ -56,8 +56,7 @@ export function buildOptions(config, req, start, callback) {
         return callback(null, options);
     }
 }
-
-export function parseCodecastUrl(base) {
+function parseCodecastUrl(base) {
     const {hostname, pathname} = url.parse(base);
     const s3Bucket = hostname.replace('.s3.amazonaws.com', '');
     const idPos = pathname.lastIndexOf('/');
