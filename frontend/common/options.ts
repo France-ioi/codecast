@@ -4,7 +4,7 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
-import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
+import {AllowExecutionOverBlocksLimit, AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {Languages} from "../lang";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
@@ -125,7 +125,7 @@ export function loadOptionsFromQuery(options: CodecastOptions, query) {
         options.logAttempts = true;
     }
     if ('allowExecutionOverBlocksLimit' in query) {
-        options.allowExecutionOverBlocksLimit = true;
+        options.allowExecutionOverBlocksLimit = '' === query.allowExecutionOverBlocksLimit ? AllowExecutionOverBlocksLimit.Yes : query.allowExecutionOverBlocksLimit;
     }
     if ('randomizeTestsOrder' in query) {
         options.randomizeTestsOrder = true;
@@ -153,7 +153,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
 
     if ('tralalere' === state.options.app) {
         state.options.logAttempts = true;
-        state.options.allowExecutionOverBlocksLimit = true;
+        state.options.allowExecutionOverBlocksLimit = AllowExecutionOverBlocksLimit.Yes;
         state.options.randomizeTestsOrder = true;
     }
 

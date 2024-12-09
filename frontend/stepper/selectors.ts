@@ -1,4 +1,4 @@
-import {AppStore, AppStoreReplay} from '../store';
+import {AllowExecutionOverBlocksLimit, AppStore, AppStoreReplay} from '../store';
 import {Stepper, StepperControlsType, StepperState} from "./index";
 import {getMessage} from "../lang";
 import {CompileStatus} from "./compile";
@@ -33,12 +33,14 @@ interface StepperControlsStateToProps {
     canGoToEnd: boolean,
     canStep: boolean,
     canExit: boolean,
+    canStepInto: boolean,
     canStepOut: boolean,
     canStepOver: boolean,
     canCompile: boolean,
     canRestart: boolean,
     canUndo: boolean,
     canRedo: boolean,
+    canChangeSpeed: boolean,
     showExpr: boolean,
     speed: number,
     isFinished: boolean,
@@ -50,7 +52,7 @@ interface StepperControlsStateToProps {
 }
 
 export const getStepperControlsSelector = memoize(({state, enabled}: {state: AppStore, enabled: boolean}): StepperControlsStateToProps => {
-    let {showStepper, platform} = state.options;
+    let {showStepper, platform, allowExecutionOverBlocksLimit} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
     const inputNeeded = state.task.inputNeeded;
@@ -60,7 +62,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
 
     let showCompile = false, showControls = true, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
-    let canStepOver = false;
+    let canStepOver = false, canStepInto = false, canChangeSpeed = true;
     let canInterrupt = false, canUndo = false, canRedo = false, canGoToEnd = false;
     let isFinished = false;
     let showExpr = !!platformData.hasMicroSteps;
@@ -142,12 +144,26 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         }
     }
 
+    canStepInto = canStep;
+
     if (hasBlockPlatform(platform)) {
         controls = {
             ...controls,
             over: false,
             out: false,
         };
+    }
+    if (AllowExecutionOverBlocksLimit.OnlyStepByStep === allowExecutionOverBlocksLimit) {
+        const blocksUsage = state.task.blocksUsage;
+
+        if (blocksUsage?.error && blocksUsage.blocksCurrent > blocksUsage.blocksLimit) {
+            canGoToEnd = false;
+            canStep = false;
+            canStep = false;
+            canStepOver = false;
+            canStepOut = false;
+            canChangeSpeed = false;
+        }
     }
 
     canStep = canStep && !isRunning;
@@ -160,7 +176,8 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         showExpr,
         showCompile, canCompile,
         canRestart, canStep, canStepOut, canInterrupt, canStepOver,
-        canUndo, canRedo, canGoToEnd,
+        canUndo, canRedo, canGoToEnd, canChangeSpeed,
+        canStepInto,
         compileOrExecuteMessage,
         isFinished,
         speed,
