@@ -74,7 +74,7 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
 
             let errorMessage = getMessage('GIT_ERROR_BRANCHES');
             if (e?.res?.body?.publicKey) {
-                errorMessage = `${errorMessage} ${getMessage('GIT_ADD_SSH_KEY')}\n${e?.res?.body?.publicKey}`;
+                errorMessage = `${errorMessage} ${getMessage('GIT_ADD_SSH_KEY')}\n\n${e?.res?.body?.publicKey}`;
             }
             setError(errorMessage);
         } finally {

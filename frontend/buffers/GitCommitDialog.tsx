@@ -24,6 +24,7 @@ export function GitCommitDialog({bufferName}: {bufferName: string}) {
         const newGitSync: GitSyncParams = {
             ...gitSync,
             commitModalOpen: false,
+            pushError: null,
         };
         dispatch(bufferInit({buffer: bufferName, gitSync: newGitSync}));
     };
@@ -65,6 +66,10 @@ export function GitCommitDialog({bufferName}: {bufferName: string}) {
                         loading={gitSync.loading}
                         disabled={gitSync.loading}
                     />
+
+                    {gitSync.pushError && <div className="generic-error mt-4">
+                        {gitSync.pushError}
+                    </div>}
                 </form>
             </div>
         </Dialog>

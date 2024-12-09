@@ -99,6 +99,7 @@ export function* bufferGitSyncSagas() {
         const newGitSync: GitSyncParams = {
             ...gitSync,
             loading: true,
+            pushError: null,
         };
 
         if (isLocalStorageEnabled()) {
@@ -135,16 +136,18 @@ export function* bufferGitSyncSagas() {
         } catch (e: any) {
             console.error(e);
 
+            let pushError = getMessage('GIT_ERROR_PUSH').s;
+            if (e?.res?.body?.publicKey) {
+                pushError = `${pushError} ${getMessage('GIT_ADD_SSH_KEY')}\n\n${e?.res?.body?.publicKey}`;
+            }
             if ('not_up_to_date' === e?.res?.body?.error) {
-                yield* put(stepperDisplayError(getMessage('GIT_ERROR_PUSH_NOT_UP_TO_DATE').s));
-            } else {
-                yield* put(stepperDisplayError(getMessage('GIT_ERROR_PUSH').s));
+                pushError = getMessage('GIT_ERROR_PUSH_NOT_UP_TO_DATE').s;
             }
 
             const newGitSync: GitSyncParams = {
                 ...gitSync,
                 loading: false,
-                commitModalOpen: false,
+                pushError,
             };
 
             yield* put(bufferInit({buffer: bufferName, gitSync: newGitSync}));
