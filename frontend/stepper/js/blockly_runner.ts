@@ -556,7 +556,7 @@ export default class BlocklyRunner extends AbstractRunner {
             this.nodesReady.push(true);
             this.isRunningInterpreter[iInterpreter] = true;
             this.toStopInterpreter[iInterpreter] = false;
-            this.registerNewThread(this.interpreters[0].stateStack);
+            this.registerNewThread(this.interpreters[0].stateStack, true);
 
             if(iInterpreter > 0) {
                 // This is a fix for pseudoToNative identity comparisons (===),
