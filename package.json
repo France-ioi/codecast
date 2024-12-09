@@ -145,6 +145,7 @@
     "file-loader": "^6.2.0",
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "nodemon": "^2.0.22",
+    "object.fromentries": "^2.0.8",
     "raw-loader": "^4.0.2",
     "react-refresh": "^0.14.0",
     "resolve-url-loader": "^5.0.0",
