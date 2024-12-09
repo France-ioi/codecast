@@ -4,8 +4,7 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
-import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
-import {parseCodecastUrl} from "../../backend/options";
+import {AllowExecutionOverBlocksLimit, AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {Languages} from "../lang";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
@@ -13,6 +12,7 @@ import {platformsList} from '../stepper/platforms';
 import {IoMode} from '../stepper/io';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
+import url from 'url';
 
 export function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -125,7 +125,7 @@ export function loadOptionsFromQuery(options: CodecastOptions, query) {
         options.logAttempts = true;
     }
     if ('allowExecutionOverBlocksLimit' in query) {
-        options.allowExecutionOverBlocksLimit = true;
+        options.allowExecutionOverBlocksLimit = '' === query.allowExecutionOverBlocksLimit ? AllowExecutionOverBlocksLimit.Yes : query.allowExecutionOverBlocksLimit;
     }
     if ('randomizeTestsOrder' in query) {
         options.randomizeTestsOrder = true;
@@ -153,7 +153,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
 
     if ('tralalere' === state.options.app) {
         state.options.logAttempts = true;
-        state.options.allowExecutionOverBlocksLimit = true;
+        state.options.allowExecutionOverBlocksLimit = AllowExecutionOverBlocksLimit.Yes;
         state.options.randomizeTestsOrder = true;
     }
 
@@ -192,6 +192,16 @@ function inIframe() {
     } catch (e) {
         return false;
     }
+}
+
+export function parseCodecastUrl(base) {
+    const {hostname, pathname} = url.parse(base);
+    const s3Bucket = hostname.replace('.s3.amazonaws.com', '');
+    const idPos = pathname.lastIndexOf('/');
+    const uploadPath = pathname.slice(1, idPos); // skip leading '/'
+    const id = pathname.slice(idPos + 1);
+
+    return {s3Bucket, uploadPath, id};
 }
 
 export default function(bundle: Bundle) {

@@ -53,7 +53,7 @@ export function TralalereControls(props: StepperControlsProps) {
                 disabled = !stepperControlsState.canStep;
                 break;
             case 'into':
-                disabled = !stepperControlsState.canStep;
+                disabled = !stepperControlsState.canStepInto;
                 break;
             case 'gotoend':
                 disabled = stepperControlsState.isFinished;

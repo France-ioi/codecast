@@ -35,6 +35,11 @@ export enum CodecastOptionsMode {
     Play = 'play',
 }
 
+export enum AllowExecutionOverBlocksLimit {
+    Yes = 'yes',
+    OnlyStepByStep = 'step_by_step',
+}
+
 export interface CodecastOptions {
     language: keyof typeof Languages,
     levels: TaskLevelName[],
@@ -89,7 +94,7 @@ export interface CodecastOptions {
     canAddUserTests?: boolean,
     viewTestDetails?: boolean,
     logAttempts?: boolean,
-    allowExecutionOverBlocksLimit?: boolean,
+    allowExecutionOverBlocksLimit?: AllowExecutionOverBlocksLimit,
     randomizeTestsOrder?: boolean,
     ioMode: IoMode,
     taskVariant?: number,

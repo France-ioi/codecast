@@ -621,7 +621,7 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
         }
 
         this._resetInterpreterState();
-        this.registerNewThread(this._debugger.suspension_stack);
+        this.registerNewThread(this._debugger.suspension_stack, true);
 
         Sk.running = true;
         this._isRunning = true;
@@ -891,7 +891,7 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
         // Execute promise to get new state
         const promise = promiseCreator();
 
-        // Add main suspension stack before this one, so that when this thread finishes, the program does not finishes
+        // Add main suspension stack before this one, so that when this thread finishes, the program does not finish
         const mainThreadStack = this.getAllThreads()[0];
 
         const newSuspensionStack = [

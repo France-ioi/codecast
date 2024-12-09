@@ -317,3 +317,20 @@
     }
   }
 }
+
+.fake-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 500px;
+  background: var(--primary-color);
+  color: white;
+  height: 30px;
+  width: 30px;
+  margin: 0 10px 0 0;
+  border: none;
+  box-shadow: none !important;
+  pointer-events: none;
+  margin-left: 8px;
+}

@@ -1,11 +1,15 @@
 import React, {useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../../hooks";
 import {getMessage, getMessageChoices} from "../../lang";
-import {AppStore} from "../../store";
+import {AllowExecutionOverBlocksLimit, AppStore} from "../../store";
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
+import {Button, Intent} from '@blueprintjs/core';
+import {faShoePrints} from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 
 export function BlocksUsage() {
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);
+    const allowExecutionOverBlocksLimit = useAppSelector(state => state.options.allowExecutionOverBlocksLimit);
     const platform = useAppSelector(selectActiveBufferPlatform);
     const [collapsed, setCollapsed] = useState(true);
 
@@ -41,8 +45,11 @@ export function BlocksUsage() {
         });
     }).join(', ') : null;
 
+    const blockLimitError = blocksUsage.error && blocksUsage.blocksCurrent > blocksUsage.blocksLimit;
+    const onlyStepByStep = blockLimitError && AllowExecutionOverBlocksLimit.OnlyStepByStep === allowExecutionOverBlocksLimit;
+
     return (
-        <div ref={wrapperRef} className={`blocks-usage ${blocksUsage.error ? 'has-error' : ''} ${collapsed ? 'is-collapsed' : ''}`} onClick={toggleCollapsed}>
+        <div ref={wrapperRef} className={`blocks-usage ${blocksUsage.error && !(blockLimitError && allowExecutionOverBlocksLimit) ? 'has-error' : ''} ${blockLimitError && allowExecutionOverBlocksLimit ? 'has-warning' : ''} ${collapsed ? 'is-collapsed' : ''}`} onClick={toggleCollapsed}>
             {collapsed ?
                 <React.Fragment>
                     {blocksUsage.error
@@ -63,6 +70,16 @@ export function BlocksUsage() {
                     </span>}
                 </React.Fragment>
             }
+            {onlyStepByStep &&
+            <div>
+                {getMessage('TASK_BLOCKS_LIMIT_EXECUTE_ONLY_WITH')}
+                <Button
+                    className="is-big fake-button"
+                    intent={Intent.PRIMARY}
+                    title={getMessage('CONTROL_STEP_BY_STEP')}
+                    icon={<FontAwesomeIcon icon={faShoePrints}/>}
+                />
+            </div>}
         </div>
     );
 }

@@ -64,13 +64,13 @@ export function StepperControls(props: StepperControlsProps) {
                 disabled = !stepperControlsState.canStep;
                 break;
             case 'into':
-                disabled = !stepperControlsState.canStep;
+                disabled = !stepperControlsState.canStepInto;
                 break;
             case 'over':
                 disabled = !stepperControlsState.canStepOver;
                 break;
             case 'expr':
-                disabled = !stepperControlsState.canStep;
+                disabled = !stepperControlsState.canStepInto;
                 if (!stepperControlsState.showExpr) {
                     style.display = 'none';
                 }
@@ -200,7 +200,7 @@ export function StepperControls(props: StepperControlsProps) {
                     <div className="player-slider-container">
                         <FontAwesomeIcon icon={faWalking} className="extremity extremity-left"/>
                         <Slider
-                            disabled={!props.enabled}
+                            disabled={!props.enabled || !stepperControlsState.canChangeSpeed}
                             value={speed}
                             onChange={onChangeSpeed}
                             min={0}
