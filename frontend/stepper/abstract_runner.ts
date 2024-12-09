@@ -168,11 +168,14 @@ export default abstract class AbstractRunner {
         log.getLogger('multithread').debug('[multithread] default create new thread');
     }
 
-    public registerNewThread(threadData: any = null): number {
+    public registerNewThread(threadData: any = null, switchToNewThread: boolean = false): number {
         log.getLogger('multithread').debug('[multithread] register new thread', threadData);
         const newThreadId = this.maxThreadId;
         this.threads[newThreadId] = threadData ? [...threadData] : null;
         this.maxThreadId++;
+        if (switchToNewThread) {
+            this.currentThreadId = newThreadId;
+        }
 
         return newThreadId;
     }

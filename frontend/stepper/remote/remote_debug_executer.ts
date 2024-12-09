@@ -7,7 +7,7 @@ import {ActionTypes as StepperActionTypes, ActionTypes, ContextEnrichingTypes} f
 import log from 'loglevel';
 import {AnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from '../analysis/analysis';
 import {LibraryTestResult} from '../../task/libs/library_test_result';
-import {StepperContext, StepperError} from '../api';
+import {inUserCode, StepperContext, StepperError} from '../api';
 import AbstractRunner from '../abstract_runner';
 import {StepperState} from '../index';
 import {DeferredPromise} from '../../utils/app';
@@ -85,6 +85,10 @@ export class RemoteDebugExecutor extends AbstractRunner {
             const testResult = ex instanceof LibraryTestResult ? ex : LibraryTestResult.fromString(String(ex));
             yield* put({type: ActionTypes.CompileFailed, payload: {testResult}});
         }
+    }
+
+    public async programInitialization(): Promise<void> {
+        this.registerNewThread(null, true);
     }
 
     public stop() {
