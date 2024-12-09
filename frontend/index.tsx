@@ -37,6 +37,8 @@ import {SmartContractConfigType} from './task/libs/smart_contract/smart_contract
 import {App, CodecastType} from './app_types';
 import {CodecastPlatform} from './stepper/codecast_platform';
 import AbstractRunner from './stepper/abstract_runner';
+import fromEntries from 'object.fromentries';
+fromEntries.shim(); // will be a no-op if not needed
 
 // Disabling auto-freeze is recommended by proxy-memoize, cf https://github.com/dai-shi/proxy-memoize
 // This is because JavaScript does not support nested proxies of frozen objects
