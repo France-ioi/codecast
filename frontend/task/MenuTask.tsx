@@ -38,6 +38,7 @@ export function MenuTask() {
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
     const currentTask = useAppSelector(state => state.task.currentTask);
     const serverTask = null !== currentTask && isServerTask(currentTask);
+    const fullScreenActive = useAppSelector(state => state.fullscreen.active);
 
     const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     const layoutType = useAppSelector(state => state.layout.type);
@@ -48,6 +49,7 @@ export function MenuTask() {
     const [aboutOpen, setAboutOpen] = useState(false);
     const [localWorkOpen, setLocalWorkOpen] = useState(false);
     const [workWithGitOpen, setWorkWithGitOpen] = useState(false);
+    const [menuIconsTop, setMenuIconsTop] = useState(90);
 
     const controls = useAppSelector(state => state.options.controls);
 
@@ -114,12 +116,23 @@ export function MenuTask() {
 
     const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();
 
+    useEffect(() => {
+        setTimeout(() => {
+            const layoutEditor = document.getElementsByClassName('layout-editor')[0];
+            if (!layoutEditor) {
+                return;
+            }
+            const offsetTop = layoutEditor.getBoundingClientRect().top;
+            setMenuIconsTop(offsetTop + 50);
+        }, 1)
+    }, [layoutType, screen, fullScreenActive, layoutMobileMode]);
+
     return (
         <div ref={wrapperRef} className={`menu-container ${menuOpen ? 'is-open' : ''}`}>
             {screen !== Screen.DocumentationSmall
                 && screen !== Screen.DocumentationBig
                 && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
-                && <div className="menu-icons">
+                && <div className="menu-icons" style={{top: menuIconsTop}}>
                     <MenuIconsTask
                         toggleMenu={() => setMenuOpen(!menuOpen)}
                         toggleDocumentation={toggleDocumentation}
