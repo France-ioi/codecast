@@ -154,8 +154,12 @@ export default function (bundle: Bundle) {
                 return;
             }
 
-            const platformAction = action.payload.action ?? 'done';
-            yield* call([platformApi, platformApi.validate], platformAction);
+            try {
+                const platformAction = action.payload.action ?? 'done';
+                yield* call([platformApi, platformApi.validate], platformAction);
+            } catch (e) {
+                console.error('An error occurred during platform validation', e);
+            }
         });
 
         yield* takeEvery(callPlatformLog, function* ({payload: {details}}) {
