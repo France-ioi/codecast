@@ -18,7 +18,7 @@ export function TaskInstructionsVideo(props: TaskInstructionsVideoProps) {
     return (
         <div className={`task-instructions-video ${videoShown ? 'is-shown' : 'is-not-shown'}`} onClick={onClick}>
             {videoShown ?
-                <video controls src={url} autoPlay style={style}/>
+                <video controls src={url} autoPlay style={{width: '100%', ...style}}/>
                 :
                 <div style={style}>
                     {props.children}
