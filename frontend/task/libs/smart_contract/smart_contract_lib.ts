@@ -168,12 +168,14 @@ export class SmartContractLib extends QuickAlgoLibrary {
         } catch (e) { }
 
         const log = output.log;
-        if (output.error && log.length) {
-            log[log.length - 1].error = err;
-        }
-        if (output.expected) {
-            for (let i = 0; i < log.length; i++) {
-                log[i].expected = output.expected[i];
+        if (log) {
+            if (output.error && log.length) {
+                log[log.length - 1].error = err;
+            }
+            if (output.expected) {
+                for (let i = 0; i < log.length; i++) {
+                    log[i].expected = output.expected[i];
+                }
             }
         }
 
