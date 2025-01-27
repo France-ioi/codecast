@@ -13,6 +13,7 @@ import {memoize} from 'proxy-memoize';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {TaskInstructionsVideo} from './TaskInstructionsVideo';
+import {QuickAlgoLibrary} from '../libs/quickalgo_library';
 
 function findStringForLanguage(taskStrings: any[], languages: string[]) {
     for (let language of languages) {
@@ -127,14 +128,13 @@ const defaultInstructionsHtml = `
 <!--    </div>-->
 `;
 
-export const getInstructionsForLevelSelector = memoize((state: AppStore) => {
+export const getInstructionsForLevelSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}) => {
     const taskInstructionsHtmlFromOptions = state.options.taskInstructions;
     const language = state.options.language.split('-')[0];
     const currentTask = state.task.currentTask;
     const taskLevel = state.task.currentLevel;
 
-    let newInstructionsHtml = taskInstructionsHtmlFromOptions ? taskInstructionsHtmlFromOptions : defaultInstructionsHtml;
-    const context = quickAlgoLibraries.getContext(null, 'main');
+    let newInstructionsHtml = taskInstructionsHtmlFromOptions ? taskInstructionsHtmlFromOptions : null;
     let newInstructionsTitle = null;
     if (currentTask && currentTask.strings && currentTask.strings.length) {
         const instructions = findStringForLanguage(currentTask.strings, [language, 'en', 'fr']);
@@ -146,7 +146,7 @@ export const getInstructionsForLevelSelector = memoize((state: AppStore) => {
         const strLang = window.stringsLanguage;
         if (strLang in window.algoreaInstructionsStrings) {
             const strings = window.algoreaInstructionsStrings[strLang];
-            let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, currentTask.gridInfos, currentTask.data, taskLevel);
+            let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, state.task.levelGridInfos, currentTask.data, taskLevel);
             if (newInstructions) {
                 const innerText = window.jQuery(newInstructions).text();
                 if (innerText.length) {
@@ -162,7 +162,8 @@ export const getInstructionsForLevelSelector = memoize((state: AppStore) => {
 });
 
 export const getTaskSuccessMessageSelector = memoize((state: AppStore) => {
-    const html = getInstructionsForLevelSelector(state).html;
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    const html = getInstructionsForLevelSelector({state, context}).html;
     const platform = state.options.platform;
     const taskLevel = state.task.currentLevel;
     const instructionsJQuery = formatTaskInstructions(html, platform, taskLevel);
@@ -171,7 +172,8 @@ export const getTaskSuccessMessageSelector = memoize((state: AppStore) => {
 });
 
 export const getTaskHintsSelector = memoize((state: AppStore) => {
-    const html = getInstructionsForLevelSelector(state).html;
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    const html = getInstructionsForLevelSelector({state, context}).html;
     const platform = state.options.platform;
 
     let hints = [];

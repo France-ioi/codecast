@@ -21,7 +21,7 @@ export default {
     gridInfos: {
         context: 'robot',
         images,
-        importModules: ['blockly-robot-1.0', 'createAlgoreaInstructions-1.0', 'algoreaInstructionsStrings'],
+        importModules: ['blockly-robot-1.0', 'createAlgoreaInstructions-1.0', 'algoreaInstructionsStrings', 'beav-1.0'],
         conceptViewer: ["extra_variable"],
         contextType: "sokoban",
         backgroundColor: "#c2c6f2",

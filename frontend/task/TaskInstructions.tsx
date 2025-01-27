@@ -18,6 +18,7 @@ import {
 import {memoize} from 'proxy-memoize';
 import {getDomElementFromDomTree, useCursorPositionTracking} from './layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from './layout/actionTypes';
+import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -41,10 +42,11 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const dispatch = useDispatch();
     const platform = useAppSelector(state => state.options.platform);
     const [hasShortOrLong, setHasShortOrLong] = useState(false);
+    const context = quickAlgoLibraries.getContext(null, 'main');
     const {
         html: newInstructionsHtml,
         title: newInstructionsTitle
-    } = useAppSelector(getInstructionsForLevelSelector);
+    } = useAppSelector(state => getInstructionsForLevelSelector({state, context}));
 
     const toggleTaskInstructions = () => {
         if (documentationOpen) {
