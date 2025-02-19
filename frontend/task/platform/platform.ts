@@ -53,11 +53,12 @@ import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {hasBlockPlatform} from '../../stepper/platforms';
 import {loadOptionsFromQuery} from '../../common/options';
-import {CodecastOptions} from '../../store';
+import {AppStore, CodecastOptions} from '../../store';
 import {asyncGetFile} from '../../utils/api';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
+import {memoize} from 'proxy-memoize';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -85,17 +86,22 @@ export function* getTaskAnswerAggregated() {
     }
 }
 
-export function getTaskMetadata() {
+export const selectTaskMetadata = memoize((state: AppStore) => {
+    const currentTask = state.task.currentTask;
+    const serverTask = null !== currentTask && isServerTask(currentTask);
+
     const metadata = window.json ?? window.PEMTaskMetaData ?? {
         fullFeedback: true,
         minWidth: "auto",
     };
     metadata.autoHeight = true;
-    metadata.disablePlatformProgress = true;
+    if (!serverTask) {
+        metadata.disablePlatformProgress = true;
+    }
     metadata.usesTokens = true; // To receive task token
 
     return metadata;
-}
+});
 
 function sendErrorLog() {
     // Send errors to the platform
@@ -248,7 +254,7 @@ function* taskUnloadEventSaga ({payload: {success}}: ReturnType<typeof taskUnloa
 }
 
 function* taskGetMetaDataEventSaga ({payload: {success, error: _error}}: ReturnType<typeof taskGetMetadataEvent>) {
-    const metadata = getTaskMetadata();
+    const metadata = yield* appSelect(selectTaskMetadata);
 
     yield* call(success, metadata);
 }
@@ -374,7 +380,7 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 }
 
 function* taskGetResourcesImportCorrectSolutions(resources) {
-    let taskSettingsParsed = getTaskMetadata();
+    let taskSettingsParsed = yield* appSelect(selectTaskMetadata);
     const task = yield* appSelect(state => state.task.currentTask);
     if (isServerTask(task)) {
         const taskSettings = yield* call(asyncGetFile, 'taskSettings.json');

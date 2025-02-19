@@ -1,5 +1,5 @@
 import React from 'react';
-import {getTaskMetadata} from "./platform/platform";
+import {selectTaskMetadata} from "./platform/platform";
 import {getMessage} from "../lang";
 import {useAppSelector} from "../hooks";
 import {AppStore} from "../store";
@@ -10,7 +10,7 @@ export const selectDisplayAbout = (state: AppStore) => {
 }
 
 export function TaskAbout() {
-    const metadata = getTaskMetadata();
+    const metadata = useAppSelector(selectTaskMetadata);
 
     const recordingVersion = useAppSelector(state => {
         if (state.player && state.player.data && state.player.data.version) {
