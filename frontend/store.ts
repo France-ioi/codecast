@@ -84,6 +84,7 @@ export interface CodecastOptions {
     taskInstructions?: string,
     taskHints?: TaskHint[],
     taskSuccessMessage?: string,
+    taskSuccessStayOnCurrentVersionEnabled?: boolean,
     theme?: string,
     app?: string,
     backend?: boolean,
