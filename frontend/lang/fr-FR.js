@@ -215,6 +215,7 @@ module.exports = {
     TASK_LEVEL: 'Version',
     TASK_LEVEL_VERSION: "{count} étoiles",
     TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Passer à la suite",
+    TASK_LEVEL_SUCCESS_STAY_BUTTON: "Rester sur la version actuelle",
     TASK_LEVEL_SUCCESS_NEXT_LABEL: "Nous vous proposons d'essayer la version {version}.",
     TASK_LEVEL_SUCCESS_NEXT_LABEL_FAMILIAR: "Nous te proposons d'essayer la version {version}.",
     TASK_LEVEL_SUCCESS_FINISHED: "Bravo, vous avez entièrement résolu cette question !",
