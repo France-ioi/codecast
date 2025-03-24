@@ -1,6 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {AppStore} from '../../store';
-import {memoize} from 'proxy-memoize';
+import {CodeHelpMode} from './hint_actions';
 
 export interface TaskHint {
     content?: string,
@@ -15,16 +14,22 @@ export interface TaskHint {
     disablePrevious?: boolean,
     immediate?: boolean,
     levels?: string[],
+    codeHelp?: {
+        main: string,
+        insufficient: string,
+    },
 }
 
 export interface HintsState {
     availableHints: TaskHint[],
     unlockedHintIds: string[],
+    codeHelpLoading: CodeHelpMode,
 }
 
 export const hintsInitialState = {
     availableHints: [],
     unlockedHintIds: [],
+    codeHelpLoading: null,
 } as HintsState;
 
 export const hintsSlice = createSlice({
@@ -75,6 +80,15 @@ export const hintsSlice = createSlice({
 
             state.availableHints = newAvailableHints;
         },
+        hintObtained(state, action: PayloadAction<TaskHint>) {
+            const newHint = {...action.payload};
+            if (!newHint.id) {
+                newHint.id = `hint:${state.availableHints.length}`;
+            }
+
+            state.availableHints.push(newHint);
+            state.unlockedHintIds.push(newHint.id);
+        },
         hintUnlocked(state, action: PayloadAction<string>) {
             if (-1 === state.unlockedHintIds.indexOf(action.payload)) {
                 const newUnlockedHintIds = [...state.unlockedHintIds, action.payload];
@@ -87,12 +101,17 @@ export const hintsSlice = createSlice({
                 }
             }
         },
+        changeCodeHelpLoading(state, action: PayloadAction<CodeHelpMode>) {
+            state.codeHelpLoading = action.payload;
+        },
     },
 });
 
 export const {
     hintsLoaded,
+    hintObtained,
     hintUnlocked,
+    changeCodeHelpLoading,
 } = hintsSlice.actions;
 
 export default hintsSlice;

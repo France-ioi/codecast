@@ -24,6 +24,7 @@ export function buildOptions(config, req, start, callback) {
     const options = buildCommonOptions(config, start);
     options.audioWorkerUrl = config.audioWorkerUrl;
     options.taskPlatformUrl = config.taskPlatformUrl;
+    options.codeHelp = config.codeHelp;
     options.baseUrl = config.baseUrl;
     options.backend = true;
     options.callbackUrl = req.originalUrl;
