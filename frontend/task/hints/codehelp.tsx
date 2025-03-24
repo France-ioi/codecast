@@ -5,7 +5,7 @@ import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {getFormattedInstructionsForLevelSelector} from '../instructions/instructions';
 import {TaskHint} from './hints_slice';
 import React from 'react';
-import {toHtml} from '../../utils/sanitize';
+import Markdown from 'react-markdown';
 
 interface CodeHelpParameters {
     code: string,
@@ -47,15 +47,17 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters) {
 }
 
 export function formatCodeHelpHint(taskHint: TaskHint) {
-    const formattedInsufficient = taskHint.codeHelp.insufficient?.replace(/`([^`]+)`/g, '<code>$1</code>');
-    const formattedMain = taskHint.codeHelp.main.replace(/`([^`]+)`/g, '<code>$1</code>');
-
     return (
         <div className="codehelp-hint">
-            {null !== formattedInsufficient && <p className="has-warning" dangerouslySetInnerHTML={toHtml(formattedInsufficient)}>
-            </p>}
-            <p dangerouslySetInnerHTML={toHtml(formattedMain)}>
-            </p>
+            {null !== taskHint.codeHelp.insufficient && <div className="has-warning mb-4">
+                <Markdown>
+                    {taskHint.codeHelp.insufficient}
+                </Markdown>
+            </div>}
+
+            <Markdown>
+                {taskHint.codeHelp.main}
+            </Markdown>
         </div>
     );
 }

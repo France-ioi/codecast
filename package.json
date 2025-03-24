@@ -96,6 +96,7 @@
     "react-dom": "^18.2.0",
     "react-files": "^2.4.9",
     "react-highlighter": "^0.4.3",
+    "react-markdown": "^10.1.0",
     "react-portal": "^4.2.2",
     "react-redux": "^8.1.1",
     "react-resize-detector": "^9.1.1",

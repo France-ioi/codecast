@@ -116,5 +116,16 @@
     background: #efa124;
     border-radius: 4px;
     padding: 1.25em 1.5em;
+
+    p:last-child {
+      margin-bottom: 0 !important;
+    }
+  }
+  pre {
+    margin-left: 10px;
+  }
+  code {
+    font-size: 1em !important;
+    color: #e00000;
   }
 }
