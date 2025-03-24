@@ -5,11 +5,26 @@
     flex-direction: column;
     gap: 16px;
     align-items: center;
+    margin: auto;
+    max-width: 500px;
 
     .hint-button {
       font-size: 16px;
-      width: fit-content;
       padding: 5px 30px;
+      width: 100%;
+    }
+
+    .question-container {
+      width: 100%;
+    }
+
+    .question {
+      width: 100%;
+    }
+
+    .question-buttons {
+      display: flex;
+      gap: 10px;
     }
   }
 
@@ -93,6 +108,7 @@
 
 .hints-dialog {
   padding-bottom: 0;
+  width: 800px;
 }
 
 .codehelp-hint {
