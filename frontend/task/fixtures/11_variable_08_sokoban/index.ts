@@ -15,6 +15,12 @@ const images = [
     {path: require('./test_hard_1.png')},
     {path: require('./test_hard_2.png')},
     {path: require('./test_hard_3.png')},
+    {path: require('./slides/diapo_01_blockly.png')},
+    {path: require('./slides/diapo_02_blockly.png')},
+    {path: require('./slides/diapo_03.png')},
+    {path: require('./slides/diapo_04.png')},
+    {path: require('./slides/diapo_05.png')},
+    {path: require('./slides/diapo_06.png')},
 ];
 
 export default {
