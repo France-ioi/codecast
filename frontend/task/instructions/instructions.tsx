@@ -14,6 +14,7 @@ import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {TaskInstructionsVideo} from './TaskInstructionsVideo';
 import {QuickAlgoLibrary} from '../libs/quickalgo_library';
+import {TaskInstructionsSlideshow} from './TaskInstructionsSlideshow';
 
 function findStringForLanguage(taskStrings: any[], languages: string[]) {
     for (let language of languages) {
@@ -52,9 +53,17 @@ const defaultInstructionsHtml = `
 <p class="variant_1 variant_2">
     Variante 1 et variante 2
 </p>
-<p class="long">
-    Plus de détails sur la mission
-</p>
+<div class="long">
+  <p>Plus de détails sur la mission</p>
+  <div data-slideshow>
+    <div id="image-container">
+      <center><img id="diaporama" src="build/images/11_variable_08_sokoban/slides/diapo_01_blockly.png" alt="Diaporama"></center>
+    </div>
+    <div id="image-container">
+      <center><img id="diaporama" src="build/images/11_variable_08_sokoban/slides/diapo_02_blockly.png" alt="Diaporama"></center>
+    </div>
+  </div>
+</div>
 <div class="basic">
     <div class="hints">
         <div class="hint">
@@ -240,6 +249,13 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             dragEnabled={false}
             maxLines={Infinity}
         />
+    } else if (node.attribs && 'data-slideshow' in node.attribs) {
+        let children = processNodes(node.children, (node, index) => transformNode(node, index, context))
+            .filter(a => 'string' !== typeof a);
+
+        return <TaskInstructionsSlideshow
+            slides={children}
+        />;
     } else if (node.attribs && 'onclick' in node.attribs) {
         const tagName = node.tagName;
         const props = generatePropsFromAttributes(node.attribs, index);

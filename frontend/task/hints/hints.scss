@@ -38,53 +38,53 @@
   .hints-content.has-no-next .carousel-control-next {
     display: none;
   }
+}
 
-  // Carousel
-  .carousel-container {
-    position: relative;
+// Carousel
+.carousel-container {
+  position: relative;
+}
+
+.carousel {
+  .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
+    color: var(--primary-color);
+    width: 50px;
+    opacity: 0.5;
   }
-
-  .carousel {
-    .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
-      color: var(--primary-color);
-      width: 50px;
-      opacity: 0.5;
-    }
-    .carousel-control-prev:hover, .carousel-control-next:hover {
+  .carousel-control-prev:hover, .carousel-control-next:hover {
+    opacity: 1;
+  }
+  .carousel-item {
+    padding: 30px 50px 60px;
+  }
+  .carousel-indicators button {
+    height: 6px;
+    opacity: 0.3;
+    background-color: var(--primary-color);
+    &.active {
       opacity: 1;
     }
-    .carousel-item {
-      padding: 30px 50px 60px;
-    }
-    .carousel-indicators button {
-      height: 6px;
-      opacity: 0.3;
-      background-color: var(--primary-color);
-      &.active {
-        opacity: 1;
-      }
-    }
-    .carousel-item h3 {
-      color: #699669;
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .carousel-item {
-      color: #222;
-    }
-    .carousel-item .row {
-      align-items: center;
-    }
-    .carousel-item .row.is-vertical-top {
-      align-items: flex-start;
-    }
-    .carousel-item img {
-      width: 100%;
-    }
-    .carousel-item ul {
-      //margin-bottom: 0;
-    }
+  }
+  .carousel-item h3 {
+    color: #699669;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  .carousel-item {
+    color: #222;
+  }
+  .carousel-item .row {
+    align-items: center;
+  }
+  .carousel-item .row.is-vertical-top {
+    align-items: flex-start;
+  }
+  .carousel-item img {
+    width: 100%;
+  }
+  .carousel-item ul {
+    //margin-bottom: 0;
   }
 }
 
