@@ -295,6 +295,7 @@ module.exports = {
     HINTS_CODE_HELP_CURRENT_CODE: "Get help on my code",
     HINTS_CODE_HELP_ASK_QUESTION: "Ask a question about my code",
     HINTS_CODE_HELP_WRITE_QUESTION: "Write your question:",
+    HINTS_CODE_HELP_LIB_DEFINITION: "The \"{library}\" module has the following available methods:",
 
     SUBMISSION_EXECUTE_ON: 'Execute on...',
     SUBMISSION_EXECUTE_ON_CLIENT: 'browser',
