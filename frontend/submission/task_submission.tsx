@@ -252,8 +252,8 @@ class TaskSubmissionExecutor {
 
             console.error(ex);
 
-            const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK')
-                : (ex.res?.body?.error ?? ex.message ?? ex.toString());
+            const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK').s
+                : getMessage('SUBMISSION_RESULTS_CRASHED_UNKNOWN').s;
             yield* put(platformAnswerGraded({error: message}));
 
             return {
