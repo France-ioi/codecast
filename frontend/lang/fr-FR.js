@@ -325,6 +325,7 @@ module.exports = {
     SUBMISSION_RESULTS_EVALUATING: 'Évaluation en cours...',
     SUBMISSION_RESULTS_CRASHED: "Une erreur s'est produite durant l'évaluation.",
     SUBMISSION_RESULTS_CRASHED_NETWORK: "Vous n'êtes actuellement pas connecté à Internet.",
+    SUBMISSION_RESULTS_CRASHED_UNKNOWN: "Impossible d'envoyer la soumission au serveur d'évaluation.",
     SUBMISSION_RESULTS_LABEL: 'Soumission en {platform}',
     SUBMISSION_RESULTS_SELECT: 'Précédentes soumissions',
     SUBMISSION_EVALUATING_USER_TESTS: "Évaluation serveur en cours sur les tests perso...",

@@ -31,7 +31,9 @@ export function SubmissionResultsSelector(props: SubmissionResultsSelectorProps)
         }
     };
 
-    const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type && SubmissionExecutionScope.MyTests !== submission.scope && !submission.cancelled);
+    const serverSubmissionResults = submissionResults
+        .filter(submission => TaskSubmissionEvaluateOn.Server === submission.type && SubmissionExecutionScope.MyTests !== submission.scope && !submission.cancelled)
+        .reverse();
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     return (

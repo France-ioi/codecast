@@ -612,6 +612,10 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     static getConsumedTextFromEvents(taskState: PrinterLibState) {
+        if (!taskState.ioEvents?.length) {
+            return '';
+        }
+
         let consumedText = [];
         for (let eventId = 0; eventId < taskState.ioEvents.length; eventId++) {
             const event = taskState.ioEvents[eventId];
