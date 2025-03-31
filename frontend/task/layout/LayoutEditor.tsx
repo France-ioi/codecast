@@ -22,6 +22,7 @@ import {getMessage} from '../../lang';
 import {bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {TaskRestartButton} from '../TaskRestartButton';
+import {BlockType} from '../blocks/block_types';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -64,7 +65,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
 
     const displayBlocks = !!(
         context
-        && blocks.length
+        && blocks.filter(block => BlockType.Directive !== block.type || options.showDirectives).length
         && platformsList[platform].displayBlocks
         && 'tralalere' !== options.app
         && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
