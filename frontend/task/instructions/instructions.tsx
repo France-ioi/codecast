@@ -44,6 +44,7 @@ const defaultInstructionsHtml = `
   <span data-lang="blockly scratch">Boucle de répétition</span>
   <span data-lang="python">Boucle for</span></a>
 </p>
+<pre>Hello MOOC!</pre>
 <p class="variant_1">
     Uniquement variante 1
 </p>
@@ -144,6 +145,7 @@ export const getInstructionsForLevelSelector = memoize(({state, context}: {state
     const taskLevel = state.task.currentLevel;
 
     let newInstructionsHtml = taskInstructionsHtmlFromOptions ? taskInstructionsHtmlFromOptions : null;
+    // let newInstructionsHtml = defaultInstructionsHtml;
     let newInstructionsTitle = null;
     if (currentTask && currentTask.strings && currentTask.strings.length) {
         const instructions = findStringForLanguage(currentTask.strings, [language, 'en', 'fr']);
