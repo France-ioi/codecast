@@ -23,6 +23,11 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
     if (task.scriptAnimation) {
         try {
             eval(task.scriptAnimation);
+
+            return {
+                ...task,
+                gridInfos: window.taskData.gridInfos,
+            };
         } catch (ex) {
             console.error("Couldn't execute script animation", ex);
         }
