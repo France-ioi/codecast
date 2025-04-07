@@ -59,6 +59,7 @@ import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
 import {memoize} from 'proxy-memoize';
+import {selectLanguageStrings} from '../instructions/instructions';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -218,11 +219,13 @@ function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 
 function* getSupportedViews() {
     const showViews = yield* call(showDifferentViews);
+    const hasSolution = yield* appSelect(state => selectLanguageStrings(state)?.solution);
 
     if (showViews) {
         return {
             [LayoutView.Task]: {},
             [LayoutView.Editor]: {},
+            ...(hasSolution ? {[LayoutView.Solution]: {}} : {}),
         }
     } else {
         return {
