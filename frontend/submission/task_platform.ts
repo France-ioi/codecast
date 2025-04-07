@@ -7,15 +7,17 @@ import {submissionUpdateTaskSubmission} from './submission_slice';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
 import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms';
 import {documentToString} from '../buffers/document';
-import stringify from 'json-stable-stringify-without-jsonify';
-import {TaskLevelName} from '../task/platform/platform_slice';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 
-export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> {
+export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
+    const queryParameters = {
+        ...(token ? {token} : {}),
+        ...(platform ? {platform} : {}),
+    };
 
-    return (yield* call(asyncGetJson, taskPlatformUrl + '/tasks/' + taskId)) as TaskServer|null;
+    return (yield* call(asyncGetJson, taskPlatformUrl + '/tasks/' + taskId, queryParameters)) as TaskServer|null;
 }
 
 export function convertServerTaskToCodecastFormat(task: TaskServer): Task {

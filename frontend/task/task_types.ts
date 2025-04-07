@@ -126,6 +126,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     hideVariantsInDocumentation?: boolean,
     blocksLanguage?: {[platform: string]: string},
     multithread?: boolean,
+    allowClientExecution?: boolean,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {

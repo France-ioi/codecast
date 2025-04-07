@@ -34,6 +34,7 @@ import {LayoutMobileMode, LayoutPlayerMode, LayoutType, LayoutView} from './layo
 import {App} from '../../app_types';
 import {quickAlgoLibraries, QuickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ReplayContext} from '../../player/sagas';
+import {TaskSolution} from '../TaskSolution';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -720,6 +721,8 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         layoutXml = '<Editor/>';
     } else if (LayoutView.Task === layoutProps.activeView) {
         return <TaskInstructions hideShowMoreButton expanded/>;
+    } else if (LayoutView.Solution === layoutProps.activeView) {
+        return <TaskSolution/>
     }
 
     const elementsTree = xmlToReact.convert(layoutXml, {

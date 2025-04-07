@@ -82,8 +82,10 @@ export const selectAvailableExecutionModes = memoize((state: AppStore): TaskSubm
     const currentTask = state.task.currentTask;
     const serverTask = null !== currentTask && isServerTask(currentTask);
 
+    const allowClientExecution = currentTask?.gridInfos?.allowClientExecution;
+
     const availableExecutionModes = [];
-    if (platformHasClientRunner) {
+    if (platformHasClientRunner && (!serverTask || allowClientExecution)) {
         availableExecutionModes.push(TaskSubmissionEvaluateOn.Client);
     }
     if (serverTask) {

@@ -15,8 +15,9 @@ import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {TaskInstructionsVideo} from './TaskInstructionsVideo';
 import {QuickAlgoLibrary} from '../libs/quickalgo_library';
 import {TaskInstructionsSlideshow} from './TaskInstructionsSlideshow';
+import {TaskState, TaskStringNormalized} from '../task_types';
 
-function findStringForLanguage(taskStrings: any[], languages: string[]) {
+function findStringForLanguage(taskStrings: TaskStringNormalized[], languages: string[]): TaskStringNormalized {
     for (let language of languages) {
         let taskString = taskStrings.find(string => string.language === language);
         if (taskString) {
@@ -25,6 +26,17 @@ function findStringForLanguage(taskStrings: any[], languages: string[]) {
     }
 
     return taskStrings[0];
+}
+
+export function selectLanguageStrings(state: AppStore): TaskStringNormalized {
+    const currentTask = state.task.currentTask;
+    if (null === currentTask || !currentTask.strings?.length) {
+        return null;
+    }
+
+    const language = state.options.language.split('-')[0];
+
+    return findStringForLanguage(currentTask.strings, [language, 'en', 'fr']);
 }
 
 
@@ -140,7 +152,6 @@ const defaultInstructionsHtml = `
 
 export const getInstructionsForLevelSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}) => {
     const taskInstructionsHtmlFromOptions = state.options.taskInstructions;
-    const language = state.options.language.split('-')[0];
     const currentTask = state.task.currentTask;
     const taskLevel = state.task.currentLevel;
 
@@ -148,7 +159,7 @@ export const getInstructionsForLevelSelector = memoize(({state, context}: {state
     // let newInstructionsHtml = defaultInstructionsHtml;
     let newInstructionsTitle = null;
     if (currentTask && currentTask.strings && currentTask.strings.length) {
-        const instructions = findStringForLanguage(currentTask.strings, [language, 'en', 'fr']);
+        const instructions = selectLanguageStrings(state);
         if (instructions.title) {
             newInstructionsTitle = instructions.title;
         }
