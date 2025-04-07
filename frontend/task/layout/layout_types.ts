@@ -1,6 +1,7 @@
 export enum LayoutView {
     Task = 'task', // instructions
     Editor = 'editor', // solving interface (everything without instructions)
+    Solution = 'solution',
 }
 
 export enum LayoutType {

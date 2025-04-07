@@ -155,6 +155,33 @@ window.changeTaskLevel = (levelName: TaskLevelName) => {
 
 let oldSagasTasks = {};
 
+function* taskRefresh(taskId?: string) {
+    const currentTask = yield* appSelect(state => state.task.currentTask);
+    if (null === currentTask && !taskId) {
+        return;
+    }
+
+    let task: TaskServer | null = null;
+    try {
+        const newPlatformState = yield* appSelect(state => state.platform);
+        task = yield* getTaskFromId(taskId ?? currentTask?.id, newPlatformState.taskToken, newPlatformState.platformName);
+    } catch (e) {
+        console.error(e);
+        yield* put({
+            type: ActionTypes.Error,
+            payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`}
+        });
+        return;
+    }
+
+    const convertedTask = convertServerTaskToCodecastFormat(task);
+    yield* put(currentTaskChange(convertedTask));
+
+    if (convertedTask?.gridInfos?.hints?.length) {
+        yield* put(hintsLoaded(convertedTask.gridInfos.hints));
+    }
+}
+
 function* taskLoadSaga(app: App, action) {
     const urlParameters = new URLSearchParams(window.location.search);
     const selectedTask = urlParameters.has('task') ? urlParameters.get('task') : null;
@@ -165,30 +192,16 @@ function* taskLoadSaga(app: App, action) {
     if (!state.task.currentTask) {
         extractTests = true;
         if (urlParameters.has('taskId')) {
-            let task: TaskServer | null = null;
-            const taskId = urlParameters.get('taskId');
-            try {
-                task = yield* getTaskFromId(taskId);
-            } catch (e) {
-                console.error(e);
-                yield* put({
-                    type: ActionTypes.Error,
-                    payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`}
-                });
-                return;
-            }
-
-            const convertedTask = convertServerTaskToCodecastFormat(task);
-            yield* put(currentTaskChange(convertedTask));
             if (urlParameters.has('sPlatform')) {
                 yield* put(platformChangeName(urlParameters.get('sPlatform')));
             }
             if (urlParameters.has('sToken')) {
+                // Will trigger task refresh
                 yield* put(platformTokenUpdated(urlParameters.get('sToken')));
             }
-            if (convertedTask?.gridInfos?.hints?.length) {
-                yield* put(hintsLoaded(convertedTask.gridInfos.hints));
-            }
+
+            const taskId = urlParameters.get('taskId');
+            yield* call(taskRefresh, taskId);
         } else if (state.options.task) {
             yield* put(currentTaskChange(state.options.task));
         } else if (selectedTask) {
@@ -998,6 +1011,8 @@ export default function (bundle: Bundle) {
                     const randomSeed = String(payload.randomSeed);
                     yield* put(platformTaskRandomSeedUpdated(randomSeed));
                 }
+
+                yield* call(taskRefresh);
             }
         });
 
