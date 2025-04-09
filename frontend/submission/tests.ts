@@ -104,7 +104,7 @@ export function getTestResultMessage(testResult: TaskSubmissionTestResult) {
     let message = errorCodeData.message;
     const time = Math.floor((testResult as TaskSubmissionServerTestResult).timeMs / 10) / 100;
     if (hasRelativeScore) {
-        message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
+        message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: Math.round(testResult.score * 100), time});
     } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
         message = getMessage('SUBMISSION_RESULT_VALIDATED').format({time});
     } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
