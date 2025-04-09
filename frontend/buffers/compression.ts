@@ -10,11 +10,9 @@ export function compressDocument(document: Document): Document {
         return document;
     }
 
-    console.log('ici');
     const answer = documentToString(document);
     const zipped = gzip.zip(answer);
     const base64String = btoa(String.fromCharCode(...new Uint8Array(zipped)));
-    console.log({zipped, base64String})
 
     return TextBufferHandler.documentFromString(base64String);
 }
@@ -24,7 +22,6 @@ export function uncompressDocument(document: Document) {
     const bytes = Uint8Array.from(atob(base64String), c => c.charCodeAt(0));
     const unzipped = gzip.unzip(bytes);
     const value = unzipped.map(a => String.fromCharCode(a)).join('');
-    console.log({base64String, unzipped, bytes, value})
 
     return TextBufferHandler.documentFromString(value);
 }

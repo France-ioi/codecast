@@ -208,7 +208,7 @@ export interface TaskTestServer {
 }
 
 export interface TaskAnswer {
-    version: string,
+    version?: string,
     document: Document,
     platform?: CodecastPlatform,
     fileName?: string,
