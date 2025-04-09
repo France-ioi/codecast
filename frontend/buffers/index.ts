@@ -205,16 +205,16 @@ function* createBufferFromSubmission(submissionId: number) {
     }
 
     const platform = submission.result.sourceCode.params.sLangProg as CodecastPlatform;
-
     const document = TextBufferHandler.documentFromString(submission?.result?.sourceCode?.source);
 
-    const newBuffer: BufferStateParameters = {
-        type: document.type,
-        source: true,
-        fileName: submission?.result?.sourceCode?.name,
+    const answer: TaskAnswer = {
+        document,
         platform,
-        submissionIndex: submissionId,
+        fileName: submission?.result?.sourceCode?.name,
     };
+
+    const newBuffer = yield* call(denormalizeBufferFromAnswer, answer);
+    newBuffer.submissionIndex = submissionId;
 
     yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
     yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
