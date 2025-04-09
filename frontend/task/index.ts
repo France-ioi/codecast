@@ -991,14 +991,15 @@ export default function (bundle: Bundle) {
             const state = yield* appSelect();
             const currentBuffer = state.buffers.activeBufferName;
             const bufferParameters = yield* call(denormalizeBufferFromAnswer, answer);
+            const document = bufferParameters.document;
             if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
                 yield* call(createSourceBufferFromBufferParameters, bufferParameters);
             } else if (null !== currentBuffer) {
                 if (state.buffers.buffers[currentBuffer].platform !== answer.platform) {
-                    yield* put(bufferChangePlatform(currentBuffer, answer.platform, answer.document));
+                    yield* put(bufferChangePlatform(currentBuffer, answer.platform, document));
                 } else {
                     yield* put(bufferInit({buffer: currentBuffer, ...bufferParameters}));
-                    yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
+                    yield* put(bufferResetDocument({buffer: currentBuffer, document, goToEnd: true}));
                 }
             }
         });

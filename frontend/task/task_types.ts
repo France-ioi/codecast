@@ -213,6 +213,7 @@ export interface TaskAnswer {
     platform?: CodecastPlatform,
     fileName?: string,
     gitSync?: GitSyncParams,
+    compressed?: boolean,
     //submissionId: string ?
 }
 
