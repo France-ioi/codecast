@@ -2,7 +2,7 @@ import {call, put} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {Task, TaskAnswer, TaskServer, TaskTest} from '../task/task_types';
 import {appSelect} from '../hooks';
-import {TaskSubmissionServer, TaskSubmissionServerResult} from './submission_types';
+import {SubmissionTestErrorCode, TaskSubmissionServer, TaskSubmissionServerResult} from './submission_types';
 import {submissionUpdateTaskSubmission} from './submission_slice';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
 import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms';
@@ -109,6 +109,9 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
         if (result.evaluated) {
             for (let test of result.tests) {
                 test.score = test.score / 100;
+                if (test.score > 0 && test.score < 1 && SubmissionTestErrorCode.WrongAnswer === test.errorCode) {
+                    test.errorCode = SubmissionTestErrorCode.PartialSuccess;
+                }
 
                 // If the test has a clientId, change the id of the test to use the client id
                 if (test?.test?.clientId) {

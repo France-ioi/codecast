@@ -32,6 +32,7 @@ export interface SubmissionSubtaskNormalized {
 export enum SubmissionTestErrorCode {
     OtherError = -1,
     NoError = 0,
+    PartialSuccess = 999,
     WrongAnswer = 1,
     AbortError = 6,
     BusError = 7,

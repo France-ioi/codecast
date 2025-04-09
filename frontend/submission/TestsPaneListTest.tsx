@@ -13,11 +13,11 @@ import {useAppSelector} from '../hooks';
 import {faTrash} from '@fortawesome/free-solid-svg-icons/faTrash';
 import {selectTaskTests} from './submission_selectors';
 import {TaskTest, TaskTestGroupType} from '../task/task_types';
-import {SubmissionTestErrorCode, TaskSubmission, TaskSubmissionServerTestResult} from './submission_types';
+import {SubmissionTestErrorCode, TaskSubmission} from './submission_types';
 import {submissionRemoveTest} from './submission_actions';
-import {call} from 'typed-redux-saga';
 import {askConfirmation} from '../alert';
 import {getTestResultMessage} from './tests';
+import {faCircleNotch} from '@fortawesome/free-solid-svg-icons/faCircleNotch';
 
 export interface SubmissionResultTestProps {
     index: number,
@@ -43,6 +43,11 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
         icon: faCheck,
         color: '#9acc68',
         colorLight: '#dfeada',
+    },
+    [SubmissionTestErrorCode.PartialSuccess]: {
+        icon: faCircleNotch,
+        color: '#f5a623',
+        colorLight: '#f1dbb7',
     },
     [SubmissionTestErrorCode.WrongAnswer]: {
         icon: faTimes,
