@@ -68,8 +68,6 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters) {
     const queryPayload = (yield* call(asyncRequestJson, codeHelpConfig.url + '/api/query', queryBody, false, {Authorization: `Bearer ${accessToken}`})) as {context: null, query_id: number, responses: {main: string, insufficient: string}};
     const {responses} = queryPayload;
 
-    console.log({queryPayload})
-
     return {
         codeHelp: responses,
     };
