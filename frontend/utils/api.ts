@@ -1,9 +1,8 @@
 import request from 'superagent';
 import {isLocalStorageEnabled} from "../common/utils";
 import {CANCEL} from 'redux-saga';
-import fs from 'fs';
 
-export const asyncRequestJson = function(path, body, withCredentials = true) {
+export const asyncRequestJson = function(path, body, withCredentials = true, headers = {}) {
     let req;
     const promise = new Promise<any>(function(resolve, reject) {
         req = request.post(path);
@@ -15,6 +14,11 @@ export const asyncRequestJson = function(path, body, withCredentials = true) {
             };
         }
         req.set('Accept', 'application/json');
+
+        for (let [name, value] of Object.entries(headers)) {
+            req.set(name, value);
+        }
+
         req.send(body);
         req.end(function(err, res) {
             if (err || !res.ok) {

@@ -2,7 +2,6 @@ import {
     checkCompilingCode,
     getDefaultSourceCode,
     getTaskPlatformMode,
-    recordingProgressSteps,
     TaskPlatformMode
 } from "./utils";
 import {Bundle} from "../linker";
@@ -22,7 +21,6 @@ import taskSlice, {
     currentTaskChange,
     currentTaskChangePredefined,
     recordingEnabledChange,
-    selectCurrentTestData,
     TaskActionTypes,
     taskAddInput,
     taskChangeSoundEnabled,
@@ -44,6 +42,7 @@ import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle, {openDocumentationIfNecessary} from "./documentation/doc";
 import BlocksBundle from "./blocks/blocks";
+import HintsBundle from "./hints/hints_saga";
 import PlatformBundle, {
     getTaskAnswerAggregated,
     platformApi,
@@ -787,6 +786,7 @@ export default function (bundle: Bundle) {
     bundle.include(QuickalgoLibsBundle);
     bundle.include(SrlBundle);
     bundle.include(BehaviourBundle);
+    bundle.include(HintsBundle);
 
     setPlatformBundleParameters({
         getTaskAnswer,

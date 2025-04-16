@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {Carousel} from 'react-bootstrap';
@@ -8,7 +8,9 @@ import {hintUnlocked} from "./hints_slice";
 import {getMessage} from '../../lang';
 import {TaskHint} from './TaskHint';
 import log from 'loglevel';
-import {selectAvailableHints} from './hints_selectors';
+import {selectAvailableHints, selectUnlockedHintIds} from './hints_selectors';
+import {askCodeHelp, CodeHelpMode} from './hint_actions';
+import {Button, Intent} from '@blueprintjs/core';
 
 export interface TaskHintProps {
     askHintClassName?: string
@@ -16,27 +18,43 @@ export interface TaskHintProps {
 
 export function TaskHints(props: TaskHintProps) {
     const availableHints = useAppSelector(selectAvailableHints);
-    const unlockedHintIds = useAppSelector(state => state.hints.unlockedHintIds.filter(hintId => availableHints.find(hint => hintId === hint.id)));
+    const unlockedHintIds = useAppSelector(selectUnlockedHintIds);
     const [displayedHintId, setDisplayedHintId] = useState(unlockedHintIds.length ? unlockedHintIds[unlockedHintIds.length - 1] : null);
-    const displayedHintIndex = null === displayedHintId ? unlockedHintIds.length : unlockedHintIds.indexOf(displayedHintId);
+    const [displayedHintIndex, setDisplayedHintIndex] = useState(null === displayedHintId ? unlockedHintIds.length : unlockedHintIds.indexOf(displayedHintId));
     const displayedHint = availableHints.find(hint => displayedHintId === hint.id);
     const nextAvailableHint = availableHints.find(hint => -1 === unlockedHintIds.indexOf(hint.id));
     const nextHintToUnlockId = useRef(nextAvailableHint ? nextAvailableHint.id : null);
-    let canAskMoreHints = undefined !== nextAvailableHint && !displayedHint?.question && !displayedHint?.disableNext;
+    const codeHelp = useAppSelector(state => state.options.codeHelp);
+    const codeHelpLoading = useAppSelector(state => state.hints.codeHelpLoading);
+    let canAskMoreNormalHints = undefined !== nextAvailableHint && !displayedHint?.question && !displayedHint?.disableNext;
+
+    // console.log({availableHints, unlockedHintIds, displayedHintId, displayedHintIndex, displayedHint})
 
     const dispatch = useDispatch();
+    const [codeHelpDetailEnabled, setCodeHelpDetailEnabled] = useState(false);
+    const [codeHelpIssue, setCodeHelpIssue] = useState('');
+
+    const changeDisplayedHintId = (hintId: string) => {
+        setDisplayedHintId(hintId);
+        setDisplayedHintIndex(null === hintId ? unlockedHintIds.length : unlockedHintIds.indexOf(hintId));
+    };
 
     const unlockNextHint = () => {
         dispatch(hintUnlocked(nextHintToUnlockId.current));
-        setDisplayedHintId(nextHintToUnlockId.current);
     };
 
     const goToHintId = useCallback((hintId: string) => {
         if (-1 === unlockedHintIds.indexOf(hintId)) {
             dispatch(hintUnlocked(hintId));
         }
-        setDisplayedHintId(hintId);
+        changeDisplayedHintId(hintId);
     }, []);
+
+    useEffect(() => {
+        if (unlockedHintIds.length) {
+            changeDisplayedHintId(unlockedHintIds[unlockedHintIds.length - 1]);
+        }
+    }, [unlockedHintIds]);
 
     let currentHintPreviousId = null;
     let currentHintNextId = null;
@@ -57,7 +75,7 @@ export function TaskHints(props: TaskHintProps) {
                         }
                     }
                 } else {
-                    canAskMoreHints = false;
+                    canAskMoreNormalHints = false;
                 }
             } else {
                 const nextHintIndex = displayedHintIndex + 1;
@@ -79,6 +97,8 @@ export function TaskHints(props: TaskHintProps) {
         }
     }
 
+    const canAskMoreHints = canAskMoreNormalHints || codeHelp?.enabled;
+
     const handleSelect = (selectedIndex: number) => {
         const nextHintId = unlockedHintIds[selectedIndex];
 
@@ -92,7 +112,7 @@ export function TaskHints(props: TaskHintProps) {
             if (currentHintNextId) {
                 goToHintId(currentHintNextId);
             } else if (canAskMoreHints) {
-                setDisplayedHintId(null);
+                changeDisplayedHintId(null);
             }
         } else if (nextHintId) {
             goToHintId(nextHintId);
@@ -108,11 +128,69 @@ export function TaskHints(props: TaskHintProps) {
         />;
     });
 
+    const getCodeHelp = () => {
+        dispatch(askCodeHelp(CodeHelpMode.Code));
+    };
+
+    const getCodeHelpWithIssue = () => {
+        dispatch(askCodeHelp(CodeHelpMode.Issue, codeHelpIssue));
+    };
+
     if (canAskMoreHints) {
         carouselElements.push(
-            <div className="hint-carousel-item hint-unlock">
-                <div className={`hint-button ${props.askHintClassName}`} onClick={unlockNextHint}>
-                    {getMessage('TRALALERE_HINTS_ASK')}
+            <div className="hint-carousel-item">
+                <div className="hint-unlock">
+                    {canAskMoreNormalHints &&  <Button
+                        className={`hint-button ${props.askHintClassName}`}
+                        text={getMessage('TRALALERE_HINTS_ASK')}
+                        intent={Intent.PRIMARY}
+                        type="submit"
+                        onClick={unlockNextHint}
+                    />}
+
+                    {codeHelp?.enabled && <>
+                        <Button
+                            className={`hint-button ${props.askHintClassName}`}
+                            text={getMessage('HINTS_CODE_HELP_CURRENT_CODE')}
+                            intent={Intent.PRIMARY}
+                            type="submit"
+                            onClick={getCodeHelp}
+                            loading={CodeHelpMode.Code === codeHelpLoading}
+                            disabled={null !== codeHelpLoading}
+                        />
+
+                        <Button
+                            className={`hint-button ${props.askHintClassName}`}
+                            text={getMessage('HINTS_CODE_HELP_ASK_QUESTION')}
+                            intent={Intent.PRIMARY}
+                            type="submit"
+                            onClick={() => setCodeHelpDetailEnabled(true)}
+                        />
+                    </>}
+
+                    {codeHelpDetailEnabled && <div className="question-container mt-4">
+                        <div className="mb-2">{getMessage('HINTS_CODE_HELP_WRITE_QUESTION')}</div>
+
+                        <textarea className='question' value={codeHelpIssue} onChange={(e) => setCodeHelpIssue(e.target.value)} rows={6}/>
+
+                        <div className="question-buttons mt-2">
+                            <Button
+                                className={`hint-button ${props.askHintClassName}`}
+                                text={getMessage('SEND')}
+                                intent={Intent.PRIMARY}
+                                onClick={getCodeHelpWithIssue}
+                                loading={CodeHelpMode.Issue === codeHelpLoading}
+                                disabled={null !== codeHelpLoading}
+                            />
+
+                            <Button
+                                className={`hint-button ${props.askHintClassName} ml-2`}
+                                text={getMessage('CANCEL')}
+                                intent={Intent.NONE}
+                                onClick={() => setCodeHelpDetailEnabled(false)}
+                            />
+                        </div>
+                    </div>}
                 </div>
             </div>
         );

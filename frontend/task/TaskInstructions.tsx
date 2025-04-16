@@ -1,7 +1,6 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {getMessage} from "../lang";
-import {formatTaskInstructions} from './utils';
 import {Button} from '@blueprintjs/core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons/faPlus';
@@ -12,10 +11,8 @@ import {documentationConceptSelected} from './documentation/documentation_slice'
 import {faMinus} from '@fortawesome/free-solid-svg-icons/faMinus';
 import {TaskInstructionsTabs} from './instructions/TaskInstructionsTabs';
 import {
-    convertHtmlInstructionsToReact,
-    getInstructionsForLevelSelector
+    convertHtmlInstructionsToReact, getFormattedInstructionsForLevelSelector,
 } from './instructions/instructions';
-import {memoize} from 'proxy-memoize';
 import {getDomElementFromDomTree, useCursorPositionTracking} from './layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from './layout/actionTypes';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
@@ -29,11 +26,8 @@ export interface TaskInstructionsProps {
 
 export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
-    const taskLevel = useAppSelector(state => state.task.currentLevel);
-    const taskVariant = useAppSelector(state => state.options.taskVariant);
     const contextId = useAppSelector(state => state.task.contextId);
     const isBackend = useAppSelector(state => state.options.backend);
-    const [instructionsTitle, setInstructionsTitle] = useState(null);
     const [instructionsHtml, setInstructionsHtml] = useState(null);
     const [instructionsTabs, setInstructionsTabs] = useState(null);
     const instructionsRef = useRef<HTMLDivElement>();
@@ -43,10 +37,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const platform = useAppSelector(state => state.options.platform);
     const [hasShortOrLong, setHasShortOrLong] = useState(false);
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const {
-        html: newInstructionsHtml,
-        title: newInstructionsTitle
-    } = useAppSelector(state => getInstructionsForLevelSelector({state, context}));
+    const instructionsJQuery = useAppSelector(state => getFormattedInstructionsForLevelSelector({state, context}));
 
     const toggleTaskInstructions = () => {
         if (documentationOpen) {
@@ -58,7 +49,6 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     };
 
     useEffect(() => {
-        let instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel, taskVariant);
         let hasTabs = false;
         if (0 < instructionsJQuery.find('.instructions-tabs').length) {
             hasTabs = true;
@@ -75,7 +65,6 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             setInstructionsTabs(null);
         }
 
-        setInstructionsTitle(newInstructionsTitle);
         setInstructionsHtml(instructionsJQuery.html());
 
         let hasShortOrLongInstructions = 0 < instructionsJQuery.find('.short').length || 0 < instructionsJQuery.find('.long').length;

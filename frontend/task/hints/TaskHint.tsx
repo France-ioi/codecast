@@ -4,6 +4,7 @@ import {toHtml} from "../../utils/sanitize";
 import {TaskHint} from "./hints_slice";
 import {formatTaskInstructions} from '../utils';
 import {getMessage} from '../../lang';
+import {formatCodeHelpHint} from './codehelp';
 
 export interface TaskHintProps {
     hint?: TaskHint,
@@ -26,6 +27,18 @@ export function TaskHint(props: TaskHintProps) {
 
     const goToHint = (hintId: string) => {
         props.goToHintId(hintId);
+    }
+
+    if (hint.codeHelp) {
+        const formattedCodeHelp = formatCodeHelpHint(hint);
+
+        return (
+            <div
+                className="hint-carousel-item"
+            >
+                {formattedCodeHelp}
+            </div>
+        );
     }
 
     const instructionsJQuery = formatTaskInstructions(hint.content, platform, taskLevel);
