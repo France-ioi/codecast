@@ -241,14 +241,33 @@ export const getTaskHintsSelector = memoize((state: AppStore) => {
     return hints.length ? hints : null;
 });
 
+function getNodeText(node) {
+    if ('text' === node.type) {
+        return node.data;
+    }
+
+    const nodeTexts = [];
+    for (let subNode of node.children) {
+        nodeTexts.push(getNodeText(subNode));
+    }
+
+    return nodeTexts.join(' ');
+}
+
 function transformNode(node, index: string|number, context: {platform: CodecastPlatform}) {
     if (node.attribs && 'select-lang-selector' in node.attribs) {
         return <PlatformSelection key="platform-selection" withoutLabel/>;
     } else if (node.attribs && 'smart-contract-storage' in node.attribs) {
         return <SmartContractStorage/>;
-    } else if (node.attribs && 'data-show-source' in node.attribs) {
-        const code = node.attribs['data-code'];
-        const lang = node.attribs['data-lang'];
+    } else if (node.attribs && ('data-show-source' in node.attribs || ('class' in node.attribs && -1 !== node.attribs['class'].indexOf('language-')))) {
+        let code, lang;
+        if ('data-show-source' in node.attribs) {
+            code = node.attribs['data-code'];
+            lang = node.attribs['data-lang'];
+        } else {
+            code = getNodeText(node);
+            lang = node.attribs['class'].substring(node.attribs['class'].indexOf('language-') + 'language-'.length).split(' ')[0];
+        }
 
         if ('all' !== lang && context.platform !== lang) {
             return null;
@@ -256,7 +275,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
 
         const sourceMode = platformsList[context.platform].aceSourceMode;
 
-        return <Editor
+        return <div style={{marginBottom: 20}}><Editor
             content={code.trim()}
             readOnly
             mode={sourceMode}
@@ -267,7 +286,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             highlightActiveLine={false}
             dragEnabled={false}
             maxLines={Infinity}
-        />
+        /></div>;
     } else if (node.attribs && 'data-slideshow' in node.attribs) {
         let children = processNodes(node.children, (node, index) => transformNode(node, index, context))
             .filter(a => 'string' !== typeof a);
