@@ -221,7 +221,24 @@ export interface TaskServer extends TaskNormalized {
     limits: TaskLimitNormalized[],
     strings: TaskStringNormalized[],
     subTasks: TaskSubtaskNormalized[],
+    sourceCodes: SourceCodeNormalized[],
     tests: TaskTestServer[],
+}
+
+export interface SourceCodeParams {
+    sLangProg: string,
+}
+
+export interface SourceCodeNormalized {
+    id: string,
+    params: SourceCodeParams|null,
+    date: string,
+    name: string,
+    source: string,
+    editable: boolean,
+    active: boolean,
+    rank: number,
+    type: string,
 }
 
 export type Task = QuickalgoTask & Partial<TaskServer>;
