@@ -60,6 +60,7 @@ import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../
 import {getAudioTimeStep} from '../task_selectors';
 import {memoize} from 'proxy-memoize';
 import {selectLanguageStrings} from '../instructions/instructions';
+import {taskFillResources} from './resources';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -382,73 +383,9 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
     yield* call(success, strDump);
 }
 
-function* taskGetResourcesImportCorrectSolutions(resources) {
-    let taskSettingsParsed = yield* appSelect(selectTaskMetadata);
-    const task = yield* appSelect(state => state.task.currentTask);
-    if (isServerTask(task)) {
-        const taskSettings = yield* call(asyncGetFile, 'taskSettings.json');
-        if (!taskSettings) {
-            return;
-        }
-        taskSettingsParsed = JSON.parse(taskSettings);
-    }
-
-    if (!taskSettingsParsed?.correctSolutions) {
-        return;
-    }
-
-    const {correctSolutions} = taskSettingsParsed;
-    resources.correct_solutions = [];
-    for (let correctSolution of correctSolutions) {
-        const {path} = correctSolution;
-        const correctedPath = path.replace(/\$TASK_PATH\/?/, '');
-        const solution = yield* call(asyncGetFile, correctedPath);
-        resources.correct_solutions.push({type: 'solution', solution, id: path, ...correctSolution});
-    }
-}
-
 function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType<typeof taskGetResourcesPost>) {
-    const options = yield* appSelect(state => state.options);
-    let optionsToPreload = {};
-    const urlParameters = new URLSearchParams(window.location.search);
-    const queryParameters = Object.fromEntries(urlParameters);
-    loadOptionsFromQuery(optionsToPreload as CodecastOptions, queryParameters);
-    optionsToPreload = {
-        ...optionsToPreload,
-        platform: options.platform,
-        language: options.language,
-    };
+    yield* call(taskFillResources, resources);
 
-    // Import necessary platform modules without waiting for them to be imported, the declaration is enough
-    const platform = yield* appSelect(state => state.options.platform);
-    yield* call(importPlatformModules, platform, window.modulesPath);
-
-    window.jQuery('script.module').each(function() {
-        const scriptSrc = window.jQuery(this).attr('src');
-        if (scriptSrc && !resources.task_modules.find(resource => scriptSrc === resource.url)) {
-            resources.task_modules.push({type: 'javascript', url: scriptSrc, id: window.jQuery(this).attr('id')});
-        }
-    });
-
-    try {
-        yield* call(taskGetResourcesImportCorrectSolutions, resources);
-    } catch (e) {
-        // Avoid blocking errors here
-        console.error(e);
-    }
-
-    // For Castor platform, we need to add custom scripts that will be added to the assets during the generation of the task
-    const castorScriptInject = `window.codecastPreload = JSON.parse('${JSON.stringify(optionsToPreload)}');
-document.body.setAttribute('id', 'app');
-var reactContainerDiv = document.createElement('div');
-reactContainerDiv.setAttribute('id', 'react-container');
-document.body.appendChild(reactContainerDiv);
-try {
-    $('#question-iframe', window.parent.document).css('width', '100%');
-} catch(e) {
-}`;
-
-    resources.task.unshift({type: 'javascript', content: castorScriptInject, id: 'codecast-preload'});
     callback(resources);
 }
 
