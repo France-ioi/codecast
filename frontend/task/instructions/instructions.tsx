@@ -183,12 +183,18 @@ export const getInstructionsForLevelSelector = memoize(({state, context}: {state
     };
 });
 
-export const getTaskSuccessMessageSelector = memoize((state: AppStore) => {
-    const context = quickAlgoLibraries.getContext(null, state.environment);
+export const getFormattedInstructionsForLevelSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}) => {
     const html = getInstructionsForLevelSelector({state, context}).html;
     const platform = state.options.platform;
     const taskLevel = state.task.currentLevel;
-    const instructionsJQuery = formatTaskInstructions(html, platform, taskLevel);
+    const taskVariant = state.options.taskVariant;
+
+    return formatTaskInstructions(html, platform, taskLevel, taskVariant);
+});
+
+export const getTaskSuccessMessageSelector = memoize((state: AppStore) => {
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    const instructionsJQuery = getFormattedInstructionsForLevelSelector({state, context});
 
     return instructionsJQuery.find('.success-message').length ? instructionsJQuery.find('.success-message').html() : null;
 });

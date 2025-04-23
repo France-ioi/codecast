@@ -10,6 +10,7 @@ module.exports = {
     ERROR: 'Erreur',
     CLOSE: 'Fermer',
     VALIDATE: 'Valider',
+    SEND: 'Envoyer',
     ALRIGHT: "D'accord",
     NONE: 'Aucun',
     CANCEL: 'Annuler',
@@ -302,6 +303,11 @@ module.exports = {
     TRALALERE_ADVICE: "Conseil",
     TRALALERE_TASK_SUCCESS: "Mission réussie",
     TRALALERE_NEXT_LEVEL_MESSAGE: "Maintenant, à ton tour !",
+
+    HINTS_CODE_HELP_CURRENT_CODE: "Avoir de l'aide sur mon code",
+    HINTS_CODE_HELP_ASK_QUESTION: "Poser une question sur mon code",
+    HINTS_CODE_HELP_WRITE_QUESTION: "Écrivez votre question :",
+    HINTS_CODE_HELP_LIB_DEFINITION: "Le module \"{library}\" dispose des méthodes suivantes :",
 
     SUBMISSION_EXECUTE_ON: 'Exécuter sur...',
     SUBMISSION_EXECUTE_ON_CLIENT: 'navigateur',

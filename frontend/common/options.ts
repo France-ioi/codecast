@@ -136,6 +136,9 @@ export function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('workWithGit' in query) {
         options.workWithGit = true;
     }
+    if ('codeHelp' in query) {
+        options.codeHelp.enabled = true;
+    }
 }
 
 function appInitReducer(state: AppStore, {payload: {options, query}}) {

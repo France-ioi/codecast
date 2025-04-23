@@ -2,7 +2,6 @@ import {
     checkCompilingCode,
     getDefaultSourceCode,
     getTaskPlatformMode,
-    recordingProgressSteps,
     TaskPlatformMode
 } from "./utils";
 import {Bundle} from "../linker";
@@ -22,7 +21,6 @@ import taskSlice, {
     currentTaskChange,
     currentTaskChangePredefined,
     recordingEnabledChange,
-    selectCurrentTestData,
     TaskActionTypes,
     taskAddInput,
     taskChangeSoundEnabled,
@@ -44,6 +42,7 @@ import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle, {openDocumentationIfNecessary} from "./documentation/doc";
 import BlocksBundle from "./blocks/blocks";
+import HintsBundle from "./hints/hints_saga";
 import PlatformBundle, {
     getTaskAnswerAggregated,
     platformApi,
@@ -787,6 +786,7 @@ export default function (bundle: Bundle) {
     bundle.include(QuickalgoLibsBundle);
     bundle.include(SrlBundle);
     bundle.include(BehaviourBundle);
+    bundle.include(HintsBundle);
 
     setPlatformBundleParameters({
         getTaskAnswer,
@@ -994,14 +994,15 @@ export default function (bundle: Bundle) {
             const state = yield* appSelect();
             const currentBuffer = state.buffers.activeBufferName;
             const bufferParameters = yield* call(denormalizeBufferFromAnswer, answer);
+            const document = bufferParameters.document;
             if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
                 yield* call(createSourceBufferFromBufferParameters, bufferParameters);
             } else if (null !== currentBuffer) {
                 if (state.buffers.buffers[currentBuffer].platform !== answer.platform) {
-                    yield* put(bufferChangePlatform(currentBuffer, answer.platform, answer.document));
+                    yield* put(bufferChangePlatform(currentBuffer, answer.platform, document));
                 } else {
                     yield* put(bufferInit({buffer: currentBuffer, ...bufferParameters}));
-                    yield* put(bufferResetDocument({buffer: currentBuffer, document: answer.document, goToEnd: true}));
+                    yield* put(bufferResetDocument({buffer: currentBuffer, document, goToEnd: true}));
                 }
             }
         });

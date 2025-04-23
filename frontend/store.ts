@@ -103,6 +103,13 @@ export interface CodecastOptions {
     contextVisualizationDesiredSize?: string,
     tabsEnabled?: boolean,
     workWithGit?: boolean,
+
+    codeHelp?: {
+        enabled?: boolean,
+        url: string,
+        username: string,
+        password: string,
+    }
 }
 
 export interface Panes {

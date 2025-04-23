@@ -6,4 +6,5 @@ export enum CodecastPlatform {
     Arduino = 'arduino',
     Blockly = 'blockly',
     Scratch = 'scratch',
+    Output = 'output',
 }

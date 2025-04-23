@@ -12,3 +12,10 @@ export const selectAvailableHints = memoize((state: AppStore): TaskHint[] => {
             && (!hint.levels || hint.levels.includes(currentLevel)));
     });
 });
+
+export const selectUnlockedHintIds = memoize((state: AppStore): string[] => {
+    const allUnlockedHintIds = state.hints.unlockedHintIds;
+    const availableHints = selectAvailableHints(state);
+
+    return allUnlockedHintIds.filter(hintId => availableHints.find(hint => hintId === hint.id));
+});

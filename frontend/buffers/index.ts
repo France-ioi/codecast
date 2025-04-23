@@ -97,6 +97,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import {StepperStatus} from '../stepper';
 import {canReloadAnswer} from '../task/platform/platform';
 import {bufferGitSyncSagas} from './buffer_git_sync';
+import {compressDocument, uncompressDocument} from './compression';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -127,11 +128,14 @@ function getNewFileName(state: AppStore, platform: CodecastPlatform) {
 }
 
 export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
+    let compressionEnabled = (CodecastPlatform.Output === buffer.platform);
+
     return {
         version: RECORDING_FORMAT_VERSION,
-        document: buffer.document,
+        document: compressionEnabled ? compressDocument(buffer.document) : buffer.document,
         fileName: buffer.fileName,
         platform: buffer.platform,
+        compressed: compressionEnabled,
         ...(buffer.gitSync ? {gitSync: buffer.gitSync} : {}),
     };
 }
@@ -141,11 +145,15 @@ export function* denormalizeBufferFromAnswer(answer: TaskAnswer): Generator<any,
 
     const platform = answer.platform ?? state.options.platform;
     const newFileName = answer.fileName ?? getNewFileName(state, answer.platform);
+    let document = answer.document;
+    if (answer.compressed) {
+        document = uncompressDocument(document);
+    }
 
     return {
         type: answer.document.type,
         source: true,
-        document: answer.document,
+        document,
         fileName: newFileName,
         platform,
         ...(answer.gitSync ? {gitSync: answer.gitSync} : {}),
@@ -197,16 +205,16 @@ function* createBufferFromSubmission(submissionId: number) {
     }
 
     const platform = submission.result.sourceCode.params.sLangProg as CodecastPlatform;
-
     const document = TextBufferHandler.documentFromString(submission?.result?.sourceCode?.source);
 
-    const newBuffer: BufferStateParameters = {
-        type: document.type,
-        source: true,
-        fileName: submission?.result?.sourceCode?.name,
+    const answer: TaskAnswer = {
+        document,
         platform,
-        submissionIndex: submissionId,
+        fileName: submission?.result?.sourceCode?.name,
     };
+
+    const newBuffer = yield* call(denormalizeBufferFromAnswer, answer);
+    newBuffer.submissionIndex = submissionId;
 
     yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
     yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));

@@ -322,6 +322,7 @@ export class PrinterLib extends QuickAlgoLibrary {
             CodecastPlatform.C,
             CodecastPlatform.Cpp,
             CodecastPlatform.Java,
+            CodecastPlatform.Output,
         ];
     };
 
@@ -787,7 +788,17 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
 
         if (testResult.log) {
-            const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
+            let log: TestResultDiffLog;
+
+            try {
+                // Check if first line of the log is JSON data containing a diff
+                log = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
+            } catch (e) {
+                return {
+                    noFeedback: true,
+                };
+            }
+
             const errorHighlightRange = {
                 start: {
                     row: log.diffRow - 1,
