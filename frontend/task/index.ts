@@ -999,7 +999,7 @@ export default function (bundle: Bundle) {
                     yield* put(bufferChangePlatform(currentBuffer, answer.platform, document));
                 } else {
                     yield* put(bufferInit({buffer: currentBuffer, ...bufferParameters}));
-                    yield* put(bufferResetDocument({buffer: currentBuffer, document, goToEnd: true}));
+                    yield* put(bufferResetDocument({buffer: currentBuffer, document}));
                 }
             }
         });
