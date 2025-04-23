@@ -170,6 +170,14 @@ export function getBlocksUsage(answer: TaskAnswer|null, state: AppStore) {
 
 export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask?: Task): Document|null {
     const context = quickAlgoLibraries.getContext(null, environment);
+    if (isServerTask(currentTask) && currentTask.sourceCodes) {
+        const defaultSourceCode = currentTask.sourceCodes.find(sourceCode => {
+            return 'Task' === sourceCode.type && 'defaultSource' === sourceCode.name && platform === sourceCode.params.sLangProg;
+        });
+        if (defaultSourceCode) {
+            return TextBufferHandler.documentFromString(defaultSourceCode.source);
+        }
+    }
     if (hasBlockPlatform(platform)) {
         if (context?.infos?.startingExample && platform in context?.infos?.startingExample) {
             return BlockBufferHandler.documentFromObject({blockly: context.infos.startingExample[platform]});
@@ -178,7 +186,8 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
         } else {
             return BlockBufferHandler.documentFromObject({blockly: '<xml></xml>'});
         }
-    } else if (context?.infos?.startingExample && platform in context?.infos?.startingExample) {
+    }
+    if (!hasBlockPlatform(platform) && context?.infos?.startingExample && platform in context?.infos?.startingExample) {
         return TextBufferHandler.documentFromString(context.infos.startingExample[platform]);
     }
 

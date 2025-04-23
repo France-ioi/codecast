@@ -185,7 +185,7 @@ export function* createSourceBufferFromDocument(document: Document, platform?: C
 export function* createSourceBufferFromBufferParameters(parameters: BufferStateParameters, creationParameters: BufferCreationParameters = {}) {
     const newBufferName = yield* call(getNewBufferName);
     yield* put(bufferInit({buffer: newBufferName, ...parameters}));
-    yield* put(bufferResetDocument({buffer: newBufferName, document: parameters.document, goToEnd: true}));
+    yield* put(bufferResetDocument({buffer: newBufferName, document: parameters.document}));
 
     if (!creationParameters.noSwitch) {
         yield* put(bufferChangeActiveBufferName(newBufferName));
@@ -217,7 +217,7 @@ function* createBufferFromSubmission(submissionId: number) {
     newBuffer.submissionIndex = submissionId;
 
     yield* put(bufferInit({buffer: newBufferName, ...newBuffer}));
-    yield* put(bufferResetDocument({buffer: newBufferName, document, goToEnd: true}));
+    yield* put(bufferResetDocument({buffer: newBufferName, document}));
     yield* put(bufferChangeActiveBufferName(newBufferName));
 }
 
@@ -248,7 +248,8 @@ function* buffersSaga() {
         const state: AppStore = yield* appSelect();
         const platform = state.buffers.buffers[bufferName].platform;
         const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
-        yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
+
+        yield* put(bufferResetDocument({buffer: bufferName, document}));
     });
 
     yield* takeEvery(bufferDuplicateSourceBuffer, function* () {
@@ -333,7 +334,7 @@ function* buffersSaga() {
         if (currentPlatform !== platform) {
             yield* call(createQuickalgoLibrary);
             document = document ?? getDefaultSourceCode(platform, state.environment, state.task.currentTask);
-            yield* put(bufferResetDocument({buffer: bufferName, document, goToEnd: true}));
+            yield* put(bufferResetDocument({buffer: bufferName, document}));
         }
     });
 
