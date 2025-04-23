@@ -106,6 +106,7 @@ declare global {
         platform: any, // platform object defined to send data to platform
         json: any, // object that contains the data of a task, defined in the index.html of such task
         PEMTaskMetaData: any, // same usage, bue for task grader tasks
+        FIOITaskMetaData: any, // same usage, bue for task grader tasks
         options: any, // this is used to store default data about task
         Blockly: any,
         goog: any,
