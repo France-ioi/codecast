@@ -136,6 +136,8 @@ declare global {
         taskStrings?: any,
         SmartContractConfig?: SmartContractConfigType,
         taskData?: any,
+        taskSettings?: any,
+        initBlocklySubTask?: () => void,
         instructionsPostProcessing?: (() => void)[],
     }
 }
