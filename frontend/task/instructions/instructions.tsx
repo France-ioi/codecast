@@ -269,13 +269,9 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             lang = node.attribs['class'].substring(node.attribs['class'].indexOf('language-') + 'language-'.length).split(' ')[0];
         }
 
-        if ('all' !== lang && context.platform !== lang) {
-            return null;
-        }
-
         const sourceMode = platformsList[context.platform].aceSourceMode;
 
-        return <div style={{marginBottom: 20}}><Editor
+        return <div style={{marginBottom: 20}} data-lang={lang}><Editor
             content={code.trim()}
             readOnly
             mode={sourceMode}
