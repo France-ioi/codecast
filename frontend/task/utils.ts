@@ -235,7 +235,7 @@ export function formatTaskInstructions(instructions: string, platform: CodecastP
 
     instructionsJQuery.find(`[class^="variant_"]:not(.variant_${taskVariant})`).remove();
 
-    instructionsJQuery.find('[data-current-lang]').html(getMessage('PLATFORM_' + platform.toLocaleUpperCase()).s);
+    instructionsJQuery.find('[data-current-lang]').html(platformsList[platform].name);
 
     return instructionsJQuery;
 }

@@ -16,6 +16,7 @@ import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 import {AppStore} from '../store';
 
 export interface PlatformData {
+    name: string,
     needsCompilation?: boolean,
     hasMicroSteps?: boolean,
     aceSourceMode?: string,
@@ -49,6 +50,7 @@ export function getAvailablePlatformsFromSupportedLanguages(supportedLanguages: 
 
 export const platformsList: {[key: string]: PlatformData} = {
     [CodecastPlatform.Python]: {
+        name: 'Python3',
         aceSourceMode: 'python',
         displayBlocks: true,
         extension: 'py',
@@ -58,6 +60,7 @@ export const platformsList: {[key: string]: PlatformData} = {
         getBlocksUsage: getPythonBlocksUsage,
     },
     [CodecastPlatform.C]: {
+        name: 'C',
         needsCompilation: true,
         hasMicroSteps: true,
         extension: 'c',
@@ -68,6 +71,18 @@ export const platformsList: {[key: string]: PlatformData} = {
         checkCode: checkCCode,
     },
     [CodecastPlatform.Cpp]: {
+        name: 'C++',
+        needsCompilation: true,
+        hasMicroSteps: true,
+        extension: 'cpp',
+        aceSourceMode: 'c_cpp',
+        displayBlocks: true,
+        runner: UnixRunner,
+        getSpecificBlocks: getCSpecificBlocks,
+        checkCode: checkCCode,
+    },
+    [CodecastPlatform.Cpp11]: {
+        name: 'C++11',
         needsCompilation: true,
         hasMicroSteps: true,
         extension: 'cpp',
@@ -78,12 +93,14 @@ export const platformsList: {[key: string]: PlatformData} = {
         checkCode: checkCCode,
     },
     [CodecastPlatform.Java]: {
+        name: 'Java (GCJ)',
         needsCompilation: true,
         hasMicroSteps: true,
         extension: 'java',
         aceSourceMode: 'java',
     },
     [CodecastPlatform.Arduino]: {
+        name: 'Arduino',
         needsCompilation: true,
         hasMicroSteps: true,
         extension: 'cpp',
@@ -92,6 +109,7 @@ export const platformsList: {[key: string]: PlatformData} = {
         getSpecificBlocks: getCSpecificBlocks,
     },
     [CodecastPlatform.Blockly]: {
+        name: 'Blockly',
         aceSourceMode: 'text',
         extension: 'blockly',
         runner: BlocklyRunner,
@@ -99,6 +117,7 @@ export const platformsList: {[key: string]: PlatformData} = {
         getBlocksUsage: getBlocklyBlocksUsage,
     },
     [CodecastPlatform.Scratch]: {
+        name: 'Scratch',
         aceSourceMode: 'text',
         extension: 'scratch',
         runner: BlocklyRunner,
@@ -106,6 +125,7 @@ export const platformsList: {[key: string]: PlatformData} = {
         getBlocksUsage: getBlocklyBlocksUsage,
     },
     [CodecastPlatform.Output]: {
+        name: 'Output',
         needsCompilation: true,
         aceSourceMode: 'text',
         extension: 'output',
