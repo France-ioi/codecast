@@ -18,7 +18,7 @@ interface CodeHelpParameters {
     taskInstructions?: string,
 }
 
-export function* getCodeHelpHint(parameters: CodeHelpParameters) {
+export function* getCodeHelpHint(parameters: CodeHelpParameters): Generator<any, TaskHint> {
     const codeHelpConfig = yield* appSelect(state => state.options.codeHelp);
 
     const loginBody = {
@@ -69,7 +69,10 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters) {
     const {responses} = queryPayload;
 
     return {
-        codeHelp: responses,
+        codeHelp: {
+            ...responses,
+            issue: parameters.issue,
+        },
     };
 }
 

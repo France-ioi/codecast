@@ -36,6 +36,8 @@ export function TaskHint(props: TaskHintProps) {
             <div
                 className="hint-carousel-item"
             >
+                {!!hint.codeHelp.issue && <p style={{fontWeight: 'bold'}}>{hint.codeHelp.issue}</p>}
+
                 {formattedCodeHelp}
             </div>
         );
