@@ -48,9 +48,10 @@ export function TaskHints(props: TaskHintProps) {
             dispatch(hintUnlocked(hintId));
         }
         changeDisplayedHintId(hintId);
-    }, []);
+    }, [unlockedHintIds]);
 
     useEffect(() => {
+        setCodeHelpIssue('');
         if (unlockedHintIds.length) {
             changeDisplayedHintId(unlockedHintIds[unlockedHintIds.length - 1]);
         }
@@ -102,21 +103,27 @@ export function TaskHints(props: TaskHintProps) {
     const handleSelect = (selectedIndex: number) => {
         const nextHintId = unlockedHintIds[selectedIndex];
 
-        if (selectedIndex === displayedHintIndex - 1) {
-            // Back
-            if (currentHintPreviousId) {
-                goToHintId(currentHintPreviousId);
-            }
-        } else if (selectedIndex === displayedHintIndex + 1) {
-            // Next
-            if (currentHintNextId) {
-                goToHintId(currentHintNextId);
-            } else if (canAskMoreHints) {
-                changeDisplayedHintId(null);
-            }
-        } else if (nextHintId) {
+        if (nextHintId) {
             goToHintId(nextHintId);
+        }  else if (canAskMoreHints) {
+            changeDisplayedHintId(null);
         }
+        //
+        // if (selectedIndex === displayedHintIndex - 1) {
+        //     // Back
+        //     if (currentHintPreviousId) {
+        //         goToHintId(currentHintPreviousId);
+        //     }
+        // } else if (selectedIndex === displayedHintIndex + 1) {
+        //     // Next
+        //     if (currentHintNextId) {
+        //         goToHintId(currentHintNextId);
+        //     } else if (canAskMoreHints) {
+        //         changeDisplayedHintId(null);
+        //     }
+        // } else if (nextHintId) {
+        //     goToHintId(nextHintId);
+        // }
     };
 
     const carouselElements = unlockedHintIds.map(unlockedHintId => {
@@ -164,6 +171,7 @@ export function TaskHints(props: TaskHintProps) {
                             text={getMessage('HINTS_CODE_HELP_ASK_QUESTION')}
                             intent={Intent.PRIMARY}
                             type="submit"
+                            disabled={null !== codeHelpLoading}
                             onClick={() => setCodeHelpDetailEnabled(true)}
                         />
                     </>}
@@ -171,7 +179,12 @@ export function TaskHints(props: TaskHintProps) {
                     {codeHelpDetailEnabled && <div className="question-container mt-4">
                         <div className="mb-2">{getMessage('HINTS_CODE_HELP_WRITE_QUESTION')}</div>
 
-                        <textarea className='question' value={codeHelpIssue} onChange={(e) => setCodeHelpIssue(e.target.value)} rows={6}/>
+                        <textarea
+                            className='question'
+                            value={codeHelpIssue} onChange={(e) => setCodeHelpIssue(e.target.value)}
+                            rows={6}
+                            disabled={null !== codeHelpLoading}
+                        />
 
                         <div className="question-buttons mt-2">
                             <Button
@@ -187,22 +200,27 @@ export function TaskHints(props: TaskHintProps) {
                                 className={`hint-button ${props.askHintClassName} ml-2`}
                                 text={getMessage('CANCEL')}
                                 intent={Intent.NONE}
+                                disabled={null !== codeHelpLoading}
                                 onClick={() => setCodeHelpDetailEnabled(false)}
                             />
                         </div>
                     </div>}
+
+                    {codeHelpLoading && <p style={{fontSize: 16}}>
+                        {getMessage(`HINTS_CODE_HELP_LOADING_${CodeHelpMode.Issue === codeHelpLoading ? 'WITH' : 'WITHOUT'}_QUESTION`)}
+                    </p>}
                 </div>
             </div>
         );
     }
 
-    const displayIndicators = !!(displayedHint && (!displayedHint.question && !displayedHint.nextHintId && !displayedHint.previousHintId));
+    const displayIndicators = !displayedHint || !!(displayedHint && (!displayedHint.question && !displayedHint.nextHintId && !displayedHint.previousHintId));
 
     log.getLogger('hints').debug('current hint id', {displayedHint, displayedHintId, displayedHintIndex, unlockedHintIds, currentHintPreviousId, currentHintNextId, canAskMoreHints, displayIndicators});
 
     return (
         <div className="hints-container">
-            <div className={`hints-content ${null === currentHintPreviousId ? 'has-no-previous' : ''} ${null === currentHintNextId && !canAskMoreHints ? 'has-no-next' : ''}`}>
+            <div className={`hints-content ${null === currentHintNextId && !canAskMoreHints ? 'has-no-next' : ''}`}>
                 <Carousel
                     activeIndex={displayedHintIndex}
                     onSelect={handleSelect}

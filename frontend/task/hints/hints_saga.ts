@@ -1,11 +1,14 @@
 import {Bundle} from '../../linker';
 import {call, put, takeEvery} from 'typed-redux-saga';
 import {askCodeHelp} from './hint_actions';
-import {changeCodeHelpLoading, hintObtained} from './hints_slice';
+import {changeCodeHelpLoading, hintObtained, TaskHint} from './hints_slice';
 import {appSelect} from '../../hooks';
 import {selectAnswer} from '../selectors';
 import {documentToString} from '../../buffers/document';
 import {getCodeHelpHint} from './codehelp';
+import {stepperDisplayError} from '../../stepper/actionTypes';
+import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
+import {getMessage} from '../../lang';
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
@@ -17,7 +20,7 @@ export default function (bundle: Bundle) {
             yield* put(changeCodeHelpLoading(mode));
 
             try {
-                const hint = yield* call(getCodeHelpHint, {
+                const hint: TaskHint = yield* call(getCodeHelpHint, {
                     code: source,
                     error: stepperError ? String(stepperError) : null,
                     issue,
@@ -26,6 +29,11 @@ export default function (bundle: Bundle) {
                 yield* put(hintObtained(hint));
             } catch (e) {
                 console.error('An error occurred during platform validation', e);
+                yield* put(stepperDisplayError(getMessage('HINTS_CODE_HELP_ERROR').s));
+                yield* put({
+                    type: CommonActionTypes.AppSwitchToScreen,
+                    payload: {screen: null},
+                });
             } finally {
                 yield* put(changeCodeHelpLoading(null));
             }
