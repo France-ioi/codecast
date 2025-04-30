@@ -137,7 +137,11 @@ export function loadOptionsFromQuery(options: CodecastOptions, query) {
         options.workWithGit = true;
     }
     if ('codeHelp' in query) {
-        options.codeHelp.enabled = true;
+        if (options.codeHelp?.url) {
+            options.codeHelp.enabled = true;
+        } else {
+            console.error('Error: CodeHelp config is not defined');
+        }
     }
 }
 

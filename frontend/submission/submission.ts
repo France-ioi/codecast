@@ -222,9 +222,9 @@ export default function (bundle: Bundle) {
             const taskTests = yield* appSelect(selectTaskTests);
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
             if (currentTestId > taskTests.length - 1) {
-                yield* put(updateCurrentTestId({testId: taskTests.length ? 0 : null, record: false}));
+                yield* put(updateCurrentTestId({testId: taskTests.length ? 0 : null, record: false, withoutContextState: !!payload.fromSubmission}));
             } else if (!(payload && payload.withoutTestChange)) {
-                yield* put(updateCurrentTestId({testId: currentTestId, record: false, keepSubmission: payload.fromSubmission}));
+                yield* put(updateCurrentTestId({testId: currentTestId, record: false, keepSubmission: payload.fromSubmission, withoutContextState: !!payload.fromSubmission}));
             }
 
             if (null !== submissionId) {
