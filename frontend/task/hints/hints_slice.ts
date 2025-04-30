@@ -15,6 +15,7 @@ export interface TaskHint {
     immediate?: boolean,
     levels?: string[],
     codeHelp?: {
+        issue: string,
         main: string,
         insufficient: string,
     },
