@@ -52,6 +52,7 @@ export function TaskHints(props: TaskHintProps) {
 
     useEffect(() => {
         setCodeHelpIssue('');
+        setCodeHelpDetailEnabled(false);
         if (unlockedHintIds.length) {
             changeDisplayedHintId(unlockedHintIds[unlockedHintIds.length - 1]);
         }
