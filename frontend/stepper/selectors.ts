@@ -159,11 +159,17 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         if (blocksUsage?.error && blocksUsage.blocksCurrent > blocksUsage.blocksLimit) {
             canGoToEnd = false;
             canStep = false;
-            canStep = false;
             canStepOver = false;
             canStepOut = false;
             canChangeSpeed = false;
         }
+    }
+    if (selectCurrentTest(state)?.data?.hiddenProgression) {
+        canStep = false;
+        canStepOver = false;
+        canStepOut = false;
+        canChangeSpeed = false;
+        canStepInto = false;
     }
 
     canStep = canStep && !isRunning;
