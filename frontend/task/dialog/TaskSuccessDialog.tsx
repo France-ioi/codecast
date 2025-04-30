@@ -14,7 +14,7 @@ export interface TaskSuccessDialogProps {
 
 export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const taskSuccessMessage = useAppSelector(state => state.task.successMessage);
-    const taskSuccessStayOnCurrentVersionEnabled = useAppSelector(state => state.options.taskSuccessStayOnCurrentVersionEnabled);
+    const taskSuccessStayOnCurrentVersionDisabled = useAppSelector(state => state.options.taskSuccessStayOnCurrentVersionDisabled);
     const levels = useAppSelector(state => state.platform.levels);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const currentTask = useAppSelector(state => state.task.currentTask);
@@ -70,7 +70,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                             <Icon icon="small-tick" iconSize={24}/>
                             <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                         </button>
-                        {taskSuccessStayOnCurrentVersionEnabled &&
+                        {!taskSuccessStayOnCurrentVersionDisabled &&
                             <button className="simple-dialog-button ml-2" onClick={props.onClose}>
                                 <span>{getMessage('TASK_LEVEL_SUCCESS_STAY_BUTTON')}</span>
                             </button>
