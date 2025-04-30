@@ -1116,6 +1116,8 @@ function* stepperCompileFromControlsSaga(app: App): Generator<any, CompileStatus
                 yield* put(updateCurrentTestId({testId: backgroundRunData.testId}));
             }
         }
+
+        yield* put(stepperRunBackgroundFinished(backgroundRunData));
     }
 
     const deferredPromise = new DeferredPromise<CompileStatus>();
@@ -1124,7 +1126,6 @@ function* stepperCompileFromControlsSaga(app: App): Generator<any, CompileStatus
         type: ActionTypes.CompileWait,
         payload: {
             callback(result: CompileStatus) {
-                app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
                 deferredPromise.resolve(result);
             },
             fromControls: true,
@@ -1156,11 +1157,6 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
         if (exit || CompileStatus.Done !== compileResult) {
             return;
         }
-    }
-
-    if (!stepperControlsState.canStep && !stepperControlsState.canStepInto) {
-        yield* put({type: ActionTypes.StepperInterrupting, payload: {}});
-        yield* take(ActionTypes.StepperInterrupted);
     }
 
     yield* put({type: ActionTypes.StepperStep, payload: {mode, useSpeed}});

@@ -9,6 +9,7 @@ import {LayoutType} from '../task/layout/layout_types';
 import {CodecastPlatform} from './codecast_platform';
 import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
 import log from 'loglevel';
+import {selectCurrentTest} from '../task/task_slice';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;
@@ -159,11 +160,17 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
         if (blocksUsage?.error && blocksUsage.blocksCurrent > blocksUsage.blocksLimit) {
             canGoToEnd = false;
             canStep = false;
-            canStep = false;
             canStepOver = false;
             canStepOut = false;
             canChangeSpeed = false;
         }
+    }
+    if (selectCurrentTest(state)?.data?.hiddenProgression) {
+        canStep = false;
+        canStepOver = false;
+        canStepOut = false;
+        canChangeSpeed = false;
+        canStepInto = false;
     }
 
     canStep = canStep && !isRunning;

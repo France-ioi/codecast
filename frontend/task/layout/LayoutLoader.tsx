@@ -3,14 +3,13 @@ import {connect} from "react-redux";
 import {AppStore, CodecastOptions} from "../../store";
 import {createLayout, selectActiveView} from "./layout";
 import {StepperStatus} from "../../stepper";
-import {ActionTypes} from "./actionTypes";
 import {withResizeDetector} from 'react-resize-detector';
 import {Directive} from "../../stepper/python/directives";
 import {Screen} from "../../common/screens";
 import {getNotionsBagFromIncludeBlocks} from '../blocks/notions';
-
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {LayoutMobileMode, LayoutType} from './layout_types';
+import {selectCurrentTest} from '../task_slice';
 
 interface LayoutLoaderStateToProps {
     advisedVisualization: string,
@@ -40,11 +39,12 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const currentTask = state.task.currentTask;
     let showVariables = options.showStack;
     const activeView = selectActiveView(state);
+    const currentTest = selectCurrentTest(state);
     const context = quickAlgoLibraries.getContext(null, 'main');
 
     if (null !== currentTask && context) {
         const notionsBag = getNotionsBagFromIncludeBlocks(state.task.contextIncludeBlocks, context.getNotionsList());
-        showVariables = showVariables && context.usesStack() && notionsBag.hasNotion('variables_set');
+        showVariables = showVariables && context.usesStack() && notionsBag.hasNotion('variables_set') && !currentTest?.data?.hiddenProgression;
     }
 
     let layoutMobileMode = state.layout.mobileMode;
