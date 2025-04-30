@@ -66,7 +66,7 @@ export default abstract class AbstractRunner {
         for (let threadId of Object.keys(Codecast.runner.getAllThreads())) {
             if (threadId in stepperState.threadsAnalysis) {
                 const sourceHighlight = stepperState.threadsAnalysis[threadId].sourceHighlight;
-                if (sourceHighlight) {
+                if (sourceHighlight && !stepperState.isFinished) {
                     computedSourceHighlight.push({
                         highlight: sourceHighlight,
                         className: nextThreadId === Number(threadId) ? 'code-highlight' : 'other-thread-highlight',
