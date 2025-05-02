@@ -1,6 +1,6 @@
 import {race, put, take, takeEvery, call} from "typed-redux-saga";
 import {Bundle} from "../linker";
-import {modalHide, modalShow, PromptModalOptions} from "./modal_slice";
+import {modalHide, modalShow, ModalType, PromptModalOptions} from "./modal_slice";
 import {PayloadAction} from "@reduxjs/toolkit";
 import log from 'loglevel';
 
@@ -42,7 +42,11 @@ export function* showPopupMessageSaga(modalOptions: PromptModalOptions) {
     }
 
     if (validate) {
-        return validate.payload.inputValue;
+        if ([ModalType.keypad, ModalType.input].includes(modalOptions.mode)) {
+            return validate.payload.inputValue;
+        }
+
+        return !!validate;
     } else {
         return false;
     }

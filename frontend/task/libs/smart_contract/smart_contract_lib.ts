@@ -50,11 +50,11 @@ export interface SmartContractResultLogLine {
 }
 
 export const smartContractPlatformsList: {[key: string]: PlatformData} = {
-    [SmartContractPlatform.SmartPy]: {aceSourceMode: 'python', extension: 'py', displayBlocks: true, needsCompilation: true, getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.SmartPy)},
-    [SmartContractPlatform.Archetype]: {aceSourceMode: 'archetype', extension: 'arl', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Archetype)},
-    [SmartContractPlatform.Michelson]: {aceSourceMode: 'michelson', extension: 'tz', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Michelson)},
-    [SmartContractPlatform.CameLIGO]: {aceSourceMode: 'ocaml', extension: 'ml', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.CameLIGO)},
-    [SmartContractPlatform.JsLIGO]: {aceSourceMode: 'javascript', extension: 'js', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.JsLIGO)},
+    [SmartContractPlatform.SmartPy]: {name: 'SmartPy', aceSourceMode: 'python', extension: 'py', displayBlocks: true, needsCompilation: true, getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.SmartPy)},
+    [SmartContractPlatform.Archetype]: {name: 'Archetype', aceSourceMode: 'archetype', extension: 'arl', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Archetype)},
+    [SmartContractPlatform.Michelson]: {name: 'Michelson', aceSourceMode: 'michelson', extension: 'tz', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.Michelson)},
+    [SmartContractPlatform.CameLIGO]: {name: 'CameLIGO', aceSourceMode: 'ocaml', extension: 'ml', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.CameLIGO)},
+    [SmartContractPlatform.JsLIGO]: {name: 'JsLIGO', aceSourceMode: 'javascript', extension: 'js', displayBlocks: true, needsCompilation: true,getSpecificBlocks: generateGetSmartContractSpecificBlocks(SmartContractPlatform.JsLIGO)},
 };
 
 interface SmartContractOutput {

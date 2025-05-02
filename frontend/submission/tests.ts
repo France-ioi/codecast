@@ -13,8 +13,9 @@ export function extractTestsFromTask(task: Task, variant: number = null): TaskTe
 }
 
 function getTestsFromTask(task: Task, taskVariant: number = null): TaskTest[] {
+    let tests = [];
+
     if (task.data) {
-        let tests = [];
         let testId = 0;
         for (let [level, levelTests] of Object.entries<any>(task.data)) {
             const realLevelTests = null !== taskVariant && undefined !== taskVariant ? extractVariantSpecific(levelTests, taskVariant, level as TaskLevelName) : levelTests;
@@ -29,8 +30,6 @@ function getTestsFromTask(task: Task, taskVariant: number = null): TaskTest[] {
                 testId++;
             }
         }
-
-        return tests;
     }
 
     if (task.tests) {
@@ -45,10 +44,13 @@ function getTestsFromTask(task: Task, taskVariant: number = null): TaskTest[] {
         const testsOrdered = [...task.tests.filter(a => a.active)];
         testsOrdered.sort((a, b) => getTestRank(a) - getTestRank(b));
 
-        return testsOrdered.map(mapServerTestToTaskTest);
+        tests = [
+            ...tests,
+            ...testsOrdered.map(mapServerTestToTaskTest),
+        ];
     }
 
-    return [];
+    return tests;
 }
 
 export function mapServerTestToTaskTest(test: TaskTestServer) {
@@ -66,7 +68,7 @@ export function mapServerTestToTaskTest(test: TaskTestServer) {
 function nameTaskTests(taskTests: TaskTest[], task: Task): void {
     for (let index = 0; index < taskTests.length; index++) {
         const test = taskTests[index];
-        const subTask = null !== test.subtaskId && task.subTasks && task.subTasks.length ? task.subTasks.find(subTask => subTask.id === test.subtaskId) : null;
+        const subTask = null !== test.subtaskId && task.subTasks && task.subTasks.length ? task.subTasks.find(subTask => subTask.id === test.subtaskId) ?? null : null;
         const parts = [];
         if (subTask) {
             parts.push(subTask.name);

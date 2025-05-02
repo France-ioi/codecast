@@ -80,8 +80,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
                 }
             }
         });
-    }, [contextId]);
-
+    }, [contextId, platform]);
 
     useCursorPositionTracking('instructions', (absPoint: CursorPoint): Pick<CursorPosition, 'textOffset'|'element'> => {
         let range, offset, textNode: HTMLElement;

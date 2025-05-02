@@ -52,7 +52,7 @@ export function getTaskLevelTests(state: AppStore, level?: TaskLevelName) {
     }
 
     return state.task.taskTests.filter(test => {
-        return selectedLevel === test.level;
+        return selectedLevel === test.level || !test.level;
     });
 }
 

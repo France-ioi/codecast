@@ -221,11 +221,10 @@ export function getCurrentImmerState(object) {
 
 export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName, taskVariant?: number) {
     const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
-    for (let availablePlatform of Object.keys(platformsList)) {
-        if (platform !== availablePlatform) {
-            instructionsJQuery.find(`[data-lang~="${availablePlatform}"]:not([data-lang~="${platform}"]`).remove();
-        }
-    }
+
+    instructionsJQuery.find(`[data-lang]:not([data-lang~="${platform}"])`).remove();
+    instructionsJQuery.find(`[select-lang]:not([select-lang~="${platform}"])`).remove();
+
     instructionsJQuery.find('.advice').attr('data-title', getMessage('TRALALERE_ADVICE'));
     for (let availableLevel of taskLevelsList) {
         if (taskLevel !== availableLevel) {
@@ -235,7 +234,7 @@ export function formatTaskInstructions(instructions: string, platform: CodecastP
 
     instructionsJQuery.find(`[class^="variant_"]:not(.variant_${taskVariant})`).remove();
 
-    instructionsJQuery.find('[data-current-lang]').html(getMessage('PLATFORM_' + platform.toLocaleUpperCase()).s);
+    instructionsJQuery.find('[data-current-lang]').html(platformsList[platform].name);
 
     return instructionsJQuery;
 }
