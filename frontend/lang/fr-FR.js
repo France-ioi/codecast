@@ -213,6 +213,8 @@ module.exports = {
     TASK_LEVEL_LOCKED_MESSAGE: "Cette version est verrouillée, et la précédente doit être résolue avant de pouvoir afficher cette version.",
     TASK_LEVEL_LOCKED_MESSAGE_DEV: "Cette version est normalement verrouillée, et la précédente doit être résolue avant de pouvoir afficher cette version. Comme vous avez chargé ce sujet en local, vous pouvez néanmoins la voir.",
     TASK_LEVEL_LOCKED_MESSAGE_DEV_BUTTON: "Voir la version",
+    TASK_CLIENT_TESTS_SUCCESS: "Votre programme fonctionne sur les tests d'exemple. Voulez-vous valider votre réponse ?",
+    TASK_CLIENT_TESTS_SUCCESS_YES: "Valider la réponse",
     TASK_BLOCKS_TITLE: "Blocs disponibles",
     TASK_BLOCKS_SUBTITLE: "Cliquez pour insérer",
     TASK_BLOCKS_LIMIT_EXPANDED: '{current}/{limit} bloc restant|{current}/{limit} blocs restants',

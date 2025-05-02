@@ -42,6 +42,8 @@ import {bufferAssociateToSubmission} from '../buffers/buffers_slice';
 import {TaskLevelName} from '../task/platform/platform_slice';
 import {callPlatformValidate} from './submission_actions';
 import {doesPlatformHaveClientRunner} from '../stepper';
+import {displayModal} from '../common/prompt_modal';
+import {ModalType} from '../common/modal_slice';
 
 const executionsCache = {};
 const submissionExecutionTasks = {};
@@ -147,11 +149,26 @@ class TaskSubmissionExecutor {
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.result.tests);
             if (currentSubmission.result.tests.find(testResult => testResult.score < 1)) {
-                const error = new LibraryTestResult(null, 'task-tests-submission-results-overview', {
-                    results: displayedResults,
-                });
+                if (displayedResults.length > 0 && !displayedResults.find(result => result.successRate < 1) && state.task.currentTask && isServerTask(state.task.currentTask)) {
+                    yield* put(displayModal({
+                        message: getMessage('TASK_CLIENT_TESTS_SUCCESS'),
+                        mode: ModalType.message,
+                        yesButtonText: getMessage('TASK_CLIENT_TESTS_SUCCESS_YES'),
+                        noButtonText: getMessage('CANCEL'),
+                        callback: (result: boolean) => {
+                            if (result) {
+                                const mainStore = Codecast.environments['main'].store;
+                                mainStore.dispatch(callPlatformValidate());
+                            }
+                        },
+                    }));
+                } else {
+                    const error = new LibraryTestResult(null, 'task-tests-submission-results-overview', {
+                        results: displayedResults,
+                    });
 
-                yield* put(stepperDisplayError(error));
+                    yield* put(stepperDisplayError(error));
+                }
             }
         }
     }

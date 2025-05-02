@@ -207,6 +207,8 @@ module.exports = {
     TASK_LEVEL_LOCKED_MESSAGE: "This version is currently locked, and the previous version must be resolved before being able to display this version.",
     TASK_LEVEL_LOCKED_MESSAGE_DEV: "This version is normally locked, and the previous version must be resolved before being able to display this version. As you opened this task locally, you can however display this version for testing purposes.",
     TASK_LEVEL_LOCKED_MESSAGE_DEV_BUTTON: "Open this version",
+    TASK_CLIENT_TESTS_SUCCESS: "Your program works on the example tests. Would you like to validate your answer?",
+    TASK_CLIENT_TESTS_SUCCESS_YES: "Validate my answer",
     TASK_BLOCKS_TITLE: "Available blocks",
     TASK_BLOCKS_SUBTITLE: "Click to insert",
     TASK_BLOCKS_LIMIT_EXPANDED: '{current}/{limit} remaining block|{current}/{limit} remaining blocks',
