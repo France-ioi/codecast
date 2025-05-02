@@ -26,7 +26,7 @@ import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
 import {getTaskLevelTests, selectSubmissionsPaneEnabled} from './submission_selectors';
-import {isServerTask, TaskAnswer, TaskTestGroupType} from '../task/task_types';
+import {isServerTask, isTestPublic, TaskAnswer, TaskTestGroupType} from '../task/task_types';
 import {platformAnswerGraded} from '../task/platform/actionTypes';
 import {getMessage} from '../lang';
 import {
@@ -41,6 +41,7 @@ import {murmurhash3_32_gc} from '../common/utils';
 import {bufferAssociateToSubmission} from '../buffers/buffers_slice';
 import {TaskLevelName} from '../task/platform/platform_slice';
 import {callPlatformValidate} from './submission_actions';
+import {doesPlatformHaveClientRunner} from '../stepper';
 
 const executionsCache = {};
 const submissionExecutionTasks = {};
@@ -58,7 +59,6 @@ class TaskSubmissionExecutor {
 
         const state = yield* appSelect();
         let currentSubmissionId = state.submission.currentSubmissionId;
-        const environment = state.environment;
         const level = state.task.currentLevel;
         const answer = selectAnswer(state);
         const tests = yield* appSelect(getTaskLevelTests);
@@ -104,25 +104,20 @@ class TaskSubmissionExecutor {
         }
 
         const displayedResults = [result];
-
-        let lastMessage = result.message;
         for (let testIndex = 0; testIndex < tests.length; testIndex++) {
+            const test = tests[testIndex];
             if (result.testId === testIndex) {
+                continue;
+            }
+            if (!isTestPublic(test) || !doesPlatformHaveClientRunner(answer.platform)) {
                 continue;
             }
 
             yield* put(submissionStartExecutingTest({submissionId: currentSubmissionId, testId: testIndex}));
-            // if ('main' === environment) {
-            // yield* delay(0);
-            // }
             log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
             const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(level, testIndex, answer);
             log.getLogger('tests').debug('[Tests] End execution, result=', payload);
             yield* put(submissionSetTestResult({submissionId: currentSubmissionId, testId: testIndex, result: payload}));
-            // if ('main' === environment) {
-            // yield* delay(0);
-            // }
-            lastMessage = payload.message;
             displayedResults.push(payload);
             if (false === payload.result) {
                 // Stop at first test that doesn't work
