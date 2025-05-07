@@ -8,6 +8,7 @@ import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract
 import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms';
 import {documentToString} from '../buffers/document';
 import {CodecastPlatform} from '../stepper/codecast_platform';
+import {delay} from '../player/sagas';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -20,12 +21,15 @@ export function* getTaskFromId(taskId: string, token: string, platform: string):
     return (yield* call(asyncGetJson, taskPlatformUrl + '/tasks/' + taskId, queryParameters)) as TaskServer|null;
 }
 
-export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
+export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<any, Task> {
     // task.scriptAnimation = "\n       window.taskData = subTask = {};\n       subTask.gridInfos = {\n         context: 'smart_contract',\n         importModules: ['smart_contract_config'],\n         showLabels: true,\n         conceptViewer: true,\n         includeBlocks: {\n           groupByCategory: true,\n           standardBlocks: {\n             wholeCategories: ['smart_contract_main_blocks', 'smart_contract_types'],\n           },\n         },\n         expectedStorage: \"(string %names)\",\n         taskStrings: {\n           \"storageDescription\": {\n             \"names\": \"it should contain its initial value then the list of names of the callers, all separated with commas\",\n           },\n         },\n         // expectedStorage: \"(Pair (string %names) (nat %nb_calls))\",\n       };\n     ";
     if (task.scriptAnimation) {
         try {
-            // It can declare window.taskData or just var taskSettings
-            eval(task.scriptAnimation);
+            let script = document.createElement('script');
+            script.setAttribute('type', 'text/javascript');
+            script.text = task.scriptAnimation;
+            document.head.appendChild(script);
+            yield* delay(0);
 
             // @ts-ignore
             let taskSettingsObject = 'undefined' !== typeof taskSettings ? taskSettings : null;

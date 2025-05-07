@@ -3,7 +3,7 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {buffers, eventChannel} from 'redux-saga';
-import {call, put, race, select, take, takeLatest, spawn} from 'typed-redux-saga';
+import {call, put, race, take, takeLatest, spawn} from 'typed-redux-saga';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
