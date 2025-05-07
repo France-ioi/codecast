@@ -168,7 +168,8 @@ export const getInstructionsForLevelSelector = memoize(({state, context}: {state
         const strLang = window.stringsLanguage;
         if (strLang in window.algoreaInstructionsStrings) {
             const strings = window.algoreaInstructionsStrings[strLang];
-            let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, state.task.levelGridInfos, currentTask.data, taskLevel);
+            const platform = state.options.platform;
+            let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, state.task.levelGridInfos, currentTask.data, taskLevel, platform);
             if (newInstructions) {
                 const innerText = window.jQuery(newInstructions).text();
                 if (innerText.length) {
@@ -269,13 +270,9 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             lang = node.attribs['class'].substring(node.attribs['class'].indexOf('language-') + 'language-'.length).split(' ')[0];
         }
 
-        if ('all' !== lang && context.platform !== lang) {
-            return null;
-        }
-
         const sourceMode = platformsList[context.platform].aceSourceMode;
 
-        return <div style={{marginBottom: 20}}><Editor
+        return <div style={{marginBottom: 20}} data-lang={lang}><Editor
             content={code.trim()}
             readOnly
             mode={sourceMode}

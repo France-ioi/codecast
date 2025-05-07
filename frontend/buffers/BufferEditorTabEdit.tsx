@@ -5,7 +5,7 @@ import {useAppSelector} from '../hooks';
 import {PlatformSelection} from '../common/PlatformSelection';
 import {useDispatch} from 'react-redux';
 import {bufferInit} from './buffers_slice';
-import {hasBlockPlatform} from '../stepper/platforms';
+import {hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {getJsLibLoaded} from '../task/libs/import_modules';
 import {bufferChangePlatform} from './buffer_actions';
 
@@ -60,7 +60,7 @@ export function BufferEditorTabEdit(props: BufferEditorTabEditProps) {
                         </div>
 
                         {hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
-                            {getMessage('PLATFORM_RELOAD').format({platform: getMessage('PLATFORM_' + platform.toLocaleUpperCase())})}
+                            {getMessage('PLATFORM_RELOAD').format({platform: platformsList[platform].name})}
                         </div>}
                     </label>
                 </div>}

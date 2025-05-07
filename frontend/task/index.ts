@@ -173,7 +173,7 @@ function* taskRefresh(taskId?: string) {
         return;
     }
 
-    const convertedTask = convertServerTaskToCodecastFormat(task);
+    const convertedTask = yield* call(convertServerTaskToCodecastFormat, task);
     yield* put(currentTaskChange(convertedTask));
 
     if (convertedTask?.gridInfos?.hints?.length) {

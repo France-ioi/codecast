@@ -321,6 +321,7 @@ export class PrinterLib extends QuickAlgoLibrary {
             CodecastPlatform.Python,
             CodecastPlatform.C,
             CodecastPlatform.Cpp,
+            CodecastPlatform.Cpp11,
             CodecastPlatform.Java,
             CodecastPlatform.Output,
         ];
@@ -696,7 +697,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     getComponent() {
-        return this.display ? InputOutputVisualization : null;
+        return InputOutputVisualization;
     }
 
     provideBlocklyColours() {

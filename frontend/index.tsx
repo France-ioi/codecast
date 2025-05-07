@@ -123,7 +123,7 @@ declare global {
         localModulesPath: string,
         app: string,
         algoreaInstructionsStrings: string[][],
-        getAlgoreaInstructionsAsHtml: (strings: string[], gridInfos: any, data: any, taskLevel: TaskLevelName) => string,
+        getAlgoreaInstructionsAsHtml: (strings: string[], gridInfos: any, data: any, taskLevel: TaskLevelName, lang: CodecastPlatform) => string,
         SrlLogger: any,
         ace: any,
         subTask: any,
@@ -136,6 +136,8 @@ declare global {
         taskStrings?: any,
         SmartContractConfig?: SmartContractConfigType,
         taskData?: any,
+        taskSettings?: any,
+        initBlocklySubTask?: () => void,
         instructionsPostProcessing?: (() => void)[],
     }
 }

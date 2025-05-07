@@ -10,6 +10,7 @@ import {getMessage} from '../../lang';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {getContextBlocksDataSelector} from '../blocks/blocks';
 import {Block, BlockType} from '../blocks/block_types';
+import {platformsList} from '../../stepper/platforms';
 
 interface CodeHelpParameters {
     code: string,
@@ -58,7 +59,7 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters): Generator<any,
         error: parameters.error ?? '',
         issue: parameters.issue ?? '',
         task_instructions: {
-            tools: getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`).s,
+            tools: platformsList[platform].name,
             details: `${instructionsText}\n\n${libraryDefinitions.join("\n")}`,
             // "avoid": "loops\r\nfor\r\nwhile",
             name: quickAlgoLibraries.getMainContextName('main'),
