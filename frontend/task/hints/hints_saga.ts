@@ -1,7 +1,12 @@
 import {Bundle} from '../../linker';
 import {call, put, takeEvery} from 'typed-redux-saga';
 import {askCodeHelp} from './hint_actions';
-import {changeCodeHelpLoading, hintObtained, TaskHint} from './hints_slice';
+import {
+    changeCodeHelpIssue,
+    changeCodeHelpLoading,
+    hintObtained,
+    TaskHint
+} from './hints_slice';
 import {appSelect} from '../../hooks';
 import {selectAnswer} from '../selectors';
 import {documentToString} from '../../buffers/document';
@@ -27,6 +32,7 @@ export default function (bundle: Bundle) {
                 });
 
                 yield* put(hintObtained(hint));
+                yield* put(changeCodeHelpIssue(''));
             } catch (e) {
                 console.error('An error occurred during platform validation', e);
                 yield* put(stepperDisplayError(getMessage('HINTS_CODE_HELP_ERROR').s));
