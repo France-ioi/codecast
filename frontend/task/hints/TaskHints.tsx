@@ -4,7 +4,7 @@ import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {Carousel} from 'react-bootstrap';
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../../hooks";
-import {hintUnlocked} from "./hints_slice";
+import {changeCodeHelpDetailEnabled, changeCodeHelpIssue, hintUnlocked} from "./hints_slice";
 import {getMessage} from '../../lang';
 import {TaskHint} from './TaskHint';
 import log from 'loglevel';
@@ -26,13 +26,13 @@ export function TaskHints(props: TaskHintProps) {
     const nextHintToUnlockId = useRef(nextAvailableHint ? nextAvailableHint.id : null);
     const codeHelp = useAppSelector(state => state.options.codeHelp);
     const codeHelpLoading = useAppSelector(state => state.hints.codeHelpLoading);
+    const codeHelpDetailEnabled = useAppSelector(state => state.hints.codeHelpDetailEnabled);
+    const codeHelpIssue = useAppSelector(state => state.hints.codeHelpIssue);
     let canAskMoreNormalHints = undefined !== nextAvailableHint && !displayedHint?.question && !displayedHint?.disableNext;
 
     // console.log({availableHints, unlockedHintIds, displayedHintId, displayedHintIndex, displayedHint})
 
     const dispatch = useDispatch();
-    const [codeHelpDetailEnabled, setCodeHelpDetailEnabled] = useState(false);
-    const [codeHelpIssue, setCodeHelpIssue] = useState('');
 
     const changeDisplayedHintId = (hintId: string) => {
         setDisplayedHintId(hintId);
@@ -43,6 +43,14 @@ export function TaskHints(props: TaskHintProps) {
         dispatch(hintUnlocked(nextHintToUnlockId.current));
     };
 
+    const setCodeHelpIssue = useCallback((issue: string) => {
+        dispatch(changeCodeHelpIssue(issue));
+    }, [dispatch]);
+
+    const setCodeHelpDetailEnabled = useCallback((enabled: boolean) => {
+        dispatch(changeCodeHelpDetailEnabled(enabled));
+    }, [dispatch]);
+
     const goToHintId = useCallback((hintId: string) => {
         if (-1 === unlockedHintIds.indexOf(hintId)) {
             dispatch(hintUnlocked(hintId));
@@ -51,8 +59,6 @@ export function TaskHints(props: TaskHintProps) {
     }, [unlockedHintIds]);
 
     useEffect(() => {
-        setCodeHelpIssue('');
-        setCodeHelpDetailEnabled(false);
         if (unlockedHintIds.length) {
             changeDisplayedHintId(unlockedHintIds[unlockedHintIds.length - 1]);
         }
