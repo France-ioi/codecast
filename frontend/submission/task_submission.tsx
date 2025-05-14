@@ -326,7 +326,7 @@ class TaskSubmissionExecutor {
         let lastMessage = null;
         const currentTask = state.task.currentTask;
         const tests = currentTask ? getTaskLevelTests(state, level) : state.task.taskTests;
-        if (!tests || 0 === Object.values(tests).length) {
+        if (!tests || 0 === Object.values(tests).length || !doesPlatformHaveClientRunner(answer.platform)) {
             return {
                 score: 0,
                 message: '',
