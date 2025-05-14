@@ -282,7 +282,7 @@ class TaskSubmissionExecutor {
 
             const outcome = yield* race({
                 result: call(() => deferredPromise.promise),
-                timeout: delay(10*60*1000), // 10 min
+                timeout: delay(60*60*1000), // 60 min
             });
 
             if (outcome.result) {
