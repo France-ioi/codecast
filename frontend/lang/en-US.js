@@ -300,7 +300,7 @@ module.exports = {
     BUFFER_TAB_FILENAME: 'Code {i}',
     BUFFER_TAB_PENDING_SUBMISSION: 'Evaluating submission',
     BUFFER_TAB_FINISHED_SUBMISSION: 'Available results',
-    BUFFER_TAB_NOT_EDITABLE: "This code is no longer editable.",
+    BUFFER_TAB_NOT_EDITABLE: "This code is no longer editable because it is being submitted.",
     BUFFER_TAB_NO_PAST_SUBMISSION: "No recent submission",
     BUFFER_TAB_FILE_NAME: "File name",
     BUFFER_TAB_LANGUAGE: "File language",
