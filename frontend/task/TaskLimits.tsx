@@ -16,7 +16,18 @@ export function TaskLimits() {
 
     const platform = useAppSelector(state => state.options.platform);
 
-    const limits = task.limits;
+    let limits = task.limits;
+    if (!limits && window.PEMTaskMetaData.limits) {
+        limits = (Object.entries(window.PEMTaskMetaData.limits) as any).map(([language, limit]) => ({
+            language,
+            maxTime: limit.time,
+            maxMemory: limit.memory,
+        }));
+    }
+    if (!limits) {
+        return null;
+    }
+
     let limitToUse = limits.find(limit => limit.language === platform);
     if (!limitToUse) {
         limitToUse = limits.find(limit => limit.language === '*');
