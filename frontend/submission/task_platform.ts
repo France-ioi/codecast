@@ -35,29 +35,10 @@ export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<
             let taskSettingsObject = 'undefined' !== typeof taskSettings ? taskSettings : null;
             if (taskSettingsObject && !window.taskData) {
                 // Convert taskSettings into window.taskData
-                window.taskData = taskSettingsObject;
-                window.initBlocklySubTask = function () {
-                };
-                taskSettingsObject.initTask(window.taskData);
-                delete taskSettingsObject.initTask;
+                window.taskData = getTaskDataFromTaskSettings(taskSettingsObject);
             }
 
-            if (window.taskData.data) {
-                window.taskData.gridInfos.allowClientExecution = true;
-            }
-
-            // Include blockly opts inside gridInfos
-            if (window.taskData.blocklyOpts && window.taskData.gridInfos.includeBlocks) {
-                window.taskData.gridInfos.includeBlocks.standardBlocks = {
-                    ...(window.taskData.gridInfos.includeBlocks.standardBlocks ?? {}),
-                    ...window.taskData.blocklyOpts.includeBlocks.standardBlocks,
-                };
-            }
-
-            return {
-                ...task,
-                ...window.taskData,
-            };
+            return getServerTaskFromTaskData(window.taskData, task);
         } catch (ex) {
             console.error("Couldn't execute script animation", ex);
         }
@@ -126,6 +107,35 @@ export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<
             },
         }
     }
+}
+
+export function getTaskDataFromTaskSettings(taskSettings: any) {
+    const taskData = taskSettings;
+    window.initBlocklySubTask = function () {
+    };
+    taskSettings.initTask(taskData);
+    delete taskSettings.initTask;
+
+    return taskData;
+}
+
+export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null) {
+    if (taskData.data) {
+        taskData.gridInfos.allowClientExecution = true;
+    }
+
+    // Include blockly opts inside gridInfos
+    if (taskData.blocklyOpts && taskData.gridInfos.includeBlocks) {
+        taskData.gridInfos.includeBlocks.standardBlocks = {
+            ...(taskData.gridInfos.includeBlocks.standardBlocks ?? {}),
+            ...taskData.blocklyOpts.includeBlocks.standardBlocks,
+        };
+    }
+
+    return {
+        ...(task ?? {}),
+        ...taskData,
+    };
 }
 
 export function* longPollServerSubmissionResults(submissionId: string, submissionIndex: number, serverSubmission: TaskSubmissionServer, callback: (TaskSubmissionServerResult) => void) {
