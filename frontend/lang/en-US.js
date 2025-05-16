@@ -244,6 +244,8 @@ module.exports = {
     TASK_BLOCK_CATEGORY_CONSTANTS: "Constants",
     TASK_BLOCK_CATEGORY_SMART_CONTRACTS: "Smart contracts",
     TASK_BLOCK_CATEGORY_UNDEFINED: "Other",
+    TASK_LIMIT_TIME: "Time limit:",
+    TASK_LIMIT_MEMORY: "Memory limit:",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
     LAYOUT_DefaultLayoutDesktop: 'Desktop',
