@@ -124,12 +124,8 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
         taskData.gridInfos.allowClientExecution = true;
     }
 
-    // Include blockly opts inside gridInfos
-    if (taskData.blocklyOpts && taskData.gridInfos.includeBlocks) {
-        taskData.gridInfos.includeBlocks.standardBlocks = {
-            ...(taskData.gridInfos.includeBlocks.standardBlocks ?? {}),
-            ...taskData.blocklyOpts.includeBlocks.standardBlocks,
-        };
+    if (taskData.blocklyOpts && taskData.blocklyOpts.includeBlocks) {
+        taskData.gridInfos.includeBlocks = taskData.blocklyOpts.includeBlocks;
     }
 
     return {
