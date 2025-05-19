@@ -9,6 +9,8 @@ import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms'
 import {documentToString} from '../buffers/document';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {delay} from '../player/sagas';
+import {BlockDocument, BufferType} from '../buffers/buffer_types';
+import {getBlocklyCodeFromXml} from '../stepper/js';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -128,6 +130,12 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
         taskData.gridInfos.includeBlocks = taskData.blocklyOpts.includeBlocks;
     }
 
+    if (window.PEMTaskMetaData) {
+        if (window.PEMTaskMetaData.supportedLanguages) {
+            taskData.supportedLanguages = window.PEMTaskMetaData.supportedLanguages.join(',');
+        }
+    }
+
     return {
         ...(task ?? {}),
         ...taskData,
@@ -169,13 +177,20 @@ export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, p
     const state = yield* appSelect();
     const taskPlatformUrl = state.options.taskPlatformUrl;
     const taskToken = state.platform.taskToken;
-    const answerContent = documentToString(answer.document);
+
+    let answerContent = documentToString(answer.document);
+    let language: string = platform;
+    if (BufferType.Block === answer.document.type) {
+        language = 'python';
+        const pythonCode = yield* call(getBlocklyCodeFromXml, answer.document as BlockDocument, 'python', state);
+        answerContent = '# blocklyXml: ' + answerContent + '\n\n' + pythonCode;
+    }
 
     const body = {
         token: taskToken,
         answerToken: answerToken,
         answer: {
-            language: platform,
+            language,
             fileName: answer.fileName,
             sourceCode: answerContent,
         },
