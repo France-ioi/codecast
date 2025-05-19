@@ -9,6 +9,7 @@ import {Codecast} from '../../app_types';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {ContextEnrichingTypes} from '../actionTypes';
 import debounce from 'lodash.debounce';
+import {adaptJsBlocks} from './js_adapter';
 
 const debounceHideBlocklyDropdown = debounce(() => {
     window.Blockly?.DropDownDiv?.hideWithoutAnimation();
@@ -70,6 +71,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context = context;
         this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;
         this.delayFactory = new window.DelayFactory();
+        adaptJsBlocks(window.Blockly);
     }
 
     public static hasBlocks(): boolean {

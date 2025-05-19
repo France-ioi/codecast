@@ -167,8 +167,8 @@ export interface TaskNormalized {
 }
 
 export interface TaskLimitNormalized {
-    id: string,
-    taskId: string,
+    id?: string,
+    taskId?: string,
     language: string,
     maxTime: number,
     maxMemory: number,
