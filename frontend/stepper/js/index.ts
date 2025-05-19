@@ -15,6 +15,8 @@ import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
+import produce from 'immer';
+import {isServerTask} from '../../task/task_types';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
@@ -72,7 +74,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         };
     }
 
-    context.blocklyHelper = createBlocklyHelper(context);
+    context.blocklyHelper = createBlocklyHelper(context, isServerTask(state.task.currentTask));
     context.onChange = () => {};
 
     // There is a setTimeout delay in Blockly lib between blockly program loading and Blockly firing events.
@@ -96,7 +98,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     yield* put(taskIncreaseContextId());
 }
 
-export function createBlocklyHelper(context: QuickAlgoLibrary) {
+export function createBlocklyHelper(context: QuickAlgoLibrary, serverTask = false) {
     const blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
@@ -129,9 +131,16 @@ export function createBlocklyHelper(context: QuickAlgoLibrary) {
         originalFireNow = window.Blockly.Events.fireNow_;
     }
 
+    // Remove printer blocks if it's a server task because in this case we don't want to display them in the blocks
+    const blocklyIncludeBlocks = produce(context.infos.includeBlocks, (includeBlocks) => {
+        if (serverTask && includeBlocks.generatedBlocks && 'printer' in includeBlocks.generatedBlocks) {
+            delete includeBlocks.generatedBlocks['printer'];
+        }
+    });
+
     log.getLogger('blockly_runner').debug('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);
-    blocklyHelper.setIncludeBlocks(context.infos.includeBlocks);
+    blocklyHelper.setIncludeBlocks(blocklyIncludeBlocks);
 
     return blocklyHelper;
 }
@@ -326,7 +335,7 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
 const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, xmlText: string) {
     const xml = window.Blockly.Xml.textToDom(xmlText);
 
-    const blocklyHelper = createBlocklyHelper(context);
+    const blocklyHelper = createBlocklyHelper(context, isServerTask(state.task.currentTask));
     const language = state.options.language.split('-')[0];
     blocklyHelper.load(language, false, 1, {});
 
@@ -377,55 +386,63 @@ export const blocklyFindLimited = (blocks, limitedUses, context) => {
     return limitations;
 }
 
+export async function getBlocklyCodeFromXml(document: BlockDocument, lang: string, state: AppStore) {
+    const language = state.options.language.split('-')[0];
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+
+    log.getLogger('blockly_runner').debug('init stepper js', state.environment);
+    context.onError = (diagnostics) => {
+        log.getLogger('blockly_runner').debug('context error', diagnostics);
+        // channel.put({
+        //     type: CompileActionTypes.StepperInterrupting,
+        // });
+        // channel.put(stepperExecutionError(diagnostics));
+    };
+
+
+    const blocklyHelper = context.blocklyHelper;
+    log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);
+    log.getLogger('blockly_runner').debug('display', context.display);
+    const blocklyXmlCode = document.content.blockly;
+    if (!blocklyHelper.workspace) {
+        blocklyHelper.load(language, context.display, 1, {});
+    }
+    if (0 === blocklyHelper.programs.length) {
+        blocklyHelper.programs.push({});
+    }
+    blocklyHelper.programs[0].blockly = blocklyXmlCode;
+    log.getLogger('blockly_runner').debug('xml code', blocklyXmlCode);
+
+    blocklyHelper.reloading = true;
+    blocklyHelper.loadPrograms();
+    // Wait that program is loaded (Blockly fires some event including an onChange event
+    if ('main' === state.environment) {
+        await delay(0);
+    }
+    blocklyHelper.reloading = false;
+
+    return blocklyHelper.getCode(lang, null, false, true);
+}
+
 export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {
         stepperApi.onInit(async function(stepperState: StepperState, state: AppStore, environment: string) {
             const answer = selectAnswer(state);
             if (hasBlockPlatform(answer.platform)) {
                 const document = answer.document as BlockDocument;
-                const context = quickAlgoLibraries.getContext(null, environment);
-                const language = state.options.language.split('-')[0];
-
-                log.getLogger('blockly_runner').debug('init stepper js', environment);
-                context.onError = (diagnostics) => {
-                    log.getLogger('blockly_runner').debug('context error', diagnostics);
-                    // channel.put({
-                    //     type: CompileActionTypes.StepperInterrupting,
-                    // });
-                    // channel.put(stepperExecutionError(diagnostics));
-                };
-
-                const blocksData = getContextBlocksDataSelector({state, context});
-
+                const context = quickAlgoLibraries.getContext(null, state.environment);
                 const blocklyHelper = context.blocklyHelper;
-                log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);
-                log.getLogger('blockly_runner').debug('display', context.display);
-                const blocklyXmlCode = document.content.blockly;
-                if (!blocklyHelper.workspace) {
-                    blocklyHelper.load(language, context.display, 1, {});
-                }
-                if (0 === blocklyHelper.programs.length) {
-                    blocklyHelper.programs.push({});
-                }
-                blocklyHelper.programs[0].blockly = blocklyXmlCode;
-                log.getLogger('blockly_runner').debug('xml code', blocklyXmlCode);
 
-                blocklyHelper.reloading = true;
-                blocklyHelper.loadPrograms();
-                // Wait that program is loaded (Blockly fires some event including an onChange event
-                if ('main' === environment) {
-                    await delay(0);
-                }
-                blocklyHelper.reloading = false;
-
-                blocklyHelper.programs[0].blocklyJS = blocklyHelper.getCode("javascript", null, false, true);
+                const xmlCode = await getBlocklyCodeFromXml(document, 'javascript', state);
 
                 let fullCode = blocklyHelper.getBlocklyLibCode(blocklyHelper.generators)
-                    + blocklyHelper.programs[0].blocklyJS
+                    + xmlCode
                     + "highlightBlock(undefined);\n"
                     + "program_end();"
 
                 log.getLogger('blockly_runner').debug('full code', fullCode);
+
+                const blocksData = getContextBlocksDataSelector({state, context});
 
                 const blocklyInterpreter = Codecast.runner;
                 blocklyInterpreter.initCodes([fullCode], blocksData);

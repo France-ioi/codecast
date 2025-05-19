@@ -80,9 +80,13 @@ import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
 import {isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
-import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
+import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
-import {convertServerTaskToCodecastFormat, getTaskFromId} from "../submission/task_platform";
+import {
+    convertServerTaskToCodecastFormat, getServerTaskFromTaskData,
+    getTaskDataFromTaskSettings,
+    getTaskFromId
+} from "../submission/task_platform";
 import {
     submissionChangePaneOpen,
     submissionCloseCurrentSubmission,
@@ -188,7 +192,9 @@ function* taskLoadSaga(app: App, action) {
     let state = yield* appSelect();
 
     let extractTests = 0 === state.task.taskTests.length;
-    if (!state.task.currentTask) {
+    if (action.payload.task) {
+        yield* put(currentTaskChange(action.payload.task));
+    } else if (!state.task.currentTask) {
         extractTests = true;
         if (urlParameters.has('taskId')) {
             if (urlParameters.has('sPlatform')) {
@@ -203,6 +209,10 @@ function* taskLoadSaga(app: App, action) {
             yield* call(taskRefresh, taskId);
         } else if (state.options.task) {
             yield* put(currentTaskChange(state.options.task));
+        } else if (window.taskSettings) {
+            window.taskData = getTaskDataFromTaskSettings(window.taskSettings);
+            const serverTask = getServerTaskFromTaskData(window.taskData);
+            yield* put(currentTaskChange(serverTask));
         } else if (selectedTask) {
             yield* put(currentTaskChangePredefined(selectedTask));
         }
@@ -507,14 +517,14 @@ function* cancelHandleLibrariesEventListenerSaga(app: App) {
 
 function* taskRunExecution({type, payload}) {
     log.getLogger('task').debug('START RUN EXECUTION', type, payload);
-    const {level, testId, tests, options, answer, resolve} = payload;
+    const {task, level, testId, tests, options, answer, resolve} = payload;
 
     log.getLogger('task').debug('Unload any previous context');
     quickAlgoLibraries.unloadContext('background');
 
     yield* put({type: AppActionTypes.AppInit, payload: {options: {...options}, environment: 'background'}});
     yield* put(platformAnswerLoaded(answer));
-    yield* put(taskLoad({testId, level, tests, reloadContext: true}));
+    yield* put(taskLoad({task, testId, level, tests, reloadContext: true}));
     yield* take(taskLoaded.type);
 
     taskSubmissionExecutor.setAfterExecutionCallback((result: TaskSubmissionResultPayload) => {

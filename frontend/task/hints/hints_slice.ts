@@ -25,12 +25,16 @@ export interface HintsState {
     availableHints: TaskHint[],
     unlockedHintIds: string[],
     codeHelpLoading: CodeHelpMode,
+    codeHelpIssue: string,
+    codeHelpDetailEnabled: boolean,
 }
 
 export const hintsInitialState = {
     availableHints: [],
     unlockedHintIds: [],
     codeHelpLoading: null,
+    codeHelpIssue: '',
+    codeHelpDetailEnabled: false,
 } as HintsState;
 
 export const hintsSlice = createSlice({
@@ -105,6 +109,12 @@ export const hintsSlice = createSlice({
         changeCodeHelpLoading(state, action: PayloadAction<CodeHelpMode>) {
             state.codeHelpLoading = action.payload;
         },
+        changeCodeHelpIssue(state, action: PayloadAction<string>) {
+            state.codeHelpIssue = action.payload;
+        },
+        changeCodeHelpDetailEnabled(state, action: PayloadAction<boolean>) {
+            state.codeHelpDetailEnabled = action.payload;
+        },
     },
 });
 
@@ -113,6 +123,8 @@ export const {
     hintObtained,
     hintUnlocked,
     changeCodeHelpLoading,
+    changeCodeHelpIssue,
+    changeCodeHelpDetailEnabled,
 } = hintsSlice.actions;
 
 export default hintsSlice;

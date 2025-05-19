@@ -137,7 +137,20 @@ class TaskSubmissionExecutor {
         yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}, withoutTestChange: true}));
 
         const finalScore = worstRate;
-        if (finalScore > 0) {
+        if (state.task.currentTask && isServerTask(state.task.currentTask) && displayedResults.length > 0 && !displayedResults.find(result => result.successRate !== 1)) {
+            yield* put(displayModal({
+                message: getMessage('TASK_CLIENT_TESTS_SUCCESS'),
+                mode: ModalType.message,
+                yesButtonText: getMessage('TASK_CLIENT_TESTS_SUCCESS_YES'),
+                noButtonText: getMessage('CANCEL'),
+                callback: (result: boolean) => {
+                    if (result) {
+                        const mainStore = Codecast.environments['main'].store;
+                        mainStore.dispatch(callPlatformValidate());
+                    }
+                },
+            }));
+        } else if (finalScore > 0) {
             const levels = yield* appSelect(state => state.platform.levels);
             const nextLevel = getNextLevelIndex(levels, level);
             let stay = finalScore < 1 || null !== nextLevel;
@@ -148,27 +161,12 @@ class TaskSubmissionExecutor {
             }
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.result.tests);
-            if (currentSubmission.result.tests.find(testResult => testResult.score < 1)) {
-                if (displayedResults.length > 0 && !displayedResults.find(result => result.successRate < 1) && state.task.currentTask && isServerTask(state.task.currentTask)) {
-                    yield* put(displayModal({
-                        message: getMessage('TASK_CLIENT_TESTS_SUCCESS'),
-                        mode: ModalType.message,
-                        yesButtonText: getMessage('TASK_CLIENT_TESTS_SUCCESS_YES'),
-                        noButtonText: getMessage('CANCEL'),
-                        callback: (result: boolean) => {
-                            if (result) {
-                                const mainStore = Codecast.environments['main'].store;
-                                mainStore.dispatch(callPlatformValidate());
-                            }
-                        },
-                    }));
-                } else {
-                    const error = new LibraryTestResult(null, 'task-tests-submission-results-overview', {
-                        results: displayedResults,
-                    });
+            if (currentSubmission.result.tests.find(testResult => testResult.score !== 1)) {
+                const error = new LibraryTestResult(null, 'task-tests-submission-results-overview', {
+                    results: displayedResults,
+                });
 
-                    yield* put(stepperDisplayError(error));
-                }
+                yield* put(stepperDisplayError(error));
             }
         }
     }
@@ -176,6 +174,7 @@ class TaskSubmissionExecutor {
     *makeBackgroundExecution(level: TaskLevelName, testId: number, answer: TaskAnswer) {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
+        const task = state.task.currentTask;
         const tests = state.task.taskTests;
         const taskVariant = state.options.taskVariant;
 
@@ -193,7 +192,7 @@ class TaskSubmissionExecutor {
         if (!(cacheKey in executionsCache)) {
             log.getLogger('tests').debug('Executions cache MISS', taskParameters, cacheKey);
             executionsCache[cacheKey] = yield new Promise<TaskSubmissionResultPayload>(resolve => {
-                backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
+                backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, task, level, testId, tests, answer, resolve}});
             });
         } else {
             log.getLogger('tests').debug('Executions cache HIT', {level, testId, taskVariant}, cacheKey);
@@ -282,7 +281,7 @@ class TaskSubmissionExecutor {
 
             const outcome = yield* race({
                 result: call(() => deferredPromise.promise),
-                timeout: delay(10*60*1000), // 10 min
+                timeout: delay(60*60*1000), // 60 min
             });
 
             if (outcome.result) {
@@ -326,7 +325,7 @@ class TaskSubmissionExecutor {
         let lastMessage = null;
         const currentTask = state.task.currentTask;
         const tests = currentTask ? getTaskLevelTests(state, level) : state.task.taskTests;
-        if (!tests || 0 === Object.values(tests).length) {
+        if (!tests || 0 === Object.values(tests).length || !doesPlatformHaveClientRunner(answer.platform)) {
             return {
                 score: 0,
                 message: '',

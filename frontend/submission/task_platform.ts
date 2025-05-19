@@ -9,6 +9,8 @@ import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms'
 import {documentToString} from '../buffers/document';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {delay} from '../player/sagas';
+import {BlockDocument, BufferType} from '../buffers/buffer_types';
+import {getBlocklyCodeFromXml} from '../stepper/js';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -35,29 +37,10 @@ export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<
             let taskSettingsObject = 'undefined' !== typeof taskSettings ? taskSettings : null;
             if (taskSettingsObject && !window.taskData) {
                 // Convert taskSettings into window.taskData
-                window.taskData = taskSettingsObject;
-                window.initBlocklySubTask = function () {
-                };
-                taskSettingsObject.initTask(window.taskData);
-                delete taskSettingsObject.initTask;
+                window.taskData = getTaskDataFromTaskSettings(taskSettingsObject);
             }
 
-            if (window.taskData.data) {
-                window.taskData.gridInfos.allowClientExecution = true;
-            }
-
-            // Include blockly opts inside gridInfos
-            if (window.taskData.blocklyOpts && window.taskData.gridInfos.includeBlocks) {
-                window.taskData.gridInfos.includeBlocks.standardBlocks = {
-                    ...(window.taskData.gridInfos.includeBlocks.standardBlocks ?? {}),
-                    ...window.taskData.blocklyOpts.includeBlocks.standardBlocks,
-                };
-            }
-
-            return {
-                ...task,
-                ...window.taskData,
-            };
+            return getServerTaskFromTaskData(window.taskData, task);
         } catch (ex) {
             console.error("Couldn't execute script animation", ex);
         }
@@ -128,6 +111,37 @@ export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<
     }
 }
 
+export function getTaskDataFromTaskSettings(taskSettings: any) {
+    const taskData = taskSettings;
+    window.initBlocklySubTask = function () {
+    };
+    taskSettings.initTask(taskData);
+    delete taskSettings.initTask;
+
+    return taskData;
+}
+
+export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null) {
+    if (taskData.data) {
+        taskData.gridInfos.allowClientExecution = true;
+    }
+
+    if (taskData.blocklyOpts && taskData.blocklyOpts.includeBlocks) {
+        taskData.gridInfos.includeBlocks = taskData.blocklyOpts.includeBlocks;
+    }
+
+    if (window.PEMTaskMetaData) {
+        if (window.PEMTaskMetaData.supportedLanguages) {
+            taskData.supportedLanguages = window.PEMTaskMetaData.supportedLanguages.join(',');
+        }
+    }
+
+    return {
+        ...(task ?? {}),
+        ...taskData,
+    };
+}
+
 export function* longPollServerSubmissionResults(submissionId: string, submissionIndex: number, serverSubmission: TaskSubmissionServer, callback: (TaskSubmissionServerResult) => void) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
@@ -163,13 +177,20 @@ export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, p
     const state = yield* appSelect();
     const taskPlatformUrl = state.options.taskPlatformUrl;
     const taskToken = state.platform.taskToken;
-    const answerContent = documentToString(answer.document);
+
+    let answerContent = documentToString(answer.document);
+    let language: string = platform;
+    if (BufferType.Block === answer.document.type) {
+        language = 'python';
+        const pythonCode = yield* call(getBlocklyCodeFromXml, answer.document as BlockDocument, 'python', state);
+        answerContent = '# blocklyXml: ' + answerContent + '\n\n' + pythonCode;
+    }
 
     const body = {
         token: taskToken,
         answerToken: answerToken,
         answer: {
-            language: platform,
+            language,
             fileName: answer.fileName,
             sourceCode: answerContent,
         },

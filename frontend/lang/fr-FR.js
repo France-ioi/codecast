@@ -250,6 +250,8 @@ module.exports = {
     TASK_BLOCK_CATEGORY_CONSTANTS: "Constantes",
     TASK_BLOCK_CATEGORY_SMART_CONTRACTS: "Smart contracts",
     TASK_BLOCK_CATEGORY_UNDEFINED: "Divers",
+    TASK_LIMIT_TIME: "Limite de temps :",
+    TASK_LIMIT_MEMORY: "Limite de mémoire :",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Se placer dans un agencement :",
     LAYOUT_DefaultLayoutDesktop: 'Ordinateur',
@@ -312,7 +314,7 @@ module.exports = {
     BUFFER_TAB_FILENAME: 'Code {i}',
     BUFFER_TAB_PENDING_SUBMISSION: 'Soumission en cours',
     BUFFER_TAB_FINISHED_SUBMISSION: 'Résultats disponibles',
-    BUFFER_TAB_NOT_EDITABLE: "Ce code n'est plus éditable.",
+    BUFFER_TAB_NOT_EDITABLE: "Ce code n'est plus éditable car il est en cours de soumission.",
     BUFFER_TAB_NO_PAST_SUBMISSION: "Aucune soumission récente",
     BUFFER_TAB_FILE_NAME: "Titre du fichier",
     BUFFER_TAB_LANGUAGE: "Langage du fichier",
