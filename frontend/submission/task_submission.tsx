@@ -137,8 +137,7 @@ class TaskSubmissionExecutor {
         yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}, withoutTestChange: true}));
 
         const finalScore = worstRate;
-        console.log({finalScore});
-        if (state.task.currentTask && isServerTask(state.task.currentTask) && displayedResults.length > 0 && !displayedResults.find(result => result.successRate < 1)) {
+        if (state.task.currentTask && isServerTask(state.task.currentTask) && displayedResults.length > 0 && !displayedResults.find(result => result.successRate !== 1)) {
             yield* put(displayModal({
                 message: getMessage('TASK_CLIENT_TESTS_SUCCESS'),
                 mode: ModalType.message,
@@ -162,7 +161,7 @@ class TaskSubmissionExecutor {
             }
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.result.tests);
-            if (currentSubmission.result.tests.find(testResult => testResult.score < 1)) {
+            if (currentSubmission.result.tests.find(testResult => testResult.score !== 1)) {
                 const error = new LibraryTestResult(null, 'task-tests-submission-results-overview', {
                     results: displayedResults,
                 });

@@ -424,10 +424,10 @@ export default function(bundle: Bundle) {
                 const context = quickAlgoLibraries.getContext(null, state.environment);
                 const blocklyHelper = context.blocklyHelper;
 
-                blocklyHelper.programs[0].blocklyJS = await getBlocklyCodeFromXml(document, 'javascript', state);
+                const xmlCode = await getBlocklyCodeFromXml(document, 'javascript', state);
 
                 let fullCode = blocklyHelper.getBlocklyLibCode(blocklyHelper.generators)
-                    + blocklyHelper.programs[0].blocklyJS
+                    + xmlCode
                     + "highlightBlock(undefined);\n"
                     + "program_end();"
 
