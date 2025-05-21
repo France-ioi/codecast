@@ -101,6 +101,7 @@ export interface CodecastOptions {
     taskVariant?: number,
     randomTaskVariants?: number,
     contextVisualizationDesiredSize?: string,
+    editorDesiredSize?: string,
     tabsEnabled?: boolean,
     workWithGit?: boolean,
     printerLibColumn?: boolean,
