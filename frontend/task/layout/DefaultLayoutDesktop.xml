@@ -1,5 +1,5 @@
 <HorizontalLayout>
-    <VerticalLayout desiredSize="40%">
+    <VerticalLayout>
         <ZoneLayout name="top-left">
             <Instructions/>
             <Variables/>
@@ -12,7 +12,7 @@
             <ControlsAndErrors/>
         </ZoneLayout>
     </VerticalLayout>
-    <VerticalLayout desiredSize="60%">
+    <VerticalLayout desiredSize="{editorDesiredSize}">
         <ZoneLayout name="center-top" closedOnDocumentationOpen="true"/>
         <ZoneLayout name="center">
             <Documentation/>
