@@ -123,7 +123,6 @@ import {
     denormalizeBufferFromAnswer
 } from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
-import {Screen} from '../common/screens';
 import {DeferredPromise} from '../utils/app';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 import jwt from 'jsonwebtoken';
@@ -178,6 +177,9 @@ function* taskRefresh(taskId?: string) {
     }
 
     const convertedTask = yield* call(convertServerTaskToCodecastFormat, task);
+    if (convertedTask.codecastParameters) {
+        yield* put({type: ActionTypes.OptionsChanged, payload: {options: convertedTask.codecastParameters}});
+    }
     yield* put(currentTaskChange(convertedTask));
 
     if (convertedTask?.gridInfos?.hints?.length) {
@@ -212,6 +214,9 @@ function* taskLoadSaga(app: App, action) {
         } else if (window.taskSettings) {
             window.taskData = getTaskDataFromTaskSettings(window.taskSettings);
             const serverTask = getServerTaskFromTaskData(window.taskData);
+            if (serverTask.codecastParameters) {
+                yield* put({type: ActionTypes.OptionsChanged, payload: {options: serverTask.codecastParameters}});
+            }
             yield* put(currentTaskChange(serverTask));
         } else if (selectedTask) {
             yield* put(currentTaskChangePredefined(selectedTask));

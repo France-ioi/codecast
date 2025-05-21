@@ -68,6 +68,7 @@ export const convertBlocklyValueToDAPFormat = (name: string, value: any, visited
             }),
             indexedVariables: Object.entries(value.properties).length,
             variablesReference: variableReferenceCount++,
+            collapsed: true,
         };
     }
 

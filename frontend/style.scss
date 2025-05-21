@@ -200,6 +200,13 @@ body#app, #app h1, #app h2, #app h3 {
   display: flex;
   flex-direction: column;
   height: 100%;
+  &.is-column {
+    flex-direction: row;
+    gap: 10px;
+    .terminal-view-header  {
+      height: 46px;
+    }
+  }
 }
 .terminal-view-header {
   display: flex;

@@ -243,7 +243,7 @@ export interface SourceCodeNormalized {
     type: string,
 }
 
-export type Task = QuickalgoTask & Partial<TaskServer>;
+export type Task = QuickalgoTask & Partial<TaskServer> & {codecastParameters?: any};
 
 export function isServerTask(object: Task|null): boolean {
     return !!((object && null !== object.id && undefined !== object.id) || window.PEMTaskMetaData);
