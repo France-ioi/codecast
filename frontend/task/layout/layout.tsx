@@ -727,6 +727,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
 
     const elementsTree = xmlToReact.convert(layoutXml, {
         contextVisualizationDesiredSize: layoutProps.options.contextVisualizationDesiredSize ?? '60%',
+        editorDesiredSize: layoutProps.options.editorDesiredSize ?? '60%',
     });
 
     return buildZonesLayout(elementsTree, {
