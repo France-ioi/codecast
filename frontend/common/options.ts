@@ -240,6 +240,14 @@ export default function(bundle: Bundle) {
         state.options.logAttempts = logAttempts;
     });
 
+    bundle.defineAction(ActionTypes.OptionsChanged);
+    bundle.addReducer(ActionTypes.OptionsChanged, (state, {payload: {options}}) => {
+        state.options = {
+            ...state.options,
+            ...options,
+        };
+    });
+
     bundle.addSaga(function* () {
         // @ts-ignore
         yield* takeEvery(ActionTypes.PlatformChanged, function* ({payload: {reloadTask}}) {

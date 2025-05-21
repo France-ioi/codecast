@@ -103,6 +103,7 @@ export interface CodecastOptions {
     contextVisualizationDesiredSize?: string,
     tabsEnabled?: boolean,
     workWithGit?: boolean,
+    printerLibColumn?: boolean,
 
     codeHelp?: {
         enabled?: boolean,
