@@ -20,6 +20,7 @@ export enum ActionTypes {
     TaskVariantChanged = 'Task.Variant.Changed',
     TabsEnabledChanged = 'Task.TabsEnabled.Changed',
     LogAttemptsChanged = 'Task.LogAttempts.Changed',
+    OptionsChanged = 'Options.Changed',
 
     WindowResized = 'Window.Resized'
 }

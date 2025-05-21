@@ -23,6 +23,7 @@ const bufferEditableOptions = {};
 
 export function InputOutputView() {
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const printerLibColumn = useAppSelector(state => !!state.options.printerLibColumn);
     const currentTest = useAppSelector(selectCurrentTest);
     const currentTestEditable = !currentTask || (currentTest && TaskTestGroupType.User === currentTest.groupType);
 
@@ -37,7 +38,7 @@ export function InputOutputView() {
     };
 
     return (
-        <div className="input-output-view">
+        <div className={`input-output-view ${printerLibColumn && 'is-column'}`}>
             {!(taskState && taskState.unknownInput) && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INPUT")}
