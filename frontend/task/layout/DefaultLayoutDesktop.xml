@@ -1,6 +1,6 @@
 <HorizontalLayout>
     <VerticalLayout>
-        <ZoneLayout name="top-left">
+        <ZoneLayout name="top-left" overflow="show-scroll">
             <Instructions/>
             <Variables/>
         </ZoneLayout>

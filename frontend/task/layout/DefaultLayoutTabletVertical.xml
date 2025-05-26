@@ -1,6 +1,6 @@
 <VerticalLayout>
     <HorizontalLayout>
-        <ZoneLayout name="top-left,center-top,center-left" default="true" desiredSize="40%">
+        <ZoneLayout name="top-left,center-top,center-left" default="true" desiredSize="40%" overflow="show-scroll">
             <Instructions/>
             <Variables/>
         </ZoneLayout>

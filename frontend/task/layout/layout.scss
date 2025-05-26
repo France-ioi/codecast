@@ -15,9 +15,42 @@
   align-items: stretch;
 }
 
+.zone-layout-wrapper {
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  &.show-scroll:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+  }
+}
+
+.zone-layout-scroll-icon {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 50px;
+  color: var(--primary-color);
+  z-index: 1;
+  pointer-events: none;
+  &.is-bottom {
+    opacity: 0;
+  }
+}
+
 .zone-layout {
+  flex: 1 0;
   display: flex;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .multi-visualization {

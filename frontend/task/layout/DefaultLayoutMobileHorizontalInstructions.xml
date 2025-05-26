@@ -5,7 +5,7 @@
                 <ContextVisualization/>
             </ZoneLayout>
         </VerticalLayout>
-        <ZoneLayout desiredSize="60%">
+        <ZoneLayout desiredSize="60%" overflow="show-scroll">
             <Instructions/>
         </ZoneLayout>
     </HorizontalLayout>
