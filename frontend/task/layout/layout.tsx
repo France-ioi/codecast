@@ -92,7 +92,7 @@ export interface LayoutElementMetadata {
     id?: string,
     title?: string,
     icon?: string,
-    overflow?: boolean,
+    overflow?: boolean|string,
     desiredSize?: string,
     stackingOrientation?: RelativeLayoutOrientation,
     allocatedWidth?: number,
