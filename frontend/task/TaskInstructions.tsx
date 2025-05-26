@@ -30,7 +30,6 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const isBackend = useAppSelector(state => state.options.backend);
     const [instructionsHtml, setInstructionsHtml] = useState(null);
     const [instructionsTabs, setInstructionsTabs] = useState(null);
-    const instructionsRef = useRef<HTMLDivElement>();
     const screen = useAppSelector(state => state.screen);
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
     const dispatch = useDispatch();
@@ -141,7 +140,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     }
 
     return (
-        <div ref={instructionsRef} className={`task-mission ${props.expanded ? 'is-expanded' : ''} cursor-main-zone`} data-cursor-self-handling="" style={{fontSize: `${zoomLevel}rem`}} data-cursor-zone="instructions">
+        <div className={`task-mission ${props.expanded ? 'is-expanded' : ''} cursor-main-zone`} data-cursor-self-handling="" style={{fontSize: `${zoomLevel}rem`}} data-cursor-zone="instructions">
             {props.missionRightSlot}
 
             {instructionsTabs ?
