@@ -23,7 +23,7 @@ export function ZoneLayout(props: ZoneLayoutProps) {
         zoneStyle.overflow = 'auto';
     }
 
-    const scrollZoneLayout = useCallback(() => {
+    const onScrollZoneLayout = useCallback(() => {
         const el = zoneLayoutRef.current;
         const isBottom = el.scrollHeight - el.scrollTop === el.clientHeight;
         setIsBottom(isBottom);
@@ -34,15 +34,20 @@ export function ZoneLayout(props: ZoneLayoutProps) {
         refreshMode: 'debounce',
         refreshRate: 100,
         targetRef: zoneLayoutRef,
-        onResize: scrollZoneLayout,
+        onResize: onScrollZoneLayout,
     });
+
+    const scrollZoneLayout = () => {
+        const el = zoneLayoutRef.current;
+        el.scrollBy({top: el.clientHeight - 30, behavior: 'smooth'});
+    };
 
     return (
         <div className={`zone-layout-wrapper ${'show-scroll' === metadata.overflow && !isBottom && 'show-scroll'}`} style={style}>
-            <div className="zone-layout" style={zoneStyle} ref={zoneLayoutRef} onScroll={scrollZoneLayout}>
+            <div className="zone-layout" style={zoneStyle} ref={zoneLayoutRef} onScroll={onScrollZoneLayout}>
                 {props.children}
             </div>
-            {'show-scroll' === metadata.overflow && <div className={`zone-layout-scroll-icon ${isBottom ? 'is-bottom' : ''}`}>
+            {'show-scroll' === metadata.overflow && <div className={`zone-layout-scroll-icon ${isBottom ? 'is-bottom' : ''}`} onClick={scrollZoneLayout}>
                 <FontAwesomeIcon icon={faCaretDown}/>
             </div>}
         </div>

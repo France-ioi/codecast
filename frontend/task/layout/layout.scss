@@ -40,9 +40,9 @@
   font-size: 50px;
   color: var(--primary-color);
   z-index: 1;
-  pointer-events: none;
+  cursor: pointer;
   &.is-bottom {
-    opacity: 0;
+    display: none;
   }
 }
 
