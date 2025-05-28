@@ -39,7 +39,7 @@ export function ZoneLayout(props: ZoneLayoutProps) {
 
     const scrollZoneLayout = () => {
         const el = zoneLayoutRef.current;
-        el.scrollBy({top: el.clientHeight - 30, behavior: 'smooth'});
+        el.scrollBy({top: el.clientHeight - 70, behavior: 'smooth'});
     };
 
     return (
