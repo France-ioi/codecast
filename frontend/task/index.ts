@@ -45,7 +45,7 @@ import BlocksBundle from "./blocks/blocks";
 import HintsBundle from "./hints/hints_saga";
 import PlatformBundle, {
     getTaskAnswerAggregated,
-    platformApi,
+    platformApi, selectTaskTokenPayload,
     setPlatformBundleParameters, subscribePlatformHelper,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
@@ -1022,7 +1022,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(platformTokenUpdated, function*() {
             const newToken = yield* appSelect(state => state.platform.taskToken);
             if (newToken) {
-                const payload = jwt.decode(newToken);
+                const payload = yield* appSelect(selectTaskTokenPayload);
                 if (payload && null !== payload.randomSeed && undefined !== payload.randomSeed) {
                     const randomSeed = String(payload.randomSeed);
                     yield* put(platformTaskRandomSeedUpdated(randomSeed));

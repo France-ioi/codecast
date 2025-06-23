@@ -11,6 +11,7 @@ import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {getContextBlocksDataSelector} from '../blocks/blocks';
 import {Block, BlockType} from '../blocks/block_types';
 import {platformsList} from '../../stepper/platforms';
+import {selectTaskTokenPayload} from '../platform/platform';
 
 interface CodeHelpParameters {
     code: string,
@@ -33,6 +34,8 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters): Generator<any,
     const instructionsJQuery = yield* appSelect(state => getFormattedInstructionsForLevelSelector({state, context}));
     const instructionsText = instructionsJQuery.text();
     const platform = yield* appSelect(selectActiveBufferPlatform);
+
+    const decodedTaskToken = yield* appSelect(selectTaskTokenPayload);
 
     const allBlocks = yield* appSelect(state => getContextBlocksDataSelector({state, context}));
     const filteredBlocks = allBlocks.filter(block => BlockType.Directive !== block.type);
@@ -64,6 +67,7 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters): Generator<any,
             // "avoid": "loops\r\nfor\r\nwhile",
             name: quickAlgoLibraries.getMainContextName('main'),
         },
+        user_id: decodedTaskToken?.idUser,
     };
 
     const queryPayload = (yield* call(asyncRequestJson, codeHelpConfig.url + '/api/query', queryBody, false, {Authorization: `Bearer ${accessToken}`})) as {context: null, query_id: number, responses: {main: string, insufficient: string}};

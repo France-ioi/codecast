@@ -47,7 +47,7 @@ import {Codecast} from '../../app_types';
 import {Document} from '../../buffers/buffer_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
-import {isServerTask, TaskAnswer} from '../task_types';
+import {isServerTask, TaskAnswer, TaskTokenPayload} from '../task_types';
 import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
@@ -61,6 +61,7 @@ import {getAudioTimeStep} from '../task_selectors';
 import {memoize} from 'proxy-memoize';
 import {selectLanguageStrings} from '../instructions/instructions';
 import {taskFillResources} from './resources';
+import jwt from 'jsonwebtoken';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -104,6 +105,17 @@ export const selectTaskMetadata = memoize((state: AppStore) => {
 
     return metadata;
 });
+
+export function selectTaskTokenPayload(state: AppStore): TaskTokenPayload|null {
+    const token = state.platform.taskToken;
+    if (!token) {
+        return null;
+    }
+
+    const payload = jwt.decode(token);
+
+    return payload as TaskTokenPayload;
+}
 
 function sendErrorLog() {
     // Send errors to the platform
