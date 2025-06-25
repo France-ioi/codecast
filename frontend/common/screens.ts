@@ -11,6 +11,7 @@ export enum Screen {
     DocumentationSmall = 'documentation_small',
     DocumentationBig = 'documentation_big',
     Hints = 'hints',
+    HintsNew = 'hints_new',
 }
 
 export default function(bundle: Bundle) {

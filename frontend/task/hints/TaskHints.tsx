@@ -11,16 +11,18 @@ import log from 'loglevel';
 import {selectAvailableHints, selectUnlockedHintIds} from './hints_selectors';
 import {askCodeHelp, CodeHelpMode} from './hint_actions';
 import {Button, Intent} from '@blueprintjs/core';
+import {Screen} from '../../common/screens';
 
 export interface TaskHintProps {
     askHintClassName?: string
 }
 
 export function TaskHints(props: TaskHintProps) {
+    const screen = useAppSelector(state => state.screen);
     const availableHints = useAppSelector(selectAvailableHints);
     const unlockedHintIds = useAppSelector(selectUnlockedHintIds);
     const [displayedHintId, setDisplayedHintId] = useState(unlockedHintIds.length ? unlockedHintIds[unlockedHintIds.length - 1] : null);
-    const [displayedHintIndex, setDisplayedHintIndex] = useState(null === displayedHintId ? unlockedHintIds.length : unlockedHintIds.indexOf(displayedHintId));
+    const [displayedHintIndex, setDisplayedHintIndex] = useState(null === displayedHintId || Screen.HintsNew === screen ? unlockedHintIds.length : unlockedHintIds.indexOf(displayedHintId));
     const displayedHint = availableHints.find(hint => displayedHintId === hint.id);
     const nextAvailableHint = availableHints.find(hint => -1 === unlockedHintIds.indexOf(hint.id));
     const nextHintToUnlockId = useRef(nextAvailableHint ? nextAvailableHint.id : null);
@@ -59,7 +61,7 @@ export function TaskHints(props: TaskHintProps) {
     }, [unlockedHintIds]);
 
     useEffect(() => {
-        if (unlockedHintIds.length) {
+        if (unlockedHintIds.length && Screen.HintsNew !== screen) {
             changeDisplayedHintId(unlockedHintIds[unlockedHintIds.length - 1]);
         }
     }, [unlockedHintIds]);

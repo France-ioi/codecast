@@ -35,4 +35,8 @@ export class LibraryTestResult {
     public static fromString(message: string|{s: string}) {
         return new this('object' === typeof message && 's' in message ? message.s : message);
     }
+
+    public static getMessage(executionResult: unknown): string {
+        return executionResult instanceof LibraryTestResult ? executionResult.getMessage() : String(executionResult);
+    }
 }

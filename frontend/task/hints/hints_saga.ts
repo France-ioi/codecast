@@ -2,6 +2,7 @@ import {Bundle} from '../../linker';
 import {call, put, takeEvery} from 'typed-redux-saga';
 import {askCodeHelp} from './hint_actions';
 import {
+    changeCodeHelpDetailEnabled,
     changeCodeHelpIssue,
     changeCodeHelpLoading,
     hintObtained,
@@ -14,6 +15,7 @@ import {getCodeHelpHint} from './codehelp';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {getMessage} from '../../lang';
+import {LibraryTestResult} from '../libs/library_test_result';
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
@@ -27,12 +29,13 @@ export default function (bundle: Bundle) {
             try {
                 const hint: TaskHint = yield* call(getCodeHelpHint, {
                     code: source,
-                    error: stepperError ? String(stepperError) : null,
+                    error: LibraryTestResult.getMessage(stepperError),
                     issue,
                 });
 
                 yield* put(hintObtained(hint));
                 yield* put(changeCodeHelpIssue(''));
+                yield* put(changeCodeHelpDetailEnabled(false));
             } catch (e) {
                 console.error('An error occurred during platform validation', e);
                 yield* put(stepperDisplayError(getMessage('HINTS_CODE_HELP_ERROR').s));

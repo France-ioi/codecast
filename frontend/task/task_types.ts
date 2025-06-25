@@ -243,6 +243,17 @@ export interface SourceCodeNormalized {
     type: string,
 }
 
+export interface TaskTokenPayload {
+    idUser: string,
+    itemUrl: string,
+    platformName: string,
+    randomSeed: string,
+    date: string,
+    bAccessSolutions: boolean,
+    bHintsAllowed: boolean,
+    bSubmissionPossible: boolean,
+}
+
 export type Task = QuickalgoTask & Partial<TaskServer> & {codecastParameters?: any};
 
 export function isServerTask(object: Task|null): boolean {

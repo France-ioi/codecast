@@ -800,13 +800,13 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-right: 34px;
   .message {
     flex: 1 1 auto;
     color: #30242B;
     font-size: 16px;
     font-weight: 600;
     margin: 0;
-    margin-right: 34px;
     overflow-x: auto;
     overflow-y: clip;
     min-width: 350px;
@@ -815,6 +815,15 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
       white-space: pre;
       font-family: $font-family-monospace;
     }
+  }
+}
+
+.codehelp-help .quickalgo-button .bp4-button-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  .bp4-icon {
+    color: white;
   }
 }
 
