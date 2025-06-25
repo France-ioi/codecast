@@ -63,7 +63,7 @@ export default function (bundle: Bundle) {
                 if (Screen.DocumentationBig === screenName || Screen.DocumentationSmall === screenName) {
                     hasOpenDocumentation = true;
                     yield* call(hideMenuHelps);
-                } else if (Screen.Hints === screenName) {
+                } else if (Screen.Hints === screenName || Screen.HintsNew === screenName) {
                     hasOpenHints = true;
                     yield* call(hideMenuHelps);
                 }

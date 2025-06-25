@@ -9,7 +9,7 @@ import {useDispatch} from 'react-redux';
 
 export function TaskHintsDialog() {
     const screen = useAppSelector(state => state.screen);
-    const hintsOpen = Screen.Hints === screen;
+    const hintsOpen = Screen.Hints === screen || Screen.HintsNew === screen;
     const dispatch = useDispatch();
 
     const closeHints = () => {

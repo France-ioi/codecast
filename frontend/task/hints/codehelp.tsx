@@ -70,8 +70,12 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters): Generator<any,
         user_id: decodedTaskToken?.idUser,
     };
 
-    const queryPayload = (yield* call(asyncRequestJson, codeHelpConfig.url + '/api/query', queryBody, false, {Authorization: `Bearer ${accessToken}`})) as {context: null, query_id: number, responses: {main: string, insufficient: string}};
+    const queryPayload = (yield* call(asyncRequestJson, codeHelpConfig.url + '/api/query', queryBody, false, {Authorization: `Bearer ${accessToken}`})) as {context: null, query_id: number, responses: {main: string, insufficient: string, error?: string}};
     const {responses} = queryPayload;
+
+    if (responses.error) {
+        throw new Error(responses.error);
+    }
 
     return {
         codeHelp: {
