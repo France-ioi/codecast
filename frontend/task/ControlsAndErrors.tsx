@@ -245,7 +245,7 @@ export function ControlsAndErrors() {
                             }}
                         >
                             <Icon icon="lightbulb"/>
-                            <span>Aide</span>
+                            <span>{getMessage('HINTS_CODE_HELP_ERROR_BUTTON')}</span>
                         </Button>
                     </div>}
                 </div>
