@@ -365,8 +365,13 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
                     yield* put(platformTaskRefresh());
                 }
             }
-            // Grade with updateScore = true and showResult = false
-            yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, success, error, true, false));
+
+            const currentTask = yield* appSelect(state => state.task.currentTask);
+            if (!isServerTask(currentTask)) {
+                // Grade with updateScore = true and showResult = false
+                yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, success, error, true, false));
+            }
+
             yield* call(taskAnswerReloadedSaga);
         } else if (answer) {
             const parsedAnswer = JSON.parse(answer);
