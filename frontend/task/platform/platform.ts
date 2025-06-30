@@ -472,6 +472,12 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, succe
             log.getLogger('tests').debug('answer data', answer);
             for (let {level} of Object.values(taskLevels)) {
                 log.getLogger('tests').debug('level', level, answerObject[level]);
+
+                // For server tasks with JS "data: {easy: {}}" when we want to evaluate correct solutions,
+                // we pass the solution without the version, it should work like this too
+                if (!answerObject[level] && 1 === Object.keys(taskLevels).length && answerObject.document) {
+                    answerObject[level] = answerObject;
+                }
                 if (!answerObject[level]) {
                     versionsScore[level] = 0;
                     continue;
