@@ -43,7 +43,7 @@ export function ZoneLayout(props: ZoneLayoutProps) {
     };
 
     return (
-        <div className={`zone-layout-wrapper ${'show-scroll' === metadata.overflow && !isBottom && 'show-scroll'}`} style={style}>
+        <div className={`zone-layout-wrapper ${('show-scroll' === metadata.overflow && !isBottom) ? 'show-scroll' : ''}`} style={style}>
             <div className="zone-layout" style={zoneStyle} ref={zoneLayoutRef} onScroll={onScrollZoneLayout}>
                 {props.children}
             </div>
