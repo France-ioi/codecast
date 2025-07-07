@@ -22,6 +22,9 @@
   &.show-scroll {
     overflow: hidden;
   }
+  &.overflow-visible {
+    overflow: visible;
+  }
   &.show-scroll:after {
     content: "";
     position: absolute;
