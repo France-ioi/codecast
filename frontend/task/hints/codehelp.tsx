@@ -57,13 +57,15 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters): Generator<any,
             ${blocks.map(block => `- ${block.caption} : ${block.description}`).join("\n")}`);
     }
 
+    const levelGridInfos = yield* appSelect(state => state.task.levelGridInfos);
+
     const queryBody = {
         code: parameters.code,
         error: parameters.error ?? '',
         issue: parameters.issue ?? '',
         task_instructions: {
             tools: platformsList[platform].name,
-            details: `${instructionsText}\n\n${libraryDefinitions.join("\n")}`,
+            details: `${instructionsText}\n\n${libraryDefinitions.join("\n")}${levelGridInfos?.codeHelpAdditionalContext ? `\n\n${levelGridInfos.codeHelpAdditionalContext}` : ''}`,
             // "avoid": "loops\r\nfor\r\nwhile",
             name: quickAlgoLibraries.getMainContextName('main'),
         },
