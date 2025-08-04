@@ -25,7 +25,7 @@ export function ZoneLayout(props: ZoneLayoutProps) {
 
     const onScrollZoneLayout = useCallback(() => {
         const el = zoneLayoutRef.current;
-        const isBottom = el.scrollHeight - el.scrollTop === el.clientHeight;
+        const isBottom = el.scrollHeight - el.scrollTop <= el.clientHeight;
         setIsBottom(isBottom);
     }, []);
 
