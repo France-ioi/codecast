@@ -45,7 +45,7 @@ import BlocksBundle from "./blocks/blocks";
 import HintsBundle from "./hints/hints_saga";
 import PlatformBundle, {
     getTaskAnswerAggregated,
-    platformApi,
+    platformApi, selectTaskTokenPayload,
     setPlatformBundleParameters, subscribePlatformHelper,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
@@ -891,7 +891,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(stepperExecutionEndConditionReached, function* ({payload: {executionResult}}) {
             const context = quickAlgoLibraries.getContext(null, app.environment);
             // checkEndCondition can throw the message or an object with more details
-            const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : String(executionResult);
+            const message: string = LibraryTestResult.getMessage(executionResult);
 
             const computeGrade = context.infos.computeGrade ? context.infos.computeGrade : (context: QuickAlgoLibrary, message: string) => {
                 let rate = 0;
@@ -1025,7 +1025,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(platformTokenUpdated, function*() {
             const newToken = yield* appSelect(state => state.platform.taskToken);
             if (newToken) {
-                const payload = jwt.decode(newToken);
+                const payload = yield* appSelect(selectTaskTokenPayload);
                 if (payload && null !== payload.randomSeed && undefined !== payload.randomSeed) {
                     const randomSeed = String(payload.randomSeed);
                     yield* put(platformTaskRandomSeedUpdated(randomSeed));

@@ -290,6 +290,7 @@ module.exports = {
     HINTS_CODE_HELP_ERROR: "An error has occurred while fetching help on your code.",
     HINTS_CODE_HELP_LOADING_WITHOUT_QUESTION: "Please wait while a personalized hint is generated...",
     HINTS_CODE_HELP_LOADING_WITH_QUESTION: "Please wait while your question is being processed...",
+    HINTS_CODE_HELP_ERROR_BUTTON: "Help",
 
     SUBMISSION_EXECUTE_ON: 'Execute on...',
     SUBMISSION_EXECUTE_ON_CLIENT: 'browser',

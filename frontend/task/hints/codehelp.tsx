@@ -11,6 +11,7 @@ import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {getContextBlocksDataSelector} from '../blocks/blocks';
 import {Block, BlockType} from '../blocks/block_types';
 import {platformsList} from '../../stepper/platforms';
+import {selectTaskTokenPayload} from '../platform/platform';
 
 interface CodeHelpParameters {
     code: string,
@@ -34,6 +35,8 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters): Generator<any,
     const instructionsText = instructionsJQuery.text();
     const platform = yield* appSelect(selectActiveBufferPlatform);
 
+    const decodedTaskToken = yield* appSelect(selectTaskTokenPayload);
+
     const allBlocks = yield* appSelect(state => getContextBlocksDataSelector({state, context}));
     const filteredBlocks = allBlocks.filter(block => BlockType.Directive !== block.type);
 
@@ -54,20 +57,27 @@ export function* getCodeHelpHint(parameters: CodeHelpParameters): Generator<any,
             ${blocks.map(block => `- ${block.caption} : ${block.description}`).join("\n")}`);
     }
 
+    const levelGridInfos = yield* appSelect(state => state.task.levelGridInfos);
+
     const queryBody = {
         code: parameters.code,
         error: parameters.error ?? '',
         issue: parameters.issue ?? '',
         task_instructions: {
             tools: platformsList[platform].name,
-            details: `${instructionsText}\n\n${libraryDefinitions.join("\n")}`,
+            details: `${instructionsText}\n\n${libraryDefinitions.join("\n")}${levelGridInfos?.codeHelpAdditionalContext ? `\n\n${levelGridInfos.codeHelpAdditionalContext}` : ''}`,
             // "avoid": "loops\r\nfor\r\nwhile",
             name: quickAlgoLibraries.getMainContextName('main'),
         },
+        user_id: decodedTaskToken?.idUser,
     };
 
-    const queryPayload = (yield* call(asyncRequestJson, codeHelpConfig.url + '/api/query', queryBody, false, {Authorization: `Bearer ${accessToken}`})) as {context: null, query_id: number, responses: {main: string, insufficient: string}};
+    const queryPayload = (yield* call(asyncRequestJson, codeHelpConfig.url + '/api/query', queryBody, false, {Authorization: `Bearer ${accessToken}`})) as {context: null, query_id: number, responses: {main: string, insufficient: string, error?: string}};
     const {responses} = queryPayload;
+
+    if (responses.error) {
+        throw new Error(responses.error);
+    }
 
     return {
         codeHelp: {

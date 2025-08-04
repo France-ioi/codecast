@@ -18,7 +18,13 @@
 .zone-layout-wrapper {
   display: flex;
   position: relative;
-  overflow: hidden;
+  overflow: auto;
+  &.show-scroll {
+    overflow: hidden;
+  }
+  &.overflow-visible {
+    overflow: visible;
+  }
   &.show-scroll:after {
     content: "";
     position: absolute;

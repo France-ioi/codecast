@@ -27,7 +27,7 @@ export interface TralalereFooterProps {
 export function TralalereFooter (props: TralalereFooterProps) {
     const stepperError = useAppSelector(state => state.stepper.error);
     const screen = useAppSelector(state => state.screen);
-    const hintsOpen = Screen.Hints === screen;
+    const hintsOpen = Screen.Hints === screen || Screen.HintsNew === screen;
     const layoutType = useAppSelector(state => state.layout.type);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);

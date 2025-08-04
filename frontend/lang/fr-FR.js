@@ -302,6 +302,7 @@ module.exports = {
     HINTS_CODE_HELP_ERROR: "Une erreur s'est produite au moment de récupérer de l'aide sur votre code.",
     HINTS_CODE_HELP_LOADING_WITHOUT_QUESTION: "Merci de patienter, un indice personnalisé est en train d'être généré...",
     HINTS_CODE_HELP_LOADING_WITH_QUESTION: "Merci de patienter, votre question est en cours de traitement...",
+    HINTS_CODE_HELP_ERROR_BUTTON: "Aide",
 
     SUBMISSION_EXECUTE_ON: 'Exécuter sur...',
     SUBMISSION_EXECUTE_ON_CLIENT: 'navigateur',

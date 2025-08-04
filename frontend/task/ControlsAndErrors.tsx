@@ -28,6 +28,8 @@ import {callPlatformValidate, submissionCancel} from '../submission/submission_a
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {selectCancellableSubmissionIndex} from '../submission/submission';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
+import {Screen} from '../common/screens';
+import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -43,6 +45,7 @@ export function ControlsAndErrors() {
     const platform = useAppSelector(selectActiveBufferPlatform);
     const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector({state, enabled: true})).canRestart;
     const availableExecutionModes = useAppSelector(selectAvailableExecutionModes);
+    const codeHelpEnabled = useAppSelector(state => state.options.codeHelp?.enabled);
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
@@ -116,6 +119,10 @@ export function ControlsAndErrors() {
     const currentTestPublic = null !== currentTestId && isTestPublic(taskTests[currentTestId]);
     const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
     const clientControlsEnabled = (!currentTask || currentTestPublic) && platformHasClientRunner;
+
+    const openTaskHints = () => {
+        dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.HintsNew}});
+    };
 
     return (
         <div className="controls-and-errors cursor-main-zone" data-cursor-zone="controls-and-errors">
@@ -229,6 +236,18 @@ export function ControlsAndErrors() {
                     <div className="message">
                         {error}
                     </div>
+                    {codeHelpEnabled && <div className="codehelp-help">
+                        <Button
+                            className="quickalgo-button is-medium"
+                            onClick={(e) => {
+                                openTaskHints();
+                                e.stopPropagation();
+                            }}
+                        >
+                            <Icon icon="lightbulb"/>
+                            <span>{getMessage('HINTS_CODE_HELP_ERROR_BUTTON')}</span>
+                        </Button>
+                    </div>}
                 </div>
             </div>}
 

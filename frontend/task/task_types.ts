@@ -129,6 +129,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     blocksLanguage?: {[platform: string]: string},
     multithread?: boolean,
     allowClientExecution?: boolean,
+    codeHelpAdditionalContext?: string,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
@@ -241,6 +242,17 @@ export interface SourceCodeNormalized {
     active: boolean,
     rank: number,
     type: string,
+}
+
+export interface TaskTokenPayload {
+    idUser: string,
+    itemUrl: string,
+    platformName: string,
+    randomSeed: string,
+    date: string,
+    bAccessSolutions: boolean,
+    bHintsAllowed: boolean,
+    bSubmissionPossible: boolean,
 }
 
 export type Task = QuickalgoTask & Partial<TaskServer> & {codecastParameters?: any};
