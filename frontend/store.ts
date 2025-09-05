@@ -82,6 +82,7 @@ export interface CodecastOptions {
     origin: string,
     task?: QuickalgoTask,
     taskInstructions?: string,
+    taskSolution?: string,
     taskHints?: TaskHint[],
     taskSuccessMessage?: string,
     taskSuccessStayOnCurrentVersionDisabled?: boolean,

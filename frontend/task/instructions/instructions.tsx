@@ -185,6 +185,14 @@ export const getInstructionsForLevelSelector = memoize(({state, context}: {state
     };
 });
 
+export function getTaskSolution(state: AppStore) {
+    if (state.options.taskSolution) {
+        return state.options.taskSolution;
+    }
+
+    return selectLanguageStrings(state)?.solution;
+}
+
 export const getFormattedInstructionsForLevelSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}) => {
     const html = getInstructionsForLevelSelector({state, context}).html;
     const platform = state.options.platform;
