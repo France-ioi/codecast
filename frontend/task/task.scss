@@ -747,6 +747,10 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   line-height: 1.1em;
   background-color: #efa124;
 
+  &:not(.submission-pending) {
+    padding-right: 30px;
+  }
+
   .close-button, .maximize-button {
     position: absolute;
     top: 4px;
@@ -800,7 +804,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-right: 34px;
+  margin-right: 10px;
   .message {
     flex: 1 1 auto;
     color: #30242B;
@@ -818,12 +822,15 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   }
 }
 
-.codehelp-help .quickalgo-button .bp4-button-text {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  .bp4-icon {
-    color: white;
+.codehelp-help {
+  margin-left: 10px;
+  .quickalgo-button .bp4-button-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    .bp4-icon {
+      color: white;
+    }
   }
 }
 

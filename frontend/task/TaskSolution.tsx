@@ -3,7 +3,7 @@ import {useAppSelector} from "../hooks";
 import {formatTaskInstructions} from './utils';
 import {
     convertHtmlInstructionsToReact,
-    selectLanguageStrings,
+    getTaskSolution,
 } from './instructions/instructions';
 
 export function TaskSolution() {
@@ -13,7 +13,7 @@ export function TaskSolution() {
     const contextId = useAppSelector(state => state.task.contextId);
     const [solutionsHtml, setSolutionsHtml] = useState(null);
     const platform = useAppSelector(state => state.options.platform);
-    const solutionHtml = useAppSelector(state => selectLanguageStrings(state)?.solution);
+    const solutionHtml = useAppSelector(getTaskSolution);
 
     useEffect(() => {
         let instructionsJQuery = formatTaskInstructions(solutionHtml, platform, taskLevel, taskVariant);
