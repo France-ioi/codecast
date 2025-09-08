@@ -38,6 +38,12 @@ import {App, CodecastType} from './app_types';
 import {CodecastPlatform} from './stepper/codecast_platform';
 import AbstractRunner from './stepper/abstract_runner';
 import fromEntries from 'object.fromentries';
+
+import {library} from '@fortawesome/fontawesome-svg-core';
+import {faBook} from '@fortawesome/free-solid-svg-icons/faBook';
+library.add(
+    faBook,
+);
 fromEntries.shim(); // will be a no-op if not needed
 
 // Disabling auto-freeze is recommended by proxy-memoize, cf https://github.com/dai-shi/proxy-memoize
