@@ -252,7 +252,6 @@ class TaskSubmissionExecutor {
 
             const submissionId = submissionData.submissionId;
             submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId);
-            yield submissionExecutionTasks[submissionIndex].toPromise();
 
             return submissionExecutionTasks[submissionIndex].result();
         } catch (ex: any) {
@@ -277,7 +276,7 @@ class TaskSubmissionExecutor {
         let longPollingTask;
         try {
             const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
-            longPollingTask = yield* spawn(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
+            longPollingTask = yield* call(longPollServerSubmissionResults, submissionId, submissionIndex, serverSubmission, deferredPromise.resolve);
 
             const outcome = yield* race({
                 result: call(() => deferredPromise.promise),
