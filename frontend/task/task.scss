@@ -1017,47 +1017,49 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   border-radius: 10px;
   padding: 15px;
   margin-top: 40px;
+
+  > h2:first-child {
+    margin-top: 8px;
+    font-size: 22px !important;
+  }
+
+  > h3:first-child {
+    margin-top: 4px;
+  }
+
+  > p {
+    &:first-child {
+      margin-top: 0;
+    }
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &:before {
+    float: left;
+    margin: .2em 1em .5em .2em;
+  }
+
+  em {
+    color: #057;
+  }
 }
+
 .morceau_cours,
 .explanationBlock.course {
   border-color: #405;
   background: #FCF8FF;
-}
-.morceau_cours:before,
-.explication_commandes:before,
-.correction .histoireCulture:before,
-.explanationBlock:before,
-.correction .explanationBlock:before {
-  float: left;
-  margin: .2em 1em .5em .2em;
-}
-.morceau_cours:before,
-.explanationBlock.course .instructions-icon,
-.explanationBlock.courseTips .instructions-icon {
-  width: 1em;
-  height: 1em;
-  float: left;
-  margin-right: 8px;
-  vertical-align: middle;
-  color: #405;
-}
-.explanationBlock > h2:first-child {
-  margin-top: 8px;
-  font-size: 22px !important;
-}
-.explication_commandes > h3:first-child,
-.histoireCulture > h3:first-child,
-.morceau_cours > h3:first-child,
-.explanationBlock > h3:first-child {
-  margin-top: 4px;
-}
-.explanationBlock > p:first-child,
-.morceau_cours > p:first-child {
-  margin-top: 0;
-}
-.explanationBlock > p:last-child,
-.morceau_cours > p:last-child {
-  margin-bottom: 0;
+
+  &:before,
+  .instructions-icon {
+    width: 1em;
+    height: 1em;
+    float: left;
+    margin-right: 8px;
+    vertical-align: middle;
+    color: #405;
+  }
 }
 
 .task-mission {
@@ -1079,6 +1081,15 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     padding: 0.5rem 0.8rem;
   }
 
+  .explanationBlock pre, .explanationBlock .editor {
+    background: #f5f3ff !important;
+    border: 1px solid #ccc !important;
+    border-left: 5px solid #405 !important;
+    .ace_editor {
+      background: initial !important;
+    }
+  }
+
   pre.task-example-input {
     background: #ecfdf5 !important;
     border-left: 5px solid #10b981 !important;
@@ -1089,14 +1100,5 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     background: #eff6ff !important;
     border-left: 5px solid #3b82f6 !important;
     color: #1e3a8a !important;
-  }
-
-  .explanationBlock pre, .explanationBlock .editor {
-    background: #f5f3ff !important;
-    border: 1px solid #ccc !important;
-    border-left: 5px solid #405 !important;
-    .ace_editor {
-      background: initial !important;
-    }
   }
 }
