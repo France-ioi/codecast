@@ -52,14 +52,12 @@ import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {hasBlockPlatform} from '../../stepper/platforms';
-import {loadOptionsFromQuery} from '../../common/options';
 import {AppStore, CodecastOptions} from '../../store';
-import {asyncGetFile} from '../../utils/api';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
 import {memoize} from 'proxy-memoize';
-import {selectLanguageStrings} from '../instructions/instructions';
+import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
 import jwt from 'jsonwebtoken';
 
@@ -232,7 +230,7 @@ function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 
 function* getSupportedViews() {
     const showViews = yield* call(showDifferentViews);
-    const hasSolution = yield* appSelect(state => selectLanguageStrings(state)?.solution);
+    const hasSolution = yield* appSelect(getTaskSolution);
 
     if (showViews) {
         return {
