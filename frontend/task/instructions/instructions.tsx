@@ -17,6 +17,7 @@ import {QuickAlgoLibrary} from '../libs/quickalgo_library';
 import {TaskInstructionsSlideshow} from './TaskInstructionsSlideshow';
 import {TaskStringNormalized} from '../task_types';
 import {TaskLimits} from '../TaskLimits';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 
 function findStringForLanguage(taskStrings: TaskStringNormalized[], languages: string[]): TaskStringNormalized {
     for (let language of languages) {
@@ -265,10 +266,15 @@ function getNodeText(node) {
 }
 
 function transformNode(node, index: string|number, context: {platform: CodecastPlatform}) {
-    if (node.attribs && 'select-lang-selector' in node.attribs) {
+    if (node.attribs && 'current-lang' in node.attribs) {
+        return <span>{platformsList[context.platform].name}</span>
+    } else if (node.attribs && 'select-lang-selector' in node.attribs) {
         return <PlatformSelection key="platform-selection" withoutLabel/>;
     } else if (node.attribs && 'smart-contract-storage' in node.attribs) {
         return <SmartContractStorage/>;
+    } else if (node.attribs && 'data-icon' in node.attribs) {
+        console.log('icons', node.attribs);
+        return <FontAwesomeIcon icon={node.attribs['data-icon']} className={node.attribs['class']}/>;
     } else if (node.attribs && ('data-show-source' in node.attribs || ('class' in node.attribs && -1 !== node.attribs['class'].indexOf('language-')))) {
         let code, lang;
         if ('data-show-source' in node.attribs) {
