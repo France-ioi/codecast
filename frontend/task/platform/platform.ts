@@ -484,7 +484,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, succe
                 log.getLogger('tests').debug('info answer', level);
 
                 // Score is between 0 and 1
-                const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer],{level, answer: answerObject[level]});
+                const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {level, answer: answerObject[level]});
 
                 versionsScore[level] = score;
                 if (level === currentLevel) {
