@@ -62,7 +62,7 @@ export const taskInitialState = {
     contextStrings: {},
     contextIncludeBlocks: {},
     blocksPanelCollapsed: false,
-    blocksPanelWasOpen: true,
+    blocksPanelWasCollapsed: false,
     blocksUsage: null,
     soundEnabled: !isLocalStorageEnabled() || !window.localStorage.getItem('soundDisabled'),
     menuHelpsOpen: false,
@@ -194,7 +194,7 @@ export const taskSlice = createSlice({
         taskSetBlocksPanelCollapsed(state: TaskState, action: PayloadAction<{collapsed: boolean, manual?: boolean}>) {
             state.blocksPanelCollapsed = action.payload.collapsed;
             if (action.payload.manual) {
-                state.blocksPanelWasOpen = !state.blocksPanelCollapsed;
+                state.blocksPanelWasCollapsed = action.payload.collapsed;
             }
         },
         taskSetBlocksUsage(state: TaskState, action: PayloadAction<BlocksUsage>) {

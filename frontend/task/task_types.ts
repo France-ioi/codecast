@@ -30,7 +30,7 @@ export interface TaskState {
     contextIncludeBlocks: QuickalgoTaskIncludeBlocks,
     availablePlatforms: string[],
     blocksPanelCollapsed?: boolean,
-    blocksPanelWasOpen?: boolean,
+    blocksPanelWasCollapsed?: boolean,
     blocksUsage?: BlocksUsage,
     soundEnabled?: boolean,
     menuHelpsOpen?: boolean,
