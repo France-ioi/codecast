@@ -222,7 +222,7 @@ export function getCurrentImmerState(object) {
 export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName, taskVariant?: number) {
     const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
 
-    instructionsJQuery.find(`[data-lang]:not([data-lang~="${platform}"])`).remove();
+    instructionsJQuery.find(`[data-lang]:not([data-lang~="${platform}"]):not([data-lang~="pseudo"])`).remove();
     instructionsJQuery.find(`[select-lang]:not([select-lang~="${platform}"])`).remove();
 
     instructionsJQuery.find('.advice').attr('data-title', getMessage('TRALALERE_ADVICE'));

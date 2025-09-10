@@ -8,4 +8,5 @@ export enum CodecastPlatform {
     Blockly = 'blockly',
     Scratch = 'scratch',
     Output = 'output',
+    PseudoCode = 'pseudo',
 }
