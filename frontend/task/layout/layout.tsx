@@ -833,8 +833,8 @@ function* layoutSaga({replayApi}: App) {
         if (action.payload) {
             yield* put(taskSetBlocksPanelCollapsed({collapsed: true}));
         } else {
-            const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
-            yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
+            const blocksPanelWasCollapsed = yield* appSelect(state => state.task.blocksPanelWasCollapsed);
+            yield* put(taskSetBlocksPanelCollapsed({collapsed: blocksPanelWasCollapsed}));
         }
     });
 

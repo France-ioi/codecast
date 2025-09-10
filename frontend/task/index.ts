@@ -784,9 +784,9 @@ export function* onEditSource(origin?: string) {
     }
 
     if ('test' !== origin) {
-        const blocksPanelWasOpen = state.task.blocksPanelWasOpen;
-        if (state.task.blocksPanelCollapsed === blocksPanelWasOpen) {
-            yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
+        const blocksPanelWasCollapsed = state.task.blocksPanelWasCollapsed;
+        if (state.task.blocksPanelCollapsed !== blocksPanelWasCollapsed) {
+            yield* put(taskSetBlocksPanelCollapsed({collapsed: blocksPanelWasCollapsed}));
         }
         if (false !== state.submission.submissionsPaneOpen) {
             yield* put(submissionChangePaneOpen(false));
