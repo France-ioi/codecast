@@ -11,6 +11,8 @@ import {CodecastPlatform} from '../stepper/codecast_platform';
 import {delay} from '../player/sagas';
 import {BlockDocument, BufferType} from '../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../stepper/js';
+import {extractTestsFromTask} from './tests';
+import {currentTaskChange, updateTaskTests} from '../task/task_slice';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -146,8 +148,15 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
 
+    const hasTests = state.task.currentTask.tests?.length;
+    const totalUrl = `${taskPlatformUrl}/submissions/${submissionId}?longPolling${!hasTests ? '&withTests' : ''}`;
+
+    const newCurrentTask = {...state.task.currentTask};
+    newCurrentTask.tests = [...state.task.currentTask.tests];
+    let needUpdateTests = false;
+
     while (true) {
-        const result = (yield* call(asyncGetJson, taskPlatformUrl + '/submissions/' + submissionId + '?longPolling')) as TaskSubmissionServerResult|null;
+        const result = (yield* call(asyncGetJson, totalUrl)) as TaskSubmissionServerResult|null;
         if (result.evaluated) {
             for (let test of result.tests) {
                 test.score = test.score / 100;
@@ -156,16 +165,28 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
                 }
 
                 // If the test has a clientId, change the id of the test to use the client id
-                if (test?.test?.clientId) {
+                if (test.test?.clientId) {
                     const userTest = state.task.taskTests.find(otherTest => otherTest.id === test.test.clientId);
                     if (userTest) {
                         test.test.id = userTest.id;
                         test.testId = userTest.id;
                     }
                 }
+                if (test.test?.id && !state.task.currentTask.tests.find(otherTest => otherTest.id === test.test.id)) {
+                    newCurrentTask.tests.push(test.test);
+                    needUpdateTests = true;
+                }
+            }
+
+            if (needUpdateTests) {
+                const taskVariant = state.options.taskVariant;
+                const tests = extractTestsFromTask(newCurrentTask, taskVariant);
+                yield* put(currentTaskChange(newCurrentTask));
+                yield* put(updateTaskTests(tests));
             }
 
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result}}));
+
             callback(result);
 
             return;

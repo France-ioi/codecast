@@ -25,7 +25,7 @@ import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../
 import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
-import {getTaskLevelTests, selectSubmissionsPaneEnabled} from './submission_selectors';
+import {getTaskLevelTests, selectSubmissionsPaneEnabled, selectTaskTests} from './submission_selectors';
 import {isServerTask, isTestPublic, TaskAnswer, TaskTestGroupType} from '../task/task_types';
 import {platformAnswerGraded} from '../task/platform/actionTypes';
 import {getMessage} from '../lang';
@@ -217,7 +217,7 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {level, answer, answerToken, scope} = parameters;
+        const {answer, answerToken, scope} = parameters;
         const state = yield* appSelect();
         const platform = answer.platform;
         const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
@@ -253,7 +253,7 @@ class TaskSubmissionExecutor {
             const submissionId = submissionData.submissionId;
             submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId);
 
-            return submissionExecutionTasks[submissionIndex].result();
+            return submissionExecutionTasks[submissionIndex].toPromise();
         } catch (ex: any) {
             yield* put(submissionUpdateTaskSubmission({
                 id: submissionIndex,
@@ -288,8 +288,30 @@ class TaskSubmissionExecutor {
                 if (submissionResult.compilationError) {
                     yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
                 } else {
-                    const selectedTestId = yield* appSelect(state => state.task.currentTestId);
-                    // Refresh display by showing the test id that was previously selected
+                    let selectedTestId = yield* appSelect(state => state.task.currentTestId);
+
+                    // Refresh display by showing the first test of the submission that is failing
+                    if (submissionResult.tests?.length) {
+                        const newTaskTests = yield* appSelect(selectTaskTests);
+                        let newTestId = null;
+                        for (let i = 0; i < newTaskTests.length; i++) {
+                            const submissionTestResult = submissionResult.tests.find(test => test.testId === newTaskTests[i].id);
+                            if (submissionTestResult) {
+                                if (null === newTestId) {
+                                    newTestId = i;
+                                }
+                                if (submissionResult?.score < 1) {
+                                    newTestId = i;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (null !== newTestId) {
+                            selectedTestId = newTestId
+                        }
+                    }
+
                     if (null !== selectedTestId) {
                         yield* put(updateCurrentTestId({testId: selectedTestId}));
                     }
