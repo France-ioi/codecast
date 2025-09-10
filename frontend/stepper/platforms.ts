@@ -130,6 +130,12 @@ export const platformsList: {[key: string]: PlatformData} = {
         aceSourceMode: 'text',
         extension: 'output',
     },
+    [CodecastPlatform.PseudoCode]: {
+        name: 'Pseudo-code',
+        needsCompilation: false,
+        aceSourceMode: 'text',
+        extension: 'pseudo',
+    },
     ...smartContractPlatformsList,
 };
 

@@ -287,18 +287,23 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
 
         const sourceMode = platformsList[context.platform].aceSourceMode;
 
-        return <div style={{marginBottom: 20}} data-lang={lang}><Editor
-            content={code.trim()}
-            readOnly
-            mode={sourceMode}
-            width="100%"
-            hideGutter
-            hideCursor
-            showPrintMargin={false}
-            highlightActiveLine={false}
-            dragEnabled={false}
-            maxLines={Infinity}
-        /></div>;
+        return <div style={{marginBottom: 20}} data-lang={lang} className="code-block code">
+            {'data-show-header' in node.attribs && !!platformsList[lang] && <div className="code-header">
+                {platformsList[lang].name}
+            </div>}
+            <Editor
+                content={code.trim()}
+                readOnly
+                mode={sourceMode}
+                width="100%"
+                hideGutter
+                hideCursor
+                showPrintMargin={false}
+                highlightActiveLine={false}
+                dragEnabled={false}
+                maxLines={Infinity}
+            />
+        </div>;
     } else if (node.attribs && 'data-task-limits' in node.attribs) {
         return <TaskLimits/>;
     } else if (node.attribs && 'data-slideshow' in node.attribs) {

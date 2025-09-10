@@ -79,7 +79,7 @@ body {
   width: auto !important;
 }
 
-html:not([active-view="task"]) {
+html:not([active-view="task"]):not([active-view="solution"]) {
   height: 100%;
   body {
     height: 100%;
@@ -535,6 +535,7 @@ html:not([active-view="task"]) {
 
 .task-mission {
   color: #7c7c7c;
+  max-width: 1200px;
 
   pre {
     display: block;
@@ -1069,36 +1070,83 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     margin-bottom: 0;
   }
 
-  pre, .explanationBlock .editor {
-    border-radius: 0.4rem !important;
-    font-size: 0.95rem;
-    margin: 0.4rem 0 1rem;
-  }
-  pre {
-    padding: 0.5rem 1rem;
-  }
-  .explanationBlock .editor {
-    padding: 0.5rem 0.8rem;
+  .codeTabs [lang="Pseudo"] {
+    margin-bottom: 1rem;
   }
 
-  .explanationBlock pre, .explanationBlock .editor {
-    background: #f5f3ff !important;
-    border: 1px solid #ccc !important;
-    border-left: 5px solid #405 !important;
-    .ace_editor {
-      background: initial !important;
+  .code-block {
+    margin: 0 0 .75rem;
+    border-radius: 0.6rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+
+    .code-header {
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      background: #e5e7eb;
+      color: #374151;
     }
-  }
 
-  pre.task-example-input {
-    background: #ecfdf5 !important;
-    border-left: 5px solid #10b981 !important;
-    color: #064e3b !important;
-  }
+    pre, .editor {
+      margin: 0;
+      font-size: 0.95rem;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
 
-  pre.task-example-output {
-    background: #eff6ff !important;
-    border-left: 5px solid #3b82f6 !important;
-    color: #1e3a8a !important;
+    pre {
+      padding: 0.5rem 0.75rem;
+    }
+    .editor {
+      padding: 0.5rem 0.6rem;
+    }
+
+    pre, .editor {
+      background: #f5f3ff !important;
+      border-top: none !important;
+      border-right: none !important;
+      border-bottom: 1px solid #ccc !important;
+      border-top-left-radius: 0 !important;
+      .ace_editor {
+        background: initial !important;
+      }
+    }
+
+    &.code {
+      .code-header {
+        background: #405;
+        color: #f9fafb;
+      }
+      .editor {
+        border-left: 4px solid #405 !important;
+        background: #111827;
+        color: #f9fafb;
+      }
+    }
+
+    &.input {
+      .code-header {
+        background: #3b82f6;
+        color: #f9fafb;
+      }
+      pre {
+        border-left: 4px solid #3b82f6 !important;
+        background: #eff6ff;
+        color: #1e40af;
+      }
+    }
+
+    &.output {
+      .code-header {
+        background: #10b981;
+        color: #f9fafb;
+      }
+      pre {
+        border-left: 4px solid #10b981 !important;
+        background: #ecfdf5 !important;
+        color: #064e3b !important;
+      }
+    }
   }
 }
