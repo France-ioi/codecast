@@ -192,7 +192,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
         yield* put(taskSetContextIncludeBlocks(JSON.parse(JSON.stringify(context.infos.includeBlocks))));
     }
     if (context.infos && context.infos.panelCollapsed) {
-        yield* put(taskSetBlocksPanelCollapsed({collapsed: true}));
+        yield* put(taskSetBlocksPanelCollapsed({collapsed: true, manual: true}));
     }
 
     yield* call(quickAlgoLibraryResetAndReloadStateSaga);
