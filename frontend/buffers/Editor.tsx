@@ -309,7 +309,7 @@ export function Editor(props: EditorProps) {
         // editor.setBehavioursEnabled(false);
         editor.current.setTheme(`ace/theme/${props.theme || 'textmate'}`);
         session.setMode(`ace/mode/${props.mode || 'text'}`);
-        editor.current.setFontSize(Math.round(16 * zoomLevel) + 'px');
+        editor.current.setFontSize(Math.round(18 * zoomLevel) + 'px');
         editor.current.setOptions({
             readOnly: !!props.readOnly,
             enableBasicAutocompletion: props.hasAutocompletion,
@@ -403,7 +403,7 @@ export function Editor(props: EditorProps) {
 
     useEffect(() => {
         if (editor.current) {
-            editor.current.setFontSize(Math.round(16 * zoomLevel) + 'px');
+            editor.current.setFontSize(Math.round(18 * zoomLevel) + 'px');
         }
     }, [zoomLevel]);
 
