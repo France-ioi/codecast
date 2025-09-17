@@ -117,6 +117,7 @@ export interface TaskSubmissionServer extends TaskSubmission {
 export interface TaskSubmissionServerResult extends SubmissionNormalized {
     subTasks?: SubmissionSubtaskNormalized[],
     tests: TaskSubmissionServerTestResult[],
+    scoreToken?: string,
 }
 
 export interface TaskSubmissionServerTestResult extends TaskSubmissionTestResult, SubmissionTestNormalized {
