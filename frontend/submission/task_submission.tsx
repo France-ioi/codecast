@@ -313,8 +313,9 @@ class TaskSubmissionExecutor {
                 }
 
                 return {
-                    score: outcome.result.score / 100,
-                    message: outcome.result.errorMessage,
+                    score: submissionResult.score / 100,
+                    message: submissionResult.errorMessage,
+                    scoreToken: submissionResult.scoreToken,
                 };
             } else {
                 yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));

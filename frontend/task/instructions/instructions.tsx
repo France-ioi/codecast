@@ -273,7 +273,6 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
     } else if (node.attribs && 'smart-contract-storage' in node.attribs) {
         return <SmartContractStorage/>;
     } else if (node.attribs && 'data-icon' in node.attribs) {
-        console.log('icons', node.attribs);
         return <FontAwesomeIcon icon={node.attribs['data-icon']} className={node.attribs['class']}/>;
     } else if (node.attribs && ('data-show-source' in node.attribs || ('class' in node.attribs && -1 !== node.attribs['class'].indexOf('language-')))) {
         let code, lang;
