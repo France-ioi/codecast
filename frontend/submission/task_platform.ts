@@ -231,7 +231,7 @@ export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, p
             readOnly: false,
             randomSeed: '',
             returnUrl: '',
-        }
+        },
     };
 
     return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions', body, false)) as {success: boolean, submissionId?: string};
