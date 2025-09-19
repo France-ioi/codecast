@@ -1,11 +1,7 @@
-import {apply, call, cancel, cancelled, fork, put, race, spawn} from "typed-redux-saga";
+import {apply, call, cancel, cancelled, fork, put, race} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
-import {
-    getNextLevelIndex,
-    PlatformTaskGradingParameters,
-    PlatformTaskGradingResult,
-} from "../task/platform/platform";
+import {getNextLevelIndex, PlatformTaskGradingParameters, PlatformTaskGradingResult,} from "../task/platform/platform";
 import {selectAnswer} from "../task/selectors";
 import {delay} from "../player/sagas";
 import {
@@ -21,7 +17,6 @@ import {
 } from "./submission_slice";
 import {longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
 import {appSelect} from '../hooks';
-import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
 import {TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {DeferredPromise} from '../utils/app';
@@ -253,7 +248,7 @@ class TaskSubmissionExecutor {
             const submissionId = submissionData.submissionId;
             submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId);
 
-            return submissionExecutionTasks[submissionIndex].toPromise();
+            return yield submissionExecutionTasks[submissionIndex].toPromise();
         } catch (ex: any) {
             yield* put(submissionUpdateTaskSubmission({
                 id: submissionIndex,
@@ -318,8 +313,9 @@ class TaskSubmissionExecutor {
                 }
 
                 return {
-                    score: outcome.result.score / 100,
-                    message: outcome.result.errorMessage,
+                    score: submissionResult.score / 100,
+                    message: submissionResult.errorMessage,
+                    scoreToken: submissionResult.scoreToken,
                 };
             } else {
                 yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
