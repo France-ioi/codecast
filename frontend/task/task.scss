@@ -563,25 +563,23 @@ html:not([active-view="task"]):not([active-view="solution"]) {
   }
   h2 {
     font-size: 1.35em !important;
-    &:not(:first-child) {
-      margin-top: 2rem;
-    }
+    margin-top: 2rem;
   }
   h3 {
     font-size: 1.25em !important;
-    &:not(:first-child) {
-      margin-top: 2rem;
-    }
+    margin-top: 2rem;
   }
   h4 {
     font-size: 1.15em !important;
-    &:not(:first-child) {
-      margin-top: 1.25rem;
-    }
+    margin-top: 1.25rem;
   }
   h1, h2, h3, h4, h5, h6 {
     color: #30242B;
     margin-bottom: 1rem;
+  }
+
+  & > div *:first-child, & > div style:first-child + * {
+    margin-top: 0 !important;
   }
 
   ul {
@@ -1074,6 +1072,15 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     margin-bottom: 1rem;
   }
 
+  em {
+    color: #057;
+  }
+
+  figcaption {
+    margin-top: .3em;
+    font-size: .95em;
+  }
+
   .code-block {
     margin: 0 0 .75rem;
     border-radius: 0.6rem;
@@ -1148,4 +1155,11 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
       }
     }
   }
+}
+
+.align-center {
+  text-align: center;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
