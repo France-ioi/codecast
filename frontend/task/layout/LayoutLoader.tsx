@@ -1,7 +1,7 @@
 import React from "react";
 import {connect} from "react-redux";
 import {AppStore, CodecastOptions} from "../../store";
-import {createLayout, selectActiveView} from "./layout";
+import {createLayout, selectActiveView, selectLayoutMobileMode} from "./layout";
 import {StepperStatus} from "../../stepper";
 import {withResizeDetector} from 'react-resize-detector';
 import {Directive} from "../../stepper/python/directives";
@@ -41,15 +41,11 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const activeView = selectActiveView(state);
     const currentTest = selectCurrentTest(state);
     const context = quickAlgoLibraries.getContext(null, 'main');
+    const layoutMobileMode = selectLayoutMobileMode(state);
 
     if (null !== currentTask && context) {
         const notionsBag = getNotionsBagFromIncludeBlocks(state.task.contextIncludeBlocks, context.getNotionsList());
         showVariables = showVariables && context.usesStack() && notionsBag.hasNotion('variables_set') && !currentTest?.data?.hiddenProgression;
-    }
-
-    let layoutMobileMode = state.layout.mobileMode;
-    if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
-        layoutMobileMode = LayoutMobileMode.Editor;
     }
 
     return {

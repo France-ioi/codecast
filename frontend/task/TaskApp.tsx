@@ -2,7 +2,6 @@ import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
 import {Dialog, Intent, ProgressBar} from "@blueprintjs/core";
-import {MenuTask} from "./MenuTask";
 import {RecorderControls} from "./RecorderControls";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {PlayerControls} from "./PlayerControls";
@@ -169,8 +168,6 @@ export function TaskApp() {
                                 </div>
                             }
                         </div>
-
-                        {LayoutView.Task !== activeView && <MenuTask/>}
                     </div>
 
                     <ContextVisualizationImages/>
