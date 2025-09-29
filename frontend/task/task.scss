@@ -380,7 +380,7 @@ html:not([active-view="task"]):not([active-view="solution"]) {
 
     &.position-bottom {
       .menu-icons {
-        right: 90px;
+        right: 130px; // Leave space for task available blocks count
         bottom: 100px;
         .menu-task-elements {
           flex-direction: row-reverse;
