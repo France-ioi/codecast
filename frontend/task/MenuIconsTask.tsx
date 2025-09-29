@@ -37,21 +37,19 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
     };
 
     return (
-        <div id='menu'>
-            <div className="menu-task-elements">
-                {showFullScreen && <div className="menu-task-element is-blue">
-                    <FullscreenButton />
-                </div>}
-                {showDocumentation && <div className="menu-task-element is-blue">
-                    <Button onClick={toggleDocumentation} icon='help'/>
-                </div>}
-                {showHints && <div className="menu-task-element is-blue">
-                    <Button onClick={toggleHints} icon='lightbulb'/>
-                </div>}
-                {showMenu && <div className="menu-task-element">
-                    <Button onClick={props.toggleMenu} icon='menu'/>
-                </div>}
-            </div>
+        <div className="menu-task-elements">
+            {showFullScreen && <div className="menu-task-element is-blue">
+                <FullscreenButton />
+            </div>}
+            {showDocumentation && <div className="menu-task-element is-blue">
+                <Button onClick={toggleDocumentation} icon='help'/>
+            </div>}
+            {showHints && <div className="menu-task-element is-blue">
+                <Button onClick={toggleHints} icon='lightbulb'/>
+            </div>}
+            {showMenu && <div className="menu-task-element">
+                <Button onClick={props.toggleMenu} icon='menu'/>
+            </div>}
         </div>
     );
 }

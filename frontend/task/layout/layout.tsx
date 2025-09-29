@@ -782,6 +782,16 @@ export function selectActiveView(state: AppStore): LayoutView|null {
     return undefined !== activeViews ? activeViews[0] as LayoutView : null;
 }
 
+export function selectLayoutMobileMode(state: AppStore): LayoutMobileMode {
+    let layoutMobileMode = state.layout.mobileMode;
+    const currentTask = state.task.currentTask;
+    if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
+        layoutMobileMode = LayoutMobileMode.Editor;
+    }
+
+    return layoutMobileMode;
+}
+
 export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
     if (-1 !== visualizations.indexOf(visualization)) {
         visualizations.splice(visualizations.indexOf(visualization), 1);

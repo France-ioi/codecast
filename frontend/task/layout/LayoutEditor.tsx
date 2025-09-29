@@ -15,7 +15,7 @@ import {
 } from '../../submission/submission';
 import {platformsList} from '../../stepper/platforms';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
-import {LayoutMobileMode, LayoutType} from './layout_types';
+import {LayoutMobileMode, LayoutType, LayoutView} from './layout_types';
 import {BufferEditorTabs} from '../../buffers/BufferEditorTabs';
 import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
 import {getMessage} from '../../lang';
@@ -23,6 +23,8 @@ import {bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {TaskRestartButton} from '../TaskRestartButton';
 import {BlockType} from '../blocks/block_types';
+import {MenuTask} from '../MenuTask';
+import {selectActiveView, selectLayoutMobileMode} from './layout';
 
 export interface LayoutEditorProps {
     style?: any,
@@ -36,7 +38,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const sourceMode = platformsList[platform].aceSourceMode;
     const preventInput = useAppSelector(state => getPlayerState(state).isPlaying);
     const layoutType = useAppSelector(state => state.layout.type);
-    const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
+    const layoutMobileMode = useAppSelector(selectLayoutMobileMode);
     const activeBufferName = useAppSelector(state => state.buffers.activeBufferName);
     const activeBufferPendingSubmissionIndex = useAppSelector(selectActiveBufferPendingSubmissionIndex);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
@@ -71,6 +73,8 @@ export function LayoutEditor(props: LayoutEditorProps) {
         && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
         && !readOnly
     );
+
+    const activeView = useAppSelector(selectActiveView);
 
     return (
         <div className="layout-editor cursor-main-zone" data-cursor-zone="layout-editor" style={props.style}>
@@ -108,6 +112,8 @@ export function LayoutEditor(props: LayoutEditorProps) {
                     <BlocksUsage/>
                 </div>}
             </div>}
+
+            {'tralalere' !== options.app && (null === activeView || LayoutView.Editor === activeView) && <MenuTask/>}
         </div>
     );
 }

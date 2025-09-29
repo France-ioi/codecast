@@ -40,6 +40,11 @@ export enum AllowExecutionOverBlocksLimit {
     OnlyStepByStep = 'step_by_step',
 }
 
+export enum MenuPosition {
+    Right = 'right',
+    Bottom = 'bottom',
+}
+
 export interface CodecastOptions {
     language: keyof typeof Languages,
     levels: TaskLevelName[],
@@ -103,6 +108,7 @@ export interface CodecastOptions {
     randomTaskVariants?: number,
     contextVisualizationDesiredSize?: string,
     editorDesiredSize?: string,
+    menuPosition?: MenuPosition,
     tabsEnabled?: boolean,
     workWithGit?: boolean,
     printerLibColumn?: boolean,
