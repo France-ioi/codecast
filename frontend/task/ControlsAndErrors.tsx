@@ -30,6 +30,7 @@ import {selectCancellableSubmissionIndex} from '../submission/submission';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {Screen} from '../common/screens';
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
+import {selectLayoutMobileMode} from './layout/layout';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -46,11 +47,7 @@ export function ControlsAndErrors() {
     const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector({state, enabled: true})).canRestart;
     const availableExecutionModes = useAppSelector(selectAvailableExecutionModes);
     const codeHelpEnabled = useAppSelector(state => state.options.codeHelp?.enabled);
-
-    let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
-    if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
-        layoutMobileMode = LayoutMobileMode.Editor;
-    }
+    const layoutMobileMode = useAppSelector(selectLayoutMobileMode);
 
     let hasError = !!stepperError;
     const hasModes = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);

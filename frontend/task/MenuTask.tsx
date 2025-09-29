@@ -26,6 +26,7 @@ import {LocalWorkDialog} from './LocalWorkDialog';
 import {IconNames} from '@blueprintjs/icons';
 import { SmartContractLib } from './libs/smart_contract/smart_contract_lib';
 import {WorkWithGitDialog} from './WorkWithGitDialog';
+import {selectLayoutMobileMode} from './layout/layout';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -35,12 +36,12 @@ export function MenuTask() {
     const platform = useAppSelector(state => state.options.platform);
     const canRecord = useAppSelector(state => state.options.canRecord);
     const hideSettings = useAppSelector(state => state.options.hideSettings);
+    const menuPosition = useAppSelector(state => state.options.menuPosition);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
     const currentTask = useAppSelector(state => state.task.currentTask);
     const serverTask = null !== currentTask && isServerTask(currentTask);
-    const fullScreenActive = useAppSelector(state => state.fullscreen.active);
 
-    const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
+    const layoutMobileMode = useAppSelector(selectLayoutMobileMode);
     const layoutType = useAppSelector(state => state.layout.type);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
@@ -49,7 +50,6 @@ export function MenuTask() {
     const [aboutOpen, setAboutOpen] = useState(false);
     const [localWorkOpen, setLocalWorkOpen] = useState(false);
     const [workWithGitOpen, setWorkWithGitOpen] = useState(false);
-    const [menuIconsTop, setMenuIconsTop] = useState(90);
 
     const controls = useAppSelector(state => state.options.controls);
 
@@ -116,23 +116,12 @@ export function MenuTask() {
 
     const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();
 
-    useEffect(() => {
-        setTimeout(() => {
-            const layoutEditor = document.getElementsByClassName('layout-editor')[0];
-            if (!layoutEditor) {
-                return;
-            }
-            const offsetTop = layoutEditor.getBoundingClientRect().top;
-            setMenuIconsTop(offsetTop + 50);
-        }, 1)
-    }, [layoutType, screen, fullScreenActive, layoutMobileMode]);
-
     return (
-        <div ref={wrapperRef} className={`menu-container ${menuOpen ? 'is-open' : ''}`}>
+        <div ref={wrapperRef} className={`menu-container ${menuOpen ? 'is-open' : ''} position-${menuPosition ?? 'right'}`}>
             {screen !== Screen.DocumentationSmall
                 && screen !== Screen.DocumentationBig
                 && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
-                && <div className="menu-icons" style={{top: menuIconsTop}}>
+                && <div className="menu-icons">
                     <MenuIconsTask
                         toggleMenu={() => setMenuOpen(!menuOpen)}
                         toggleDocumentation={toggleDocumentation}
