@@ -32,7 +32,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const hasNextLevel = null !== nextLevel;
 
     let intermediateMessage = null;
-    let nextAction = 'next-level';
+    let nextAction = 'nextLevel';
     if (currentLevelFinished) {
         if (hasNextLevel) {
             const levelIndex = taskLevelsList.indexOf(currentLevel);
@@ -44,12 +44,13 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
             }
         } else {
             intermediateMessage = <p>{getMessage('TASK_LEVEL_SUCCESS_FINISHED')}</p>;
+            nextAction = 'nextImmediate';
         }
     }
 
     const triggerNextAction = () => {
         props.onClose();
-        if ('next-level' === nextAction) {
+        if ('nextLevel' === nextAction) {
             dispatch(taskChangeLevel(taskLevelsList[nextLevel]));
         } else {
             dispatch(callPlatformValidate(nextAction));
@@ -64,18 +65,29 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
             {!currentLevelFinished && <p>{getMessage('TASK_LEVEL_SUCCESS_FINISHED')}</p>}
 
             <div className="simple-dialog-buttons">
-                {currentLevelFinished && hasNextLevel
-                    ? <>
-                        <button className="simple-dialog-button" onClick={triggerNextAction}>
-                            <Icon icon="small-tick" iconSize={24}/>
-                            <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
-                        </button>
-                        {!taskSuccessStayOnCurrentVersionDisabled &&
-                            <button className="simple-dialog-button ml-2" onClick={props.onClose}>
-                                <span>{getMessage('TASK_LEVEL_SUCCESS_STAY_BUTTON')}</span>
+                {currentLevelFinished
+                    ? (hasNextLevel
+                        ? <>
+                            <button className="simple-dialog-button" onClick={triggerNextAction}>
+                                <Icon icon="small-tick" iconSize={24}/>
+                                <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                             </button>
-                        }
-                    </>
+                            {!taskSuccessStayOnCurrentVersionDisabled &&
+                                <button className="simple-dialog-button ml-2" onClick={props.onClose}>
+                                    <span>{getMessage('TASK_LEVEL_SUCCESS_STAY_BUTTON')}</span>
+                                </button>
+                            }
+                        </>
+                        : <>
+                            <button className="simple-dialog-button" onClick={triggerNextAction}>
+                                <Icon icon="small-tick" iconSize={24}/>
+                                <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
+                            </button>
+                            <button className="simple-dialog-button ml-2" onClick={props.onClose}>
+                                <span>{getMessage('TASK_LEVEL_SUCCESS_STAY_LEVEL_BUTTON')}</span>
+                            </button>
+                        </>
+                    )
                     : <button className="simple-dialog-button" onClick={props.onClose}>
                         <Icon icon="small-tick" iconSize={24}/>
                         <span>{getMessage('OK')}</span>
