@@ -41,8 +41,10 @@ import fromEntries from 'object.fromentries';
 
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {faBook} from '@fortawesome/free-solid-svg-icons/faBook';
+import {faCog} from '@fortawesome/free-solid-svg-icons/faCog';
 library.add(
     faBook,
+    faCog,
 );
 fromEntries.shim(); // will be a no-op if not needed
 
