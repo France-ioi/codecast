@@ -1,6 +1,6 @@
 import React, {useEffect, useRef} from "react";
 import {useAppSelector, useDebounce} from "../../hooks";
-import {BlockBufferHandler} from "../../buffers/document";
+import {BlockBufferHandler, documentToString} from "../../buffers/document";
 import log from 'loglevel';
 import {stepperDisplayError} from '../actionTypes';
 import {useDispatch} from 'react-redux';
@@ -9,6 +9,7 @@ import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {BlockBufferState, BlockDocument} from '../../buffers/buffer_types';
 import {bufferResetToDefaultSourceCode} from '../../buffers/buffer_actions';
 import {ComputedSourceHighlight, SourceHighlightBlock} from '../index';
+import {callPlatformLog} from '../../submission/submission_actions';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -168,6 +169,12 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                     previousValue.current = answer.blockly;
                     log.getLogger('editor').debug('new value', answer);
                     props.onEditPlain(document);
+
+                    if (eventType !== window.Blockly.Events.Create && (eventType === window.Blockly.Events.Change || event.oldCoordinate)) {
+                        const details = `block_update;${eventType.prototype.type};${documentToString(document)}`;
+                        dispatch(callPlatformLog(['activity', details]));
+                    }
+
                     // log.getLogger('editor').debug('timeout before removing highlight');
                     // if (resetDisplayTimeout.current) {
                     //     clearTimeout(resetDisplayTimeout.current);

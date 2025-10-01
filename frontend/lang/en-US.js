@@ -198,7 +198,7 @@ module.exports = {
     TASK_VISUALIZATION_NOT_EVALUATED_EVALUATION: "This test has not been evaluated during this evaluation.",
     TASK_LEVEL: 'Version',
     TASK_LEVEL_VERSION: "{count} stars",
-    TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Go to next version",
+    TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Move on",
     TASK_LEVEL_SUCCESS_STAY_BUTTON: "Stay on current version",
     TASK_LEVEL_SUCCESS_STAY_LEVEL_BUTTON: "Stay on current question",
     TASK_LEVEL_SUCCESS_NEXT_LABEL: "We suggest you try the version {version}.",

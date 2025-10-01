@@ -163,9 +163,12 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(callPlatformLog, function* ({payload: {details}}) {
-            const environment = yield* appSelect(state => state.environment);
+            const state = yield* appSelect();
             // Don't interact with the platform in replay mode
-            if ('main' !== environment) {
+            const levelGridInfos = state.task.levelGridInfos;
+            const taskParams = state.platform.taskParams;
+
+            if (!(taskParams?.options?.log || levelGridInfos?.logOption) || 'main' !== state.environment) {
                 return;
             }
 
