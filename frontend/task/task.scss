@@ -624,16 +624,12 @@ html:not([active-view="task"]):not([active-view="solution"]) {
     margin-bottom: 1rem;
   }
 
-  & > div *:first-child, & > div style:first-child + * {
+  & > div > *:first-child, & > div > style:first-child + * {
     margin-top: 0 !important;
   }
 
   ul {
     margin-bottom: 1rem !important;
-  }
-
-  :last-child {
-    margin-bottom: 0 !important;
   }
 
   &:not(.is-expanded) .short {
@@ -1087,8 +1083,13 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     margin: .2em 1em .5em .2em;
   }
 
-  em {
-    color: #057;
+  .instructions-icon {
+    width: 1em;
+    height: 1em;
+    float: left;
+    margin-right: 8px;
+    vertical-align: middle;
+    color: #405;
   }
 }
 
@@ -1097,14 +1098,17 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   border-color: #405;
   background: #FCF8FF;
 
-  &:before,
   .instructions-icon {
-    width: 1em;
-    height: 1em;
-    float: left;
-    margin-right: 8px;
-    vertical-align: middle;
     color: #405;
+  }
+}
+
+.explication_commandes {
+  border-color: #055;
+  background: #F8FEFE;
+
+  .instructions-icon {
+    color: #055;
   }
 }
 
@@ -1129,7 +1133,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   }
 
   .code-block {
-    margin: 0 0 .75rem;
+    margin: .25rem 0 .75rem;
     border-radius: 0.6rem;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
