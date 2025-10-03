@@ -42,9 +42,11 @@ import fromEntries from 'object.fromentries';
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {faBook} from '@fortawesome/free-solid-svg-icons/faBook';
 import {faCog} from '@fortawesome/free-solid-svg-icons/faCog';
+import {faComment} from '@fortawesome/free-solid-svg-icons/faComment';
 library.add(
     faBook,
     faCog,
+    faComment,
 );
 fromEntries.shim(); // will be a no-op if not needed
 
