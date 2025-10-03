@@ -1112,6 +1112,15 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   }
 }
 
+.histoireCulture, .explanationBlock.culture {
+  border-color: #660;
+  background: #FFFFE4;
+
+  .instructions-icon {
+    color: #660;
+  }
+}
+
 .task-mission {
   .task-example-io-title {
     margin-top: 0.8rem;
