@@ -16,6 +16,7 @@ import {
 import {getDomElementFromDomTree, useCursorPositionTracking} from './layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from './layout/actionTypes';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
+import {simulationInstance} from './instructions/animation';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -37,6 +38,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const [hasShortOrLong, setHasShortOrLong] = useState(false);
     const context = quickAlgoLibraries.getContext(null, 'main');
     const instructionsJQuery = useAppSelector(state => getFormattedInstructionsForLevelSelector({state, context}));
+    const currentTask = useAppSelector(state => state.task.currentTask);
 
     const toggleTaskInstructions = () => {
         if (documentationOpen) {
@@ -46,6 +48,16 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
         }
     };
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (currentTask && currentTask.animationExampleCmds && window.jQuery("#simuDemo").length) {
+                simulationInstance("#simuDemo", currentTask.animationFeatures("#simuDemo"), currentTask.animationExampleCmds, () => {
+                    console.log('end animation');
+                });
+            }
+        });
+    }, [currentTask]);
 
     useEffect(() => {
         let hasTabs = false;
