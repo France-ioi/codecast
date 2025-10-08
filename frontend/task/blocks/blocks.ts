@@ -257,8 +257,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     block.caption = blockDesc.substring(0, funcProtoEnd);
                     block.description = blockDesc.substring(funcProtoEnd + 1);
                 } else {
-                    console.error("Description for block '" + blockName + "' needs to be of the format 'function() : description', auto-generated one used instead could be wrong.");
                     block.caption = blockName + '()';
+                    block.description = blockDesc;
                 }
             }
 

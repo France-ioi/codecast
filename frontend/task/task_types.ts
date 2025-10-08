@@ -153,6 +153,8 @@ export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDep
 export interface QuickalgoTask {
     gridInfos: QuickalgoTaskGridInfos,
     data?: any,
+    animationExampleCmds?: any,
+    animationFeatures?: (selector: any) => void,
 }
 
 export interface TaskNormalized {
