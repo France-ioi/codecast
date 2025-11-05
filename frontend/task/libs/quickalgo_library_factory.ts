@@ -82,7 +82,10 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
         }
     }
 
-    yield* call(loadMathJax);
+    if (currentTask?.useLatex) {
+        yield* call(loadMathJax);
+    }
+
     yield* call(loadFonts, state.options.theme, currentTask);
 
     // Reset fully local strings when creating a new context to avoid keeping strings from an other language
