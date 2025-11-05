@@ -2,8 +2,8 @@ import {appSelect} from '../../hooks';
 import {quickAlgoLibraries} from './quick_algo_libraries_model';
 import log from 'loglevel';
 import {extractLevelSpecific, extractVariantSpecific} from '../utils';
-import {call, put, select} from 'typed-redux-saga';
-import {importModules, importPlatformModules, loadFonts} from './import_modules';
+import {call, put} from 'typed-redux-saga';
+import {importModules, importPlatformModules, loadFonts, loadMathJax} from './import_modules';
 import {SmartContractLib} from './smart_contract/smart_contract_lib';
 import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
 import {PrinterLib} from './printer/printer_lib';
@@ -81,6 +81,8 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
             yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
         }
     }
+
+    yield* call(loadMathJax);
     yield* call(loadFonts, state.options.theme, currentTask);
 
     // Reset fully local strings when creating a new context to avoid keeping strings from an other language

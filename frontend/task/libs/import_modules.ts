@@ -361,6 +361,27 @@ export function loadFonts(theme: string, task: Task|null) {
     }
 }
 
+let mathJaxConfigured = false;
+export function loadMathJax() {
+    if (mathJaxConfigured) {
+        return;
+    }
+
+    window.MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        messageStyle: "none",
+    });
+    window.MathJax.Hub.processSectionDelay = 0;
+
+    window.instructionsPostProcessing = [
+        ...(window.instructionsPostProcessing ?? []),
+        () => {
+            window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub]);
+        },
+    ];
+    mathJaxConfigured = true;
+}
+
 export function getJsLibLoaded() {
     return jsLibLoaded;
 }
