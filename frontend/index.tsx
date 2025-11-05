@@ -149,6 +149,7 @@ declare global {
         taskSettings?: any,
         initBlocklySubTask?: () => void,
         instructionsPostProcessing?: (() => void)[],
+        MathJax: any,
     }
 }
 

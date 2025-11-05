@@ -164,6 +164,7 @@ export interface TaskNormalized {
     author: string,
     showLimits: boolean,
     userTests: boolean,
+    useLatex: boolean,
     isEvaluable: boolean,
     scriptAnimation: string,
     hasSubtasks: boolean,

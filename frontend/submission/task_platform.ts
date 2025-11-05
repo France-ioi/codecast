@@ -123,7 +123,7 @@ export function getTaskDataFromTaskSettings(taskSettings: any) {
     return taskData;
 }
 
-export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null) {
+export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null): Task {
     if (taskData.data) {
         taskData.gridInfos.allowClientExecution = true;
     }
@@ -136,6 +136,16 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
         if (window.PEMTaskMetaData.supportedLanguages) {
             taskData.supportedLanguages = window.PEMTaskMetaData.supportedLanguages.join(',');
         }
+        if (window.PEMTaskMetaData.useLatex) {
+            taskData.useLatex = !!window.PEMTaskMetaData.useLatex;
+        }
+    }
+
+    if (task.useLatex) {
+        taskData.gridInfos.importModules = [
+            ...(taskData.gridInfos.importModules ?? []),
+            'mathjax',
+        ];
     }
 
     return {
