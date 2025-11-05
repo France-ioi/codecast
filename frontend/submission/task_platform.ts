@@ -141,7 +141,7 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
         }
     }
 
-    if (task.useLatex) {
+    if (task?.useLatex) {
         taskData.gridInfos.importModules = [
             ...(taskData.gridInfos.importModules ?? []),
             'mathjax',
