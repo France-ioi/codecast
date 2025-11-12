@@ -124,7 +124,7 @@ export function getTaskDataFromTaskSettings(taskSettings: any) {
 }
 
 export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null): Task {
-    if (taskData.data) {
+    if (taskData.data && false !== taskData.gridInfos.allowClientExecution) {
         taskData.gridInfos.allowClientExecution = true;
     }
 
