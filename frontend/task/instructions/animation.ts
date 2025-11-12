@@ -143,7 +143,9 @@ export function simulationInstance(selector, task, commands, callback) {
 
     window.jQuery(selector + " .play").click(function () { setTimeout(play, 100); });
     window.jQuery(selector + " .pause").click(pause);
-    window.jQuery(selector + " .restart").click(restart);
+    window.jQuery(selector + " .restart").click(() => {
+        restart(null, null);
+    });
 
     return {
         animDelay: task.animDelay ? task.animDelay : 400,
