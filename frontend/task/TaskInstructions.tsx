@@ -51,10 +51,13 @@ export function TaskInstructions(props: TaskInstructionsProps) {
 
     useEffect(() => {
         setTimeout(() => {
-            if (currentTask && currentTask.animationExampleCmds && window.jQuery("#simuDemo").length) {
-                simulationInstance("#simuDemo", currentTask.animationFeatures("#simuDemo"), currentTask.animationExampleCmds, () => {
-                    console.log('end animation');
-                });
+            if (currentTask && currentTask.animationExampleCmds) {
+                for (let [selector, commands] of Object.entries(currentTask.animationExampleCmds)) {
+                    selector = '#' + selector;
+                    if (window.jQuery(selector).length) {
+                        simulationInstance(selector, currentTask.animationFeatures(selector), commands, () => {});
+                    }
+                }
             }
         });
     }, [currentTask]);
