@@ -315,10 +315,21 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
     } else if (node.attribs && 'onclick' in node.attribs) {
         const tagName = node.tagName;
         const props = generatePropsFromAttributes(node.attribs, index);
+
+        let codeToExecute = node.attribs.onclick;
+        const preventDefault = -1 !== codeToExecute.indexOf('return false');
+
         // @ts-ignore
-        props['onClick'] = () => {
-            eval(node.attribs.onclick);
-        }
+        props['onClick'] = (e) => {
+            if (preventDefault) {
+                codeToExecute = codeToExecute.replace(/return false/g, '');
+            }
+
+            eval(codeToExecute);
+            if (preventDefault) {
+                e.preventDefault();
+            }
+        };
 
         // If the node is not a void element and has children then process them
         let children = null;
