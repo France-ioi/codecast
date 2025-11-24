@@ -154,7 +154,7 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
         return;
     }
 
-    if (!isInPlatform() && isLocalStorageEnabled() && window.localStorage.getItem('platform') && window.localStorage.getItem('platform') in platformsList) {
+    if (isLocalStorageEnabled() && window.localStorage.getItem('platform') && window.localStorage.getItem('platform') in platformsList) {
         state.options.platform = window.localStorage.getItem('platform') as CodecastPlatform;
     }
 
@@ -173,7 +173,8 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     }
 
     if (!(state.options.platform in platformsList)) {
-        throw new Error("Unknown platform name: " + state.options.platform);
+        console.error("Unknown platform name: " + state.options.platform);
+        state.options.platform = Object.keys(platformsList)[0] as CodecastPlatform;
     }
 }
 
