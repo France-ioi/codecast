@@ -17,6 +17,7 @@ import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
 import produce from 'immer';
 import {isServerTask} from '../../task/task_types';
+import {getBlocklyHelper} from './blockly_interface';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
@@ -99,7 +100,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
 }
 
 export function createBlocklyHelper(context: QuickAlgoLibrary, serverTask = false) {
-    const blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
+    const blocklyHelper = getBlocklyHelper(context.infos.maxInstructions, context);
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
     // during loadPrograms at the start of the program execution

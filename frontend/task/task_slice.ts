@@ -6,6 +6,7 @@ import ProcessingFixture from './fixtures/test_processing';
 import BarcodeFixture from './fixtures/test_barcode';
 import QuickPiFixture from './fixtures/quickpi_testbed';
 import QuickPiBuzzerFixture from './fixtures/quickpi_buzzer';
+import MicrobitFixture from './fixtures/microbit';
 import QuickPiDirectionFixture from './fixtures/quickpi_direction';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
 import StringsLoginFixture from './fixtures/14_strings_01_login';
@@ -26,6 +27,7 @@ const availableTasks = {
     turtle: TurtleFixture,
     quickpi: QuickPiFixture,
     buzzer: QuickPiBuzzerFixture,
+    microbit: MicrobitFixture,
     direction: QuickPiDirectionFixture,
     processing: ProcessingFixture,
     printer: StringRotationFixture,

@@ -121,7 +121,6 @@ declare global {
         Blockly: any,
         goog: any,
         FioiBlockly: any,
-        getBlocklyHelper: any,
         quickAlgoInterface: any,
         displayHelper: any,
         arrayContains: any,
