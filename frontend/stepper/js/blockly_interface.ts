@@ -99,6 +99,7 @@ class BlocklyInterface {
     private limitedPointers: any;
     private blockCounts: any;
     private dragJustTerminated: boolean;
+    private prevWidth: number;
 
     constructor(maxBlocks, subTask) {
         this.subTask = subTask;
@@ -173,7 +174,7 @@ class BlocklyInterface {
 
         this.options = options;
 
-        addExtraBlocks(this.strings, this.getDefaultColours());
+        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator);
         this.createSimpleGeneratorsAndBlocks();
 
         this.display = display;
@@ -425,6 +426,24 @@ class BlocklyInterface {
             }
         }
         window.jQuery("#program").val(this.programs[this.codeId].javascript);
+    }
+
+    updateSize(force) {
+        let panelWidth = 500;
+        if (this.languages[this.codeId] == "blockly") {
+            panelWidth = window.jQuery("#blocklyDiv").width() - 10;
+        } else {
+            panelWidth = window.jQuery("#program").width() + 20;
+        }
+        if (force || panelWidth != this.prevWidth) {
+            if (this.languages[this.codeId] == "blockly") {
+                if (this.trashInToolbox) {
+                    window.Blockly.Trashcan.prototype.MARGIN_SIDE_ = panelWidth - 90;
+                }
+                window.Blockly.svgResize(this.workspace);
+            }
+        }
+        this.prevWidth = panelWidth;
     }
 
     highlightBlock(id, keep) {

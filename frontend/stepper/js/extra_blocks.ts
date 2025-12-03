@@ -1,4 +1,4 @@
-export function addExtraBlocks(strings, defaultColors) {
+export function addExtraBlocks(strings, defaultColors, showIfMutator ) {
     window.Blockly.Blocks['controls_untilWhile'] = window.Blockly.Blocks['controls_whileUntil'];
     window.Blockly.JavaScript['controls_untilWhile'] = window.Blockly.JavaScript['controls_whileUntil'];
     window.Blockly.Python['controls_untilWhile'] = window.Blockly.Python['controls_whileUntil'];
@@ -219,7 +219,7 @@ export function addExtraBlocks(strings, defaultColors) {
         };
 
     } else {
-        if (!this.mainContext.infos || !this.mainContext.infos.showIfMutator) {
+        if (!showIfMutator) {
             var old = window.Blockly.Blocks.controls_if.init;
             window.Blockly.Blocks.controls_if.init = function () {
                 old.call(this);
