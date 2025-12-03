@@ -65,7 +65,6 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
                 }
             },
             setPlayPause: () => {},
-            updateControlsDisplay: () => {},
             onResize: () => {},
             displayKeypad: function(initialValue, position, callbackModify, callbackFinished, options) {
                 if (window.displayHelper) {
@@ -102,26 +101,6 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
 export function createBlocklyHelper(context: QuickAlgoLibrary, serverTask = false) {
     const blocklyHelper = getBlocklyHelper(context.infos.maxInstructions, context);
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
-    // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
-    // during loadPrograms at the start of the program execution
-    blocklyHelper.onChangeResetDisplay = () => {
-    };
-    // Override this function to add x="0" y="0" so that cleanBlockAttributes works correctly by detecting x is not null
-    blocklyHelper.getEmptyContent = function() {
-        if (this.scratchMode) {
-            return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
-        } else {
-            return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
-        }
-    };
-    // Override this function to change parameters
-    blocklyHelper.getOrigin = function() {
-        // Get x/y origin
-        if (this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
-            return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
-        }
-        return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
-    };
 
     if (context.infos.multithread) {
         // Make generation of all blocks

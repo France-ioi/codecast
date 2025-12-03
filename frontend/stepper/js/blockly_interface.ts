@@ -1,6 +1,6 @@
 // Code extracted from https://github.com/France-ioi/bebras-modules/blob/master/pemFioi/quickAlgo/blockly_interface.js
 
-import { addExtraBlocks } from './extra_blocks';
+import {addExtraBlocks} from './extra_blocks';
 import {getStandardBlocklyBlocks} from './standard_blockly_blocks';
 import {getStandardScratchBlocks} from './standard_scratch_blocks';
 
@@ -56,6 +56,15 @@ let blocklyAllowedSiblings = {
     'controls_untilWhile': ['controls_whileUntil'],
     'controls_if_else': ['controls_if'],
     'lists_create_with_empty': ['lists_create_with']
+};
+
+let blocklyClipboardSaved;
+
+function addInSet(l, val) {
+    // Add val to list l if not already present
+    if(l.indexOf(val) == -1) {
+        l.push(val);
+    }
 }
 
 class BlocklyInterface {
@@ -68,12 +77,12 @@ class BlocklyInterface {
     private definitions: any;
     private simpleGenerators: any;
     private codeId: number;
-    private workspace: any;
+    public workspace: any;
     private options: any;
     private initialScale: number;
     private divId: string;
     private trashInToolbox: boolean;
-    private startingBlock: boolean;
+    public startingBlock: boolean;
     private startingExampleIds: any[];
     private mediaUrl: string;
     private unloaded: boolean;
@@ -89,6 +98,7 @@ class BlocklyInterface {
     private allBlocksAllowed: any;
     private limitedPointers: any;
     private blockCounts: any;
+    private dragJustTerminated: boolean;
 
     constructor(maxBlocks, subTask) {
         this.subTask = subTask;
@@ -108,8 +118,8 @@ class BlocklyInterface {
         this.startingBlock = true;
         this.startingExampleIds = [];
         this.mediaUrl = (
-            (window.location.protocol == 'file:' && modulesPath)
-                ? modulesPath + '/img/blockly/'
+            (window.location.protocol == 'file:' && window.modulesPath)
+                ? window.modulesPath + '/img/blockly/'
                 : (window.location.protocol == 'https:' ? 'https:' : 'http:') + "//static4.castor-informatique.fr/contestAssets/blockly/"
         );
         this.unloaded = false;
@@ -161,8 +171,6 @@ class BlocklyInterface {
         }
         this.placeholderBlocks = options.placeholderBlocks;
 
-        this.locale = locale;
-        this.nbTestCases = nbTestCases;
         this.options = options;
 
         addExtraBlocks(this.strings, this.getDefaultColours());
@@ -173,7 +181,7 @@ class BlocklyInterface {
         if (display) {
             // this.loadHtml(nbTestCases);
             let xml = this.getToolboxXml();
-            let wsConfig = {
+            let wsConfig: any = {
                 toolbox: "<xml>" + xml + "</xml>",
                 comments: true,
                 sounds: false,
@@ -205,7 +213,7 @@ class BlocklyInterface {
                 wsConfig.zoom.startScale *= window.blocklyUserScale;
             }
             if (this.trashInToolbox) {
-                window.Blockly.Trashcan.prototype.MARGIN_SIDE_ = $('#blocklyDiv').width() - 110;
+                window.Blockly.Trashcan.prototype.MARGIN_SIDE_ = window.jQuery('#blocklyDiv').width() - 110;
             }
             if (options.disable !== undefined) {
                 wsConfig.disable = options.disable;
@@ -215,17 +223,17 @@ class BlocklyInterface {
             window.Blockly.removeEvents();
 
             // Inject Blockly
-            window.blocklyWorkspace = this.workspace = window.Blockly.inject(this.divId, wsConfig);
+            this.workspace = window.Blockly.inject(this.divId, wsConfig);
 
-            let toolboxNode = $('#toolboxXml');
+            let toolboxNode = window.jQuery('#toolboxXml');
             if (toolboxNode.length != 0) {
                 toolboxNode.html(xml);
             }
 
             // Restore clipboard if allowed
-            if (window.blocklyClipboardSaved) {
-                if (this.checkBlocksAreAllowed(window.blocklyClipboardSaved)) {
-                    window.Blockly.clipboardXml_ = window.blocklyClipboardSaved;
+            if (blocklyClipboardSaved) {
+                if (this.checkBlocksAreAllowed(blocklyClipboardSaved, false)) {
+                    window.Blockly.clipboardXml_ = blocklyClipboardSaved;
                 } else {
                     // Set to false to indicate that blocks were disallowed
                     window.Blockly.clipboardXml_ = false;
@@ -233,7 +241,7 @@ class BlocklyInterface {
                 window.Blockly.clipboardSource_ = this.workspace;
             }
 
-            $(".blocklyToolboxDiv").css("background-color", "rgba(168, 168, 168, 0.5)");
+            window.jQuery(".blocklyToolboxDiv").css("background-color", "rgba(168, 168, 168, 0.5)");
             this.workspace.addChangeListener(this.onChange.bind(this));
             this.onChange();
         } else {
@@ -259,10 +267,6 @@ class BlocklyInterface {
         window.Blockly.BlockSvg.terminateDragCallback = function () {
             that.dragJustTerminated = true;
         };
-
-        if (window.quickAlgoInterface) {
-            quickAlgoInterface.updateControlsDisplay();
-        }
     }
 
     unloadLevel() {
@@ -276,7 +280,7 @@ class BlocklyInterface {
 
         // Save clipboard
         if (this.display && window.Blockly.clipboardXml_) {
-            window.blocklyClipboardSaved = window.Blockly.clipboardXml_;
+            blocklyClipboardSaved = window.Blockly.clipboardXml_;
         }
 
         let ws = this.workspace;
@@ -288,37 +292,7 @@ class BlocklyInterface {
         }
     }
 
-    onChangeResetDisplayFct() {
-        if (this.unloaded || this.reloading) {
-            return;
-        }
-        this.highlightBlock(null);
-        if (this.quickAlgoInterface && !this.reloading) {
-            this.quickAlgoInterface.resetTestScores();
-        }
-        if (this.keepDisplayedError) {
-            // Do not clear the error this time
-            this.keepDisplayedError = false;
-        } else {
-            this.displayError('');
-        }
-    }
-
-    onChangeResetDisplay() {
-        // This function will replace itself with the debounced onChangeResetDisplayFct
-        this.onChangeResetDisplay = debounce(this.onChangeResetDisplayFct.bind(this), 500, false);
-        this.onChangeResetDisplayFct();
-    }
-
-    resetDisplay() {
-        this.highlightBlock(null);
-        if (!this.scratchMode && window.Blockly.selected) {
-            // Do not execute that while the user is moving blocks around
-            window.Blockly.selected.unselect();
-        }
-    }
-
-    onChange(event) {
+    onChange(event = null) {
         let eventType = event ? event.constructor : null;
 
         let isBlockEvent = event ? (
@@ -328,7 +302,6 @@ class BlocklyInterface {
             eventType === window.Blockly.Events.Change) : true;
 
         if (isBlockEvent) {
-            this.onChangeResetDisplay();
             if (this.subTask) {
                 this.subTask.onChange();
             }
@@ -354,14 +327,10 @@ class BlocklyInterface {
     }
 
     getEmptyContent() {
-        if (this.startingBlock) {
-            if (this.scratchMode) {
-                return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
-            } else {
-                return '<xml><block type="robot_start" deletable="false" movable="false"></block></xml>';
-            }
+        if (this.scratchMode) {
+            return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
         } else {
-            return '<xml></xml>';
+            return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
         }
     }
 
@@ -394,42 +363,11 @@ class BlocklyInterface {
         if (this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
             return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
         }
-        return this.scratchMode ? {x: 4, y: 20} : {x: 2, y: 2};
+        return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
     }
 
-    // TODO :: New version of these three functions when we'll have multiple
-    // node programs we can edit
-    setCodeId(newCodeId) {
+    setCodeId(newCodeId: number) {
         this.codeId = newCodeId;
-        $("#selectCodeId").val(this.codeId);
-        $(".robot0, .robot1").hide();
-        $(".robot" + this.codeId).show();
-    }
-
-    changeCodeId() {
-        this.loadCodeId($("#selectCodeId").val());
-    }
-
-    loadCodeId(codeId) {
-        this.savePrograms();
-        this.codeId = codeId;
-        for (let iCode = 0; iCode < this.mainContext.nbCodes; iCode++) {
-            $(".robot" + iCode).hide();
-        }
-        $(".robot" + this.codeId).show();
-
-        $(".language_blockly, .language_javascript").hide();
-        $(".language_" + this.languages[this.codeId]).show();
-
-        let blocklyElems = $(".blocklyToolboxDiv, .blocklyWidgetDiv");
-        $("#selectLanguage").val(this.languages[this.codeId]);
-        if (this.languages[this.codeId] == "blockly") {
-            blocklyElems.show();
-        } else {
-            blocklyElems.hide();
-            $(".blocklyTooltipDiv").hide();
-        }
-        this.loadPrograms();
     }
 
     savePrograms() {
@@ -445,7 +383,7 @@ class BlocklyInterface {
 
         this.checkRobotStart();
 
-        this.programs[this.codeId].javascript = $("#program").val();
+        this.programs[this.codeId].javascript = window.jQuery("#program").val();
         if (this.workspace != null) {
             let xml = window.Blockly.Xml.workspaceToDom(this.workspace);
             this.cleanBlockAttributes(xml);
@@ -486,35 +424,7 @@ class BlocklyInterface {
                 }
             }
         }
-        $("#program").val(this.programs[this.codeId].javascript);
-    }
-
-    loadProgramFromDom(xml) {
-        if (!this.checkBlocksAreAllowed(xml)) {
-            return;
-        }
-
-        // Shift to x=200 y=20 + offset
-        if (!this.exampleOffset) {
-            this.exampleOffset = 0;
-        }
-        let origin = this.getOrigin();
-        origin.x += 200 + this.exampleOffset;
-        origin.y += 20 + this.exampleOffset;
-        // Add an offset of 10 each time, so if someone clicks the button
-        // multiple times the blocks don't stack
-        this.exampleOffset += 10;
-
-        // Remove robot_start
-        if (xml.children.length == 1 && xml.children[0].getAttribute('type') == 'robot_start') {
-            xml = xml.firstChild.firstChild;
-        }
-
-        this.cleanBlockAttributes(xml, origin);
-
-        window.Blockly.Xml.domToWorkspace(xml, this.workspace);
-
-        this.highlightBlock(xml.firstChild.getAttribute('id'));
+        window.jQuery("#program").val(this.programs[this.codeId].javascript);
     }
 
     highlightBlock(id, keep) {
@@ -561,15 +471,6 @@ class BlocklyInterface {
         }
     }
 
-    displayError(message) {
-        if (this.quickAlgoInterface) {
-            this.quickAlgoInterface.displayError(message);
-            this.quickAlgoInterface.setPlayPause(false);
-        } else {
-            $('#errors').html(message);
-        }
-    }
-
     addBlocksAllowed(blocks) {
         for (let i = 0; i < blocks.length; i++) {
             let name = blocks[i];
@@ -613,9 +514,10 @@ class BlocklyInterface {
         };
         for (let i = 0; i < this.mainContext.infos.limitedUses.length; i++) {
             let curLimit = this.mainContext.infos.limitedUses[i];
+            let blocks;
             if (this.scratchMode) {
                 // Convert block list to Scratch
-                let blocks = [];
+                blocks = [];
                 for (let j = 0; j < curLimit.blocks.length; j++) {
                     let curBlock = curLimit.blocks[j];
                     let convBlockList = blocklyToScratch.singleBlocks[curBlock];
@@ -628,7 +530,7 @@ class BlocklyInterface {
                     }
                 }
             } else {
-                let blocks = curLimit.blocks;
+                blocks = curLimit.blocks;
             }
 
             for (let j = 0; j < blocks.length; j++) {
@@ -713,7 +615,7 @@ class BlocklyInterface {
         }
     }
 
-    getCode(language, codeWorkspace, noReportValue, noConstraintCheck) {
+    getCode(language, codeWorkspace = undefined, noReportValue = false, noConstraintCheck = false) {
         if (codeWorkspace == undefined) {
             codeWorkspace = this.workspace;
         }
@@ -762,13 +664,13 @@ class BlocklyInterface {
             code.push(languageObj.definitions_[def]);
         }
 
-        let code = code.join("\n");
-        code += "\n";
-        code += comments.join("\n");
+        let codeString = code.join("\n");
+        codeString += "\n";
+        codeString += comments.join("\n");
 
         this.reportValues = oldReportValues;
 
-        return code;
+        return codeString;
     }
 
     completeBlockHandler(block, objectName, context) {
@@ -838,7 +740,7 @@ class BlocklyInterface {
             block.params.length > 0) {
             block.blocklyJson.args0 = [];
             for (let iParam = 0; iParam < block.params.length; iParam++) {
-                let param = {
+                let param: any = {
                     type: "input_value",
                     name: "PARAM_" + iParam
                 }
@@ -976,11 +878,12 @@ class BlocklyInterface {
                         }
 
                         let callCode = code + '(' + params + ')';
+                        let reportedCode;
                         // Add reportValue to show the value in step-by-step mode
                         if (that.reportValues) {
-                            let reportedCode = "reportBlockValue('" + block.id + "', " + callCode + ")";
+                            reportedCode = "reportBlockValue('" + block.id + "', " + callCode + ")";
                         } else {
-                            let reportedCode = callCode;
+                            reportedCode = callCode;
                         }
 
                         if (typeof output == "undefined") {
@@ -1214,24 +1117,7 @@ class BlocklyInterface {
             }
         }
 
-        if (typeof provideBlocklyColours == "function") {
-            let providedColours = provideBlocklyColours();
-
-            for (let group in providedColours) {
-                if (!(group in colours)) {
-                    colours[group] = {};
-                }
-                for (let name in providedColours[group]) {
-                    colours[group][name] = providedColours[group][name];
-                }
-            }
-        }
-
         return colours;
-    }
-
-    getPlaceholderBlock(name) {
-        return this.placeholderBlocks ? "<statement name='" + name + "'><shadow type='placeholder_statement'></shadow></statement>" : '';
     }
 
     getStdBlocks() {
@@ -1656,34 +1542,13 @@ class BlocklyInterface {
 
     fixScratch() {
         // Store the maxBlocks information somewhere, as Scratch ignores it
-        window.Blockly.Workspace.prototype.maxBlocks = function () {
-            return maxBlocks;
+        window.Blockly.Workspace.prototype.maxBlocks = () => {
+            return this.maxBlocks;
         };
 
         // Translate requested Blocks from Blockly to Scratch blocks
         // TODO :: full translation
         this.includeBlocks.standardBlocks.singleBlocks = this.blocksToScratch(this.includeBlocks.standardBlocks.singleBlocks || []);
-    }
-
-    getFullCode(code) {
-        return this.getBlocklyLibCode(this.generators) + code + "program_end()";
-    }
-
-    checkCode(code, display) {
-        // TODO :: check a code is okay for validation; for now it's checked
-        // by getCode so this function is not useful in the Blockly/Scratch
-        // version
-        return true;
-    }
-
-    checkCodes(codes, display) {
-        // Check multiple codes
-        for (let i = 0; i < codes.length; i++) {
-            if (!this.checkCode(codes[i], display)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     checkBlocksAreAllowed(xml, silent) {
@@ -1716,7 +1581,7 @@ class BlocklyInterface {
         return !(notAllowed.length);
     }
 
-    cleanBlockAttributes(xml, origin) {
+    cleanBlockAttributes(xml, origin = null) {
         // Clean up block attributes
         if (!origin) {
             origin = {x: 0, y: 0};
