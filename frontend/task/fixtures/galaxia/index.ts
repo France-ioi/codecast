@@ -18,11 +18,9 @@ export default {
                 thingz: [
                     "readAcceleration",
                     "isButtonPressedWithName",
+                    "readMagneticForce",
+                    "computeCompassHeading",
 
-                    // {className: "Accel", classInstances: ["accel"], methods: ["get_x", "get_y", "get_z"]},
-                    // {className: "Compass", classInstances: ["compass"], methods: ["get_x", "get_y", "get_z"]},
-                    // {className: "Button", classInstances: ["button_a", "button_b"], methods: ["is_pressed"]},
-                    // {className: "ButtonTouch", classInstances: ["touch_n", "touch_s", "touch_e", "touch_w"], methods: ["is_touched"]},
                     // {className: "Led", classInstances: ["led"], methods: ["set_colors", "read_light_level"]},
                     // "temperature",
                 ],

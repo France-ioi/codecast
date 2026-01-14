@@ -16,16 +16,15 @@ export default {
             groupByCategory: true,
             generatedBlocks: {
                 microbit: [
-                    // {className: "Accel", classInstances: ["accelerometer"], methods: ["get_x", "get_y", "get_z"]},
                     // {className: "Compass", classInstances: ["compass"], methods: ["get_x", "get_y", "get_z"]},
-                    // {className: "Button", classInstances: ["button_a", "button_b"], methods: ["is_pressed"]},
-                    // {className: "ButtonTouch", classInstances: ["pin_logo"], methods: ["is_touched"]},
                     // {className: "Display", classInstances: ["display"], methods: ["show", "get_pixel", "set_pixel", "clear", "read_light_level"]},
                     // {className: "Microphone", classInstances: ["microphone"], methods: ["sound_level"]},
                     // {className: "Image", init: true, methods: []},
                     // "thingz.temperature",
                     "readAcceleration",
                     "isButtonPressedWithName",
+                    "readMagneticForce",
+                    "computeCompassHeading",
                 ],
                 // music: [
                 //     "music.pitch",
