@@ -23,7 +23,9 @@ export default {
                     // {className: "Display", classInstances: ["display"], methods: ["show", "get_pixel", "set_pixel", "clear", "read_light_level"]},
                     // {className: "Microphone", classInstances: ["microphone"], methods: ["sound_level"]},
                     // {className: "Image", init: true, methods: []},
-                    "thingz.temperature",
+                    // "thingz.temperature",
+                    "readAcceleration",
+                    "isButtonPressedWithName",
                 ],
                 // music: [
                 //     "music.pitch",
@@ -43,19 +45,19 @@ export default {
             medium: 10,
             hard: 11
         },
-        // quickPiSensors: "default",
-        quickPiSensors: [
-            { type: "button", name: 'button_a' },
-            { type: "button", name: 'button_b' },
-            { type: "button", name: 'pin_logo' },
-            { type: "temperature", name: 'temp' },
-            { type: "light", name: 'light' },
-            { type: "ledmatrix", name: 'ledmatrix' },
-            { type: "accelerometer", name: 'accel' },
-            { type: "magnetometer", name: 'magneto' },
-            { type: "sound", name: 'sound', unit: ''},
-            { type: "buzzer", name: 'buzzer'},
-        ],
+        quickPiSensors: "default",
+        // quickPiSensors: [
+        //     { type: "button", name: 'button_a' },
+        //     { type: "button", name: 'button_b' },
+        //     { type: "button", name: 'pin_logo' },
+        //     { type: "temperature", name: 'temp' },
+        //     { type: "light", name: 'light' },
+        //     { type: "ledmatrix", name: 'ledmatrix' },
+        //     { type: "accelerometer", name: 'accel' },
+        //     { type: "magnetometer", name: 'magneto' },
+        //     { type: "sound", name: 'sound', unit: ''},
+        //     { type: "buzzer", name: 'buzzer'},
+        // ],
 
         startingExample: {
             easy: {

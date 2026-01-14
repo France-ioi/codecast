@@ -22,10 +22,13 @@ export interface DraggableBlockItem {
 interface BlockInfo {
     nbArgs: number,
     type: string,
-    yieldsValue: string|boolean,
+    yieldsValue: string,
     params: any[],
     nbsArgs: any[],
     hidden?: boolean,
+    blocklyJson?: object,
+    blocklyXml?: string,
+    blocklyInit?: Function,
 }
 
 export const CONSTRUCTOR_NAME = '__constructor';
@@ -51,34 +54,56 @@ export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string
     if (block.hidden) {
         blockInfo.hidden = true;
     }
+    if (block.blocklyJson) {
+        blockInfo.blocklyJson = block.blocklyJson;
+    }
+    if (block.blocklyXml) {
+        blockInfo.blocklyXml = block.blocklyXml;
+    }
+    if (block.blocklyInit) {
+        blockInfo.blocklyInit = block.blocklyInit;
+    }
 
     return blockInfo;
 }
 
-function getBlockFromBlockInfo(generatorName: string, blockName: string, blockInfo: BlockInfo|undefined, contextStrings): Block {
-    let code = contextStrings.code[`${generatorName}.${blockName}`] ?? contextStrings.code[blockName];
+function convertQuickalgoLibraryToCodecastBlock(block: QuickalgoLibraryBlock, category: string, generatorName: string, contextStrings): Block {
+    let code = contextStrings.code[`${generatorName}.${block.name}`] ?? contextStrings.code[block.name];
     if ('undefined' === typeof code) {
-        code = blockName;
+        code = block.name;
     }
-    let nbsArgs = blockInfo ? (blockInfo.nbsArgs ? blockInfo.nbsArgs : []) : [];
-    let params = blockInfo ? blockInfo.params : [];
-    let type = blockInfo ? blockInfo.type : 'actions';
-    let returnType = blockInfo ? blockInfo.yieldsValue : null;
+
+    const paramsCount = [];
+    if (block.anyArgs) {
+        // Allows to specify the function can accept any number of arguments
+        paramsCount.push(Infinity);
+    }
+    let variants = block.variants ? block.variants : (block.params ? [block.params] : []);
+    if (variants.length) {
+        for (let i = 0; i < variants.length; i++) {
+            paramsCount.push(variants[i].length);
+        }
+    }
 
     return {
         generatorName,
-        name: blockName,
+        name: block.name,
         type: BlockType.Function,
-        category: type,
-        paramsCount: nbsArgs,
-        params,
+        category: category ?? 'actions',
+        paramsCount,
+        params: block.params ?? [],
         caption: code,
         code,
-        returnType,
-        showInBlocks: !blockInfo?.hidden,
-    }
+        showInBlocks: !block?.hidden,
+        ...(block?.codeGenerators ? {codeGenerators: block.codeGenerators} : {}),
+        ...(block?.yieldsValue ? {yieldsValue: block.yieldsValue} : {}),
+        ...(block?.blocklyJson ? {blocklyJson: block.blocklyJson} : {}),
+        ...(block?.blocklyXml ? {blocklyXml: block.blocklyXml} : {}),
+        ...(block?.blocklyInit ? {blocklyInit: block.blocklyInit} : {}),
+    };
 }
 
+// For a specific context and a platform
 export const getContextBlocksDataSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}): Block[] => {
     if (!context) {
         return [];
@@ -92,111 +117,80 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
 
     if (contextIncludeBlocks && contextIncludeBlocks.generatedBlocks) {
         // Flatten customBlocks information for easy access
-        const blocksInfos = {};
+        const blocksInfos: {[blockName: string]: {block: QuickalgoLibraryBlock, category: string}} = {};
         for (let generatorName in context.customBlocks) {
-            for (let typeName in context.customBlocks[generatorName]) {
-                let blockList = context.customBlocks[generatorName][typeName];
+            for (let category in context.customBlocks[generatorName]) {
+                let blockList = context.customBlocks[generatorName][category];
                 for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                     let block = blockList[iBlock];
-                    blocksInfos[block.name] = generateBlockInfo(block, typeName);
+                    blocksInfos[block.name] = {block, category};
                 }
             }
         }
 
-        const classRepresentations: {[className: string]: QuickAlgoCustomClass} = {};
-        for (let generatorName in context.customClasses) {
-            for (let typeName in context.customClasses[generatorName]) {
-                for (let className in context.customClasses[generatorName][typeName]) {
-                    let classRepresentation = context.customClasses[generatorName][typeName][className];
-                    classRepresentations[className] = classRepresentation;
-                    if (classRepresentation.init) {
-                        blocksInfos[`${className}.${CONSTRUCTOR_NAME}`] = generateBlockInfo(classRepresentation.init, typeName);
-                    }
-                    if (classRepresentation.blocks) {
-                        for (let iBlock = 0; iBlock < classRepresentation.blocks.length; iBlock++) {
-                            let block = classRepresentation.blocks[iBlock];
-                            blocksInfos[`${className}.${block.name}`] = generateBlockInfo(block, typeName);
-                        }
-                    }
-                    if (classRepresentation.constants) {
-                        for (let iConst = 0; iConst < classRepresentation.constants.length; iConst++) {
-                            let name = classRepresentation.constants[iConst].name;
-                            availableBlocks.push({
-                                generatorName,
-                                name: `${className}.${name}`,
-                                caption: `${className}.${name}`,
-                                code: `${className}.${name}`,
-                                category: 'constants',
-                                type: BlockType.ClassConstant,
-                                methodName: name,
-                                className,
-                                value: classRepresentation.constants[iConst].value,
-                            });
-                        }
-                    }
+        // TODO: Handle class constants
+
+        console.log('custom features', context.features);
+
+        if (context.features) {
+            for (let [featureName, featureData] of Object.entries(context.features)) {
+                if (!contextIncludeBlocks.generatedBlocks[featureData.generatorName]?.includes(featureName)) {
+                    continue;
                 }
-            }
-        }
 
-        // Generate functions used in the task
-        for (let generatorName in contextIncludeBlocks.generatedBlocks) {
-            let blockList = contextIncludeBlocks.generatedBlocks[generatorName];
-            if (!blockList.length) {
-                continue;
-            }
-
-            for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
-                let blockName = blockList[iBlock];
-                if ('string' === typeof blockName) {
-                    const newBlock = getBlockFromBlockInfo(generatorName, blockName, blocksInfos[blockName], contextStrings);
+                for (let block of (featureData.blocks ?? [])) {
+                    const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings);
                     availableBlocks.push(newBlock);
-                } else {
-                    let {className, classInstances, methods, init} = blockName;
-                    let classRepresentation = classRepresentations[className];
-                    if (!classRepresentation) {
-                        throw `Unknown class name: ${className}`;
-                    }
-
-                    if (init) {
-                        methods = [...methods, CONSTRUCTOR_NAME];
-                    }
-                    let placeholderClassInstance = false;
-                    if (!classInstances || !classInstances.length) {
-                        classInstances = [classRepresentation.defaultInstanceName ?? `${className.substring(0, 1).toLocaleLowerCase() + className.substring(1)}`];
-                        placeholderClassInstance = true;
-                    }
-                    for (let classInstance of classInstances) {
-                        for (let method of methods) {
+                }
+                for (let [className, classInfo] of Object.entries(featureData.classMethods ?? {})) {
+                    for (let classInstance of classInfo.instances) {
+                        for (let [method, block] of Object.entries(classInfo.methods)) {
                             const totalBlockName = `${className}.${method}`;
                             const instanceBlockName = `${classInstance}.${method}`;
-                            const newBlock = getBlockFromBlockInfo(generatorName, instanceBlockName, blocksInfos[totalBlockName], contextStrings);
+                            block.name = totalBlockName;
+                            const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings);
                             newBlock.type = BlockType.ClassFunction;
+                            newBlock.caption = instanceBlockName + '()';
                             newBlock.methodName = method;
                             newBlock.className = className;
                             newBlock.classInstance = classInstance;
-                            newBlock.placeholderClassInstance = placeholderClassInstance;
                             availableBlocks.push(newBlock);
                         }
                     }
                 }
             }
+        } else {
+            // Generate functions used in the task
+            for (let generatorName in contextIncludeBlocks.generatedBlocks) {
+                let blockList = contextIncludeBlocks.generatedBlocks[generatorName];
+                if (!blockList.length) {
+                    continue;
+                }
 
-            if (context.customConstants && context.customConstants[generatorName]) {
-                let constList = context.customConstants[generatorName];
-                for (let iConst = 0; iConst < constList.length; iConst++) {
-                    let name = constList[iConst].name;
-                    // if (contextStrings.constant && contextStrings.constant[name]) {
-                    //     name = contextStrings.constant[name];
-                    // }
-                    availableBlocks.push({
-                        generatorName,
-                        name,
-                        caption: name,
-                        code: name,
-                        category: 'constants',
-                        type: BlockType.Constant,
-                        value: constList[iConst].value,
-                    });
+                for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
+                    let blockName = blockList[iBlock];
+                    const {block, category} = blocksInfos[blockName];
+                    const newBlock = convertQuickalgoLibraryToCodecastBlock(block, category, generatorName, contextStrings);
+                    availableBlocks.push(newBlock);
+                }
+
+                if (context.customConstants && context.customConstants[generatorName]) {
+                    let constList = context.customConstants[generatorName];
+                    for (let iConst = 0; iConst < constList.length; iConst++) {
+                        let name = constList[iConst].name;
+                        // if (contextStrings.constant && contextStrings.constant[name]) {
+                        //     name = contextStrings.constant[name];
+                        // }
+                        availableBlocks.push({
+                            generatorName,
+                            name,
+                            caption: name,
+                            code: name,
+                            category: 'constants',
+                            type: BlockType.Constant,
+                            value: constList[iConst].value,
+                        });
+                    }
                 }
             }
         }
@@ -245,7 +239,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             let funcCode = block.caption;
             blockDesc = block.description;
             if (!blockDesc) {
-                if (!hasBlockPlatform(platform)) {
+                if (!hasBlockPlatform(platform) && !block.caption) {
                     block.caption = funcCode + '()';
                 }
                 if (BlockType.ClassFunction === block.type && 'init' === block.methodName) {
@@ -257,7 +251,9 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     block.caption = blockDesc.substring(0, funcProtoEnd);
                     block.description = blockDesc.substring(funcProtoEnd + 1);
                 } else {
-                    block.caption = blockName + '()';
+                    if (!block.caption) {
+                        block.caption = blockName + '()';
+                    }
                     block.description = blockDesc;
                 }
             }
@@ -315,12 +311,6 @@ function getSnippet(block: Block, platform: CodecastPlatform) {
 
     let snippetIndex = 1;
     let ret = proto.substring(0, parenthesisOpenIndex + 1);
-    if (BlockType.ClassFunction === block.type && block.placeholderClassInstance) {
-        ret = ret.replace(new RegExp(`${block.classInstance}( ?(=|\.))`, 'ug'), (group, complement) => {
-            return "\${" + snippetIndex + ":" + block.classInstance + `}${complement}`;
-        });
-        snippetIndex++;
-    }
 
     if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
         return ret + ")" + finalCharacter;

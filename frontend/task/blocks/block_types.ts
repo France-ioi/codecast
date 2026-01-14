@@ -21,9 +21,13 @@ export interface Block {
     paramsCount?: number[],
     params?: string[], // for function
     showInBlocks?: boolean,
-    returnType?: string|boolean,
+    codeGenerators?: {[platformName: string]: Function},
+    yieldsValue?: string,
     methodName?: string,
     className?: string,
     classInstance?: string,
     placeholderClassInstance?: boolean, // if this is a placeholder class instance that we generate for the sole purpose of creating blocks for this class
+    blocklyJson?: object,
+    blocklyXml?: string,
+    blocklyInit?: Function,
 }

@@ -167,19 +167,6 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
         context.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
     }
 
-    yield* call(createDisplayHelper);
-    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && currentTask) {
-        yield* call(loadBlocklyHelperSaga, context);
-    } else {
-        // Create a fake blockly helper to make other libs like Turtle work
-        context.blocklyHelper = {
-            fake: true,
-            updateSize() {
-
-            },
-        };
-    }
-
     const testData = selectCurrentTestData(state);
     log.getLogger('libraries').debug('Created context with', {currentTask, currentLevel, testData, context});
     taskApi.displayedSubTask = {
@@ -198,6 +185,19 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
     }
     if (context.infos && context.infos.panelCollapsed) {
         yield* put(taskSetBlocksPanelCollapsed({collapsed: true, manual: true}));
+    }
+
+    yield* call(createDisplayHelper);
+    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && currentTask) {
+        yield* call(loadBlocklyHelperSaga, context);
+    } else {
+        // Create a fake blockly helper to make other libs like Turtle work
+        context.blocklyHelper = {
+            fake: true,
+            updateSize() {
+
+            },
+        };
     }
 
     yield* call(quickAlgoLibraryResetAndReloadStateSaga);

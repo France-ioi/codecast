@@ -82,7 +82,7 @@ export default class UnixRunner extends AbstractRunner {
                     return param in PARAM_TYPE_CONVERSION ? PARAM_TYPE_CONVERSION[param] : 'int';
                 }).join(', ');
                 // @ts-ignore
-                headers[code] = `${block.returnType in RETURN_TYPE_CONVERSION ? RETURN_TYPE_CONVERSION[block.returnType] : 'void'} ${code}(${argsSection});`;
+                headers[code] = `${block.yieldsValue in RETURN_TYPE_CONVERSION ? RETURN_TYPE_CONVERSION[block.yieldsValue] : 'void'} ${code}(${argsSection});`;
             }
 
             this.functionHeaders[generatorName + '.h'] = Object.values(headers).join("\n");
@@ -110,9 +110,9 @@ export default class UnixRunner extends AbstractRunner {
             const executorPromise = self.quickAlgoCallsExecutor(block.generatorName, block.name, formattedArgs, res => result = res);
             yield ['promise', executorPromise];
 
-            if ('int' === block.returnType) {
+            if ('int' === block.yieldsValue) {
                 yield ['result', new C.IntegralValue(C.builtinTypes['int'], result)];
-            } else if (block.returnType) {
+            } else if (block.yieldsValue) {
                 yield ['result', result];
             }
         }

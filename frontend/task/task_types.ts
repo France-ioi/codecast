@@ -57,12 +57,10 @@ export interface TaskTest {
     level?: TaskLevelName,
 }
 
-export type QuickalgoTaskIncludeBlock = string|{className: string, classInstances?: string[], init?: boolean, methods: string[]};
-
 export interface QuickalgoTaskIncludeBlocks {
     groupByCategory?: boolean,
     originalGroupByCategory?: boolean,
-    generatedBlocks?: {[context: string]: QuickalgoTaskIncludeBlock[]},
+    generatedBlocks?: {[context: string]: string[]},
     standardBlocks?: {
         includeAll?: boolean,
         includeAllPython?: boolean,
@@ -79,7 +77,7 @@ export interface QuickalgoTaskIncludeBlocks {
 // We can customize the option for each level in the task definition
 export interface QuickalgoTaskIncludeBlocksAllLevels {
     groupByCategory?: boolean|{[level: string]: boolean},
-    generatedBlocks?: {[context: string]: QuickalgoTaskIncludeBlock[]}|{[context: string]: {[level: string]: QuickalgoTaskIncludeBlock[]}},
+    generatedBlocks?: {[context: string]: string[]}|{[context: string]: {[level: string]: string[]}},
     standardBlocks?: {
         includeAll?: boolean,
         wholeCategories?: string[]|{[level: string]: string[]},

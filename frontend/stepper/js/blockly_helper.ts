@@ -3,6 +3,7 @@
 import {addExtraBlocks} from './extra_blocks';
 import {getStandardBlocklyBlocks} from './standard_blockly_blocks';
 import {getStandardScratchBlocks} from './standard_scratch_blocks';
+import {Block, BlockType} from '../../task/blocks/block_types';
 
 let blocklySets = {
     allDefault: {
@@ -67,7 +68,7 @@ function addInSet(l, val) {
     }
 }
 
-class BlocklyInterface {
+export class BlocklyHelper {
     private subTask: any;
     private scratchMode: boolean;
     private maxBlocks: number;
@@ -92,6 +93,7 @@ class BlocklyInterface {
     private quickAlgoInterface: any;
     private highlightedBlocks: any[];
     private includeBlocks: any;
+    private availableBlocks: Block[];
     private mainContext: any;
     private placeholderBlocks: boolean;
     private strings: any;
@@ -100,6 +102,7 @@ class BlocklyInterface {
     private blockCounts: any;
     private dragJustTerminated: boolean;
     private prevWidth: number;
+    private availableBlocksInfo: Record<string, Record<string, Record<string, Block>>> = {};
 
     constructor(maxBlocks, subTask) {
         this.subTask = subTask;
@@ -147,7 +150,7 @@ class BlocklyInterface {
 
     loadContext(mainContext) {
         this.mainContext = mainContext;
-        this.createGeneratorsAndBlocks();
+        // this.createGeneratorsAndBlocks();
     }
 
     load(locale, display, nbTestCases, options) {
@@ -327,6 +330,11 @@ class BlocklyInterface {
         this.includeBlocks = includeBlocks;
     }
 
+    setAvailableBlocks(availableBlocks: Block[]) {
+        this.availableBlocks = availableBlocks;
+        this.createGeneratorsAndBlocksForAvailableBlocks();
+    }
+
     getEmptyContent() {
         if (this.scratchMode) {
             return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
@@ -402,7 +410,8 @@ class BlocklyInterface {
 
             this.programs[this.codeId].blockly = window.Blockly.Xml.domToText(xml);
             this.programs[this.codeId].blocklyJS = this.getCode("javascript");
-            //this.programs[this.codeId].blocklyPython = this.getCode("python");
+            this.programs[this.codeId].blocklyPython = this.getCode("python");
+            console.log('python', this.programs[this.codeId].blocklyPython)
         }
     }
 
@@ -428,6 +437,7 @@ class BlocklyInterface {
         window.jQuery("#program").val(this.programs[this.codeId].javascript);
     }
 
+    // Used by some Quickalgo libraries
     updateSize(force) {
         let panelWidth = 500;
         if (this.languages[this.codeId] == "blockly") {
@@ -845,10 +855,10 @@ class BlocklyInterface {
         let blockParams = blockInfo.params;
 
         for (let language in {JavaScript: null, Python: null}) {
-            if (typeof blockInfo.codeGenerators[language] == "undefined") {
-                // Prevent the function name to be used as a variable
-                window.Blockly[language].addReservedWords(code);
+            // Prevent the function name to be used as a variable
+            window.Blockly[language].addReservedWords(code);
 
+            if (typeof blockInfo.codeGenerators[language] == "undefined") {
                 function setCodeGeneratorForLanguage(language) {
                     blockInfo.codeGenerators[language] = function (block) {
                         let params = "";
@@ -1063,6 +1073,36 @@ class BlocklyInterface {
                 //this.createBlock(label, generator.labelFr, generator.type, generator.nbParams);
             }
         }
+
+    }
+
+    createGeneratorsAndBlocksForAvailableBlocks() {
+        console.log('av blocks', this.availableBlocks);
+        for (let block of this.availableBlocks.filter(block => block.type === BlockType.Function)) {
+            const {generatorName, category, name} = block;
+
+            this.availableBlocksInfo[generatorName] ??= {};
+            this.availableBlocksInfo[generatorName][category] ??= {};
+            this.availableBlocksInfo[generatorName][category][name] = {
+                ...block,
+            };
+
+            const blockInfo = this.availableBlocksInfo[generatorName][category][name];
+
+            /* TODO: Allow library writers to provide their own JS/Python code instead of just a handler */
+            this.completeBlockHandler(blockInfo, generatorName, this.mainContext);
+            this.completeBlockJson(blockInfo, generatorName, category, this.mainContext); /* category.category is category name */
+            this.completeBlockXml(blockInfo);
+            this.completeCodeGenerators(blockInfo, generatorName);
+            this.applyCodeGenerators(blockInfo);
+            this.createBlock(blockInfo);
+            this.applyBlockOptions(blockInfo);
+        }
+
+        // TODO: code generators for customClasses and customClassInstances
+        for (let block of this.availableBlocks.filter(block => block.type === BlockType.ClassFunction)) {
+            console.log('create code generator', block);
+        }
     }
 
     getBlocklyLibCode(generators) {
@@ -1163,6 +1203,20 @@ class BlocklyInterface {
         return null;
     }
 
+    getBlockFromCustomBlocks(generatorName: string, category: string, name: string) {
+        if (!(generatorName in this.availableBlocksInfo)) {
+            throw new Error(`Generator not found: ${generatorName}`);
+        }
+        if (!(category in this.availableBlocksInfo[generatorName])) {
+            throw new Error(`Category not found in generator ${generatorName}: ${category}`);
+        }
+        if (!(name in this.availableBlocksInfo[generatorName][category])) {
+            throw new Error(`Block not found in generator ${generatorName} and category ${category}: ${name}`);
+        }
+
+        return this.availableBlocksInfo[generatorName][category][name];
+    }
+
 
     addBlocksAndCategories(blockNames, blocksDefinition, categoriesInfos) {
         let colours = this.getDefaultColours();
@@ -1208,45 +1262,55 @@ class BlocklyInterface {
             this.addBlocksAllowed(['math_number', 'text']);
         }
 
+        console.log('available', this.availableBlocks);
 
         // *** Blocks from the lib
-        if (this.includeBlocks.generatedBlocks && 'wholeCategories' in this.includeBlocks.generatedBlocks) {
-            for (let blockType in this.includeBlocks.generatedBlocks.wholeCategories) {
-                let categories = this.includeBlocks.generatedBlocks.wholeCategories[blockType];
-                for (let i = 0; i < categories.length; i++) {
-                    let category = categories[i];
-                    if (blockType in this.mainContext.customBlocks && category in this.mainContext.customBlocks[blockType]) {
-                        let contextBlocks = this.mainContext.customBlocks[blockType][category];
-                        let blockNames = [];
-                        for (let i = 0; i < contextBlocks.length; i++) {
-                            blockNames.push(contextBlocks[i].name);
-                        }
-                        this.addBlocksAndCategories(
-                            blockNames,
-                            this.mainContext.customBlocks[blockType],
-                            categoriesInfos
-                        );
-                    }
+        for (let block of this.availableBlocks) {
+            if (BlockType.Function !== block.type) {
+                continue;
+            }
+
+            let colours = this.getDefaultColours();
+            const blockInfo = this.getBlockFromCustomBlocks(block.generatorName, block.category, block.name);
+
+            if (!(block.category in categoriesInfos)) {
+                categoriesInfos[block.category] = {
+                    blocksXml: [],
+                    colour: colours.blocks[block.name]
+                };
+            }
+            let blockXml = blockInfo.blocklyXml;
+            if (categoriesInfos[block.category].blocksXml.indexOf(blockXml) == -1) {
+                categoriesInfos[block.category].blocksXml.push(blockXml);
+            }
+            this.addBlocksAllowed([block.name]);
+
+            // by the way, just change the defaul colours of the blockly blocks:
+            if (!this.scratchMode) {
+                let defCat = ["logic", "loops", "math", "texts", "lists", "colour"];
+                for (let iCat in defCat) {
+                    window.Blockly.Blocks[defCat[iCat]].HUE = colours.categories[defCat[iCat]];
                 }
             }
         }
-        if (this.includeBlocks.generatedBlocks && 'singleBlocks' in this.includeBlocks.generatedBlocks) {
-            for (let blockType in this.includeBlocks.generatedBlocks.singleBlocks) {
-                this.addBlocksAndCategories(
-                    this.includeBlocks.generatedBlocks.singleBlocks[blockType],
-                    this.mainContext.customBlocks[blockType],
-                    categoriesInfos
-                );
-            }
-        }
-        for (let blockType in this.includeBlocks.generatedBlocks) {
-            if (blockType == 'wholeCategories' || blockType == 'singleBlocks') continue;
-            this.addBlocksAndCategories(
-                this.includeBlocks.generatedBlocks[blockType],
-                this.mainContext.customBlocks[blockType],
-                categoriesInfos
-            );
-        }
+
+        // if (this.includeBlocks.generatedBlocks && 'singleBlocks' in this.includeBlocks.generatedBlocks) {
+        //     for (let blockType in this.includeBlocks.generatedBlocks.singleBlocks) {
+        //         this.addBlocksAndCategories(
+        //             this.includeBlocks.generatedBlocks.singleBlocks[blockType],
+        //             this.mainContext.customBlocks[blockType],
+        //             categoriesInfos
+        //         );
+        //     }
+        // }
+        // for (let blockType in this.includeBlocks.generatedBlocks) {
+        //     if (blockType == 'wholeCategories' || blockType == 'singleBlocks') continue;
+        //     this.addBlocksAndCategories(
+        //         this.includeBlocks.generatedBlocks[blockType],
+        //         this.mainContext.customBlocks[blockType],
+        //         categoriesInfos
+        //     );
+        // }
 
         for (let genName in this.simpleGenerators) {
             for (let iGen = 0; iGen < this.simpleGenerators[genName].length; iGen++) {
@@ -1666,8 +1730,4 @@ class BlocklyInterface {
             this.startingExampleIds.push(blockId);
         }
     }
-}
-
-export function getBlocklyHelper(maxBlocks, subTask) {
-    return new BlocklyInterface(maxBlocks, subTask);
 }
