@@ -22,7 +22,7 @@ export interface DraggableBlockItem {
 interface BlockInfo {
     nbArgs: number,
     type: string,
-    yieldsValue: string,
+    yieldsValue: string|boolean,
     params: any[],
     nbsArgs: any[],
     hidden?: boolean,

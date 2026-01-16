@@ -22,7 +22,7 @@ export interface LibraryEventListener {
 
 export interface QuickalgoLibraryBlock {
     name?: string,
-    yieldsValue?: string,
+    yieldsValue?: string|boolean,
     params?: string[],
     blocklyJson?: object,
     blocklyXml?: string,

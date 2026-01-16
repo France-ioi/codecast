@@ -22,7 +22,7 @@ export interface Block {
     params?: string[], // for function
     showInBlocks?: boolean,
     codeGenerators?: {[platformName: string]: Function},
-    yieldsValue?: string,
+    yieldsValue?: string|boolean,
     methodName?: string,
     className?: string,
     classInstance?: string,
