@@ -125,8 +125,8 @@ export class SmartContractLib extends QuickAlgoLibrary {
         const testResultSplit = testResult.log.trim().split("\n");
         let output = { log: [], decoded: false };
         let jsonFirstIndex = 0;
-        while (jsonFirstIndex != -1) {
-            jsonFirstIndex = testResultSplit.slice(jsonFirstIndex).findIndex(line => line.trim().startsWith('{'));
+        while (jsonFirstIndex !== -1) {
+            jsonFirstIndex = jsonFirstIndex + testResultSplit.slice(jsonFirstIndex).findIndex(line => line.trim().startsWith('{'));
             const testResultJson = testResultSplit.slice(jsonFirstIndex).join("\n");
 
             try {
