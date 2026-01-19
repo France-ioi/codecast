@@ -511,7 +511,7 @@ export function Editor(props: EditorProps) {
         for (let {block, pos} of Object.values(blocksToInsert.elements)) {
             let insertNewLineBefore = false;
             let insertNewLineAfter = false;
-            if (((BlockType.Function === block.type || BlockType.ClassFunction === block.type) && block.category !== 'sensors') || BlockType.Directive === block.type) {
+            if (((BlockType.Function === block.type || BlockType.ClassFunction === block.type) && !block.yieldsValue) || BlockType.Directive === block.type) {
                 insertNewLineBefore = insertNewLineAfter = true;
             }
             if (BlockType.Token === block.type && block.snippet && -1 !== block.snippet.indexOf('${')) {

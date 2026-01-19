@@ -128,8 +128,6 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             }
         }
 
-        // TODO: Handle class constants
-
         console.log('custom features', context.features);
 
         if (context.features) {
@@ -156,6 +154,22 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                             newBlock.classInstance = classInstance;
                             availableBlocks.push(newBlock);
                         }
+                    }
+                }
+
+                for (let [className, constants] of Object.entries(featureData.classConstants ?? {})) {
+                    for (let [name, value] of Object.entries(constants)) {
+                        availableBlocks.push({
+                            generatorName: featureData.generatorName,
+                            name: `${className}.${name}`,
+                            caption: `${className}.${name}`,
+                            code: `${className}.${name}`,
+                            category: 'constants',
+                            type: BlockType.ClassConstant,
+                            methodName: name,
+                            className,
+                            value,
+                        });
                     }
                 }
             }

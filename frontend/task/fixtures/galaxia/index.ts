@@ -20,19 +20,19 @@ export default {
                     "isButtonPressedWithName",
                     "readMagneticForce",
                     "computeCompassHeading",
+                    "temperature",
 
                     // {className: "Led", classInstances: ["led"], methods: ["set_colors", "read_light_level"]},
-                    // "temperature",
                 ],
                 // machine: [
                 //     {className: "Pin", init: true, methods: ["on", "off"]},
                 //     {className: "PWM", init: true, methods: ["duty", "duty_u16"]},
                 //     "time_pulse_us",
                 // ],
-                // time: [
-                //     "sleep",
-                //     "sleep_us",
-                // ],
+                time: [
+                    "sleep",
+                    "sleep_us",
+                ],
                 // network: [
                 //     {className: "WLAN", init: true, methods: ["active", "scan", "connect", "isconnected", "ifconfig", "disconnect"]},
                 // ],

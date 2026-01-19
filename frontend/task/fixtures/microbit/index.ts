@@ -16,24 +16,28 @@ export default {
             groupByCategory: true,
             generatedBlocks: {
                 microbit: [
-                    // {className: "Compass", classInstances: ["compass"], methods: ["get_x", "get_y", "get_z"]},
                     // {className: "Display", classInstances: ["display"], methods: ["show", "get_pixel", "set_pixel", "clear", "read_light_level"]},
-                    // {className: "Microphone", classInstances: ["microphone"], methods: ["sound_level"]},
                     // {className: "Image", init: true, methods: []},
-                    // "thingz.temperature",
                     "readAcceleration",
                     "isButtonPressedWithName",
                     "readMagneticForce",
                     "computeCompassHeading",
+                    "temperature",
+                    'soundLevel',
+                    "ledMatrixShow",
+                    "ledMatrixClear",
+                    "ledMatrixGetPixel",
+                    "ledMatrixSetPixel",
+                    //TODO: read_light_level et Image
                 ],
-                // music: [
-                //     "music.pitch",
-                //     "music.stop",
-                // ],
-                // time: [
-                //     "time.sleep",
-                //     "time.sleep_us",
-                // ],
+                music: [
+                    "pitch",
+                    "stop",
+                ],
+                time: [
+                    "sleep",
+                    "sleep_us",
+                ],
             },
             standardBlocks: {
                 includeAll: true

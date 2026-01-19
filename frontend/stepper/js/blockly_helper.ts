@@ -851,6 +851,10 @@ export class BlocklyHelper {
         // for closure:
         let args0 = blockInfo.blocklyJson.args0;
         let code = this.mainContext.strings.code[blockInfo.name];
+        if (!code) {
+            code = blockInfo.name;
+        }
+
         let output = blockInfo.blocklyJson.output;
         let blockParams = blockInfo.params;
 
@@ -1101,7 +1105,7 @@ export class BlocklyHelper {
 
         // TODO: code generators for customClasses and customClassInstances
         for (let block of this.availableBlocks.filter(block => block.type === BlockType.ClassFunction)) {
-            console.log('create code generator', block);
+            // console.log('create code generator', block);
         }
     }
 
