@@ -250,7 +250,9 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
             const classParts: {[className: string]: {[methodName: string]: string}} = {};
             for (let block of blocks.filter(block => block.type === BlockType.ClassFunction)) {
                 const {generatorName, name, params, type, methodName, className, classInstance} = block;
-                classInstancesToAdd[classInstance] = className;
+                if (classInstance) {
+                    classInstancesToAdd[classInstance] = className;
+                }
                 if (!(className in classParts)) {
                     classParts[className] = {};
                 }

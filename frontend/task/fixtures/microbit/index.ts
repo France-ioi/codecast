@@ -16,8 +16,6 @@ export default {
             groupByCategory: true,
             generatedBlocks: {
                 microbit: [
-                    // {className: "Display", classInstances: ["display"], methods: ["show", "get_pixel", "set_pixel", "clear", "read_light_level"]},
-                    // {className: "Image", init: true, methods: []},
                     "readAcceleration",
                     "isButtonPressedWithName",
                     "readMagneticForce",
@@ -28,7 +26,8 @@ export default {
                     "ledMatrixClear",
                     "ledMatrixGetPixel",
                     "ledMatrixSetPixel",
-                    //TODO: read_light_level et Image
+                    "lightIntensity",
+                    // "wasGesture",
                 ],
                 music: [
                     "pitch",

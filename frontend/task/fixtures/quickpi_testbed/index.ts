@@ -53,7 +53,7 @@ export default {
                         // "turnLedOff",
                         // "readDistance",
                         // "toggleLedState",
-                        // "readLightIntensity",
+                        "readLightIntensity",
                         // "currentTime",
                         "setBuzzerState",
                         "setBuzzerNote",

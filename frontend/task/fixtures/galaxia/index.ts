@@ -21,6 +21,7 @@ export default {
                     "readMagneticForce",
                     "computeCompassHeading",
                     "temperature",
+                    "lightIntensity",
 
                     // {className: "Led", classInstances: ["led"], methods: ["set_colors", "read_light_level"]},
                 ],

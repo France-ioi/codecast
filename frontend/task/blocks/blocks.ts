@@ -5,7 +5,7 @@ import {BlocksUsage} from "../task_types";
 import {taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
-import {QuickAlgoCustomClass, QuickAlgoLibrary, QuickalgoLibraryBlock} from "../libs/quickalgo_library";
+import {QuickAlgoLibrary, QuickalgoLibraryBlock} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
 import {appSelect} from '../../hooks';
 import {hasBlockPlatform, platformsList} from '../../stepper/platforms';
@@ -141,7 +141,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     availableBlocks.push(newBlock);
                 }
                 for (let [className, classInfo] of Object.entries(featureData.classMethods ?? {})) {
-                    for (let classInstance of classInfo.instances) {
+                    for (let classInstance of (classInfo.instances ?? [])) {
                         for (let [method, block] of Object.entries(classInfo.methods)) {
                             const totalBlockName = `${className}.${method}`;
                             const instanceBlockName = `${classInstance}.${method}`;
@@ -154,6 +154,17 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                             newBlock.classInstance = classInstance;
                             availableBlocks.push(newBlock);
                         }
+                    }
+                    if (classInfo.init) {
+                        const block = classInfo.init;
+                        const method = CONSTRUCTOR_NAME;
+                        block.name = `${className}.${method}`;
+                        const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings);
+                        newBlock.type = BlockType.ClassFunction;
+                        newBlock.caption = className + '()';
+                        newBlock.methodName = method;
+                        newBlock.className = className;
+                        availableBlocks.push(newBlock);
                     }
                 }
 
