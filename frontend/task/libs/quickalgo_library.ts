@@ -41,8 +41,9 @@ export interface QuickAlgoCustomClass {
 }
 
 export interface ModuleClassDefinition {
-    instances: string[],
-    methods: {[methodName: string]: QuickalgoLibraryBlock},
+    instances?: string[],
+    init?: QuickalgoLibraryBlock,
+    methods?: {[methodName: string]: QuickalgoLibraryBlock},
 }
 
 export interface ModuleFeature {
@@ -97,6 +98,7 @@ export abstract class QuickAlgoLibrary {
     forceGradingWithoutDisplay?: boolean;
     eventListeners: LibraryEventListener[] = [];
     features: ModuleDefinition;
+    getPythonCode: () => Promise<string>;
 
     constructor(display: boolean, infos: any) {
         this.display = display;

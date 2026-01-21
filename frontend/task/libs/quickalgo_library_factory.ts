@@ -31,6 +31,8 @@ import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {selectAvailableExecutionModes} from '../../submission/submission_selectors';
 import {submissionChangeExecutionMode} from '../../submission/submission_slice';
 import {OpenCvLib} from './opencv/opencv_lib';
+import {Codecast} from '../../app_types';
+import {bufferGetPythonCode} from '../../buffers/buffer_actions';
 
 const availableLibs = {
     'smart_contract': SmartContractLib,
@@ -162,6 +164,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
     // (which happens in particular in the case of a replay)
     context.forceGradingWithoutDisplay = 'background' !== state.environment;
     yield* call(addCustomBlocksToQuickalgoLibrary, context, display, levelGridInfos);
+    yield* call(addGetPythonCodeHelper, context);
 
     if (context.changeSoundEnabled) {
         context.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
@@ -210,6 +213,17 @@ export function* addCustomBlocksToQuickalgoLibrary(context: QuickAlgoLibrary, di
     const debugLib = new DebugLib(display, gridInfos);
     yield* call(mergeQuickalgoLibrary, 'debug', context, debugLib);
 }
+
+function* addGetPythonCodeHelper(context: QuickAlgoLibrary) {
+    const environment = yield* appSelect(state => state.environment);
+    const store = Codecast.environments[environment].store;
+
+    context.getPythonCode = () =>
+        new Promise((resolve, reject) => {
+            store.dispatch(bufferGetPythonCode(resolve, reject));
+        });
+}
+
 
 export function* mergeQuickalgoLibrary(libName: string, parentContext: QuickAlgoLibrary, childContext: QuickAlgoLibrary) {
     const environment = yield* appSelect(state => state.environment);

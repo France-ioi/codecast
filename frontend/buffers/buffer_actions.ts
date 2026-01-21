@@ -44,3 +44,10 @@ export const bufferGitPush = createAction('buffer/gitPush', (bufferName: string,
         gitUsername,
     },
 }));
+
+export const bufferGetPythonCode = createAction('buffer/getPythonCode', (resolve: (code: string) => void, reject: () => void) => ({
+    payload: {
+        resolve,
+        reject,
+    },
+}));
