@@ -27,7 +27,7 @@ export default {
                     "ledMatrixGetPixel",
                     "ledMatrixSetPixel",
                     "lightIntensity",
-                    // "wasGesture",
+                    "wasGesture",
                 ],
                 music: [
                     "pitch",
@@ -39,7 +39,10 @@ export default {
                 ],
             },
             standardBlocks: {
-                includeAll: true
+                includeAll: true,
+                singleBlocks: {
+                    easy: ["controls_infiniteloop", "logic_boolean", "controls_if_else", "controls_if"],
+                },
             },
         },
         maxInstructions: {
