@@ -128,8 +128,6 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             }
         }
 
-        console.log('custom features', context.features);
-
         if (context.features) {
             for (let [featureName, featureData] of Object.entries(context.features)) {
                 if (!contextIncludeBlocks.generatedBlocks[featureData.generatorName]?.includes(featureName)) {

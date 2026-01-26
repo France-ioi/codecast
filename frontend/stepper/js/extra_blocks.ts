@@ -1,4 +1,4 @@
-export function addExtraBlocks(strings, defaultColors, showIfMutator ) {
+export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMode ) {
     window.Blockly.Blocks['controls_untilWhile'] = window.Blockly.Blocks['controls_whileUntil'];
     window.Blockly.JavaScript['controls_untilWhile'] = window.Blockly.JavaScript['controls_whileUntil'];
     window.Blockly.Python['controls_untilWhile'] = window.Blockly.Python['controls_whileUntil'];
@@ -159,7 +159,7 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator ) {
         return 'while True:\n' + branch;
     };
 
-    if (this.scratchMode) {
+    if (scratchMode) {
         window.Blockly.Blocks['robot_start'] = {
             init: function () {
                 this.jsonInit({

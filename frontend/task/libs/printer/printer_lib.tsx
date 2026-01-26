@@ -200,7 +200,6 @@ export class PrinterLib extends QuickAlgoLibrary {
     texts: any;
     scale: number;
     libOptions: any;
-    showIfMutator: boolean;
     printer: any;
     ioMode: IoMode;
     innerState: PrinterLibState;

@@ -16,6 +16,7 @@ import {documentToString} from '../../buffers/document';
 import {BlockDocument, BufferType} from '../../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../../stepper/js';
 import {selectAnswer} from '../selectors';
+import {getAvailableModules} from '../utils';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -125,12 +126,19 @@ export default function(bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(bufferGetPythonCode, function* ({payload: {resolve}}) {
+        yield* takeEvery(bufferGetPythonCode, function* ({payload: {context, resolve}}) {
             const answer = yield* appSelect(selectAnswer);
             let answerContent = documentToString(answer.document);
             if (BufferType.Block === answer.document.type) {
                 const state = yield* appSelect();
                 answerContent = yield* call(getBlocklyCodeFromXml, answer.document as BlockDocument, 'python', state);
+                const availableModules = getAvailableModules(context);
+                let modules = '';
+                for (let i = 0; i < availableModules.length; i++) {
+                    modules += 'from ' + availableModules[i] + ' import *\n';
+                }
+
+                answerContent = `${modules}${answerContent}`;
             }
 
             resolve(answerContent);

@@ -4,6 +4,7 @@ import {addExtraBlocks} from './extra_blocks';
 import {getStandardBlocklyBlocks} from './standard_blockly_blocks';
 import {getStandardScratchBlocks} from './standard_scratch_blocks';
 import {Block, BlockType} from '../../task/blocks/block_types';
+import {QuickAlgoLibrary} from '../../task/libs/quickalgo_library';
 
 let blocklySets = {
     allDefault: {
@@ -70,11 +71,11 @@ function addInSet(l, val) {
 
 export class BlocklyHelper {
     private subTask: any;
-    private scratchMode: boolean;
+    public scratchMode: boolean;
     private maxBlocks: number;
-    private programs: any[];
+    public programs: any[];
     private language: string;
-    private languages: string[];
+    public languages: string[];
     private definitions: any;
     private simpleGenerators: any;
     private codeId: number;
@@ -94,15 +95,17 @@ export class BlocklyHelper {
     private highlightedBlocks: any[];
     private includeBlocks: any;
     private availableBlocks: Block[];
-    private mainContext: any;
+    private mainContext: QuickAlgoLibrary;
     private placeholderBlocks: boolean;
     private strings: any;
     private allBlocksAllowed: any;
     private limitedPointers: any;
-    private blockCounts: any;
+    public blockCounts: any;
     private dragJustTerminated: boolean;
     private prevWidth: number;
     private availableBlocksInfo: Record<string, Record<string, Record<string, Block>>> = {};
+    public reloading: boolean;
+    public fake: boolean;
 
     constructor(maxBlocks, subTask) {
         this.subTask = subTask;
@@ -177,7 +180,7 @@ export class BlocklyHelper {
 
         this.options = options;
 
-        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator);
+        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
         this.createSimpleGeneratorsAndBlocks();
 
         this.display = display;
@@ -913,7 +916,7 @@ export class BlocklyHelper {
                         let callCode = code + '(' + params + ')';
                         let reportedCode;
                         // Add reportValue to show the value in step-by-step mode
-                        if (that.reportValues) {
+                        if (that.mainContext.blocklyHelper.reportValues) {
                             reportedCode = "reportBlockValue('" + block.id + "', " + callCode + ")";
                         } else {
                             reportedCode = callCode;
@@ -1081,7 +1084,6 @@ export class BlocklyHelper {
     }
 
     createGeneratorsAndBlocksForAvailableBlocks() {
-        console.log('av blocks', this.availableBlocks);
         for (let block of this.availableBlocks.filter(block => block.type === BlockType.Function)) {
             const {generatorName, category, name} = block;
 
@@ -1101,11 +1103,6 @@ export class BlocklyHelper {
             this.applyCodeGenerators(blockInfo);
             this.createBlock(blockInfo);
             this.applyBlockOptions(blockInfo);
-        }
-
-        // TODO: code generators for customClasses and customClassInstances
-        for (let block of this.availableBlocks.filter(block => block.type === BlockType.ClassFunction)) {
-            // console.log('create code generator', block);
         }
     }
 
@@ -1265,8 +1262,6 @@ export class BlocklyHelper {
         if (this.scratchMode) {
             this.addBlocksAllowed(['math_number', 'text']);
         }
-
-        console.log('available', this.availableBlocks);
 
         // *** Blocks from the lib
         for (let block of this.availableBlocks) {
@@ -1727,7 +1722,7 @@ export class BlocklyHelper {
                     (block.getAttribute('deletable') == 'false' ||
                         block.getAttribute('movable') == 'false' ||
                         block.getAttribute('editable') == 'false')) {
-                    console.log('Warning: starting block of type \'' + block.getAttribute('type') + '\' with read-only attributes has no id, these attributes will be removed.');
+                    console.warn('Warning: starting block of type \'' + block.getAttribute('type') + '\' with read-only attributes has no id, these attributes will be removed.');
                 }
                 continue;
             }

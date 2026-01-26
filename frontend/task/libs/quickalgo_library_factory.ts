@@ -33,6 +33,7 @@ import {submissionChangeExecutionMode} from '../../submission/submission_slice';
 import {OpenCvLib} from './opencv/opencv_lib';
 import {Codecast} from '../../app_types';
 import {bufferGetPythonCode} from '../../buffers/buffer_actions';
+import {BlocklyHelper} from '../../stepper/js/blockly_helper';
 
 const availableLibs = {
     'smart_contract': SmartContractLib,
@@ -200,7 +201,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
             updateSize() {
 
             },
-        };
+        } as any as BlocklyHelper;
     }
 
     yield* call(quickAlgoLibraryResetAndReloadStateSaga);
@@ -220,7 +221,7 @@ function* addGetPythonCodeHelper(context: QuickAlgoLibrary) {
 
     context.getPythonCode = () =>
         new Promise((resolve, reject) => {
-            store.dispatch(bufferGetPythonCode(resolve, reject));
+            store.dispatch(bufferGetPythonCode(context, resolve, reject));
         });
 }
 

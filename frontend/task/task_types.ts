@@ -128,6 +128,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     multithread?: boolean,
     allowClientExecution?: boolean,
     codeHelpAdditionalContext?: string,
+    showIfMutator?: boolean,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {

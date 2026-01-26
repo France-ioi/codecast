@@ -405,7 +405,7 @@ export async function getBlocklyCodeFromXml(document: BlockDocument, lang: strin
     }
     blocklyHelper.reloading = false;
 
-    return blocklyHelper.getCode(lang, null, false, true);
+    return blocklyHelper.getCode(lang, null, true, true);
 }
 
 export default function(bundle: Bundle) {
@@ -415,12 +415,10 @@ export default function(bundle: Bundle) {
             if (hasBlockPlatform(answer.platform)) {
                 const document = answer.document as BlockDocument;
                 const context = quickAlgoLibraries.getContext(null, state.environment);
-                const blocklyHelper = context.blocklyHelper;
 
                 const xmlCode = await getBlocklyCodeFromXml(document, 'javascript', state);
 
-                let fullCode = blocklyHelper.getBlocklyLibCode(blocklyHelper.generators)
-                    + xmlCode
+                let fullCode = xmlCode
                     + "highlightBlock(undefined);\n"
                     + "program_end();"
 

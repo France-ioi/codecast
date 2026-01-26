@@ -1,6 +1,7 @@
 import {createAction} from '@reduxjs/toolkit';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {BufferStateParameters, Document} from './buffer_types';
+import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 
 export const bufferDownload = createAction('buffer/download');
 export const bufferReload = createAction('buffer/reload');
@@ -45,8 +46,9 @@ export const bufferGitPush = createAction('buffer/gitPush', (bufferName: string,
     },
 }));
 
-export const bufferGetPythonCode = createAction('buffer/getPythonCode', (resolve: (code: string) => void, reject: () => void) => ({
+export const bufferGetPythonCode = createAction('buffer/getPythonCode', (context: QuickAlgoLibrary, resolve: (code: string) => void, reject: () => void) => ({
     payload: {
+        context,
         resolve,
         reject,
     },

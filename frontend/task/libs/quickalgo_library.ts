@@ -13,6 +13,7 @@ import {App, Codecast} from '../../app_types';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
 import AbstractRunner from '../../stepper/abstract_runner';
 import {generateRemoteLibHandler} from './remote_lib_handler';
+import {BlocklyHelper} from '../../stepper/js/blockly_helper';
 
 export interface LibraryEventListener {
     condition: (callback: (result: boolean) => void) => void,
@@ -82,7 +83,7 @@ export abstract class QuickAlgoLibrary {
     linkBack: boolean;
     delayFactory: any;
     raphaelFactory: any;
-    blocklyHelper: any;
+    blocklyHelper: BlocklyHelper;
     onChange: any;
     docGenerator: any;
     delaysStartedCount: number = 0;
@@ -99,6 +100,7 @@ export abstract class QuickAlgoLibrary {
     eventListeners: LibraryEventListener[] = [];
     features: ModuleDefinition;
     getPythonCode: () => Promise<string>;
+    showIfMutator: boolean;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
