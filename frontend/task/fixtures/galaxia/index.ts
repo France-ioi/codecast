@@ -35,23 +35,23 @@ export default {
                     "sleep",
                     "sleep_us",
                 ],
-                // network: [
-                //     "wlanInit",
-                //     "wlanActive",
-                //     "wlanScan",
-                //     "wlanConnect",
-                //     "wlanIsConnected",
-                //     "wlanIfConfig",
-                //     "wlanDisconnect",
-                // ],
-                // requests: [
-                //     "requestsGet",
-                //     "requestsPost",
-                //     "requestsResponse",
-                // ],
-                // json: [
-                //     "dumps",
-                // ],
+                network: [
+                    "wlanInit",
+                    "wlanActive",
+                    "wlanScan",
+                    "wlanConnect",
+                    "wlanIsConnected",
+                    "wlanIfConfig",
+                    "wlanDisconnect",
+                ],
+                requests: [
+                    "requestsGet",
+                    "requestsPost",
+                    "requestsResponse",
+                ],
+                json: [
+                    "jsonDumps",
+                ],
             },
             standardBlocks: {
                 includeAll: true

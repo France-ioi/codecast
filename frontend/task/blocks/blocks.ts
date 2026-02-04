@@ -191,6 +191,18 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                         });
                     }
                 }
+
+                for (let [name, value] of Object.entries(featureData.constants ?? {})) {
+                    availableBlocks.push({
+                        generatorName: featureData.generatorName,
+                        name,
+                        caption: name,
+                        code: name,
+                        category: 'constants',
+                        type: BlockType.Constant,
+                        value,
+                    });
+                }
             }
         } else {
             // Generate functions used in the task
