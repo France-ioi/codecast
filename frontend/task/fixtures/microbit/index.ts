@@ -1,5 +1,66 @@
 import {QuickalgoTask} from '../../task_types';
 
+function OutputGenerator() {
+    this.events = [];
+    this.time = 0;
+
+    this.start = function() {
+        this.events = [];
+        this.time = 0;
+    };
+
+    this.sleep = function(time) {
+        this.time += time;
+    };
+
+    this.setElementState = function(type,name,state,input) {
+        // Note : input means the grading will not check whether the program
+        // actually read the sensor
+        var event = {
+            time: this.time,
+            type: type,
+            name: name,
+            state: state,
+            input: !!input
+        };
+        this.events.push(event);
+    };
+
+    this.setElementStateAfter = function(type,name,state,input,time) {
+        // Note : input means the grading will not check whether the program
+        // actually read the sensor
+        var event = {
+            time: this.time + time,
+            type: type,
+            name: name,
+            state: state,
+            input: !!input
+        };
+        this.events.push(event);
+    };
+
+
+    this.setBuzzerNote = function(name,frequency) {
+        this.setElementState("buzzer", name, frequency);
+    };
+
+    this.setElementProperty = function(type,name,property,value) {
+        var event = {
+            time: this.time,
+            type: type,
+            name: name
+        };
+        event[property] = value;
+        this.events.push(event);
+    };
+
+    this.getEvents = function() {
+        return this.events;
+    }
+};
+
+var og = new OutputGenerator();
+
 export default {
     gridInfos: {
         context: "quickpi",
@@ -11,6 +72,14 @@ export default {
         actionDelay: 100,
         maxIterWithoutAction: 6000/12,
         customSensors: true,
+
+        // customLedMatrixImages: [
+        //     {name: "TARGET", value: "00900:09990:99099:09990:00900:"},
+        //     "HOUSE",
+        // ],
+
+        // enabledGestures: ['shake'],
+        enabledGestures: ['shake', 'left', 'right'],
 
         includeBlocks: {
             groupByCategory: true,
@@ -50,19 +119,19 @@ export default {
             medium: 10,
             hard: 11
         },
-        quickPiSensors: "default",
-        // quickPiSensors: [
-        //     { type: "button", name: 'button_a' },
-        //     { type: "button", name: 'button_b' },
-        //     { type: "button", name: 'pin_logo' },
-        //     { type: "temperature", name: 'temp' },
-        //     { type: "light", name: 'light' },
-        //     { type: "ledmatrix", name: 'ledmatrix' },
-        //     { type: "accelerometer", name: 'accel' },
-        //     { type: "magnetometer", name: 'magneto' },
-        //     { type: "sound", name: 'sound', unit: ''},
-        //     { type: "buzzer", name: 'buzzer'},
-        // ],
+        // quickPiSensors: "default",
+        quickPiSensors: [
+            { type: "button", name: 'button_a', label: 'bouton A' },
+            { type: "button", name: 'button_b', label: 'bouton B' },
+            // { type: "button", name: 'pin_logo' },
+            // { type: "temperature", name: 'temp' },
+            // { type: "light", name: 'light' },
+            { type: "ledmatrix", name: 'led_matrix', label: 'Panneau LED' },
+            { type: "accelerometer", name: 'accel' },
+            { type: "magnetometer", name: 'magneto' },
+            // { type: "sound", name: 'sound', unit: ''},
+            // { type: "buzzer", name: 'buzzer'},
+        ],
 
         startingExample: {
             easy: {
@@ -81,6 +150,16 @@ export default {
             testName: "Test 1",
             autoGrading: true,
             loopsForever: true,
+            // output: function() {
+            //     og.start();
+            //     og.setElementState("button","button1",false);
+            //     og.setElementState("screen","screen",{line1:"",line2:""});
+            //     og.sleep(100);
+            //     og.setElementState("button","button1",true);
+            //     og.setElementState("screen","screen",{line1:window.quickPiHello,line2:""});
+            //
+            //     return og.getEvents();
+            // }(),
             output: [
                 // { time: 0, type: "wifi", name: "wifi", state: {active: false} },
                 // { time: 1000, type: "wifi", name: "wifi", state: {active: true, connected: false} },
@@ -88,16 +167,19 @@ export default {
                 // { time: 3000, type: "wifi", name: "wifi", state: {lastRequest: {method: 'GET', url: 'https://example.com/', headers: {test: 'bla'}}}},
 
 
-                // { time: 0, type: "accelerometer", name: "accel", state: [0, 0, 1] },
-                // { time: 1000, type: "accelerometer", name: "accel", state: [0, 0, 4] },
-                // { time: 2000, type: "accelerometer", name: "accel", state: [0, 0, 3] },
+                { time: 0, type: "accelerometer", name: "accel", state: [0, 0, 1, null] },
+                { time: 0, type: "ledmatrix", name: "led_matrix", state: "00000:00000:00000:00000:00000".split(":").map(e => e.split('').map(Number))},
+                // { time: 0, type: "ledmatrix", name: "led_matrix", state: "90009:09090:00900:09090:90009".split(":").map(e => e.split('').map(Number))},
+
+                { time: 1000, type: "accelerometer", name: "accel", state: [0, 0, 1, 'shake'] },
+                { time: 1000, type: "ledmatrix", name: "led_matrix", state: "00000:00009:00090:90900:09000".split(":").map(e => e.split('').map(Number))},
 
                 // { time: 0, type: "servo", name: "servo", state: 20 },
                 // { time: 1000, type: "servo", name: "servo", state: 30 },
                 // { time: 2000, type: "servo", name: "servo", state: 40 },
 
-                { time: 0, type: "ledmatrix", name: "ledmatrix", state: "09090:99999:99999:09990:00900".split(":").map(e => e.split('').map(Number)) },
-                { time: 1000, type: "ledmatrix", name: "ledmatrix", state: "00000:09090:00000:09990:90009".split(":").map(e => e.split('').map(Number))},
+                // { time: 0, type: "ledmatrix", name: "led_matrix", state: "09090:99999:99999:09990:00900".split(":").map(e => e.split('').map(Number)) },
+                // { time: 500, type: "ledmatrix", name: "led_matrix", state: "00000:09090:00000:09990:90009".split(":").map(e => e.split('').map(Number))},
             ],
         }],
         medium: [{

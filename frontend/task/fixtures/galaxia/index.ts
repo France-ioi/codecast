@@ -22,25 +22,32 @@ export default {
                     "computeCompassHeading",
                     "temperature",
                     "lightIntensity",
-
-                    // {className: "Led", classInstances: ["led"], methods: ["set_colors", "read_light_level"]},
+                    "ledSetColors",
                 ],
-                // machine: [
-                //     {className: "Pin", init: true, methods: ["on", "off"]},
-                //     {className: "PWM", init: true, methods: ["duty", "duty_u16"]},
-                //     "time_pulse_us",
-                // ],
+                machine: [
+                    "machinePin",
+                    "pwmInit",
+                    "pwmDuty",
+                    "pwmDutyU16",
+                    "timePulseUs",
+                ],
                 time: [
                     "sleep",
                     "sleep_us",
                 ],
                 // network: [
-                //     {className: "WLAN", init: true, methods: ["active", "scan", "connect", "isconnected", "ifconfig", "disconnect"]},
+                //     "wlanInit",
+                //     "wlanActive",
+                //     "wlanScan",
+                //     "wlanConnect",
+                //     "wlanIsConnected",
+                //     "wlanIfConfig",
+                //     "wlanDisconnect",
                 // ],
                 // requests: [
-                //     "get",
-                //     "post",
-                //     {className: "Response", init: true, methods: ["json"]},
+                //     "requestsGet",
+                //     "requestsPost",
+                //     "requestsResponse",
                 // ],
                 // json: [
                 //     "dumps",

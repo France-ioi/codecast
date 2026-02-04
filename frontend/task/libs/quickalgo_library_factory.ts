@@ -119,6 +119,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
                 console.error("Cannot create context", e);
                 contextLib = new DefaultQuickalgoLibrary(display, levelGridInfos);
                 quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
+                throw new Error(`Cannot create context: ${e}`);
             }
         }
     }
@@ -130,6 +131,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
             console.error("Cannot create context", e);
             contextLib = new DefaultQuickalgoLibrary(display, levelGridInfos);
             quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
+            throw new Error(`Cannot create context: ${e}`);
         }
     }
 
@@ -235,8 +237,6 @@ export function* mergeQuickalgoLibrary(libName: string, parentContext: QuickAlgo
     const fieldsToMerge = [
         'customBlocks',
         'customConstants',
-        'customClasses',
-        'customClassInstances',
         'notionsList',
     ];
 

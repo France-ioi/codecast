@@ -139,20 +139,13 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     availableBlocks.push(newBlock);
                 }
                 for (let [className, classInfo] of Object.entries(featureData.classMethods ?? {})) {
-                    for (let classInstance of (classInfo.instances ?? [])) {
-                        for (let [method, block] of Object.entries(classInfo.methods)) {
-                            const totalBlockName = `${className}.${method}`;
-                            const instanceBlockName = `${classInstance}.${method}`;
-                            block.name = totalBlockName;
-                            const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings);
-                            newBlock.type = BlockType.ClassFunction;
-                            newBlock.caption = instanceBlockName + '()';
-                            newBlock.methodName = method;
-                            newBlock.className = className;
-                            newBlock.classInstance = classInstance;
-                            availableBlocks.push(newBlock);
-                        }
+                    let placeholderClassInstance = false;
+                    let classInstances = classInfo.instances ?? [];
+                    if (!classInstances.length) {
+                        classInstances = [classInfo.defaultInstanceName ?? `${className.substring(0, 1).toLocaleLowerCase() + className.substring(1)}`];
+                        placeholderClassInstance = true;
                     }
+
                     if (classInfo.init) {
                         const block = classInfo.init;
                         const method = CONSTRUCTOR_NAME;
@@ -162,7 +155,24 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                         newBlock.caption = className + '()';
                         newBlock.methodName = method;
                         newBlock.className = className;
+                        newBlock.classInstance = placeholderClassInstance ? classInstances[0] : null;
+                        newBlock.placeholderClassInstance = placeholderClassInstance;
                         availableBlocks.push(newBlock);
+                    }
+                    for (let classInstance of classInstances) {
+                        for (let [method, block] of Object.entries(classInfo.methods ?? {})) {
+                            const totalBlockName = `${className}.${method}`;
+                            const instanceBlockName = `${classInstance}.${method}`;
+                            block.name = totalBlockName;
+                            const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings);
+                            newBlock.type = BlockType.ClassFunction;
+                            newBlock.caption = instanceBlockName + '()';
+                            newBlock.methodName = method;
+                            newBlock.className = className;
+                            newBlock.classInstance = classInstance;
+                            newBlock.placeholderClassInstance = placeholderClassInstance;
+                            availableBlocks.push(newBlock);
+                        }
                     }
                 }
 
@@ -292,6 +302,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
         }
     }));
 
+    console.log({blocks: availableBlocks})
+
     return availableBlocks;
 });
 
@@ -334,6 +346,13 @@ function getSnippet(block: Block, platform: CodecastPlatform) {
 
     let snippetIndex = 1;
     let ret = proto.substring(0, parenthesisOpenIndex + 1);
+
+    if (BlockType.ClassFunction === block.type && block.placeholderClassInstance) {
+        ret = ret.replace(new RegExp(`${block.classInstance}( ?(=|\.))`, 'ug'), (group, complement) => {
+            return "\${" + snippetIndex + ":" + block.classInstance + `}${complement}`;
+        });
+        snippetIndex++;
+    }
 
     if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
         return ret + ")" + finalCharacter;

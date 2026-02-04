@@ -34,16 +34,10 @@ export interface QuickalgoLibraryBlock {
     codeGenerators?: Record<string, Function>;
 }
 
-export interface QuickAlgoCustomClass {
-    defaultInstanceName?: string,
-    init?: QuickalgoLibraryBlock,
-    blocks: QuickalgoLibraryBlock[],
-    constants?: {name: string, value: any}[],
-}
-
 export interface ModuleClassDefinition {
     instances?: string[],
     init?: QuickalgoLibraryBlock,
+    defaultInstanceName?: string,
     methods?: {[methodName: string]: QuickalgoLibraryBlock},
 }
 
@@ -69,8 +63,6 @@ export abstract class QuickAlgoLibrary {
     strings: any;
     customBlocks: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}};
     customConstants: {[generatorName: string]: {name: string, value: any}[]};
-    customClasses: {[generatorName: string]: {[categoryName: string]: {[className: string]: QuickAlgoCustomClass}}};
-    customClassInstances: {[generatorName: string]: {[instanceName: string]: string}};
     conceptList: any[];
     conceptDisabledList?: string[];
     notionsList: NotionArborescence;
@@ -112,8 +104,6 @@ export abstract class QuickAlgoLibrary {
         this.strings = {};
         this.customBlocks = {};
         this.customConstants = {};
-        this.customClasses = {};
-        this.customClassInstances = {};
         this.conceptList = [];
 
         this.aceEditor = null;
