@@ -17,6 +17,7 @@ import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
 import produce from 'immer';
 import {isServerTask} from '../../task/task_types';
+import {BlocklyHelper} from './blockly_helper';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
@@ -64,7 +65,6 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
                 }
             },
             setPlayPause: () => {},
-            updateControlsDisplay: () => {},
             onResize: () => {},
             displayKeypad: function(initialValue, position, callbackModify, callbackFinished, options) {
                 if (window.displayHelper) {
@@ -74,7 +74,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         };
     }
 
-    context.blocklyHelper = createBlocklyHelper(context, isServerTask(state.task.currentTask));
+    context.blocklyHelper = createBlocklyHelper(context, state, isServerTask(state.task.currentTask));
     context.onChange = () => {};
 
     // There is a setTimeout delay in Blockly lib between blockly program loading and Blockly firing events.
@@ -98,29 +98,9 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     yield* put(taskIncreaseContextId());
 }
 
-export function createBlocklyHelper(context: QuickAlgoLibrary, serverTask = false) {
-    const blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
+export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore, serverTask = false) {
+    const blocklyHelper = new BlocklyHelper(context.infos.maxInstructions, context);
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
-    // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
-    // during loadPrograms at the start of the program execution
-    blocklyHelper.onChangeResetDisplay = () => {
-    };
-    // Override this function to add x="0" y="0" so that cleanBlockAttributes works correctly by detecting x is not null
-    blocklyHelper.getEmptyContent = function() {
-        if (this.scratchMode) {
-            return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
-        } else {
-            return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
-        }
-    };
-    // Override this function to change parameters
-    blocklyHelper.getOrigin = function() {
-        // Get x/y origin
-        if (this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
-            return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
-        }
-        return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
-    };
 
     if (context.infos.multithread) {
         // Make generation of all blocks
@@ -132,14 +112,18 @@ export function createBlocklyHelper(context: QuickAlgoLibrary, serverTask = fals
     }
 
     // Remove printer blocks if it's a server task because in this case we don't want to display them in the blocks
+    // TODO: integrate this into getContextBlocksDataSelector?
     const blocklyIncludeBlocks = produce(context.infos.includeBlocks, (includeBlocks) => {
         if (serverTask && includeBlocks.generatedBlocks && 'printer' in includeBlocks.generatedBlocks) {
             delete includeBlocks.generatedBlocks['printer'];
         }
     });
 
+    const availableBlocks = getContextBlocksDataSelector({state, context});
+
     log.getLogger('blockly_runner').debug('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);
+    blocklyHelper.setAvailableBlocks(availableBlocks);
     blocklyHelper.setIncludeBlocks(blocklyIncludeBlocks);
 
     return blocklyHelper;
@@ -335,7 +319,7 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
 const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, xmlText: string) {
     const xml = window.Blockly.Xml.textToDom(xmlText);
 
-    const blocklyHelper = createBlocklyHelper(context, isServerTask(state.task.currentTask));
+    const blocklyHelper = createBlocklyHelper(context, state, isServerTask(state.task.currentTask));
     const language = state.options.language.split('-')[0];
     blocklyHelper.load(language, false, 1, {});
 
@@ -421,7 +405,7 @@ export async function getBlocklyCodeFromXml(document: BlockDocument, lang: strin
     }
     blocklyHelper.reloading = false;
 
-    return blocklyHelper.getCode(lang, null, false, true);
+    return blocklyHelper.getCode(lang, null, true, true);
 }
 
 export default function(bundle: Bundle) {
@@ -431,12 +415,10 @@ export default function(bundle: Bundle) {
             if (hasBlockPlatform(answer.platform)) {
                 const document = answer.document as BlockDocument;
                 const context = quickAlgoLibraries.getContext(null, state.environment);
-                const blocklyHelper = context.blocklyHelper;
 
                 const xmlCode = await getBlocklyCodeFromXml(document, 'javascript', state);
 
-                let fullCode = blocklyHelper.getBlocklyLibCode(blocklyHelper.generators)
-                    + xmlCode
+                let fullCode = xmlCode
                     + "highlightBlock(undefined);\n"
                     + "program_end();"
 

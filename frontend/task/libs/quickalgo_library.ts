@@ -13,6 +13,7 @@ import {App, Codecast} from '../../app_types';
 import {mainQuickAlgoLogger} from './quick_algo_logger';
 import AbstractRunner from '../../stepper/abstract_runner';
 import {generateRemoteLibHandler} from './remote_lib_handler';
+import {BlocklyHelper} from '../../stepper/js/blockly_helper';
 
 export interface LibraryEventListener {
     condition: (callback: (result: boolean) => void) => void,
@@ -22,20 +23,34 @@ export interface LibraryEventListener {
 
 export interface QuickalgoLibraryBlock {
     name?: string,
-    yieldsValue?: boolean|string,
+    yieldsValue?: string|boolean,
     params?: string[],
-    blocklyJson?: any,
+    blocklyJson?: object,
+    blocklyXml?: string,
+    blocklyInit?: Function,
     anyArgs?: boolean,
     variants?: any,
     hidden?: boolean,
+    codeGenerators?: Record<string, Function>;
 }
 
-export interface QuickAlgoCustomClass {
-    defaultInstanceName?: string,
+export interface ModuleClassDefinition {
+    instances?: string[],
     init?: QuickalgoLibraryBlock,
-    blocks: QuickalgoLibraryBlock[],
-    constants?: {name: string, value: any}[],
+    defaultInstanceName?: string,
+    methods?: {[methodName: string]: QuickalgoLibraryBlock},
 }
+
+export interface ModuleFeature {
+    generatorName: string,
+    category: string,
+    blocks?: QuickalgoLibraryBlock[],
+    classMethods?: {[className: string]: ModuleClassDefinition},
+    classConstants?: {[className: string]: {[name: string]: string}},
+    constants?: {[name: string]: string},
+}
+
+export type ModuleDefinition = {[moduleName: string]: ModuleFeature};
 
 export abstract class QuickAlgoLibrary {
     display: boolean;
@@ -48,8 +63,6 @@ export abstract class QuickAlgoLibrary {
     strings: any;
     customBlocks: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}};
     customConstants: {[generatorName: string]: {name: string, value: any}[]};
-    customClasses: {[generatorName: string]: {[categoryName: string]: {[className: string]: QuickAlgoCustomClass}}};
-    customClassInstances: {[generatorName: string]: {[instanceName: string]: string}};
     conceptList: any[];
     conceptDisabledList?: string[];
     notionsList: NotionArborescence;
@@ -62,7 +75,7 @@ export abstract class QuickAlgoLibrary {
     linkBack: boolean;
     delayFactory: any;
     raphaelFactory: any;
-    blocklyHelper: any;
+    blocklyHelper: BlocklyHelper;
     onChange: any;
     docGenerator: any;
     delaysStartedCount: number = 0;
@@ -77,6 +90,9 @@ export abstract class QuickAlgoLibrary {
     childContexts: QuickAlgoLibrary[] = [];
     forceGradingWithoutDisplay?: boolean;
     eventListeners: LibraryEventListener[] = [];
+    features: ModuleDefinition;
+    getPythonCode: () => Promise<string>;
+    showIfMutator: boolean;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -88,8 +104,6 @@ export abstract class QuickAlgoLibrary {
         this.strings = {};
         this.customBlocks = {};
         this.customConstants = {};
-        this.customClasses = {};
-        this.customClassInstances = {};
         this.conceptList = [];
 
         this.aceEditor = null;

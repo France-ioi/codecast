@@ -64,7 +64,8 @@ var og = new OutputGenerator();
 export default {
     gridInfos: {
         context: 'quickpi',
-        importModules: ['quickpi-board', 'quickpi-connection', 'quickpi-screen', 'blockly-quickpi'],
+        importModules: ['connected-boards'],
+        // importModules: ['quickpi-board', 'quickpi-connection', 'quickpi-screen', 'blockly-quickpi'],
         quickPiDisableConnection: true,
         hideSaveOrLoad: false,
         hideControls: {blocklyToPython: false},
@@ -123,7 +124,7 @@ export default {
                 og.start();
                 og.setElementState("button","button1",false);
                 og.setElementState("screen","screen",{line1:"",line2:""});
-                og.sleep(100);
+                og.sleep(1000);
                 og.setElementState("button","button1",true);
                 og.setElementState("screen","screen",{line1:"Bonjour",line2:""});
 

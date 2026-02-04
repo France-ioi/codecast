@@ -31,6 +31,9 @@ import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {selectAvailableExecutionModes} from '../../submission/submission_selectors';
 import {submissionChangeExecutionMode} from '../../submission/submission_slice';
 import {OpenCvLib} from './opencv/opencv_lib';
+import {Codecast} from '../../app_types';
+import {bufferGetPythonCode} from '../../buffers/buffer_actions';
+import {BlocklyHelper} from '../../stepper/js/blockly_helper';
 
 const availableLibs = {
     'smart_contract': SmartContractLib,
@@ -116,6 +119,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
                 console.error("Cannot create context", e);
                 contextLib = new DefaultQuickalgoLibrary(display, levelGridInfos);
                 quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
+                throw new Error(`Cannot create context: ${e}`);
             }
         }
     }
@@ -127,6 +131,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
             console.error("Cannot create context", e);
             contextLib = new DefaultQuickalgoLibrary(display, levelGridInfos);
             quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
+            throw new Error(`Cannot create context: ${e}`);
         }
     }
 
@@ -162,22 +167,10 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
     // (which happens in particular in the case of a replay)
     context.forceGradingWithoutDisplay = 'background' !== state.environment;
     yield* call(addCustomBlocksToQuickalgoLibrary, context, display, levelGridInfos);
+    yield* call(addGetPythonCodeHelper, context);
 
     if (context.changeSoundEnabled) {
         context.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
-    }
-
-    yield* call(createDisplayHelper);
-    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && currentTask) {
-        yield* call(loadBlocklyHelperSaga, context);
-    } else {
-        // Create a fake blockly helper to make other libs like Turtle work
-        context.blocklyHelper = {
-            fake: true,
-            updateSize() {
-
-            },
-        };
     }
 
     const testData = selectCurrentTestData(state);
@@ -200,6 +193,19 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
         yield* put(taskSetBlocksPanelCollapsed({collapsed: true, manual: true}));
     }
 
+    yield* call(createDisplayHelper);
+    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && currentTask) {
+        yield* call(loadBlocklyHelperSaga, context);
+    } else {
+        // Create a fake blockly helper to make other libs like Turtle work
+        context.blocklyHelper = {
+            fake: true,
+            updateSize() {
+
+            },
+        } as any as BlocklyHelper;
+    }
+
     yield* call(quickAlgoLibraryResetAndReloadStateSaga);
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
 
@@ -211,6 +217,17 @@ export function* addCustomBlocksToQuickalgoLibrary(context: QuickAlgoLibrary, di
     yield* call(mergeQuickalgoLibrary, 'debug', context, debugLib);
 }
 
+function* addGetPythonCodeHelper(context: QuickAlgoLibrary) {
+    const environment = yield* appSelect(state => state.environment);
+    const store = Codecast.environments[environment].store;
+
+    context.getPythonCode = () =>
+        new Promise((resolve, reject) => {
+            store.dispatch(bufferGetPythonCode(context, resolve, reject));
+        });
+}
+
+
 export function* mergeQuickalgoLibrary(libName: string, parentContext: QuickAlgoLibrary, childContext: QuickAlgoLibrary) {
     const environment = yield* appSelect(state => state.environment);
     quickAlgoLibraries.addLibrary(childContext, libName, environment);
@@ -220,8 +237,6 @@ export function* mergeQuickalgoLibrary(libName: string, parentContext: QuickAlgo
     const fieldsToMerge = [
         'customBlocks',
         'customConstants',
-        'customClasses',
-        'customClassInstances',
         'notionsList',
     ];
 
