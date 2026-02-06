@@ -28,13 +28,14 @@ export interface SubmissionResultProps {
 
 export function TestsPaneList(props: SubmissionResultProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const canAddUserTests = useAppSelector(state => state.options.canAddUserTests);
     const testsOrdered = useAppSelector(selectTaskTests);
     const submission = props.submission;
     const subTasksOrdered = currentTask?.subTasks ? [...currentTask.subTasks] : [];
     subTasksOrdered.sort((a, b) => a.rank - b.rank);
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const canCreateOwnTests = context ? context.supportsCustomTests() : false;
+    const canCreateOwnTests = context ? context.supportsCustomTests() && (canAddUserTests || !!currentTask.userTests) : false;
 
     const dispatch = useDispatch();
     const showSubmissionError = (type: SubmissionErrorType) => {
