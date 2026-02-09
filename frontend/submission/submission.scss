@@ -21,12 +21,20 @@
     padding: .5rem .75rem;
     padding-top: 0;
     margin-top: -.5em;
+    display: flex;
+    justify-content: space-between;
     .submission-label {
       border-radius: 6px;
       color: #333 !important;
       white-space: nowrap;
       font-size: 14px;
       padding: 4px 5px !important;
+    }
+    .submission-close {
+      color: var(--primary-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
     }
   }
 }

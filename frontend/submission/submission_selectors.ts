@@ -14,22 +14,22 @@ export const selectTaskTests = memoize<AppStore, TaskTest[]>((state: AppStore) =
     if (null !== state.submission.currentSubmissionId) {
         const submission = state.submission.taskSubmissions[state.submission.currentSubmissionId];
         if (TaskSubmissionMode.UserTest === submission?.result?.mode) {
-            const submissionUserTests = [];
+            const userTests = submission.userTests;
+
             if (submission && submission?.result?.tests) {
                 for (let testResult of submission.result.tests) {
                     if (testResult.test) {
                         const test = testResult.test;
                         let hasUserTest = false;
                         if (test.clientId) {
-                            const userTest = taskLevelsTests.find(otherTest => otherTest.id === test.clientId);
+                            const userTest = userTests.find(otherTest => otherTest.id === test.clientId);
                             if (userTest) {
                                 hasUserTest = true;
-                                submissionUserTests.push(userTest);
                             }
                         }
 
                         if (!hasUserTest) {
-                            submissionUserTests.push(mapServerTestToTaskTest(test));
+                            userTests.push(mapServerTestToTaskTest(test));
                         }
                     }
                 }
@@ -37,7 +37,7 @@ export const selectTaskTests = memoize<AppStore, TaskTest[]>((state: AppStore) =
 
             return [
                 ...taskLevelsTests.filter(test => TaskTestGroupType.User !== test.groupType),
-                ...submissionUserTests,
+                ...userTests,
             ];
         }
     }
@@ -73,7 +73,7 @@ export function selectTaskSelectorEnabled(state: AppStore) {
 
     const taskTests = selectTaskTests(state);
 
-    return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && taskTests.length > 1))
+    return !!(state.options.viewTestDetails || state.options.canAddUserTests || state.task.currentTask.userTests || (state.task.currentTask && taskTests.length > 1))
 }
 
 export const selectAvailableExecutionModes = memoize((state: AppStore): TaskSubmissionEvaluateOn[] => {

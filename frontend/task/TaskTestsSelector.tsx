@@ -99,7 +99,7 @@ export function TaskTestsSelector() {
                     <FontAwesomeIcon icon={faList}/>
                 </span>
             </div>}
-            {Object.entries(tooManyTests ? (null !== currentTestId ? {[currentTestId]: taskTestsByIndex[currentTestId]} : {}) : taskTestsByIndex).map(([index, testData]) =>
+            {Object.entries(tooManyTests ? (null !== currentTestId && taskTestsByIndex[currentTestId] ? {[currentTestId]: taskTestsByIndex[currentTestId]} : {}) : taskTestsByIndex).map(([index, testData]) =>
                 <div
                     key={index}
                     className={`tests-selector-tab${!tooManyTests ? ' is-selectable' : ''}${currentTestId === Number(index) ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
