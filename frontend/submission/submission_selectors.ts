@@ -63,7 +63,7 @@ export function selectSubmissionsPaneEnabled(state: AppStore) {
 
     const taskTests = selectTaskTests(state);
 
-    return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && taskTests.length > 3))
+    return !!(state.options.viewTestDetails || state.options.canAddUserTests || state.task.currentTask.userTests || (state.task.currentTask && taskTests.length > 3))
 }
 
 export function selectTaskSelectorEnabled(state: AppStore) {
