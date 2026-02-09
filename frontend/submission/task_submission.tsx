@@ -223,6 +223,7 @@ class TaskSubmissionExecutor {
             platform,
             type: TaskSubmissionEvaluateOn.Server,
             scope: scope ?? SubmissionExecutionScope.Submit,
+            userTests,
         };
         yield* put(submissionAddNewTaskSubmission(serverSubmission));
 
@@ -324,6 +325,9 @@ class TaskSubmissionExecutor {
                     score: 0,
                 };
             }
+        } catch (e) {
+            console.error(e);
+            throw e;
         } finally {
             if (yield* cancelled()) {
                 if (longPollingTask) {

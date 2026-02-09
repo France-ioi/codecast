@@ -113,7 +113,7 @@ export function ContextVisualization() {
             </div>
         </div>;
     } else if (submission && submission.result && isServerSubmission(submission) && null !== currentTestId && !currentTestResult) {
-        if (TaskTestGroupType.User === taskTests[currentTestId].groupType) {
+        if (TaskTestGroupType.User === taskTests[currentTestId]?.groupType) {
             innerVisualization = <div className="task-visualization-not-public">
                 {getMessage('TASK_VISUALIZATION_NOT_EVALUATED_USER')}
             </div>;
@@ -140,7 +140,7 @@ export function ContextVisualization() {
                     </div>
                 </div>}
         </div>;
-    } else {
+    } else if (null !== currentTestId) {
         innerVisualization = <div className="task-visualization-not-public">
             {getMessage('TASK_VISUALIZATION_NOT_PUBLIC')}
         </div>

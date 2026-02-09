@@ -175,14 +175,16 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
                 }
 
                 // If the test has a clientId, change the id of the test to use the client id
+                let hasUserTest = false;
                 if (test.test?.clientId) {
                     const userTest = state.task.taskTests.find(otherTest => otherTest.id === test.test.clientId);
                     if (userTest) {
                         test.test.id = userTest.id;
                         test.testId = userTest.id;
+                        hasUserTest = true;
                     }
                 }
-                if (test.test?.id && !state.task.currentTask.tests.find(otherTest => otherTest.id === test.test.id)) {
+                if (!hasUserTest && test.test?.id && !state.task.currentTask.tests.find(otherTest => otherTest.id === test.test.id)) {
                     newCurrentTask.tests.push(test.test);
                     needUpdateTests = true;
                 }
@@ -191,7 +193,7 @@ export function* longPollServerSubmissionResults(submissionId: string, submissio
             if (needUpdateTests) {
                 const taskVariant = state.options.taskVariant;
                 const tests = extractTestsFromTask(newCurrentTask, taskVariant);
-                yield* put(currentTaskChange(newCurrentTask));
+                yield* put(currentTaskChange({task: newCurrentTask}));
                 yield* put(updateTaskTests(tests));
             }
 

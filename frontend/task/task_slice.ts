@@ -107,10 +107,12 @@ export const taskSlice = createSlice({
             }
             state.previousTestId = null;
         },
-        currentTaskChange(state, action: PayloadAction<Task|null>) {
-            state.currentTask = action.payload;
-            state.previousTestId = null;
-            state.currentTestId = null;
+        currentTaskChange(state, action: PayloadAction<{task: Task|null, keepCurrentTestId?: boolean}>) {
+            state.currentTask = action.payload.task;
+            if (!action.payload.keepCurrentTestId) {
+                state.previousTestId = null;
+                state.currentTestId = null;
+            }
         },
         taskCurrentLevelChange(state, action: PayloadAction<{level: TaskLevelName, record?: boolean}>) {
             state.currentLevel = action.payload.level;

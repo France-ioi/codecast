@@ -1,4 +1,4 @@
-import {TaskTestServer} from '../task/task_types';
+import {TaskTest, TaskTestServer} from '../task/task_types';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {SubmissionExecutionScope} from './submission_slice';
@@ -81,6 +81,7 @@ export interface TaskSubmission {
     platform: CodecastPlatform,
     result?: TaskSubmissionResult,
     scope?: SubmissionExecutionScope,
+    userTests?: TaskTest[],
 }
 
 export enum TaskSubmissionMode {

@@ -180,7 +180,7 @@ function* taskRefresh(taskId?: string) {
     if (convertedTask.codecastParameters) {
         yield* put({type: ActionTypes.OptionsChanged, payload: {options: convertedTask.codecastParameters}});
     }
-    yield* put(currentTaskChange(convertedTask));
+    yield* put(currentTaskChange({task: convertedTask, keepCurrentTestId: true}));
 
     if (convertedTask?.gridInfos?.hints?.length) {
         yield* put(hintsLoaded(convertedTask.gridInfos.hints));
@@ -195,7 +195,7 @@ function* taskLoadSaga(app: App, action) {
 
     let extractTests = 0 === state.task.taskTests.length;
     if (action.payload.task) {
-        yield* put(currentTaskChange(action.payload.task));
+        yield* put(currentTaskChange({task: action.payload.task}));
     } else if (!state.task.currentTask) {
         extractTests = true;
         if (urlParameters.has('taskId')) {
@@ -210,14 +210,14 @@ function* taskLoadSaga(app: App, action) {
             const taskId = urlParameters.get('taskId');
             yield* call(taskRefresh, taskId);
         } else if (state.options.task) {
-            yield* put(currentTaskChange(state.options.task));
+            yield* put(currentTaskChange({task: state.options.task}));
         } else if (window.taskSettings) {
             window.taskData = getTaskDataFromTaskSettings(window.taskSettings);
             const serverTask = getServerTaskFromTaskData(window.taskData);
             if (serverTask.codecastParameters) {
                 yield* put({type: ActionTypes.OptionsChanged, payload: {options: serverTask.codecastParameters}});
             }
-            yield* put(currentTaskChange(serverTask));
+            yield* put(currentTaskChange({task: serverTask}));
         } else if (selectedTask) {
             yield* put(currentTaskChangePredefined(selectedTask));
         }
@@ -631,7 +631,7 @@ function* taskLevelLoadedSaga() {
 function* taskUpdateCurrentTestIdSaga({payload}) {
     const state = yield* appSelect();
     const context = quickAlgoLibraries.getContext(null, state.environment);
-    log.getLogger('task').debug('update current test', context);
+    log.getLogger('task').debug('update current test', context, {submissionId: state.submission.currentSubmissionId});
 
     const taskTests = yield* appSelect(selectTaskTests);
 
@@ -640,10 +640,12 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
         const currentState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
         const taskResetDone = state.task.resetDone;
         const allTaskTests = state.task.taskTests;
-        const realTestIndex = allTaskTests.findIndex(test => taskTests[state.task.previousTestId].id === test.id);
-        log.getLogger('tests').debug('update current test context state', {allTaskTests, previous: state.task.previousTestId, current: state.task.currentTestId, taskTests, previousTest: taskTests[state.task.previousTestId], realTestIndex});
-        if (-1 !== realTestIndex) {
-            yield* put(updateTestContextState({testIndex: realTestIndex, contextState: currentState, contextStateResetDone: taskResetDone}));
+        if (taskTests[state.task.previousTestId]) {
+            const realTestIndex = allTaskTests.findIndex(test => taskTests[state.task.previousTestId].id === test.id);
+            log.getLogger('tests').debug('update current test context state', {allTaskTests, previous: state.task.previousTestId, current: state.task.currentTestId, taskTests, previousTest: taskTests[state.task.previousTestId], realTestIndex});
+            if (-1 !== realTestIndex) {
+                yield* put(updateTestContextState({testIndex: realTestIndex, contextState: currentState, contextStateResetDone: taskResetDone}));
+            }
         }
     }
 
@@ -662,24 +664,25 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     } else if (context) {
         log.getLogger('task').debug('task update test', taskTests, state.task.currentTestId);
         if (!(state.task.currentTestId in taskTests)) {
-            console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task);
-            throw "Couldn't update test during replay, check if the replay is using the appropriate task";
-        }
-        context.iTestCase = state.task.currentTestId;
+            console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task, taskTests);
+            // throw "Couldn't update test during replay, check if the replay is using the appropriate task";
+        } else {
+            context.iTestCase = state.task.currentTestId;
 
-        let newTaskResetDone = true;
-        if (!payload.withoutContextState) {
-            const {contextState, contextStateResetDone} = yield* call(getTestContextState);
-            if (false === contextStateResetDone) {
-                newTaskResetDone = false;
+            let newTaskResetDone = true;
+            if (!payload.withoutContextState) {
+                const {contextState, contextStateResetDone} = yield* call(getTestContextState);
+                if (false === contextStateResetDone) {
+                    newTaskResetDone = false;
+                }
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
+                log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', contextState);
+                yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
             }
-            yield* call(quickAlgoLibraryResetAndReloadStateSaga, contextState);
-            log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', contextState);
-            yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-        }
 
-        if (newTaskResetDone !== state.task.resetDone) {
-            yield* put(taskResetDone(newTaskResetDone));
+            if (newTaskResetDone !== state.task.resetDone) {
+                yield* put(taskResetDone(newTaskResetDone));
+            }
         }
     }
 
