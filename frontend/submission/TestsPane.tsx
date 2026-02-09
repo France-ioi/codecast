@@ -4,11 +4,11 @@ import {useAppSelector} from "../hooks";
 import {TestsPaneList} from './TestsPaneList';
 import {
     submissionChangePaneOpen,
+    submissionCloseCurrentSubmission,
 } from './submission_slice';
 import {getMessage} from '../lang';
-import {faSpinner} from '@fortawesome/free-solid-svg-icons';
+import {faSpinner, faTimes} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {SubmissionResultsSelector} from './SubmissionResultsSelector';
 import {SubmissionResultLabel} from './SubmissionResultLabel';
 import {isServerSubmission} from './submission';
 
@@ -25,6 +25,10 @@ export function TestsPane(props: TestsPaneProps) {
         dispatch(submissionChangePaneOpen(false));
     };
 
+    const cancelSubmission = () => {
+        dispatch(submissionCloseCurrentSubmission({}));
+    };
+
     return (
         <div className="submission-results" style={{display: props.open ? 'flex' : 'none'}}>
             <div className="submission-results__header">
@@ -35,6 +39,9 @@ export function TestsPane(props: TestsPaneProps) {
 
             {currentSubmission && isServerSubmission(currentSubmission) && <div className="submission-results__label-container">
                 <SubmissionResultLabel submission={currentSubmission}/>
+                <div className="submission-close" onClick={cancelSubmission}>
+                    <FontAwesomeIcon icon={faTimes}/>
+                </div>
             </div>}
 
             <div className="submission-results__submission">

@@ -84,9 +84,9 @@ export function TestsPaneList(props: SubmissionResultProps) {
             <React.Fragment>
                 {compilationResult}
 
-                {submission && (!isServerSubmission(submission) || !submission.result?.compilationError) && submission.result?.tests.length === 0 && <div>
-                    {getMessage('SUBMISSION_NO_TESTS')}
-                </div>}
+                {/*{submission && (!isServerSubmission(submission) || !submission.result?.compilationError) && submission.result?.tests.length === 0 && <div>*/}
+                {/*    {getMessage('SUBMISSION_NO_TESTS')}*/}
+                {/*</div>}*/}
 
                 <React.Fragment>
                     {subTasksOrdered.length > 0 && <div className="submission-result-subtasks">
