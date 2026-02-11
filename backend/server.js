@@ -201,7 +201,7 @@ function addBackendRoutes(app, config, store) {
        pair identifying the S3 target, which must correspond to one of the user's
        grants. */
     app.post('/upload', function (req, res) {
-        const basePlayerUrl = req.body.basePlayerUrl ? req.body.basePlayerUrl : config.playerUrl;
+        const basePlayerUrl = req.body?.basePlayerUrl ? req.body.basePlayerUrl : config.playerUrl;
 
         config.getUserConfig(req, function (err, userConfig) {
             console.log('user config', userConfig);
@@ -220,7 +220,7 @@ function addBackendRoutes(app, config, store) {
                     const audio = await upload.getFileUploadForm(s3client, s3Bucket, uploadPath + '.mp3');
 
                     const additionalFiles = [];
-                    for (let fileName of (req.body.additionalFiles ?? [])) {
+                    for (let fileName of (req.body?.additionalFiles ?? [])) {
                         const fileForm = await upload.getFileUploadForm(s3client, s3Bucket, uploadPath + '-' + fileName);
                         additionalFiles.push(fileForm);
                     }
@@ -269,7 +269,7 @@ function addBackendRoutes(app, config, store) {
 
             const s3client = upload.makeS3Client(target);
             const {s3Bucket, uploadPath: uploadDir} = target;
-            const id = (req.body.uploadId !== undefined) ? req.body.uploadId : Date.now().toString();
+            const id = (req.body?.uploadId !== undefined) ? req.body.uploadId : Date.now().toString();
             const base = `${uploadDir}/${id}`;
 
             const mp3file = path.join(__dirname, 'temp/data.mp3')
@@ -341,7 +341,7 @@ function addBackendRoutes(app, config, store) {
     app.post('/save', function (req, res) {
         config.getUserConfig(req, function (err, userConfig) {
             console.log('user config', userConfig);
-            const {s3Bucket, uploadPath, id} = parseCodecastUrl(req.body.base);
+            const {s3Bucket, uploadPath, id} = parseCodecastUrl(req.body?.base);
             selectTarget(userConfig, {s3Bucket, uploadPath}, function (err, target) {
                 if (err) {
                     return res.json({error: err.toString()});
