@@ -23,7 +23,7 @@ $alert-padding-x: 10px !default;
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
 @import "~@blueprintjs/select/lib/css/blueprint-select.css";
-@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
+//@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
 
 @import "./player/style.scss";
 @import "./editor/style.scss";
@@ -47,7 +47,7 @@ html {
 }
 
 /* Darker icons on blueprint buttons. */
-.bp4-button .bp4-icon, .bp4-button .bp4-icon-standard, .bp4-button .bp4-icon-large {
+.bp6-button .bp6-icon, .bp6-button .bp6-icon-standard, .bp6-button .bp6-icon-large {
   color: #3c5060;
 }
 
@@ -211,7 +211,7 @@ body#app, #app h1, #app h2, #app h3 {
 .terminal-view-header {
   display: flex;
   align-items: center;
-  .bp4-icon {
+  .bp6-icon {
     margin-left: 5px;
   }
 }
@@ -234,7 +234,7 @@ body#app, #app h1, #app h2, #app h3 {
   }
 }
 
-h6.bp4-heading {
+h6.bp6-heading {
   font-size: 18px;
 }
 
@@ -282,7 +282,7 @@ ul.global-scope li, ul.object-scope li {
   top: -1px;
   right: -1px;
 }
-.stack-controls button.bp4-small {
+.stack-controls button.bp6-small {
   min-height: 20px;
 }
 
@@ -473,15 +473,15 @@ span + .value-previous {
 .directive-bar {
   margin-bottom: 6px;
 }
-.directive-bar .bp4-navbar {
+.directive-bar .bp6-navbar {
   height: 40px;
   padding: 0 8px;
   box-shadow: none;
 }
-.directive-bar .bp4-navbar-group {
+.directive-bar .bp6-navbar-group {
   height: 40px;
 }
-.directive-bar .bp4-button {
+.directive-bar .bp6-button {
   margin-right: 8px;
 }
 
@@ -499,7 +499,7 @@ span + .value-previous {
   right: -1px;
 }
 
-.memory-controls .bp4-button-group {
+.memory-controls .bp6-button-group {
     vertical-align: 6px;
     padding-right: 2px;
 }
@@ -790,11 +790,11 @@ button.btn-cc {
   width: 100%;
 }
 
-.bp4-dialog:not(.simple-dialog):not(.bp4-alert) {
+.bp6-dialog:not(.simple-dialog):not(.bp6-alert) {
   padding-bottom: 0;
 }
 
-.button-group .bp4-form-content {
+.button-group .bp6-form-content {
   display: flex;
   gap: 8px;
 }

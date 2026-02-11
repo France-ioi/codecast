@@ -74,7 +74,7 @@ export function MenuTask() {
         if (
             wrapperRef.current
             && !wrapperRef.current.contains(event.target)
-            && !event.target.closest('.bp4-portal')
+            && !event.target.closest('.bp6-portal')
             && menuOpen
         ) {
             setMenuOpen(false);
@@ -183,7 +183,7 @@ export function MenuTask() {
                 onClose={() => setWorkWithGitOpen(false)}
             />
             <Dialog title={getMessage('MENU_ABOUT')} isOpen={aboutOpen} onClose={() => setAboutOpen(false)}>
-                <div className='bp4-dialog-body'>
+                <div className='bp6-dialog-body'>
                     <TaskAbout/>
                 </div>
             </Dialog>

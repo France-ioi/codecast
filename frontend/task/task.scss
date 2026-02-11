@@ -322,10 +322,10 @@ html:not([active-view="task"]):not([active-view="solution"]) {
         &.is-blue {
           background: var(--primary-color);
         }
-        .bp4-button {
+        .bp6-button {
           background: transparent !important;
           box-shadow: none !important;
-          .bp4-icon {
+          .bp6-icon {
             color: #fff !important;
           }
         }
@@ -415,7 +415,7 @@ html:not([active-view="task"]):not([active-view="solution"]) {
       display: flex;
       align-items: center;
 
-      .bp4-button {
+      .bp6-button {
         background: transparent !important;
         box-shadow: none !important;
         border-right: solid 1px black;
@@ -431,13 +431,13 @@ html:not([active-view="task"]):not([active-view="solution"]) {
         &[disabled] {
           opacity: 0.5;
         }
-        .bp4-icon {
+        .bp6-icon {
           color: #fff !important;
           svg {
             width: 28px;
             height: 28px;
           }
-          &.bp4-icon-floppy-disk svg, &.bp4-icon-repeat svg {
+          &.bp6-icon-floppy-disk svg, &.bp6-icon-repeat svg {
             width: 22px;
             height: 22px;
             margin: 3px;
@@ -496,9 +496,9 @@ html:not([active-view="task"]):not([active-view="solution"]) {
 
     .controls-mute {
       border-right: solid 1px black;
-      .bp4-button {
+      .bp6-button {
         border-right: none;
-        .bp4-icon {
+        .bp6-icon {
           color: #fff !important;
           svg {
             width: 22px;
@@ -512,7 +512,7 @@ html:not([active-view="task"]):not([active-view="solution"]) {
     .player-controls-volume {
       width: 120px;
       padding: 0 20px 0 10px;
-      .bp4-slider-handle {
+      .bp6-slider-handle {
         display: block;
         width: 20px !important;
         &:after {
@@ -524,22 +524,22 @@ html:not([active-view="task"]):not([active-view="solution"]) {
       }
     }
 
-    .bp4-slider {
+    .bp6-slider {
       height: 12px !important;
       min-width: initial;
-      .bp4-slider-axis, .bp4-slider-label {
+      .bp6-slider-axis, .bp6-slider-label {
         display: none;
       }
-      .bp4-slider-progress {
+      .bp6-slider-progress {
         height: 12px;
         border-radius: 500px;
         background: #30242B;
       }
-      .bp4-slider-track {
+      .bp6-slider-track {
         height: 12px;
         top: 0;
       }
-      .bp4-slider-handle {
+      .bp6-slider-handle {
         background: var(--primary-color);
         border-radius: 50px;
         width: 30px;
@@ -557,7 +557,7 @@ html:not([active-view="task"]):not([active-view="solution"]) {
           border-bottom: solid 3px white;
         }
       }
-      .bp4-slider-progress.bp4-intent-primary {
+      .bp6-slider-progress.bp6-intent-primary {
         background-color: var(--primary-color);
       }
     }
@@ -566,13 +566,13 @@ html:not([active-view="task"]):not([active-view="solution"]) {
   .task-player-resume {
     justify-content: center;
     align-items: center;
-    .bp4-button {
+    .bp6-button {
       background-color: var(--primary-color);
       background-image: none;
       color: #fff;
       outline: none;
       box-shadow: none !important;
-      .bp4-icon {
+      .bp6-icon {
         color: #fff;
       }
     }
@@ -671,7 +671,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     font-size: 18px;
     display: flex;
     align-items: center;
-    .bp4-icon {
+    .bp6-icon {
       margin-right: 8px;
     }
   }
@@ -709,7 +709,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     cursor: pointer;
     display: flex;
     align-items: center;
-    .bp4-icon {
+    .bp6-icon {
       margin-right: 5px;
     }
   }
@@ -749,11 +749,11 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 }
 
 @include mobile {
-  .bp4-dialog {
+  .bp6-dialog {
     width: 100%;
     margin: 0;
     border-radius: 0;
-    .bp4-dialog-header {
+    .bp6-dialog-header {
       border-radius: 0;
     }
   }
@@ -839,14 +839,14 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 .error-dialog {
   width: auto;
   z-index: 10;
-  .bp4-dialog {
+  .bp6-dialog {
     width: auto;
     max-width: 100vw;
   }
-  //.bp4-overlay-backdrop {
+  //.bp6-overlay-backdrop {
     //display: none;
   //}
-  .bp4-dialog-container {
+  .bp6-dialog-container {
     width: auto;
   }
 }
@@ -875,11 +875,11 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 
 .codehelp-help {
   margin-left: 10px;
-  .quickalgo-button .bp4-button-text {
+  .quickalgo-button .bp6-button-text {
     display: flex;
     align-items: center;
     gap: 4px;
-    .bp4-icon {
+    .bp6-icon {
       color: white;
     }
   }
@@ -980,7 +980,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
     font-size: 1rem !important;
     padding: 0.375rem 1rem !important;
   }
-  .bp4-icon {
+  .bp6-icon {
     color: #fff;
   }
   &[disabled] {
@@ -1010,10 +1010,10 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   }
 }
 
-.bp4-select-popover .bp4-input::-webkit-input-placeholder {
+.bp6-select-popover .bp6-input::-webkit-input-placeholder {
   color: transparent;
 }
-.bp4-select-popover .bp4-menu li {
+.bp6-select-popover .bp6-menu li {
   font-size: 0.9em;
 }
 
@@ -1027,7 +1027,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 .project-structure {
   max-height: 300px;
   overflow-y: auto;
-  .bp4-menu-item {
+  .bp6-menu-item {
     font-size: 16px;
   }
 }

@@ -92,7 +92,7 @@ export function EditorSave() {
                 <input
                     type='text'
                     placeholder="Name"
-                    className='bp4-input bp4-fill'
+                    className='bp6-input bp6-fill'
                     value={name || ''}
                     onChange={_nameChanged}
                 />

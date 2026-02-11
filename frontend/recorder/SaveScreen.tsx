@@ -105,7 +105,7 @@ export function SaveScreen(props: SaveScreenProps) {
                 <input
                     id='eventsUrlInput'
                     type='text'
-                    className='bp4-input bp4-fill'
+                    className='bp6-input bp6-fill'
                     value={eventsUrl || ''}
                     readOnly
                     onFocus={handleFocus}
@@ -115,7 +115,7 @@ export function SaveScreen(props: SaveScreenProps) {
                 <input
                     id='audioUrlInput'
                     type='text'
-                    className='bp4-input bp4-fill'
+                    className='bp6-input bp6-fill'
                     value={audioUrl || ''}
                     readOnly
                     onFocus={handleFocus}
@@ -126,7 +126,7 @@ export function SaveScreen(props: SaveScreenProps) {
                 <input
                     id='wavAudioUrlInput'
                     type='text'
-                    className='bp4-input bp4-fill'
+                    className='bp6-input bp6-fill'
                     value={wavAudioUrl || ''}
                     readOnly
                     onFocus={handleFocus}

@@ -101,14 +101,14 @@ export function PromptModalDialog() {
             <form onSubmit={validate}>
                 {ModalType.input === modalData.mode &&
                     <div className="text-center mb-2 mt-4">
-                        <input autoFocus type="text" className='modal-input bp4-input bp4-fill' value={inputValue} onChange={(event) => setInputValue(event.target.value)}></input>
+                        <input autoFocus type="text" className='modal-input bp6-input bp6-fill' value={inputValue} onChange={(event) => setInputValue(event.target.value)}></input>
                     </div>
                 }
 
                 {ModalType.dialog !== modalData.mode && ModalType.keypad !== modalData.mode &&
                     <div className="simple-dialog-buttons">
                         <button type="submit" className="simple-dialog-button">
-                            <Icon icon="small-tick" iconSize={24}/>
+                            <Icon icon="small-tick" size={24}/>
                             <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText || ModalType.input === modalData.mode ? 'VALIDATE' : 'ALRIGHT'))}</span>
                         </button>
 

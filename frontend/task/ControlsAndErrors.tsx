@@ -264,7 +264,7 @@ export function ControlsAndErrors() {
                 title={getMessage('ERROR')}
                 onClose={() => setErrorDialogOpen(false)}
             >
-                <div className='bp4-dialog-body'>
+                <div className='bp6-dialog-body'>
                     <div className="error-message-wrapper">
                         <div className="message">
                             {error}

@@ -189,8 +189,8 @@ export function Documentation(props: DocumentationProps) {
                     </span>
                 </div>
                 <div className="documentation-category-selector">
-                    <label className='bp4-label documentation-select'>
-                        <div className='bp4-select'>
+                    <label className='bp6-label documentation-select'>
+                        <div className='bp6-select'>
                             <select onChange={chooseConceptFromDropdown} value={selectedConcept ? selectedConcept.id : undefined}>
                                 {conceptsWithoutCategory.map(concept =>
                                     <option value={concept.id} key={concept.id}>{concept.name}</option>

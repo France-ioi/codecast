@@ -36,12 +36,12 @@ export function BufferEditorTabEdit(props: BufferEditorTabEditProps) {
         <div className="layout-editor-tab-edit">
             <form onSubmit={saveTab}>
                 <div>
-                    <label className='bp4-label'>
+                    <label className='bp6-label'>
                         {getMessage('BUFFER_TAB_FILE_NAME')}
                         <input
                             type='text'
                             placeholder="Name"
-                            className='bp4-input bp4-fill'
+                            className='bp6-input bp6-fill'
                             value={fileName || ''}
                             onChange={(e) => setFileName(e.target.value)}
                         />
@@ -49,9 +49,9 @@ export function BufferEditorTabEdit(props: BufferEditorTabEditProps) {
                 </div>
 
                 {canChangePlatform && <div>
-                    <label className='bp4-label'>
+                    <label className='bp6-label'>
                         {getMessage('BUFFER_TAB_LANGUAGE')}
-                        <div className='bp4-select'>
+                        <div className='bp6-select'>
                             <PlatformSelection
                                 customPlatform={platform}
                                 customSetPlatform={setPlatform}

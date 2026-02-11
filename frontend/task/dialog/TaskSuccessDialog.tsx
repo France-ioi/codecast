@@ -69,7 +69,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                     ? (hasNextLevel
                         ? <>
                             <button className="simple-dialog-button" onClick={triggerNextAction}>
-                                <Icon icon="small-tick" iconSize={24}/>
+                                <Icon icon="small-tick" size={24}/>
                                 <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                             </button>
                             {!taskSuccessStayOnCurrentVersionDisabled &&
@@ -80,7 +80,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                         </>
                         : <>
                             <button className="simple-dialog-button" onClick={triggerNextAction}>
-                                <Icon icon="small-tick" iconSize={24}/>
+                                <Icon icon="small-tick" size={24}/>
                                 <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                             </button>
                             <button className="simple-dialog-button ml-2" onClick={props.onClose}>
@@ -89,7 +89,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                         </>
                     )
                     : <button className="simple-dialog-button" onClick={props.onClose}>
-                        <Icon icon="small-tick" iconSize={24}/>
+                        <Icon icon="small-tick" size={24}/>
                         <span>{getMessage('OK')}</span>
                     </button>
                 }

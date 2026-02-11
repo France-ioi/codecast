@@ -21,7 +21,7 @@ export class SubtitlePaneItemViewer extends React.PureComponent<SubtitlePaneItem
                         <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
                     </div>
                     <div>
-                        <Icon icon={IconNames.ARROW_RIGHT} iconSize={14}/>
+                        <Icon icon={IconNames.ARROW_RIGHT} size={14}/>
                     </div>
                     <div className='subtitles-timestamp-start-end'>
                         <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>

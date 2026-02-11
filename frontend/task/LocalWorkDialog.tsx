@@ -56,7 +56,7 @@ export function LocalWorkDialog(props: LocalWorkDialogProps) {
             canOutsideClickClose={true}
             isCloseButtonShown={true}
         >
-            <div className='bp4-dialog-body'>
+            <div className='bp6-dialog-body'>
                 <FormGroup>
                     <div id='localWorkExplanation'>
                         {getMessage('LOCAL_WORK_DESCRIPTION')}

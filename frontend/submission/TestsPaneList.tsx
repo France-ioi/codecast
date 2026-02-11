@@ -74,9 +74,13 @@ export function TestsPaneList(props: SubmissionResultProps) {
 
     return (
         <div className="submission-result">
-            {submission && isServerSubmission(submission) && TaskSubmissionMode.UserTest === submission.result?.mode && <div>
-                <Alert intent={Intent.WARNING}>{getMessage('SUBMISSION_USER_TEST_WARNING')}</Alert>
-            </div>}
+            <Alert
+                intent={Intent.WARNING}
+                isOpen={submission && isServerSubmission(submission) && TaskSubmissionMode.UserTest === submission.result?.mode}
+            >
+                {getMessage('SUBMISSION_USER_TEST_WARNING')}
+            </Alert>
+
             {submission && !submission.evaluated && <div>
                 {getMessage('SUBMISSION_RESULTS_EVALUATING')}
             </div>}

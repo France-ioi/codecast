@@ -39,7 +39,7 @@ export function GitCommitDialog({bufferName}: {bufferName: string}) {
             isCloseButtonShown={true}
             onClose={closeCommitDialog}
         >
-            <div className='bp4-dialog-body'>
+            <div className='bp6-dialog-body'>
                 <form onSubmit={doGitPush}>
                     <FormGroup labelFor='gitMessage' label={getMessage('GIT_COMMIT_MESSAGE')}>
                         <InputGroup

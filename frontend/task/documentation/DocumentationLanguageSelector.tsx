@@ -15,8 +15,8 @@ export function DocumentationLanguageSelector() {
     };
 
     return (
-        <label className='bp4-label documentation-select'>
-            <div className='bp4-select'>
+        <label className='bp6-label documentation-select'>
+            <div className='bp6-select'>
                 <select onChange={setDocumentationLanguage} value={documentationLanguage}>
                     {availablePlatforms.map(platform =>
                         <option key={platform} value={platform}>{platformsList[platform].name}</option>
