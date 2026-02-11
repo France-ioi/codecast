@@ -66,7 +66,7 @@ import {Bundle} from "../linker";
 import {QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from "../task/libs/quickalgo_libraries";
-import {taskResetDone, taskUpdateState, updateCurrentTestId} from "../task/task_slice";
+import {selectCurrentTest, taskResetDone, taskUpdateState, updateCurrentTestId} from "../task/task_slice";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {selectAnswer} from "../task/selectors";
@@ -1145,7 +1145,7 @@ function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
         yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
     }
 
-    const stepperControlsState = getStepperControlsSelector({state, enabled: true});
+    const stepperControlsState = getStepperControlsSelector({state, enabled: true, currentTestHiddenProgression: !!selectCurrentTest(state)?.data?.hiddenProgression});
     const stepper = getStepper(state);
     const mustCompile = StepperStatus.Clear === stepper.status;
 

@@ -9,7 +9,6 @@ import {LayoutType} from '../task/layout/layout_types';
 import {CodecastPlatform} from './codecast_platform';
 import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
 import log from 'loglevel';
-import {selectCurrentTest} from '../task/task_slice';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;
@@ -52,7 +51,7 @@ interface StepperControlsStateToProps {
     soundEnabled: boolean,
 }
 
-export const getStepperControlsSelector = memoize(({state, enabled}: {state: AppStore, enabled: boolean}): StepperControlsStateToProps => {
+export const getStepperControlsSelector = memoize(({state, enabled, currentTestHiddenProgression}: {state: AppStore, enabled: boolean, currentTestHiddenProgression: boolean}): StepperControlsStateToProps => {
     let {showStepper, platform, allowExecutionOverBlocksLimit} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
@@ -165,7 +164,7 @@ export const getStepperControlsSelector = memoize(({state, enabled}: {state: App
             canChangeSpeed = false;
         }
     }
-    if (selectCurrentTest(state)?.data?.hiddenProgression) {
+    if (currentTestHiddenProgression) {
         canStep = false;
         canStepOver = false;
         canStepOut = false;

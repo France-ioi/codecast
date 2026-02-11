@@ -20,6 +20,7 @@ import {
 import {getMessage} from "../../lang";
 import {getStepperControlsSelector} from "../selectors";
 import {useAppSelector} from "../../hooks";
+import {selectCurrentTest} from '../../task/task_slice';
 import {LayoutType} from '../../task/layout/layout_types';
 
 interface StepperControlsProps {
@@ -30,7 +31,7 @@ interface StepperControlsProps {
 export function StepperControls(props: StepperControlsProps) {
     const [speedDisplayedState, setSpeedDisplayedState] = useState(false);
     const stepperControlsState = useAppSelector(state => {
-        return getStepperControlsSelector({state, enabled: props.enabled});
+        return getStepperControlsSelector({state, enabled: props.enabled, currentTestHiddenProgression: !!selectCurrentTest(state)?.data?.hiddenProgression});
     });
     const {showControls, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt, showStepper, layoutType} = stepperControlsState;
     const dispatch = useDispatch();

@@ -17,7 +17,7 @@ import {
 import {getMessage} from "../lang";
 import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
-import {taskChangeSoundEnabled} from "../task/task_slice";
+import {selectCurrentTest, taskChangeSoundEnabled} from "../task/task_slice";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 
 import {LayoutType} from '../task/layout/layout_types';
@@ -28,7 +28,7 @@ interface StepperControlsProps {
 
 export function TralalereControls(props: StepperControlsProps) {
     const stepperControlsState = useAppSelector(state => {
-        return getStepperControlsSelector({state, enabled: props.enabled});
+        return getStepperControlsSelector({state, enabled: props.enabled, currentTestHiddenProgression: !!selectCurrentTest(state)?.data?.hiddenProgression});
     });
     const {showControls, showCompile, compileOrExecuteMessage, controlsType, canInterrupt, showStepper} = stepperControlsState;
     const layoutType = useAppSelector(state => state.layout.type);
