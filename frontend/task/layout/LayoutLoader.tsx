@@ -1,5 +1,6 @@
 import React, {useCallback, useRef} from "react";
-import {shallowEqual, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
+import {createSelector} from "@reduxjs/toolkit";
 import {AppStore} from "../../store";
 import {createLayout, LayoutProps, selectActiveView, selectLayoutMobileMode} from "./layout";
 import {StepperStatus} from "../../stepper";
@@ -8,34 +9,44 @@ import {getNotionsBagFromIncludeBlocks} from '../blocks/notions';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {selectCurrentTest} from '../task_slice';
 
-function selectLayoutLoaderProps(state: AppStore) {
-    const fullScreenActive = state.fullscreen.active;
-    const currentStepperState = state.stepper.currentStepperState;
-    const orderedDirectives = currentStepperState && currentStepperState.directives ? currentStepperState.directives.ordered : [];
-    const advisedVisualization = (!state.stepper || state.stepper.status === StepperStatus.Clear) && state.task.resetDone ? 'instructions' : 'variables';
-    const preferredVisualizations = state.layout.preferredVisualizations;
-    const layoutType = state.layout.type;
-    const layoutRequiredType = state.layout.requiredType;
-    const screen = state.screen;
-    const options = state.options;
-    const currentTask = state.task.currentTask;
-    let showVariables = options.showStack;
-    const activeView = selectActiveView(state);
-    const currentTest = selectCurrentTest(state);
-    const context = quickAlgoLibraries.getContext(null, 'main');
-    const layoutMobileMode = selectLayoutMobileMode(state);
+const selectLayoutLoaderProps = createSelector(
+    [
+        (state: AppStore) => state.fullscreen.active,
+        (state: AppStore) => state.stepper.currentStepperState,
+        (state: AppStore) => state.stepper?.status,
+        (state: AppStore) => state.task.resetDone,
+        (state: AppStore) => state.layout.preferredVisualizations,
+        (state: AppStore) => state.layout.type,
+        (state: AppStore) => state.layout.requiredType,
+        (state: AppStore) => state.screen,
+        (state: AppStore) => state.options,
+        (state: AppStore) => state.task.currentTask,
+        (state: AppStore) => state.task.contextIncludeBlocks,
+        selectActiveView,
+        selectCurrentTest,
+        selectLayoutMobileMode,
+    ],
+    (...args) => {
+        const [fullScreenActive, currentStepperState, stepperStatus, resetDone, preferredVisualizations,
+            layoutType, layoutRequiredType, screen, options, currentTask, contextIncludeBlocks,
+            activeView, currentTest, layoutMobileMode] = args;
+        const orderedDirectives = currentStepperState && currentStepperState.directives ? currentStepperState.directives.ordered : [];
+        const advisedVisualization = (stepperStatus === undefined || stepperStatus === StepperStatus.Clear) && resetDone ? 'instructions' : 'variables';
+        let showVariables = options.showStack;
+        const context = quickAlgoLibraries.getContext(null, 'main');
 
-    if (null !== currentTask && context) {
-        const notionsBag = getNotionsBagFromIncludeBlocks(state.task.contextIncludeBlocks, context.getNotionsList());
-        showVariables = showVariables && context.usesStack() && notionsBag.hasNotion('variables_set') && !currentTest?.data?.hiddenProgression;
-    }
+        if (null !== currentTask && context) {
+            const notionsBag = getNotionsBagFromIncludeBlocks(contextIncludeBlocks, context.getNotionsList());
+            showVariables = showVariables && context.usesStack() && notionsBag.hasNotion('variables_set') && !currentTest?.data?.hiddenProgression;
+        }
 
-    return {
-        orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
-        layoutType, layoutMobileMode, screen, options, currentTask, layoutRequiredType,
-        showVariables, activeView,
-    };
-}
+        return {
+            orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
+            layoutType, layoutMobileMode, screen, options, currentTask, layoutRequiredType,
+            showVariables, activeView,
+        };
+    },
+);
 
 // We need to manually check if directives are the same because the current stepper state is rewritten
 // at each stepper execution step
@@ -74,7 +85,7 @@ const LayoutLoaderContent = React.memo(function LayoutLoaderContent(props: Layou
 }, areEqual);
 
 export function LayoutLoader() {
-    const stateProps = useSelector(selectLayoutLoaderProps, shallowEqual);
+    const stateProps = useSelector(selectLayoutLoaderProps);
     const parentRef = useRef<HTMLElement>(null);
     const {width, height} = useResizeDetector({targetRef: parentRef});
 
