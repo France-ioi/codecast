@@ -19,7 +19,7 @@ export interface NumericKeypadProps {
 
 export function NumericKeypad(props: NumericKeypadProps) {
     const [keypadValue, setKeypadValue] = useState('0');
-    const keypadInputRef = useRef<HTMLInputElement>();
+    const keypadInputRef = useRef<HTMLInputElement>(null);
 
     const onKeypadKeyDown = (e) => {
         let btn = null;

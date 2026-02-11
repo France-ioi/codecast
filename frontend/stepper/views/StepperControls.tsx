@@ -36,7 +36,7 @@ export function StepperControls(props: StepperControlsProps) {
     const dispatch = useDispatch();
     const speedDisabled = stepperControlsState.controls && 'speed' in stepperControlsState.controls && (false === stepperControlsState.controls['speed'] || '_' === stepperControlsState.controls['speed']);
 
-    const _button = (key: string, onClick: any, title: string, icon: IconName|JSX.Element, text?: string, classNames?: string): ReactElement => {
+    const _button = (key: string, onClick: any, title: string, icon: IconName|React.JSX.Element, text?: string, classNames?: string): ReactElement => {
         const {controls} = stepperControlsState;
 
         let disabled = false;

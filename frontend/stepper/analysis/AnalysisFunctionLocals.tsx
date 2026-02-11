@@ -7,7 +7,7 @@ interface AnalysisFunctionLocalsProps {
     stackFrameName?: string,
 }
 
-export const AnalysisFunctionLocals = (props: AnalysisFunctionLocalsProps): JSX.Element => {
+export const AnalysisFunctionLocals = (props: AnalysisFunctionLocalsProps): React.JSX.Element => {
     const {stackFrameName} = props;
     const variables = props.stackFrame.variables;
 

@@ -19,7 +19,7 @@ export function BlocksUsage() {
         }
     };
 
-    const wrapperRef = useRef<HTMLDivElement>();
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         function handleClickOutside(event) {

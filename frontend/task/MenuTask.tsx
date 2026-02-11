@@ -59,7 +59,7 @@ export function MenuTask() {
 
     const canWorkWithGit = useAppSelector(state => serverTask && state.options.workWithGit);
 
-    const wrapperRef = useRef<HTMLDivElement>();
+    const wrapperRef = useRef<HTMLDivElement>(null);
     const dispatch = useDispatch();
 
     useEffect(() => {

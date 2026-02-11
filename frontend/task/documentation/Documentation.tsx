@@ -1,4 +1,4 @@
-import React, {ReactFragment, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Button, Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
@@ -11,7 +11,6 @@ import {
 import {useAppSelector} from "../../hooks";
 import {DocumentationConcept, documentationConceptSelected} from "./documentation_slice";
 import {Screen} from "../../common/screens";
-import {select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {getMessage} from "../../lang";

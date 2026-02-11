@@ -8,7 +8,7 @@ interface VumeterProps {
 }
 
 export function Vumeter(props: VumeterProps) {
-    const canvasRef = useRef();
+    const canvasRef = useRef(null);
 
     const dispatch = useDispatch();
 

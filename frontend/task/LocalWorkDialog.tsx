@@ -17,7 +17,7 @@ export function LocalWorkDialog(props: LocalWorkDialogProps) {
     const platform = useAppSelector(selectActiveBufferPlatform);
     const shellCommand = `./fioi.py submit program.${platformsList[platform].extension} --language ${platform} --platform ${platformName} --token ${taskToken}`;
     const [copied, setCopied] = useState(false);
-    const timeoutRef = useRef<NodeJS.Timeout>();
+    const timeoutRef = useRef<NodeJS.Timeout>(null);
 
     const handleFocus = (event) => event.target.select();
 

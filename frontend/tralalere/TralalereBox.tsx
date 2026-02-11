@@ -2,7 +2,7 @@ import React from "react";
 import { getTralalereImg } from "./tralalere_assets";
 
 export interface TralalereBoxProps {
-    children: JSX.Element | JSX.Element[],
+    children: React.JSX.Element | React.JSX.Element[],
 }
 
 export function TralalereBox(props: TralalereBoxProps) {

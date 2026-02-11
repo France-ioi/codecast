@@ -90,7 +90,7 @@ export function Editor(props: EditorProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const contextStrings = useAppSelector(state => state.task.contextStrings);
 
-    const refEditor = useRef();
+    const refEditor = useRef(null);
     const batchEdits = useRef([]);
 
     log.getLogger('editor').debug('[buffer] re-render editor', props.name, props.state);

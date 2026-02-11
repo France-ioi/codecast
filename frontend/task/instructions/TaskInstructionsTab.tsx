@@ -23,7 +23,7 @@ export function TaskInstructionsTab(props: TaskInstructionsTabProps) {
     const maxHeight = useAppSelector(state => state.layout.instructions.maxHeight);
     const activePage = pages[activePageIndex];
     const dispatch = useDispatch();
-    const mainRef = useRef<HTMLDivElement>();
+    const mainRef = useRef<HTMLDivElement>(null);
 
     const setActivePageIndex = (pageIndex: number) => {
         dispatch({type: LayoutActionTypes.LayoutInstructionsIndexChanged, payload: {pageIndex}});

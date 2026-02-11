@@ -19,7 +19,7 @@ export function appSelect(selector?: (state: AppStore, ...args: any[]) => any, .
 }
 
 export function useDebounce(callback, timeout: number) {
-    const ref = useRef();
+    const ref = useRef(null);
 
     useEffect(() => {
         ref.current = callback;
