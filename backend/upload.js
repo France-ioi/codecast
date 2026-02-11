@@ -1,4 +1,4 @@
-import {S3Client, PutObjectCommand} from "@aws-sdk/client-s3";
+import {S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand} from "@aws-sdk/client-s3";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 const generateWebFormS3URL = async (s3client, event) => {
@@ -33,11 +33,15 @@ export async function getFileUploadForm(s3client, bucket, fileName) {
 }
 
 export function getObject(s3, params) {
-    return s3.getObject(params).promise();
+    const command = new GetObjectCommand(params);
+
+    return s3.send(command);
 }
 
 export function putObject(s3, params) {
-    return s3.putObject(params).promise();
+    const command = new PutObjectCommand(params);
+
+    return s3.send(command);
 }
 
 export function deleteObject(s3, bucket, key) {
@@ -48,5 +52,7 @@ export function deleteObject(s3, bucket, key) {
         },
     };
 
-    return s3.deleteObjects(params).promise();
+    const command = new DeleteObjectsCommand(params);
+
+    return s3.send(command);
 }

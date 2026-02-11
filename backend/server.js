@@ -14,7 +14,6 @@ import startWorker from './worker';
 import {buildOptions, parseCodecastUrl} from './options';
 import addOfflineRoutes from './offline';
 import {logCompileData, logLoadingData, logUploadData, statisticsSearch} from './statistics';
-import {getFileUploadForm} from "./upload";
 
 function buildApp(config, store, callback) {
 

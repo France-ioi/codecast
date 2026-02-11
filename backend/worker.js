@@ -34,8 +34,9 @@ function* saveSaga({payload: {target, id, changes, req, res}}) {
         const s3 = upload.makeS3Client(target);
 
         /* TODO: support updating data: fetch json, apply requested changes, putObject */
-        const {Body, VersionId} = yield call(upload.getObject, s3, {Bucket: s3Bucket, Key: s3JsonKey});
-        const data = JSON.parse(Body);
+        const {Body} = yield call(upload.getObject, s3, {Bucket: s3Bucket, Key: s3JsonKey});
+        const jsonString = yield Body.transformToString();
+        const data = JSON.parse(jsonString);
         if ('name' in changes) {
             /* name: string */
             data.name = changes.name;
