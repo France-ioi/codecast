@@ -239,6 +239,7 @@ body#app, #app h1, #app h2, #app h3 {
 
 h2.bp6-heading {
   font-size: 18px !important;
+  line-height: inherit !important;
 }
 
 #vumeter {
@@ -800,4 +801,21 @@ button.btn-cc {
 .button-group .bp6-form-content {
   display: flex;
   gap: 8px;
+}
+
+.bp6-select:after {
+  font-family: "blueprint-icons-16", sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 400;
+  line-height: 1;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  content: "\f184";
+  color: #5f6b7c;
+  pointer-events: none;
+  position: absolute;
+  right: 7px;
+  top: 7px;
 }

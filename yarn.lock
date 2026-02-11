@@ -1543,14 +1543,14 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.28.5"
 
-"@blueprintjs/colors@^5.1.13":
+"@blueprintjs/colors@^5.1.12", "@blueprintjs/colors@^5.1.13":
   version "5.1.13"
   resolved "https://registry.yarnpkg.com/@blueprintjs/colors/-/colors-5.1.13.tgz#556b5a96183c1a83ce0376b0733bbc1e062209dc"
   integrity sha512-iDS9z95cAHkwDoOAu9owomUPHUsdxYd5SgoVzGImH0t9oEyyqx+QjVqI9fUQ+zTUJHtep36X2xKmjMJqWYwwUg==
   dependencies:
     tslib "~2.6.2"
 
-"@blueprintjs/core@^6.7.0":
+"@blueprintjs/core@^6.6.1", "@blueprintjs/core@^6.7.0":
   version "6.7.0"
   resolved "https://registry.yarnpkg.com/@blueprintjs/core/-/core-6.7.0.tgz#c8b62d89577e53c341b51c7bced8f338831ec1ea"
   integrity sha512-nvwTzmy6ot6f9vStK9Xe9LLyycCqU48rY0yjpkYEcKFmXGSgckJSpaqsHfhN6EPdzSue+B6iykR9gOxd2yHXgg==
@@ -1580,12 +1580,23 @@
     react-innertext "^1.1.5"
     tslib "~2.6.2"
 
-"@blueprintjs/icons@^6.5.1":
+"@blueprintjs/icons@^6.5.0", "@blueprintjs/icons@^6.5.1":
   version "6.5.1"
   resolved "https://registry.yarnpkg.com/@blueprintjs/icons/-/icons-6.5.1.tgz#92eeee0465dfbbf69d07ef2236c0bf2b80f57e8c"
   integrity sha512-+yu/hPdk0WLfNFJnc6waUm1rmXEbG6wAFOhOoXhvrGOr+3YGht8Zhwc+VNl8JNrer24EVB6U8NOHaOYjPEePcQ==
   dependencies:
     change-case "^4.1.2"
+    classnames "^2.3.1"
+    tslib "~2.6.2"
+
+"@blueprintjs/select@6.0.13":
+  version "6.0.13"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/select/-/select-6.0.13.tgz#6c19b76bb2ab1e50f7059c8baf7e63acd28f49dd"
+  integrity sha512-Cz+BTbBlXYre/Dqm7mwi9nSxPXpJc9PQF8iKdeqBxJsDhYkSg7SB7xNHt0zjtU38pmBprIpu03rdQ7vo9OAAzQ==
+  dependencies:
+    "@blueprintjs/colors" "^5.1.12"
+    "@blueprintjs/core" "^6.6.1"
+    "@blueprintjs/icons" "^6.5.0"
     classnames "^2.3.1"
     tslib "~2.6.2"
 
