@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import {InputGroup} from "@blueprintjs/core";
 import {SubtitlePaneItemEditor} from "./views/SubtitlePaneItemEditor";
 import {SubtitlePaneItemViewer} from "./views/SubtitlePaneItemViewer";
@@ -45,7 +44,7 @@ interface SubtitlesPaneProps extends SubtitlesPaneStateToProps, SubtitlesPaneDis
 }
 
 class _SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
-    _selectedComponent: any = null;
+    _selectedRef = React.createRef<HTMLDivElement>();
 
     render() {
         const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, windowHeight} = this.props;
@@ -64,29 +63,32 @@ class _SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
                     {subtitles && subtitles.map((subtitle, index) => {
                         const selected = (currentIndex === index);
                         if (!editing) {
-                            const ref = selected && this._refSelected;
-
-                            return <SubtitlePaneItem
+                            const item = <SubtitlePaneItem
                                 key={index}
                                 item={subtitle}
-                                ref={ref}
                                 selected={selected}
                                 onJump={this._jump}
                                 highlight={filterRegexp}
                             />;
+
+                            if (selected) {
+                                return <div key={index} ref={this._selectedRef}>{item}</div>;
+                            }
+
+                            return item;
                         }
                         if (selected) {
-                            return <SubtitlePaneItemEditor
-                                key={index}
-                                item={subtitle}
-                                ref={this._refSelected}
-                                offset={audioTime - subtitle.start}
-                                audioTime={audioTime}
-                                onChange={this._changeItem}
-                                onInsert={this._insertItem}
-                                onRemove={this._removeItem}
-                                onShift={this._shiftItem}
-                            />;
+                            return <div key={index} ref={this._selectedRef}>
+                                <SubtitlePaneItemEditor
+                                    item={subtitle}
+                                    offset={audioTime - subtitle.start}
+                                    audioTime={audioTime}
+                                    onChange={this._changeItem}
+                                    onInsert={this._insertItem}
+                                    onRemove={this._removeItem}
+                                    onShift={this._shiftItem}
+                                />
+                            </div>;
                         }
 
                         return <SubtitlePaneItemViewer
@@ -103,23 +105,15 @@ class _SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
         );
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (this.props.currentIndex !== prevProps.currentIndex) {
-            if (this._selectedComponent) {
-                // eslint-disable-next-line
-                const item = ReactDOM.findDOMNode(this._selectedComponent);
+            const item = this._selectedRef.current;
+            if (item) {
                 const container = item.parentElement;
-
-                if (item instanceof HTMLElement) {
-                    container.scrollTop = (item.offsetTop - container.offsetTop) + (item.clientHeight - container.clientHeight) / 2;
-                }
+                container.scrollTop = (item.offsetTop - container.offsetTop) + (item.clientHeight - container.clientHeight) / 2;
             }
         }
     }
-
-    _refSelected = (component) => {
-        this._selectedComponent = component;
-    };
     _jump = (subtitle: NodeCue) => {
         this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: subtitle.data.start}});
     };

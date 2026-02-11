@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import scrollIntoView from "scroll-into-view-if-needed";
 import {SubtitlePaneItemEditor} from "./SubtitlePaneItemEditor";
 import {SubtitlePaneItemViewer} from "./SubtitlePaneItemViewer";
@@ -36,7 +35,7 @@ interface SubtitlesEditorPaneProps extends SubtitlesEditorPaneStateToProps, Subt
 }
 
 class _SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps> {
-    _selectedComponent: SubtitlePaneItemEditor = null;
+    _selectedRef = React.createRef<HTMLDivElement>();
 
     render() {
         const {subtitles, currentIndex, audioTime, selectedKey} = this.props;
@@ -50,20 +49,20 @@ class _SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps>
             subtitles.forEach((subtitle, index) => {
                 const selected = currentIndex === index;
                 if (selected) {
-                    items.push(<SubtitlePaneItemEditor
-                        key={index}
-                        item={subtitle}
-                        ref={this._refSelected}
-                        offset={audioTime - subtitle.data.start}
-                        audioTime={audioTime}
-                        onChange={this._changeItem}
-                        onInsert={this._insertItem}
-                        onRemove={canRemove && this._removeItem}
-                        onShift={this._shiftItem}
-                        minStart={prevStart + shiftAmount}
-                        maxStart={subtitle.data.end - shiftAmount}
-                        shiftAmount={shiftAmount}
-                    />);
+                    items.push(<div key={index} ref={this._selectedRef}>
+                        <SubtitlePaneItemEditor
+                            item={subtitle}
+                            offset={audioTime - subtitle.data.start}
+                            audioTime={audioTime}
+                            onChange={this._changeItem}
+                            onInsert={this._insertItem}
+                            onRemove={canRemove && this._removeItem}
+                            onShift={this._shiftItem}
+                            minStart={prevStart + shiftAmount}
+                            maxStart={subtitle.data.end - shiftAmount}
+                            shiftAmount={shiftAmount}
+                        />
+                    </div>);
                 } else {
                     items.push(<SubtitlePaneItemViewer
                         key={index}
@@ -86,23 +85,15 @@ class _SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps>
 
     componentDidUpdate(prevProps) {
         if (this.props.currentIndex !== prevProps.currentIndex) {
-            if (this._selectedComponent) {
-                // eslint-disable-next-line
-                const domNode = ReactDOM.findDOMNode(this._selectedComponent);
-
-                if (domNode instanceof Element) {
-                    scrollIntoView(domNode, {
-                        block: 'center',
-                        behavior: 'smooth'
-                    });
-                }
+            const domNode = this._selectedRef.current;
+            if (domNode) {
+                scrollIntoView(domNode, {
+                    block: 'center',
+                    behavior: 'smooth'
+                });
             }
         }
     }
-
-    _refSelected = (component) => {
-        this._selectedComponent = component;
-    };
     _jump = (subtitle: NodeCue) => {
         this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: subtitle.data.start}});
     };
