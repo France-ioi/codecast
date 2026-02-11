@@ -1,3 +1,5 @@
+@use "sass:string";
+
 :root {
   --primary-color: #4a90e2;
   --secondary-color: #4a4a4a;
@@ -51,7 +53,7 @@ $sides: (top, bottom, left, right);
 
 @each $space in $spaceamounts {
   @each $side in $sides {
-    .m#{str-slice($side, 0, 1)}-#{$space} {
+    .m#{string.slice($side, 0, 1)}-#{$space} {
       margin-#{$side}: #{$space * 5}px !important;
     }
   }
