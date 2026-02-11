@@ -38,7 +38,7 @@ const CustomToggle = React.forwardRef<HTMLAnchorElement, {children: ReactNode, o
 
 class _MultiVisualization extends React.PureComponent<MultiVisualizationProps> {
     render() {
-        const elements: ReactElement[] = React.Children.toArray(this.props.children) as ReactElement[];
+        const elements = React.Children.toArray(this.props.children) as ReactElement<{metadata: any}>[];
 
         return (
             <div className={`multi-visualization ${this.props.className ? this.props.className : ''}`}>

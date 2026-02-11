@@ -238,7 +238,7 @@ function clearUrl() {
 **/
 window.Codecast.start = function(options) {
     // Fix bug when bundle is loaded in head before body is initialized, dialogs would not appear
-    Portal.defaultProps.container = document.body;
+    // Portal.defaultProps.container = document.body;
 
     window.Codecast.options = JSON.parse(JSON.stringify(options));
 

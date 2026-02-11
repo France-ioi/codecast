@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {Editor, EditorProps} from "./Editor";
 import {useDispatch} from "react-redux";
-import {withResizeDetector} from "react-resize-detector";
+import {useResizeDetector} from "react-resize-detector";
 import {BlocklyEditor} from "../stepper/js/BlocklyEditor";
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {Block} from '../task/blocks/block_types';
@@ -33,8 +33,6 @@ interface BufferEditorProps {
     mode: string,
     requiredWidth: any,
     requiredHeight: any,
-    width?: number,
-    height?: number,
     bufferName: string,
     hasAutocompletion?: boolean,
     platform?: CodecastPlatform,
@@ -42,13 +40,14 @@ interface BufferEditorProps {
     editorProps?: EditorProps,
 }
 
-const _BufferEditor = (props: BufferEditorProps) => {
-    const {bufferName, width, height} = props;
+export function BufferEditor(props: BufferEditorProps) {
+    const {bufferName} = props;
     const bufferState = useAppSelector(state => state.buffers.buffers[bufferName] ? state.buffers.buffers[bufferName] : createEmptyBufferState(BufferType.Text));
     const bufferType = bufferState.type;
     const highlights = bufferState.source ? useAppSelector(getComputedSourceHighlightFromStateSelector) : null;
     const [prevWidth, setPrevWidth] = useState(0);
     const [prevHeight, setPrevHeight] = useState(0);
+    const {width, height} = useResizeDetector<HTMLDivElement>();
 
     const dispatch = useDispatch();
 
@@ -58,7 +57,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         }
         setPrevWidth(width);
         setPrevHeight(height);
-    }, [props.width, props.height])
+    }, [width, height])
 
     const onInit = useCallback(() => {
         dispatch(bufferInit({buffer: bufferName, type: bufferType}));
@@ -120,5 +119,3 @@ const _BufferEditor = (props: BufferEditorProps) => {
         {...props.editorProps}
     />;
 }
-
-export const BufferEditor = withResizeDetector(_BufferEditor);
