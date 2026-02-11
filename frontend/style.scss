@@ -537,7 +537,7 @@ span + .value-previous {
   z-index: 2;
 }
 
-svg {
+.directive-view svg {
   font-size: 13px;
   font-family: $font-family-sans-serif;
 
@@ -818,4 +818,8 @@ button.btn-cc {
   position: absolute;
   right: 7px;
   top: 7px;
+}
+
+:focus {
+  outline: none !important;
 }
