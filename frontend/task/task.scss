@@ -1,4 +1,17 @@
 @use "sass:string";
+@use './mixins' as *;
+@use '../variables' as *;
+
+@use "./layout/layout.scss";
+@use "./controls.scss";
+@use "./documentation/documentation.scss";
+@use "./task_tests.scss";
+@use "./levels.scss";
+@use "./hints/hints.scss";
+@use "./blocks/blocks.scss";
+@use "./libs/quickpi.scss";
+@use "./libs/smart_contract/smart_contract.scss";
+@use "../stepper/js/blockly.scss";
 
 :root {
   --primary-color: #4a90e2;
@@ -24,17 +37,7 @@
   }
 }
 
-@mixin mobile {
-  @media screen and (max-width: 767px) {
-    @content
-  }
-}
 
-@mixin not-mobile {
-  @media screen and (min-width: 768px) {
-    @content
-  }
-}
 
 @include mobile {
   .hidden-mobile {
@@ -59,17 +62,6 @@ $sides: (top, bottom, left, right);
   }
 }
 
-
-@import "./layout/layout.scss";
-@import "./controls.scss";
-@import "./documentation/documentation.scss";
-@import "./task_tests.scss";
-@import "./levels.scss";
-@import "./hints/hints.scss";
-@import "./blocks/blocks.scss";
-@import "./libs/quickpi.scss";
-@import "./libs/smart_contract/smart_contract.scss";
-@import "../stepper/js/blockly.scss";
 
 html {
   margin: 0 !important;

@@ -1,42 +1,43 @@
 @use "sass:math";
 
-$font-family-sans-serif: var(--font-family-sans-serif);
-$font-family-monospace: 'Inconsolata';
-$font-family-console: 'Lucida Console', Monaco, monospace;
+@use './variables' as *;
 
-$font-size-base: 1rem;
-$font-size-lg: $font-size-base * 1.12 !default;
-$font-size-sm: $font-size-base * .875 !default;
+@use 'bootstrap/scss/bootstrap' with (
+  $font-family-sans-serif: var(--font-family-sans-serif),
+  $font-family-monospace: 'Inconsolata',
 
-$grid-breakpoints: (
-  xs: 0,
-  sm: 576px,
-  md: 800px,
-  lg: 1024px,
-  xl: 1200px
-) !default;
+  $font-size-base: 1rem,
+  $font-size-lg: 1rem * 1.12,
+  $font-size-sm: 1rem * .875,
 
-$grid-gutter-width: 6px;
-$alert-padding-y: 10px !default;
-$alert-padding-x: 10px !default;
+  $grid-breakpoints: (
+    xs: 0,
+    sm: 576px,
+    md: 800px,
+    lg: 1024px,
+    xl: 1200px
+  ),
 
-@import "~bootstrap/scss/bootstrap";
+  $grid-gutter-width: 6px,
+  $alert-padding-y: 10px,
+  $alert-padding-x: 10px
+);
+
+@use './player/style' as player;
+@use './editor/style' as editor;
+@use './task/task';
+@use './task/instructions/instructions';
+@use 'python';
+@use 'subtitles';
+@use 'controls';
+@use './buffers/buffers';
+@use './tralalere/tralalere';
+@use './submission/submission';
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
 @import "~@blueprintjs/select/lib/css/blueprint-select.css";
 //@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
-
-@import "./player/style.scss";
-@import "./editor/style.scss";
-@import "./task/task.scss";
-@import "./task/instructions/instructions.scss";
-@import "python";
-@import "subtitles";
-@import "controls";
-@import "./buffers/buffers.scss";
-@import "./tralalere/tralalere.scss";
-@import "./submission/submission.scss";
 
 input {
   padding: 0;
@@ -75,7 +76,7 @@ body#app {
 body#app, #app h1, #app h2, #app h3 {
   font-size: 18px;
   font-weight: normal;
-  font-family: $font-family-sans-serif;
+  font-family: var(--font-family-sans-serif);
 }
 #app h1, #app h2, #app h3 {
   line-height: 1;
@@ -309,7 +310,7 @@ span + .value-previous {
 
 .vardecl {
   overflow: hidden;
-  max-height: 2 * math.ceil($line-height-lg * $font-size-lg);
+  max-height: 2 * math.ceil(bootstrap.$line-height-lg * $font-size-lg);
 }
 .vardecl-object {
   max-height: none;
@@ -391,20 +392,20 @@ span + .value-previous {
 .mainView-lg {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-lg;
-    line-height: math.ceil($line-height-lg * $font-size-lg);
+    line-height: math.ceil(bootstrap.$line-height-lg * $font-size-lg);
   }
 }
 
 .mainView-md {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-base;
-    line-height: math.ceil($line-height-base * $font-size-base);
+    line-height: math.ceil(bootstrap.$line-height-base * $font-size-base);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 7px;
   }
   .vardecl {
-    max-height: 2 * math.ceil($line-height-base * $font-size-base);
+    max-height: 2 * math.ceil(bootstrap.$line-height-base * $font-size-base);
   }
   .vardecl-object {
     max-height: none;
@@ -414,7 +415,7 @@ span + .value-previous {
 .mainView-sm {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-sm;
-    line-height: math.ceil($line-height-sm * $font-size-sm);
+    line-height: math.ceil(bootstrap.$line-height-sm * $font-size-sm);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 6px;
@@ -438,7 +439,7 @@ span + .value-previous {
     padding: 3px 5px;
   }
   .vardecl {
-    max-height: 2 * $line-height-sm;
+    max-height: 2 * bootstrap.$line-height-sm;
   }
   .vardecl-object {
     max-height: none;

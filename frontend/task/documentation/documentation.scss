@@ -1,3 +1,5 @@
+@use '../mixins' as *;
+
 .documentation {
   border-left: solid 1px #e7e7e7;
   height: 100%;

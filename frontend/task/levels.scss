@@ -1,3 +1,5 @@
+@use './mixins' as *;
+
 .level-tabs {
   display: flex;
   align-items: center;

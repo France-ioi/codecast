@@ -1,4 +1,5 @@
-@import "./keypad";
+@use "./keypad";
+@use "../mixins" as *;
 
 .task-available-blocks-container {
   flex: 33%;
