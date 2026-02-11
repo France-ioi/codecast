@@ -8182,11 +8182,6 @@ react-bootstrap@^2.7.4:
     uncontrollable "^7.2.1"
     warning "^4.0.3"
 
-react-clickdrag@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/react-clickdrag/-/react-clickdrag-4.0.0.tgz#f418ee0c9a9b0bd43ab3531f2471a90f1ebbfedf"
-  integrity sha512-XG1Tl4DTKlEPd5MFasdzq3ntAyE1fX8w4FaQETMxlJAg1QSSsaR3gFpBd7wD4iuPLUAQDYtf8iV+fCUDTnf8fA==
-
 react-css-modules@^4.7.11:
   version "4.7.11"
   resolved "https://registry.yarnpkg.com/react-css-modules/-/react-css-modules-4.7.11.tgz#e9bc7ac6e3dd7e71c8e46e9d22c1d0abb2110682"

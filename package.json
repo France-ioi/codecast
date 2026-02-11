@@ -88,7 +88,6 @@
     "rdndmb-html5-to-touch": "^9.0.0",
     "react": "^19.0.0",
     "react-bootstrap": "^2.7.4",
-    "react-clickdrag": "^4.0.0",
     "react-css-modules": "^4.7.11",
     "react-csv": "^2.2.2",
     "react-dnd": "^16.0.1",

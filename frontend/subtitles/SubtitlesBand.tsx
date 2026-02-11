@@ -1,8 +1,7 @@
-import React from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import classnames from 'classnames';
 import {connect} from "react-redux";
 import {AppStore} from "../store";
-import clickDrag from 'react-clickdrag';
 
 interface SubtitlesBandStateToProps {
     hidden: boolean,
@@ -56,78 +55,74 @@ function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
     };
 }
 
-interface PlayerAppDispatchToProps {
+interface SubtitlesBandDispatchToProps {
     dispatch: Function
 }
 
-interface DataDrag {
-    dataDrag: {
-        isMouseDown: boolean,
-        isMoving: boolean,
-        mouseDownPositionX: number,
-        mouseDownPositionY: number,
-        moveDeltaX: number,
-        moveDeltaY: number
+interface SubtitlesBandProps extends SubtitlesBandStateToProps, SubtitlesBandDispatchToProps {
+}
+
+function _SubtitlesBand(props: SubtitlesBandProps) {
+    const {hidden, active, item, geometry, top, textHidden, windowHeight} = props;
+
+    const bandRef = useRef<HTMLDivElement>(null);
+    const [currentY, setCurrentY] = useState(0);
+    const lastPositionYRef = useRef(0);
+    const dragStartYRef = useRef(0);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const clampY = useCallback((y: number) => {
+        if (!windowHeight || !top) return y;
+        const height = bandRef.current ? bandRef.current.offsetHeight : 40;
+        return Math.min(windowHeight - top - height, Math.max(-top, y));
+    }, [windowHeight, top]);
+
+    const handlePointerDown = useCallback((e: React.PointerEvent) => {
+        dragStartYRef.current = e.clientY;
+        lastPositionYRef.current = currentY;
+        setIsDragging(true);
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    }, [currentY]);
+
+    const handlePointerMove = useCallback((e: React.PointerEvent) => {
+        if (!isDragging) return;
+        const deltaY = e.clientY - dragStartYRef.current;
+        const newY = lastPositionYRef.current + deltaY;
+        setCurrentY(clampY(newY));
+    }, [isDragging, clampY]);
+
+    const handlePointerUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    useEffect(() => {
+        setCurrentY(prev => clampY(prev));
+    }, [clampY]);
+
+    if (hidden) {
+        return <div style={{display: 'none'}}/>;
     }
-}
 
-interface SubtitlesBandProps extends SubtitlesBandStateToProps, PlayerAppDispatchToProps, DataDrag {
+    const translation = `translate(0px, ${currentY}px)`;
 
-}
-
-class _SubtitlesBand extends React.PureComponent<SubtitlesBandProps> {
-    state = {
-        band: null,
-        currentY: 0,
-        lastPositionY: 0
-    };
-
-    render() {
-        const {hidden} = this.props;
-        if (hidden) {
-            /* ClickDrag requires a DOM node to attach to, so return a hidden element
-               rather than false. */
-            return <div style={{display: 'none'}}/>;
-        }
-
-        const {active, item, geometry, dataDrag: {isMoving}, top, textHidden} = this.props;
-        const translation = `translate(0px, ${this.state.currentY}px)`;
-
-        return (
-            <div
-                className={classnames(['subtitles-band', `subtitles-band-${active ? '' : 'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
-                style={{top: `${top}px`, transform: translation}}
-                ref={this._refBand}
-            >
-                <div className='subtitles-band-frame'>
-                    {item &&
-                        <p className='subtitles-text' style={{textDecoration: textHidden ? 'line-through' : 'none'}}>
-                            {item.data.text}
-                        </p>
-                    }
-                </div>
+    return (
+        <div
+            className={classnames(['subtitles-band', `subtitles-band-${active ? '' : 'in'}active`, isDragging && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
+            style={{top: `${top}px`, transform: translation, touchAction: 'none'}}
+            ref={bandRef}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+        >
+            <div className='subtitles-band-frame'>
+                {item &&
+                    <p className='subtitles-text' style={{textDecoration: textHidden ? 'line-through' : 'none'}}>
+                        {item.data.text}
+                    </p>
+                }
             </div>
-        );
-    }
-
-    static getDerivedStateFromProps(nextProps, prevState) {
-        if (!nextProps.windowHeight) return null;
-        const height = (prevState.band ? prevState.band.offsetHeight : 40);
-        if (nextProps.dataDrag.isMoving) {
-            const newPositionY = prevState.lastPositionY + nextProps.dataDrag.moveDeltaY;
-            const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, newPositionY));
-
-            return {currentY};
-        } else {
-            const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, prevState.currentY));
-
-            return {currentY, lastPositionY: currentY};
-        }
-    }
-
-    _refBand = (element) => {
-        this.setState({band: element});
-    };
+        </div>
+    );
 }
 
-export const SubtitlesBand = clickDrag(connect(mapStateToProps)(_SubtitlesBand), {touch: true});
+export const SubtitlesBand = connect(mapStateToProps)(_SubtitlesBand);
