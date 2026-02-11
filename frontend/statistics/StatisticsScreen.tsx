@@ -168,7 +168,7 @@ class _StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
                             <HTMLTable
                                 bordered
                                 interactive
-                                condensed
+                                compact
                             >
                                 <thead>
                                     <tr>

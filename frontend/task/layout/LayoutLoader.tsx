@@ -1,32 +1,14 @@
-import React from "react";
-import {connect} from "react-redux";
-import {AppStore, CodecastOptions} from "../../store";
-import {createLayout, selectActiveView, selectLayoutMobileMode} from "./layout";
+import React, {useCallback, useRef} from "react";
+import {shallowEqual, useSelector} from "react-redux";
+import {AppStore} from "../../store";
+import {createLayout, LayoutProps, selectActiveView, selectLayoutMobileMode} from "./layout";
 import {StepperStatus} from "../../stepper";
-import {withResizeDetector} from 'react-resize-detector';
-import {Directive} from "../../stepper/python/directives";
-import {Screen} from "../../common/screens";
+import {useResizeDetector} from 'react-resize-detector';
 import {getNotionsBagFromIncludeBlocks} from '../blocks/notions';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
-import {LayoutMobileMode, LayoutType} from './layout_types';
 import {selectCurrentTest} from '../task_slice';
 
-interface LayoutLoaderStateToProps {
-    advisedVisualization: string,
-    orderedDirectives: readonly Directive[],
-    fullScreenActive: boolean,
-    preferredVisualizations: string[],
-    layoutType: LayoutType,
-    layoutRequiredType: LayoutType,
-    layoutMobileMode: LayoutMobileMode,
-    screen: Screen,
-    options: CodecastOptions,
-    currentTask: any,
-    showVariables: boolean,
-    activeView?: string,
-}
-
-function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
+function selectLayoutLoaderProps(state: AppStore) {
     const fullScreenActive = state.fullscreen.active;
     const currentStepperState = state.stepper.currentStepperState;
     const orderedDirectives = currentStepperState && currentStepperState.directives ? currentStepperState.directives.ordered : [];
@@ -55,30 +37,9 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     };
 }
 
-interface LayoutLoaderDispatchToProps {
-    dispatch: Function
-}
-
-interface LayoutLoaderProps extends LayoutLoaderStateToProps, LayoutLoaderDispatchToProps {
-    width: number,
-    height: number,
-}
-
-class _LayoutLoader extends React.PureComponent<LayoutLoaderProps> {
-    render() {
-        if (undefined !== this.props.width && undefined !== this.props.height) {
-            return createLayout(this.props);
-        }
-
-        return (
-            <div className="layout-empty"/>
-        );
-    }
-}
-
 // We need to manually check if directives are the same because the current stepper state is rewritten
 // at each stepper execution step
-function areEqual(prevProps, nextProps) {
+function areEqual(prevProps: LayoutProps, nextProps: LayoutProps) {
     if (Object.keys(prevProps).length !== Object.keys(nextProps).length) {
         return false;
     }
@@ -102,4 +63,30 @@ function areEqual(prevProps, nextProps) {
     return true;
 }
 
-export const LayoutLoader = connect(mapStateToProps)(withResizeDetector(React.memo(_LayoutLoader, areEqual)));
+const LayoutLoaderContent = React.memo(function LayoutLoaderContent(props: LayoutProps) {
+    if (undefined !== props.width && undefined !== props.height) {
+        return createLayout(props);
+    }
+
+    return (
+        <div className="layout-empty"/>
+    );
+}, areEqual);
+
+export function LayoutLoader() {
+    const stateProps = useSelector(selectLayoutLoaderProps, shallowEqual);
+    const parentRef = useRef<HTMLElement>(null);
+    const {width, height} = useResizeDetector({targetRef: parentRef});
+
+    const captureParent = useCallback((node: HTMLElement | null) => {
+        if (node) {
+            parentRef.current = node.parentElement;
+        }
+    }, []);
+
+    if (undefined !== width && undefined !== height) {
+        return <LayoutLoaderContent {...stateProps} width={width} height={height}/>;
+    }
+
+    return <div ref={captureParent} className="layout-empty"/>;
+}

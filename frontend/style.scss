@@ -18,7 +18,7 @@ $grid-gutter-width: 6px;
 $alert-padding-y: 10px !default;
 $alert-padding-x: 10px !default;
 
-@import "node_modules/bootstrap/scss/bootstrap";
+@import "~bootstrap/scss/bootstrap";
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
