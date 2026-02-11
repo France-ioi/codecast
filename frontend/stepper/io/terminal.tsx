@@ -1,6 +1,5 @@
 /* Line-buffered terminal */
-import React from 'react';
-import produce, {immerable} from "immer";
+import {produce, immerable} from "immer";
 
 export const initialStateTerminal = {} as any;
 

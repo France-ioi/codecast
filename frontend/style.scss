@@ -1,3 +1,5 @@
+@use "sass:math";
+
 $font-family-sans-serif: var(--font-family-sans-serif);
 $font-family-monospace: 'Inconsolata';
 $font-family-console: 'Lucida Console', Monaco, monospace;
@@ -307,7 +309,7 @@ span + .value-previous {
 
 .vardecl {
   overflow: hidden;
-  max-height: 2 * ceil($line-height-lg * $font-size-lg);
+  max-height: 2 * math.ceil($line-height-lg * $font-size-lg);
 }
 .vardecl-object {
   max-height: none;
@@ -389,20 +391,20 @@ span + .value-previous {
 .mainView-lg {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-lg;
-    line-height: ceil($line-height-lg * $font-size-lg);
+    line-height: math.ceil($line-height-lg * $font-size-lg);
   }
 }
 
 .mainView-md {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-base;
-    line-height: ceil($line-height-base * $font-size-base);
+    line-height: math.ceil($line-height-base * $font-size-base);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 7px;
   }
   .vardecl {
-    max-height: 2 * ceil($line-height-base * $font-size-base);
+    max-height: 2 * math.ceil($line-height-base * $font-size-base);
   }
   .vardecl-object {
     max-height: none;
@@ -412,7 +414,7 @@ span + .value-previous {
 .mainView-sm {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-sm;
-    line-height: ceil($line-height-sm * $font-size-sm);
+    line-height: math.ceil($line-height-sm * $font-size-sm);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 6px;

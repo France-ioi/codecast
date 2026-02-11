@@ -1,9 +1,11 @@
+@use "sass:color";
+
 $color-background: white;
 $color-theme: #779;
 $icon-size: 16px;
 
-$color-hover: desaturate(darken($color-theme, 20%), 10%);
-$color-active: fade-out($color-hover, 0.5);
+$color-hover: color.adjust(color.adjust($color-theme, $lightness: -20%), $saturation: -10%);
+$color-active: color.adjust($color-hover, $alpha: -0.5);
 
 .player-controls-volume {
   padding: 7px 0;
