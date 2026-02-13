@@ -1,4 +1,4 @@
-import React, {ReactFragment, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Button, Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
@@ -11,7 +11,6 @@ import {
 import {useAppSelector} from "../../hooks";
 import {DocumentationConcept, documentationConceptSelected} from "./documentation_slice";
 import {Screen} from "../../common/screens";
-import {select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {getMessage} from "../../lang";
@@ -190,8 +189,8 @@ export function Documentation(props: DocumentationProps) {
                     </span>
                 </div>
                 <div className="documentation-category-selector">
-                    <label className='bp4-label documentation-select'>
-                        <div className='bp4-select'>
+                    <label className='bp6-label documentation-select'>
+                        <div className='bp6-select'>
                             <select onChange={chooseConceptFromDropdown} value={selectedConcept ? selectedConcept.id : undefined}>
                                 {conceptsWithoutCategory.map(concept =>
                                     <option value={concept.id} key={concept.id}>{concept.name}</option>

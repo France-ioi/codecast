@@ -56,7 +56,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
 
     return (
         <Dialog icon='menu' title={getMessage('CLOSED_CAPTIONS_TITLE')} isOpen={props.open} onClose={props.onClose}>
-            <div className='bp4-dialog-body'>
+            <div className='bp6-dialog-body'>
                 {busy &&
                     <Spinner size={20}/>
                 }
@@ -72,9 +72,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
                         );
                     })}
                 </RadioGroup>
-                {lastError &&
-                    <Alert intent={Intent.DANGER}>{lastError}</Alert>
-                }
+                <Alert intent={Intent.DANGER} isOpen={!!lastError}>{lastError}</Alert>
                 <div className="mt-4">
                     <Checkbox disabled={!isLoaded} checked={paneEnabled} onChange={_changePaneEnabled}>
                         {getMessage('CLOSED_CAPTIONS_SHOW_PANE')}
@@ -87,7 +85,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
                 </div>
                 {isLoaded &&
                     <div style={{textAlign: 'center'}} className="mt-4">
-                        <a {...(hasLocalSubtitles ? {onClick: downloadSubtitles} : {href: availableOptions[loadedKey].url})} className='bp4-button bp4-small bp4-icon-download'
+                        <a {...(hasLocalSubtitles ? {onClick: downloadSubtitles} : {href: availableOptions[loadedKey].url})} className='bp6-button bp6-small bp6-icon-download'
                             target='_blank' rel="noreferrer" download>
                             {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
                         </a>

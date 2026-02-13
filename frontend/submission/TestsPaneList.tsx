@@ -35,7 +35,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
     subTasksOrdered.sort((a, b) => a.rank - b.rank);
     const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const canCreateOwnTests = context ? context.supportsCustomTests() && (canAddUserTests || !!currentTask.userTests) : false;
+    const canCreateOwnTests = context ? context.supportsCustomTests() && (canAddUserTests || !!currentTask?.userTests) : false;
 
     const dispatch = useDispatch();
     const showSubmissionError = (type: SubmissionErrorType) => {
@@ -74,9 +74,13 @@ export function TestsPaneList(props: SubmissionResultProps) {
 
     return (
         <div className="submission-result">
-            {submission && isServerSubmission(submission) && TaskSubmissionMode.UserTest === submission.result?.mode && <div>
-                <Alert intent={Intent.WARNING}>{getMessage('SUBMISSION_USER_TEST_WARNING')}</Alert>
-            </div>}
+            <Alert
+                intent={Intent.WARNING}
+                isOpen={submission && isServerSubmission(submission) && TaskSubmissionMode.UserTest === submission.result?.mode}
+            >
+                {getMessage('SUBMISSION_USER_TEST_WARNING')}
+            </Alert>
+
             {submission && !submission.evaluated && <div>
                 {getMessage('SUBMISSION_RESULTS_EVALUATING')}
             </div>}

@@ -11,7 +11,7 @@ const FILTERED_NAMES = [
     '<module>',
 ];
 
-export const AnalysisFunctionView = (props: AnalysisFunctionViewProps): JSX.Element => {
+export const AnalysisFunctionView = (props: AnalysisFunctionViewProps): React.JSX.Element => {
     const stackFrameName = props.stackFrame.name && -1 === FILTERED_NAMES.indexOf(props.stackFrame.name) ? props.stackFrame.name : null;
 
     return (

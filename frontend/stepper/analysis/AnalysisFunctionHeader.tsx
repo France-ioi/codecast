@@ -7,7 +7,7 @@ interface AnalysisFunctionHeaderProps {
     stackFrameName?: string,
 }
 
-export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.Element => {
+export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): React.JSX.Element => {
     const {stackFrameName} = props;
     const stackFrameNameHasParenthesis = !!(!stackFrameName || -1 !== stackFrameName.indexOf('('));
 

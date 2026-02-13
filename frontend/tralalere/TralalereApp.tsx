@@ -326,7 +326,7 @@ export function TralalereApp() {
 
                         <div className="simple-dialog-buttons mb-4">
                             <button className="tralalere-button next-button" onClick={increaseLevel}>
-                                <Icon icon="small-tick" iconSize={24}/>
+                                <Icon icon="small-tick" size={24}/>
                                 <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                             </button>
                         </div>

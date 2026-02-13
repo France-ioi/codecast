@@ -1,54 +1,4 @@
-@mixin control-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  border-radius: 500px;
-  background: var(--primary-color);
-  color: white;
-  height: 40px;
-  width: 40px;
-  margin: 0 10px 0 0;
-  border: none;
-  box-shadow: none !important;
-  .bp4-icon {
-    color: inherit;
-  }
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-  &[disabled] {
-    opacity: 0.3;
-  }
-  &.is-small {
-    height: 30px;
-    width: 30px;
-    svg {
-      width: 13px;
-      height: 13px;
-    }
-  }
-}
-
-@mixin codecast-dropdown {
-  .dropdown-toggle {
-    width: 100%;
-    border: none !important;
-    outline: none;
-  }
-  .dropdown-menu {
-    //width: 100%;
-  }
-  .dropdown-item {
-    outline: none;
-    text-decoration: initial;
-    &:active {
-      background-color: #e9ecef;
-      color: #1e2125;
-    }
-  }
-}
+@use './mixins' as *;
 
 .task .controls-and-errors {
   position: relative;
@@ -143,17 +93,17 @@
       align-items: center;
       width: 100%;
     }
-    .bp4-slider-axis, .bp4-slider-label {
+    .bp6-slider-axis, .bp6-slider-label {
       display: none;
     }
-    .bp4-slider {
+    .bp6-slider {
       height: 13px;
       min-width: initial;
     }
-    .bp4-slider-track {
+    .bp6-slider-track {
       height: 3px;
     }
-    .bp4-slider-handle {
+    .bp6-slider-handle {
       background: var(--primary-color);
       border-radius: 50px;
       width: 30px;
@@ -172,7 +122,7 @@
         border-bottom: solid 3px white;
       }
     }
-    .bp4-slider-progress.bp4-intent-primary {
+    .bp6-slider-progress.bp6-intent-primary {
       background-color: var(--primary-color);
     }
     .extremity {
@@ -183,20 +133,18 @@
       &.extremity-right {
         margin-left: 20px;
       }
-      svg {
-        width: 20px;
-        height: 20px;
-      }
+      width: 16px;
+      height: 16px;
     }
   }
 
-  .bp4-button {
+  .bp6-button {
     @include control-button;
   }
 }
 
 .task.task-player-replay .controls-stepper, .task.task-player-replay .controls-compile {
-  .bp4-button, .bp4-slider {
+  .bp6-button, .bp6-slider {
     opacity: 0.3;
     &:hover:not([disabled]) {
       opacity: 1;
@@ -217,19 +165,19 @@
       color: white;
       opacity: 1;
     }
-    .bp4-slider-handle {
+    .bp6-slider-handle {
       background: white;
       &:after {
         border-bottom-color: var(--primary-color);
       }
     }
-    .bp4-slider-progress {
+    .bp6-slider-progress {
       background: rgba(92, 112, 128, 0.76) !important;
     }
   }
 
   .controls-stepper {
-    .bp4-button {
+    .bp6-button {
       margin-right: 4px;
       svg {
         width: 18px;
@@ -250,7 +198,7 @@
   .controls-stepper.step_by_step {
     padding: 0 5px;
     width: 100%;
-    .bp4-button {
+    .bp6-button {
       margin-right: 0px;
       width: 30px;
       height: 30px;
@@ -266,12 +214,12 @@
   display: flex;
   align-items: center;
   cursor: pointer;
-  .bp4-switch {
+  .bp6-switch {
     margin: 0 4px 0 10px;
-    input ~ .bp4-control-indicator {
+    input ~ .bp6-control-indicator {
       background: #e4e5ea !important;
     }
-    .bp4-control-indicator {
+    .bp6-control-indicator {
       box-shadow: inset 1px 1px 1px 0px #b3b3b3 !important;
       &:before {
         background: var(--primary-color);

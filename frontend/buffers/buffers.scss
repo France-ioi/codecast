@@ -1,3 +1,5 @@
+@use '../task/mixins' as *;
+
 .layout-editor-tabs {
   display: flex;
   align-items: center;

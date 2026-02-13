@@ -20,6 +20,7 @@ import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
 import {isTestPublic} from './task_types';
+import {selectCurrentTest} from './task_slice';
 import {LibraryTestResult} from './libs/library_test_result';
 import {getStepperControlsSelector} from '../stepper/selectors';
 import {selectAvailableExecutionModes, selectTaskTests} from '../submission/submission_selectors';
@@ -44,7 +45,7 @@ export function ControlsAndErrors() {
     const cancellableSubmissionIndex = useAppSelector(selectCancellableSubmissionIndex);
     const cancellableSubmission = useAppSelector(state => null !== cancellableSubmissionIndex ? state.submission.taskSubmissions[cancellableSubmissionIndex] : null);
     const platform = useAppSelector(selectActiveBufferPlatform);
-    const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector({state, enabled: true})).canRestart;
+    const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector({state, enabled: true, currentTestHiddenProgression: !!selectCurrentTest(state)?.data?.hiddenProgression})).canRestart;
     const availableExecutionModes = useAppSelector(selectAvailableExecutionModes);
     const codeHelpEnabled = useAppSelector(state => state.options.codeHelp?.enabled);
     const layoutMobileMode = useAppSelector(selectLayoutMobileMode);
@@ -264,7 +265,7 @@ export function ControlsAndErrors() {
                 title={getMessage('ERROR')}
                 onClose={() => setErrorDialogOpen(false)}
             >
-                <div className='bp4-dialog-body'>
+                <div className='bp6-dialog-body'>
                     <div className="error-message-wrapper">
                         <div className="message">
                             {error}

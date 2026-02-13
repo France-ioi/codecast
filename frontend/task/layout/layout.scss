@@ -94,7 +94,7 @@
       &:not(:last-child) {
         border-bottom: solid 1px #30242B;
       }
-      .bp4-icon {
+      .bp6-icon {
         margin-right: 10px;
       }
       &:hover, &:active {
@@ -191,4 +191,10 @@
   margin-left: -13px;
   margin-top: -13px;
   z-index: 1000;
+}
+
+.bp6-icon-standard {
+  width: auto !important;
+  height: auto !important;
+  flex: none;
 }

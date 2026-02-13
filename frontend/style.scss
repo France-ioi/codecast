@@ -1,40 +1,43 @@
-$font-family-sans-serif: var(--font-family-sans-serif);
-$font-family-monospace: 'Inconsolata';
-$font-family-console: 'Lucida Console', Monaco, monospace;
+@use "sass:math";
 
-$font-size-base: 1rem;
-$font-size-lg: $font-size-base * 1.12 !default;
-$font-size-sm: $font-size-base * .875 !default;
+@use './variables' as *;
 
-$grid-breakpoints: (
-  xs: 0,
-  sm: 576px,
-  md: 800px,
-  lg: 1024px,
-  xl: 1200px
-) !default;
+@use 'bootstrap/scss/bootstrap' with (
+  $font-family-sans-serif: var(--font-family-sans-serif),
+  $font-family-monospace: 'Inconsolata',
 
-$grid-gutter-width: 6px;
-$alert-padding-y: 10px !default;
-$alert-padding-x: 10px !default;
+  $font-size-base: 1rem,
+  $font-size-lg: 1rem * 1.12,
+  $font-size-sm: 1rem * .875,
 
-@import "node_modules/bootstrap/scss/bootstrap";
+  $grid-breakpoints: (
+    xs: 0,
+    sm: 576px,
+    md: 800px,
+    lg: 1024px,
+    xl: 1200px
+  ),
+
+  $grid-gutter-width: 6px,
+  $alert-padding-y: 10px,
+  $alert-padding-x: 10px
+);
+
+@use './player/style' as player;
+@use './editor/style' as editor;
+@use './task/task';
+@use './task/instructions/instructions';
+@use 'python';
+@use 'subtitles';
+@use 'controls';
+@use './buffers/buffers';
+@use './tralalere/tralalere';
+@use './submission/submission';
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
 @import "~@blueprintjs/select/lib/css/blueprint-select.css";
-@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
-
-@import "./player/style.scss";
-@import "./editor/style.scss";
-@import "./task/task.scss";
-@import "./task/instructions/instructions.scss";
-@import "python";
-@import "subtitles";
-@import "controls";
-@import "./buffers/buffers.scss";
-@import "./tralalere/tralalere.scss";
-@import "./submission/submission.scss";
+//@import "~@blueprintjs/popover2/lib/css/blueprint-popover2.css";
 
 input {
   padding: 0;
@@ -47,7 +50,7 @@ html {
 }
 
 /* Darker icons on blueprint buttons. */
-.bp4-button .bp4-icon, .bp4-button .bp4-icon-standard, .bp4-button .bp4-icon-large {
+.bp6-button .bp6-icon, .bp6-button .bp6-icon-standard, .bp6-button .bp6-icon-large {
   color: #3c5060;
 }
 
@@ -73,7 +76,7 @@ body#app {
 body#app, #app h1, #app h2, #app h3 {
   font-size: 18px;
   font-weight: normal;
-  font-family: $font-family-sans-serif;
+  font-family: var(--font-family-sans-serif);
 }
 #app h1, #app h2, #app h3 {
   line-height: 1;
@@ -211,7 +214,7 @@ body#app, #app h1, #app h2, #app h3 {
 .terminal-view-header {
   display: flex;
   align-items: center;
-  .bp4-icon {
+  .bp6-icon {
     margin-left: 5px;
   }
 }
@@ -234,8 +237,9 @@ body#app, #app h1, #app h2, #app h3 {
   }
 }
 
-h6.bp4-heading {
-  font-size: 18px;
+h2.bp6-heading {
+  font-size: 18px !important;
+  line-height: inherit !important;
 }
 
 #vumeter {
@@ -282,7 +286,7 @@ ul.global-scope li, ul.object-scope li {
   top: -1px;
   right: -1px;
 }
-.stack-controls button.bp4-small {
+.stack-controls button.bp6-small {
   min-height: 20px;
 }
 
@@ -307,7 +311,7 @@ span + .value-previous {
 
 .vardecl {
   overflow: hidden;
-  max-height: 2 * ceil($line-height-lg * $font-size-lg);
+  max-height: 2 * math.ceil(bootstrap.$line-height-lg * $font-size-lg);
 }
 .vardecl-object {
   max-height: none;
@@ -389,20 +393,20 @@ span + .value-previous {
 .mainView-lg {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-lg;
-    line-height: ceil($line-height-lg * $font-size-lg);
+    line-height: math.ceil(bootstrap.$line-height-lg * $font-size-lg);
   }
 }
 
 .mainView-md {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-base;
-    line-height: ceil($line-height-base * $font-size-base);
+    line-height: math.ceil(bootstrap.$line-height-base * $font-size-base);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 7px;
   }
   .vardecl {
-    max-height: 2 * ceil($line-height-base * $font-size-base);
+    max-height: 2 * math.ceil(bootstrap.$line-height-base * $font-size-base);
   }
   .vardecl-object {
     max-height: none;
@@ -412,7 +416,7 @@ span + .value-previous {
 .mainView-sm {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-sm;
-    line-height: ceil($line-height-sm * $font-size-sm);
+    line-height: math.ceil(bootstrap.$line-height-sm * $font-size-sm);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 6px;
@@ -436,7 +440,7 @@ span + .value-previous {
     padding: 3px 5px;
   }
   .vardecl {
-    max-height: 2 * $line-height-sm;
+    max-height: 2 * bootstrap.$line-height-sm;
   }
   .vardecl-object {
     max-height: none;
@@ -473,15 +477,15 @@ span + .value-previous {
 .directive-bar {
   margin-bottom: 6px;
 }
-.directive-bar .bp4-navbar {
+.directive-bar .bp6-navbar {
   height: 40px;
   padding: 0 8px;
   box-shadow: none;
 }
-.directive-bar .bp4-navbar-group {
+.directive-bar .bp6-navbar-group {
   height: 40px;
 }
-.directive-bar .bp4-button {
+.directive-bar .bp6-button {
   margin-right: 8px;
 }
 
@@ -499,7 +503,7 @@ span + .value-previous {
   right: -1px;
 }
 
-.memory-controls .bp4-button-group {
+.memory-controls .bp6-button-group {
     vertical-align: 6px;
     padding-right: 2px;
 }
@@ -533,7 +537,7 @@ span + .value-previous {
   z-index: 2;
 }
 
-svg {
+.directive-view svg {
   font-size: 13px;
   font-family: $font-family-sans-serif;
 
@@ -790,11 +794,32 @@ button.btn-cc {
   width: 100%;
 }
 
-.bp4-dialog:not(.simple-dialog):not(.bp4-alert) {
+.bp6-dialog:not(.simple-dialog):not(.bp6-alert) {
   padding-bottom: 0;
 }
 
-.button-group .bp4-form-content {
+.button-group .bp6-form-content {
   display: flex;
   gap: 8px;
+}
+
+.bp6-select:after {
+  font-family: "blueprint-icons-16", sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 400;
+  line-height: 1;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  content: "\f184";
+  color: #5f6b7c;
+  pointer-events: none;
+  position: absolute;
+  right: 7px;
+  top: 7px;
+}
+
+:focus {
+  outline: none !important;
 }

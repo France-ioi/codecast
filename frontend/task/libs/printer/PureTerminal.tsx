@@ -9,7 +9,7 @@ interface PureTerminalProps {
 }
 
 export function PureTerminal(props: PureTerminalProps) {
-    const refTerminal = useRef<HTMLDivElement>();
+    const refTerminal = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         props.onInit({

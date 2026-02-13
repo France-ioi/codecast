@@ -1,6 +1,6 @@
 import {default as createSagaMiddleware} from 'redux-saga';
 import {all, call} from 'typed-redux-saga';
-import produce from "immer";
+import {produce} from "immer";
 import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";

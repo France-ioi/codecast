@@ -163,7 +163,7 @@ class XMLToReact {
         try {
             return this.xmlParser.parseFromString(xml, 'text/xml');
         } catch (e) {
-            console.warn('Unable to parse invalid XML input. Please input valid XML.'); // eslint-disable-line no-console
+            console.warn('Unable to parse invalid XML input. Please input valid XML.');  
         }
 
         return null;

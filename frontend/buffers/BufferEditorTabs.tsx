@@ -23,7 +23,7 @@ export function BufferEditorTabs() {
 
     const [isLeftArrowDisabled, setIsLeftArrowDisabled] = useState(false);
     const [isRightArrowDisabled, setIsRightArrowDisabled] = useState(false);
-    const tabsContainerRef = useRef<HTMLDivElement>();
+    const tabsContainerRef = useRef<HTMLDivElement>(null);
 
     const scrollIncrement = 600;
 

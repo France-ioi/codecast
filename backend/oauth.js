@@ -168,7 +168,7 @@ module.exports = function (app, config, callback) {
     };
 
     config.getUserConfig = function (req, callback) {
-        jwt.verify(req.body.token || req.query.token, config.ownSecret, {}, function (err, token) {
+        jwt.verify(req.body?.token || req.query.token, config.ownSecret, {}, function (err, token) {
             let userId = 0;
             if (!err && token.user_id) {
                 userId = token.user_id;

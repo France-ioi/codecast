@@ -98,7 +98,7 @@ export function BufferEditorTab(props: BufferEditorTabProps) {
             rootClose
         >
             {({ ref, ...triggerHandler }) => (
-                <div className={`layout-editor-tab ${isActive ? 'is-active' : ''} ${isFlashing ? 'is-flashing' : ''}`} onClick={changeTab} ref={ref}>
+                <div className={`layout-editor-tab ${isActive ? 'is-active' : ''} ${isFlashing ? 'is-flashing' : ''}`} onClick={changeTab} ref={ref as React.Ref<HTMLDivElement>}>
                     {hasResults && <React.Fragment>
                         <FontAwesomeIcon icon={faBell} className={`icon-bell ${isFlashing ? 'is-animated' : ''}`}/>
                         <span>{fileName}</span>

@@ -7,7 +7,7 @@ interface AnalysisStackViewProps {
     analysis: CodecastAnalysisSnapshot,
 }
 
-export const AnalysisStackView = (props: AnalysisStackViewProps): JSX.Element => {
+export const AnalysisStackView = (props: AnalysisStackViewProps): React.JSX.Element => {
     const firstVisible = 0;
     const tailCount = 0;
 

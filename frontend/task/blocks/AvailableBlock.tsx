@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect} from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 import {useDrag} from "react-dnd";
 import {getEmptyImage} from "react-dnd-html5-backend";
 import {useDispatch} from "react-redux";
@@ -26,6 +26,9 @@ export function AvailableBlock(props: AvailableBlockProps) {
         }),
     }), [block])
 
+    const dragRef = useRef<HTMLDivElement>(null);
+    drag(dragRef);
+
     useEffect(() => {
         dragPreview(getEmptyImage(), {captureDraggingState: true});
     }, []);
@@ -41,7 +44,7 @@ export function AvailableBlock(props: AvailableBlockProps) {
     }, [activeBufferName, block]);
 
     return (
-        <div className="task-available-block" ref={drag} onClick={insertBlock}>
+        <div className="task-available-block" ref={dragRef} onClick={insertBlock}>
             <div className="task-available-block-name">
                 {block.caption}
             </div>

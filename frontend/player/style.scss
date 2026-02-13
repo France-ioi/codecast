@@ -1,9 +1,11 @@
+@use "sass:color";
+
 $color-background: white;
 $color-theme: #779;
 $icon-size: 16px;
 
-$color-hover: desaturate(darken($color-theme, 20%), 10%);
-$color-active: fade-out($color-hover, 0.5);
+$color-hover: color.adjust(color.adjust($color-theme, $lightness: -20%), $saturation: -10%);
+$color-active: color.adjust($color-hover, $alpha: -0.5);
 
 .player-controls-volume {
   padding: 7px 0;
@@ -27,7 +29,7 @@ $color-active: fade-out($color-hover, 0.5);
     &:hover {
       border-color: $color-hover;
 
-      .bp4-icon {
+      .bp6-icon {
         fill: $color-hover;
       }
     }
@@ -35,12 +37,12 @@ $color-active: fade-out($color-hover, 0.5);
     &:active {
       border-color: $color-active;
 
-      .bp4-icon {
+      .bp6-icon {
         fill: $color-active;
       }
     }
 
-    .bp4-icon {
+    .bp6-icon {
       color: $color-theme;
     }
   }
@@ -53,11 +55,11 @@ $color-active: fade-out($color-hover, 0.5);
   border-radius: 4px;
   transition: width 0.3s, height 0.05s;
 
-  .bp4-slider-progress.bp4-intent-primary {
+  .bp6-slider-progress.bp6-intent-primary {
     background-color: $color-theme;
   }
 
-  .bp4-slider-handle {
+  .bp6-slider-handle {
     width: 14px;
     height: 14px;
     background: $color-theme;
@@ -68,7 +70,7 @@ $color-active: fade-out($color-hover, 0.5);
 
   &:not(disabled) {
     &:hover {
-      .bp4-slider-handle {
+      .bp6-slider-handle {
         transform: scale(1);
       }
     }

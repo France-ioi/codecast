@@ -56,7 +56,7 @@ export function GitResolveConflictsDialog({bufferName}: {bufferName: string}) {
             isCloseButtonShown={true}
             onClose={closeConflictsDialog}
         >
-            <div className='bp4-dialog-body'>
+            <div className='bp6-dialog-body'>
                 <form onSubmit={validateConflictSolve}>
                     <p>
                         {getMessage('GIT_RESOLVE_CONFLICTS_LABEL')}

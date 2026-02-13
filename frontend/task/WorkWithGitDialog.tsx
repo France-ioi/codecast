@@ -175,7 +175,7 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
             canOutsideClickClose={true}
             isCloseButtonShown={true}
         >
-            <div className='bp4-dialog-body'>
+            <div className='bp6-dialog-body'>
                 <FormGroup labelFor='gitRepository' label={getMessage('GIT_REPOSITORY')}>
                     <InputGroup
                         leftIcon={IconNames.GitRepo}

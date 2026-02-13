@@ -88,7 +88,7 @@ function initTask(subTask) {
     
         
 
-    /*        
+            /*        
             {
                 valid_result: {
                     type: 'string',

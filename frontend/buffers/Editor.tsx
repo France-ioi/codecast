@@ -90,7 +90,7 @@ export function Editor(props: EditorProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const contextStrings = useAppSelector(state => state.task.contextStrings);
 
-    const refEditor = useRef();
+    const refEditor = useRef(null);
     const batchEdits = useRef([]);
 
     log.getLogger('editor').debug('[buffer] re-render editor', props.name, props.state);
@@ -590,6 +590,9 @@ export function Editor(props: EditorProps) {
         },
     }));
 
+    const dropRef = useRef<HTMLDivElement>(null);
+    drop(dropRef);
+
     useCursorPositionTracking(`editor:${props.name}`, (absPoint: CursorPoint): Pick<CursorPosition, 'editorCaret' | 'posToEditorCaret'> => {
         const editorCaret = editor.current.renderer.screenToTextCoordinates(absPoint.x, absPoint.y);
         const caretPosition = editor.current.renderer.textToScreenCoordinates(editorCaret.row, editorCaret.column);
@@ -616,7 +619,7 @@ export function Editor(props: EditorProps) {
     });
 
     return (
-        <div className="editor cursor-main-zone" data-cursor-zone={`editor:${props.name}`} data-cursor-self-handling="" style={{width: width, height: height}} ref={drop}>
+        <div className="editor cursor-main-zone" data-cursor-zone={`editor:${props.name}`} data-cursor-self-handling="" style={{width: width, height: height}} ref={dropRef}>
             <div className="editor-frame" ref={refEditor}/>
             <div
                 className={classnames(['editor-shield', shield && 'editor-shield-up'])}

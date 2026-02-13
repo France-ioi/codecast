@@ -6,7 +6,7 @@ import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
 
 export function DebugLibView() {
     const taskState: DebugLibState = useAppSelector(state => state.task.state?.debug);
-    const containerRef = useRef<HTMLDivElement>();
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         containerRef.current.scrollTop = containerRef.current.scrollHeight;

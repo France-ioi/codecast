@@ -11,7 +11,7 @@ export function InputOutputVisualization() {
     const currentTest = useAppSelector(selectCurrentTest);
     const currentTestData = currentTest?.data;
 
-    const currentTestDataRef = useRef<any>();
+    const currentTestDataRef = useRef<any>(null);
     currentTestDataRef.current = currentTestData;
 
     let visualization;

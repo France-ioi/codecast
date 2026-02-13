@@ -8,7 +8,7 @@ export function TralalereBlocksUsage() {
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);
     const platform = useAppSelector((state: AppStore) => state.options.platform);
 
-    const wrapperRef = useRef<HTMLDivElement>();
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     if (!blocksUsage || !blocksUsage.blocksLimit || Infinity === blocksUsage.blocksLimit) {
         return null;

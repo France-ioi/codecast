@@ -154,7 +154,8 @@ module.exports = (env, argv) => {
                             options: {
                                 sassOptions: {
                                     sourceMap: isDev,
-                                    precision: 8
+                                    precision: 8,
+                                    quietDeps: true,
                                 }
                             }
                         }

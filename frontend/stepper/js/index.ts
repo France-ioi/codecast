@@ -15,7 +15,7 @@ import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
-import produce from 'immer';
+import {produce} from 'immer';
 import {isServerTask} from '../../task/task_types';
 import {BlocklyHelper} from './blockly_helper';
 

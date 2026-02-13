@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 export interface TaskInstructionsVideoProps {
     url: string,
     style: React.CSSProperties,
-    children: JSX.Element | JSX.Element[],
+    children: React.JSX.Element | React.JSX.Element[],
 }
 
 export function TaskInstructionsVideo(props: TaskInstructionsVideoProps) {
