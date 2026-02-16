@@ -14,18 +14,18 @@ const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
 const smp = new SpeedMeasurePlugin();
 
 const bundledFiles = fs.readFileSync('bundled_files.txt', 'utf8')
-  .split("\n")
-  .filter(a => a.length && a.trim().split('')[0] !== '#')
-  .map(file => {
-      const fileName = file.split(':').length >= 2 ? file.split(':')[1] : file;
+    .split("\n")
+    .filter(a => a.length && a.trim().split('')[0] !== '#')
+    .map(file => {
+        const fileName = file.split(':').length >= 2 ? file.split(':')[1] : file;
 
-      return {
-          from: fileName,
-          to({absoluteFilename}) {
-              return path.join(__dirname, 'build', path.relative(path.resolve(__dirname), absoluteFilename));
-          },
-      };
-  });
+        return {
+            from: fileName,
+            to({absoluteFilename}) {
+                return path.join(__dirname, 'build', path.relative(path.resolve(__dirname), absoluteFilename));
+            },
+        };
+    });
 
 module.exports = (env, argv) => {
     if (!argv.mode) {
@@ -132,6 +132,11 @@ module.exports = (env, argv) => {
                             loader: 'css-loader',
                             options: {
                                 modules: false,
+                                sourceMap: isDev,
+                            }
+                        }, {
+                            loader: 'postcss-loader',
+                            options: {
                                 sourceMap: isDev,
                             }
                         },

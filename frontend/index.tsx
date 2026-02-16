@@ -1,5 +1,6 @@
 import './buffers/ace_loader';
 import './style.scss';
+import './tailwind.css';
 import url from 'url';
 import React from 'react';
 import {createRoot} from 'react-dom/client';
