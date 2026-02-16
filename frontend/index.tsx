@@ -3,6 +3,9 @@ import './style.scss';
 import './tailwind.css';
 import url from 'url';
 import React from 'react';
+import ReactDOM from "react-dom/client";
+import * as ReactJSXRuntime from "react/jsx-runtime";
+import * as ReactJSXRuntimeDev from 'react/jsx-dev-runtime';
 import {createRoot} from 'react-dom/client';
 import {Provider} from 'react-redux';
 import {HTML5toTouch} from 'rdndmb-html5-to-touch';
@@ -29,7 +32,6 @@ import {Documentation} from "./task/documentation/Documentation";
 import '@france-ioi/skulpt/dist/skulpt.min.js';
 import '@france-ioi/skulpt/dist/skulpt-stdlib.js';
 import '@france-ioi/skulpt/dist/debugger.js';
-import {Portal} from "@blueprintjs/core";
 import {DndProvider} from "react-dnd-multi-backend";
 import {CustomDragLayer} from "./task/CustomDragLayer";
 import {TralalereApp} from "./tralalere/TralalereApp";
@@ -85,6 +87,25 @@ log.getLogger('subtitles').setDefaultLevel('info');
 log.getLogger('task').setDefaultLevel('info');
 log.getLogger('tests').setDefaultLevel('info');
 window.log = log;
+
+
+// Export React elements necessary for some libs that depend on React (ex: connected-boards)
+// They need React, ReactDOM, and React JSX Runtime (which exists in dev and prod)
+const UniversalJSX = {
+    ...(ReactJSXRuntime as any),
+    ...(ReactJSXRuntimeDev as any),
+};
+
+if (process.env['NODE_ENV'] === 'development') {
+    const devFunc = (ReactJSXRuntimeDev as any).jsxDEV || (ReactJSXRuntimeDev as any).default?.jsxDEV;
+    UniversalJSX.jsx = devFunc;
+    UniversalJSX.jsxs = devFunc;
+}
+
+(window as any).ReactJSXRuntime = UniversalJSX;
+(window as any).ReactJSXRuntimeDev = UniversalJSX;
+(window as any).React = React;
+(window as any).ReactDOM = ReactDOM;
 
 declare global {
     const Sk: any;
