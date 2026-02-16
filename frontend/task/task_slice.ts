@@ -5,6 +5,7 @@ import TurtleFixture from './fixtures/turtle_05_functions_01';
 import ProcessingFixture from './fixtures/test_processing';
 import BarcodeFixture from './fixtures/test_barcode';
 import QuickPiFixture from './fixtures/quickpi_testbed';
+import QuickPi3DFixture from './fixtures/quickpi_3d';
 import QuickPiBuzzerFixture from './fixtures/quickpi_buzzer';
 import MicrobitFixture from './fixtures/microbit';
 import GalaxiaFixture from './fixtures/galaxia';
@@ -27,6 +28,7 @@ const availableTasks = {
     robot: SokobanFixture,
     turtle: TurtleFixture,
     quickpi: QuickPiFixture,
+    quickpi3d: QuickPi3DFixture,
     buzzer: QuickPiBuzzerFixture,
     microbit: MicrobitFixture,
     galaxia: GalaxiaFixture,
