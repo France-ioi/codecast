@@ -221,6 +221,11 @@ module.exports = (env, argv) => {
                     ],
                 },
             ],
+            parser: {
+                javascript: {
+                    dynamicImportMode: "eager",
+                },
+            },
         },
         plugins: [
             new webpack.DefinePlugin({
@@ -254,6 +259,7 @@ module.exports = (env, argv) => {
             removeAvailableModules: false,
             removeEmptyChunks: false,
             splitChunks: false,
+            runtimeChunk: false,
             minimizer: [
                 new TerserPlugin({
                     terserOptions: {
