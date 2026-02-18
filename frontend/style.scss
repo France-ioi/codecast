@@ -1,28 +1,6 @@
 @use "sass:math";
-
+@use "sass:meta";
 @use './variables' as *;
-
-@use 'bootstrap/scss/bootstrap' with (
-  $font-family-sans-serif: var(--font-family-sans-serif),
-  $font-family-monospace: 'Inconsolata',
-
-  $font-size-base: 1rem,
-  $font-size-lg: 1rem * 1.12,
-  $font-size-sm: 1rem * .875,
-
-  $grid-breakpoints: (
-    xs: 0,
-    sm: 576px,
-    md: 800px,
-    lg: 1024px,
-    xl: 1200px
-  ),
-
-  $grid-gutter-width: 6px,
-  $alert-padding-y: 10px,
-  $alert-padding-x: 10px
-);
-
 @use './player/style' as player;
 @use './editor/style' as editor;
 @use './task/task';
@@ -33,6 +11,12 @@
 @use './buffers/buffers';
 @use './tralalere/tralalere';
 @use './submission/submission';
+
+@layer properties, theme, base, bootstrap, components, utilities;
+
+@layer bootstrap {
+  @include meta.load-css("./bootstrap");
+}
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
@@ -311,7 +295,7 @@ span + .value-previous {
 
 .vardecl {
   overflow: hidden;
-  max-height: 2 * math.ceil(bootstrap.$line-height-lg * $font-size-lg);
+  max-height: 2 * math.ceil(2 * $font-size-lg);
 }
 .vardecl-object {
   max-height: none;
@@ -393,20 +377,20 @@ span + .value-previous {
 .mainView-lg {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-lg;
-    line-height: math.ceil(bootstrap.$line-height-lg * $font-size-lg);
+    line-height: math.ceil(2 * $font-size-lg);
   }
 }
 
 .mainView-md {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-base;
-    line-height: math.ceil(bootstrap.$line-height-base * $font-size-base);
+    line-height: math.ceil(1.5 * $font-size-base);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 7px;
   }
   .vardecl {
-    max-height: 2 * math.ceil(bootstrap.$line-height-base * $font-size-base);
+    max-height: 2 * math.ceil(1.5 * $font-size-base);
   }
   .vardecl-object {
     max-height: none;
@@ -416,7 +400,7 @@ span + .value-previous {
 .mainView-sm {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-sm;
-    line-height: math.ceil(bootstrap.$line-height-sm * $font-size-sm);
+    line-height: math.ceil(1.25 * $font-size-sm);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 6px;
@@ -440,7 +424,7 @@ span + .value-previous {
     padding: 3px 5px;
   }
   .vardecl {
-    max-height: 2 * bootstrap.$line-height-sm;
+    max-height: 2 * 1.25;
   }
   .vardecl-object {
     max-height: none;
