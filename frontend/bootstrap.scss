@@ -1,0 +1,23 @@
+@use "sass:math";
+@use "./variables" as *;
+
+@use 'bootstrap/scss/bootstrap' with (
+  $font-family-sans-serif: var(--font-family-sans-serif),
+  $font-family-monospace: 'Inconsolata',
+
+  $font-size-base: 1rem,
+  $font-size-lg: 1rem * 1.12,
+  $font-size-sm: 1rem * .875,
+
+  $grid-breakpoints: (
+    xs: 0,
+    sm: 576px,
+    md: 800px,
+    lg: 1024px,
+    xl: 1200px
+  ),
+
+  $grid-gutter-width: 6px,
+  $alert-padding-y: 10px,
+  $alert-padding-x: 10px
+);
