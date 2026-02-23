@@ -134,11 +134,6 @@ module.exports = (env, argv) => {
                                 modules: false,
                                 sourceMap: isDev,
                             }
-                        }, {
-                            loader: 'postcss-loader',
-                            options: {
-                                sourceMap: isDev,
-                            }
                         },
                     ],
                 },

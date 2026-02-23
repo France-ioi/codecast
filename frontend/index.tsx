@@ -1,9 +1,8 @@
 import './buffers/ace_loader';
 import './style.scss';
-import './tailwind.css';
 import url from 'url';
 import React from 'react';
-import ReactDOM from "react-dom/client";
+import * as ReactDOM from "react-dom";
 import * as ReactJSXRuntime from "react/jsx-runtime";
 import * as ReactJSXRuntimeDev from 'react/jsx-dev-runtime';
 import {createRoot} from 'react-dom/client';
