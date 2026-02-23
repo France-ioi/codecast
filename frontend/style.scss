@@ -12,11 +12,10 @@
 @use './tralalere/tralalere';
 @use './submission/submission';
 
-@layer properties, theme, base, bootstrap, components, utilities;
-
-@layer bootstrap {
+// Don't put it in a CSS layer for now, but know that it's possible if necessary
+//@layer bootstrap {
   @include meta.load-css("./bootstrap");
-}
+//}
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
