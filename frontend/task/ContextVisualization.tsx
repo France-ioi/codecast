@@ -132,7 +132,7 @@ export function ContextVisualization() {
         />;
     } else if (!currentTask || currentTestPublic || (currentTestResult && !currentTestResult.noFeedback)) {
         innerVisualization = <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
-            {Visualization ? <Visualization/> :
+            {Visualization ? <Visualization context={context}/> :
                 <div id="taskContent">
                     <div id="taskIntro"/>
                     <div id="testSelector">

@@ -7,6 +7,7 @@ export default {
         '3d_visualization': true,
         hideSaveOrLoad: false,
         actionDelay: 0,
+        quickPiDisableConnection: true,
 
         includeBlocks: {
             groupByCategory: true,
@@ -39,7 +40,7 @@ export default {
 
         quickPiSensors: {
             easy: [
-                { type: "led", name: 'Rled' },
+                // { type: "led", name: 'Rled' },
             ],
         },
 
