@@ -23,7 +23,7 @@ export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
 }
 
 export function extractLevelSpecific(item: any, level: TaskLevelName) {
-    if ((typeof item !== "object")) {
+    if (typeof item !== "object" || null === item) {
         return item;
     }
     if (Array.isArray(item)) {
