@@ -36,6 +36,10 @@ class QuickalgoExecutor {
             });
         }
 
+        if (this.stepperContext.finished) {
+            return;
+        }
+
         // If check end condition every turn, check it now before calling a new Quickalgo action
         if (context.infos.checkEndEveryTurn) {
             try {
@@ -55,7 +59,7 @@ class QuickalgoExecutor {
             }
         }
 
-        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ready for call');
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ready for call', this.stepperContext.finished);
         if (null !== context.plannedNewDelay && undefined !== context.plannedNewDelay) {
             context.infos.actionDelay = context.plannedNewDelay;
         }
