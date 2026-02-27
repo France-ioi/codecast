@@ -842,6 +842,11 @@ export class BlocklyHelper {
         if (typeof block.blocklyXml == "undefined" || block.blocklyXml == "") {
             block.blocklyXml = "<block type='" + block.name + "'></block>";
         }
+        if (!block.name.includes('_noShadow')) {
+            block.blocklyXml = block.blocklyXml.replace(/<block type='([\w_\-]+)_noShadow'>/g, (match, blockType) => {
+                return `<block type='${blockType}'>`;
+            });
+        }
     }
 
     completeCodeGenerators(blockInfo, objectName) {
@@ -1057,32 +1062,6 @@ export class BlocklyHelper {
         }
     }
 
-    createGeneratorsAndBlocks() {
-        this.blockCounts = {};
-        let customGenerators = this.mainContext.customBlocks;
-        for (let objectName in customGenerators) {
-            for (let categoryName in customGenerators[objectName]) {
-                let category = customGenerators[objectName][categoryName];
-                for (let iBlock = 0; iBlock < category.length; iBlock++) {
-                    let block = category[iBlock];
-
-                    /* TODO: Allow library writers to provide their own JS/Python code instead of just a handler */
-                    this.completeBlockHandler(block, objectName, this.mainContext);
-                    this.completeBlockJson(block, objectName, categoryName, this.mainContext); /* category.category is category name */
-                    this.completeBlockXml(block);
-                    this.completeCodeGenerators(block, objectName);
-                    this.applyCodeGenerators(block);
-                    this.createBlock(block);
-                    this.applyBlockOptions(block);
-                }
-                // TODO: Anything of this still needs to be done?
-                //this.createGenerator(label, objectName + "." + code, generator.type, generator.nbParams);
-                //this.createBlock(label, generator.labelFr, generator.type, generator.nbParams);
-            }
-        }
-
-    }
-
     createGeneratorsAndBlocksForAvailableBlocks() {
         for (let block of this.availableBlocks.filter(block => block.type === BlockType.Function)) {
             const {generatorName, category, name} = block;
@@ -1104,38 +1083,6 @@ export class BlocklyHelper {
             this.createBlock(blockInfo);
             this.applyBlockOptions(blockInfo);
         }
-    }
-
-    getBlocklyLibCode(generators) {
-        let strCode = "";
-        for (let objectName in generators) {
-            strCode += "let " + objectName + " = {\n";
-            for (let iGen = 0; iGen < generators[objectName].length; iGen++) {
-                let generator = generators[objectName][iGen];
-
-                if (generator.nbParams == 0) {
-                    strCode += generator.codeFr + ": function() { ";
-                } else {
-                    strCode += generator.codeFr + ": function(param1) { ";
-                }
-                if (generator.type == 1) {
-                    strCode += "return ";
-                }
-                if (generator.nbParams == 0) {
-                    strCode += objectName + "_" + generator.labelEn + "(); }";
-                } else {
-                    strCode += objectName + "_" + generator.labelEn + "(param1); }";
-                }
-                if (iGen < generators[objectName].length - 1) {
-                    strCode += ",";
-                }
-                strCode += "\n";
-            }
-            strCode += "};\n\n";
-        }
-        strCode += "Math['max'] = function(a, b) { if (a > b) return a; return b; };\n";
-        strCode += "Math['min'] = function(a, b) { if (a > b) return b; return a; };\n";
-        return strCode;
     }
 
 
