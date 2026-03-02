@@ -29,8 +29,18 @@ export default function(bundle: Bundle) {
         if (isLocalStorageEnabled() && window.localStorage.getItem('language') && window.localStorage.getItem('language') in Languages) {
             language = window.localStorage.getItem('language');
         }
-        if (options.language && options.language in Languages) {
-            language = options.language;
+        if (options.language) {
+            if (options.language in Languages) {
+                language = options.language;
+            } else {
+                // Try to find a matching language
+                for (let key of Object.keys(Languages)) {
+                    if (key.includes(options.language)) {
+                        language = key;
+                        break;
+                    }
+                }
+            }
         }
 
         window.stringsLanguage = language.split('-')[0];

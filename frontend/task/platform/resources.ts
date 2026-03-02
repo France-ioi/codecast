@@ -199,6 +199,7 @@ export function* taskFillResources(resources: any) {
         ...optionsToPreload,
         platform: options.platform,
         language: options.language,
+        ...(options.language ? {canChangeLanguage: false, hideSettings: true} : {}),
     };
 
     // Import necessary platform modules without waiting for them to be imported, the declaration is enough
