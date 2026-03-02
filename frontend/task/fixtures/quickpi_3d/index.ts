@@ -15,10 +15,9 @@ export default {
                 quickpi: {
                     easy: [
                         "setLedState",
-                        "turnLedOn",
                         "sleep",
-                        "turnLedOff",
                         "readDistance",
+                        "setMotorSpeed",
                     ],
                 }
             },
