@@ -141,8 +141,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                 for (let [className, classInfo] of Object.entries(featureData.classMethods ?? {})) {
                     let placeholderClassInstance = false;
                     let classInstances = classInfo.instances ?? [];
-                    if (!classInstances.length) {
-                        classInstances = [classInfo.defaultInstanceName ?? `${className.substring(0, 1).toLocaleLowerCase() + className.substring(1)}`];
+                    if ((undefined === classInfo.instances || null === classInfo.instances) && classInfo.defaultInstanceName) {
+                        classInstances = [classInfo.defaultInstanceName];
                         placeholderClassInstance = true;
                     }
 
