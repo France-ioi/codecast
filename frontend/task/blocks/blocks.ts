@@ -72,8 +72,10 @@ function convertQuickalgoLibraryToCodecastBlock(block: QuickalgoLibraryBlock, ca
     if ('undefined' === typeof code) {
         code = block.name;
     }
-    if (!hasBlockPlatform(platform) && !code.includes('(')) {
-        code += '()';
+
+    let caption = code;
+    if (!hasBlockPlatform(platform) && !caption.includes('(')) {
+        caption += '()';
     }
 
     const paramsCount = [];
@@ -95,7 +97,7 @@ function convertQuickalgoLibraryToCodecastBlock(block: QuickalgoLibraryBlock, ca
         category: category ?? 'actions',
         paramsCount,
         params: block.params ?? [],
-        caption: code,
+        caption,
         code,
         showInBlocks: !block?.hidden,
         ...(block?.codeGenerators ? {codeGenerators: block.codeGenerators} : {}),
