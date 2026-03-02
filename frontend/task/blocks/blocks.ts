@@ -214,6 +214,10 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
 
                 for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                     let blockName = blockList[iBlock];
+                    if (!(blockName in blocksInfos)) {
+                        throw new Error(`This block does not exist or has not been loaded by the library: ${blockName}`);
+                    }
+
                     const {block, category} = blocksInfos[blockName];
                     const newBlock = convertQuickalgoLibraryToCodecastBlock(block, category, generatorName, contextStrings);
                     availableBlocks.push(newBlock);

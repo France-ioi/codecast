@@ -130,7 +130,7 @@ function* dispatchActionToStore(action: Action) {
 
 function* linkTaskPlatformSaga() {
     const state = yield* appSelect();
-    if ('main' !== state.environment) {
+    if ('main' !== state.environment || null !== platformApi) {
         return;
     }
 

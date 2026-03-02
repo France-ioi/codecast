@@ -38,9 +38,9 @@ export class DisplayHelper {
         const mainStore = Codecast.environments['main'].store;
         mainStore.dispatch(displayModal({message: dialog, mode: ModalType.dialog}));
 
-        // Wait next tick to make sure modal is rendered
+        // Wait to make sure modal is rendered
         if (callback) {
-            setTimeout(callback);
+            setTimeout(callback, 30);
         }
     }
 
