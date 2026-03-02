@@ -33,40 +33,6 @@ interface BlockInfo {
 
 export const CONSTRUCTOR_NAME = '__constructor';
 
-export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string): BlockInfo {
-    const blockInfo: BlockInfo = {
-        nbArgs: 0, // handled below
-        type: typeName,
-        yieldsValue: block.yieldsValue,
-        params: block.params ?? [],
-        nbsArgs: [],
-    };
-    if (block.anyArgs) {
-        // Allows to specify the function can accept any number of arguments
-        blockInfo.nbsArgs.push(Infinity);
-    }
-    let variants = block.variants ? block.variants : (block.params ? [block.params] : []);
-    if (variants.length) {
-        for (let i = 0; i < variants.length; i++) {
-            blockInfo.nbsArgs.push(variants[i].length);
-        }
-    }
-    if (block.hidden) {
-        blockInfo.hidden = true;
-    }
-    if (block.blocklyJson) {
-        blockInfo.blocklyJson = block.blocklyJson;
-    }
-    if (block.blocklyXml) {
-        blockInfo.blocklyXml = block.blocklyXml;
-    }
-    if (block.blocklyInit) {
-        blockInfo.blocklyInit = block.blocklyInit;
-    }
-
-    return blockInfo;
-}
-
 function convertQuickalgoLibraryToCodecastBlock(block: QuickalgoLibraryBlock, category: string, generatorName: string, contextStrings, platform: CodecastPlatform): Block {
     let code = contextStrings.code[`${generatorName}.${block.name}`] ?? contextStrings.code[block.name];
     if ('undefined' === typeof code) {
