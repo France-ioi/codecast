@@ -103,8 +103,6 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
 
     state.options.language = language;
     updateLanguageCalls(state);
-
-    return state;
 }
 
 export function updateLanguageCalls(state: AppStore) {
