@@ -67,10 +67,13 @@ export function generateBlockInfo(block: QuickalgoLibraryBlock, typeName: string
     return blockInfo;
 }
 
-function convertQuickalgoLibraryToCodecastBlock(block: QuickalgoLibraryBlock, category: string, generatorName: string, contextStrings): Block {
+function convertQuickalgoLibraryToCodecastBlock(block: QuickalgoLibraryBlock, category: string, generatorName: string, contextStrings, platform: CodecastPlatform): Block {
     let code = contextStrings.code[`${generatorName}.${block.name}`] ?? contextStrings.code[block.name];
     if ('undefined' === typeof code) {
         code = block.name;
+    }
+    if (!hasBlockPlatform(platform) && !code.includes('(')) {
+        code += '()';
     }
 
     const paramsCount = [];
@@ -135,7 +138,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                 }
 
                 for (let block of (featureData.blocks ?? [])) {
-                    const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings);
+                    const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings, platform);
                     availableBlocks.push(newBlock);
                 }
                 for (let [className, classInfo] of Object.entries(featureData.classMethods ?? {})) {
@@ -150,7 +153,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                         const block = classInfo.init;
                         const method = CONSTRUCTOR_NAME;
                         block.name = `${className}.${method}`;
-                        const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings);
+                        const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings, platform);
                         newBlock.type = BlockType.ClassFunction;
                         newBlock.caption = className + '()';
                         newBlock.methodName = method;
@@ -164,7 +167,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                             const totalBlockName = `${className}.${method}`;
                             const instanceBlockName = `${classInstance}.${method}`;
                             block.name = totalBlockName;
-                            const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings);
+                            const newBlock = convertQuickalgoLibraryToCodecastBlock(block, featureData.category, featureData.generatorName, contextStrings, platform);
                             newBlock.type = BlockType.ClassFunction;
                             newBlock.caption = instanceBlockName + '()';
                             newBlock.methodName = method;
@@ -219,7 +222,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
                     }
 
                     const {block, category} = blocksInfos[blockName];
-                    const newBlock = convertQuickalgoLibraryToCodecastBlock(block, category, generatorName, contextStrings);
+                    const newBlock = convertQuickalgoLibraryToCodecastBlock(block, category, generatorName, contextStrings, platform);
                     availableBlocks.push(newBlock);
                 }
 
@@ -285,12 +288,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
 
             let blockDesc = '';
             let blockName = block.name;
-            let funcCode = block.caption;
             blockDesc = block.description;
             if (!blockDesc) {
-                if (!hasBlockPlatform(platform) && !block.caption) {
-                    block.caption = funcCode + '()';
-                }
                 if (BlockType.ClassFunction === block.type && 'init' === block.methodName) {
                     block.caption = `${block.classInstance} = ${block.className}()`;
                 }
