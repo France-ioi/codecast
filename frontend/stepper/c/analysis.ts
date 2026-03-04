@@ -44,7 +44,7 @@ export const analyseState = function(programState): AnalysisC {
         };
     }
 
-    return Object.freeze(result);
+    return result;
 };
 
 /*
@@ -119,11 +119,11 @@ export const collectDirectives = function(functionCallStack, focusDepth): Steppe
         })
     }
 
-    return Object.freeze({
+    return {
         ordered,
         functionCallStackMap,
         functionCallStack: null
-    });
+    };
 };
 
 export function convertUnixStateToAnalysisSnapshot(programState: any, lastProgramState: any): AnalysisSnapshot {

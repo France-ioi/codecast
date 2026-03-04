@@ -776,7 +776,7 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
         if (context === ContextEnrichingTypes.StepperProgress) {
-            stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
+            stepperState.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
 
             // Don't reanalyse after program is finished :
             // keep the last state of the stack and set isFinished state.

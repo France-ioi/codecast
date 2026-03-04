@@ -38,7 +38,7 @@ export const fetchLatestBlocklyAnalysis = function (localVariables: any, lastAna
         stepNum: newStepNum
     };
 
-    return Object.freeze(analysis);
+    return analysis;
 }
 
 let variableReferenceCount = 1;

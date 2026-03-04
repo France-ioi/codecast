@@ -98,6 +98,7 @@ import {Range} from '../buffers/buffer_types';
 import {StepperProgressParameters} from './stepper_types';
 import {FileDescriptor} from '../task/libs/remote_lib_handler';
 import {RecorderStatus} from '../recorder/store';
+import {produce} from 'immer';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -438,11 +439,9 @@ function stepperRestartReducer(state: AppStore, {payload: {stepperState}}): void
     const {platform} = state.options;
 
     if (stepperState) {
-        Codecast.runner.enrichStepperState(stepperState, ContextEnrichingTypes.StepperRestart);
-        /**
-         * StepperState comes from an action so it's not an immer draft.
-         */
-        stepperState = {...stepperState};
+        stepperState = produce(stepperState, draft => {
+            Codecast.runner.enrichStepperState(draft, ContextEnrichingTypes.StepperRestart);
+        });
     } else {
         if (platform === CodecastPlatform.Python) {
             stepperState = state.stepper.initialStepperState;
@@ -468,8 +467,8 @@ function stepperRestartReducer(state: AppStore, {payload: {stepperState}}): void
     }
 
     state.stepper.status = StepperStatus.Idle;
-    state.stepper.initialStepperState = stepperState;
-    state.stepper.currentStepperState = stepperState;
+    state.stepper.initialStepperState = JSON.parse(JSON.stringify(stepperState));
+    state.stepper.currentStepperState = JSON.parse(JSON.stringify(stepperState));
     state.stepper.redo = [];
     state.task.resetDone = false;
     state.task.inputs = [];
@@ -480,7 +479,7 @@ function stepperTaskCancelledReducer(): void {
 }
 
 function stepperResetReducer(state: AppStore, {payload: {stepperState}}): void {
-    state.stepper = Object.freeze(stepperState);
+    state.stepper = stepperState;
 }
 
 function stepperStepReducer(state: AppStore): void {
@@ -498,18 +497,15 @@ function stepperStartedReducer(state: AppStoreReplay, action): void {
 }
 
 function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext, progress}}: {payload: {stepperContext: StepperContext, progress: boolean}}): void {
-    /**
-     * TODO: stepperState comes from an action so it's not an immer draft.
-     */
-    stepperContext.state = {...stepperContext.state};
-
     if (false !== progress) {
         // Set new currentStepperState state and go back to idle.
-        Codecast.runner.enrichStepperState(stepperContext.state, ContextEnrichingTypes.StepperProgress, stepperContext);
+        stepperContext.state = produce(stepperContext.state, draft => {
+            Codecast.runner.enrichStepperState(draft, ContextEnrichingTypes.StepperProgress, stepperContext);
+        });
     }
 
     state.task.state = quickAlgoLibraries.getLibrariesInnerState(state.environment);
-    state.stepper.currentStepperState = stepperContext.state;
+    state.stepper.currentStepperState = JSON.parse(JSON.stringify(stepperContext.state));
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
     }
@@ -518,13 +514,12 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
-    Codecast.runner.enrichStepperState(stepperContext.state, ContextEnrichingTypes.StepperIdle, stepperContext);
-    /**
-     * TODO: stepperState comes from an action so it's not an immer draft.
-     */
-    stepperContext.state = {...stepperContext.state};
 
-    state.stepper.currentStepperState = stepperContext.state;
+    stepperContext.state = produce(stepperContext.state, draft => {
+        Codecast.runner.enrichStepperState(draft, ContextEnrichingTypes.StepperIdle, stepperContext);
+    });
+
+    state.stepper.currentStepperState = JSON.parse(JSON.stringify(stepperContext.state));
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;
 }
