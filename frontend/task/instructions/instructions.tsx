@@ -9,7 +9,7 @@ import React from 'react';
 import {AppStore} from '../../store';
 import {formatTaskInstructions} from '../utils';
 import {TaskLevelName} from '../platform/platform_slice';
-import {memoize} from 'proxy-memoize';
+import {createSelector} from '@reduxjs/toolkit';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {TaskInstructionsVideo} from './TaskInstructionsVideo';
@@ -152,39 +152,42 @@ const defaultInstructionsHtml = `
 <!--    </div>-->
 `;
 
-export const getInstructionsForLevelSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}) => {
-    const taskInstructionsHtmlFromOptions = state.options.taskInstructions;
-    const currentTask = state.task.currentTask;
-    const taskLevel = state.task.currentLevel;
-
-    let newInstructionsHtml = taskInstructionsHtmlFromOptions ? taskInstructionsHtmlFromOptions : null;
-    // let newInstructionsHtml = defaultInstructionsHtml;
-    let newInstructionsTitle = null;
-    if (currentTask && currentTask.strings && currentTask.strings.length) {
-        const instructions = selectLanguageStrings(state);
-        if (instructions.title) {
-            newInstructionsTitle = instructions.title;
-        }
-        newInstructionsHtml = instructions.statement;
-    } else if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask?.gridInfos.intro) {
-        const strLang = window.stringsLanguage;
-        if (strLang in window.algoreaInstructionsStrings) {
-            const strings = window.algoreaInstructionsStrings[strLang];
-            const platform = state.options.platform;
-            let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, state.task.levelGridInfos, currentTask.data, taskLevel, platform);
-            if (newInstructions) {
-                const innerText = window.jQuery(newInstructions).text();
-                if (innerText.length) {
-                    newInstructionsHtml = newInstructions;
+export const getInstructionsForLevelSelector = createSelector(
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => state.options.taskInstructions,
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => state.task.currentTask,
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => state.task.currentLevel,
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => state.task.levelGridInfos,
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => state.options.platform,
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => selectLanguageStrings(state),
+    ({context}: {state: AppStore, context: QuickAlgoLibrary}) => context,
+    (taskInstructionsHtmlFromOptions, currentTask, taskLevel, levelGridInfos, platform, instructions, context) => {
+        let newInstructionsHtml = taskInstructionsHtmlFromOptions ? taskInstructionsHtmlFromOptions : null;
+        // let newInstructionsHtml = defaultInstructionsHtml;
+        let newInstructionsTitle = null;
+        if (currentTask && currentTask.strings && currentTask.strings.length) {
+            if (instructions.title) {
+                newInstructionsTitle = instructions.title;
+            }
+            newInstructionsHtml = instructions.statement;
+        } else if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask?.gridInfos.intro) {
+            const strLang = window.stringsLanguage;
+            if (strLang in window.algoreaInstructionsStrings) {
+                const strings = window.algoreaInstructionsStrings[strLang];
+                let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, levelGridInfos, currentTask.data, taskLevel, platform);
+                if (newInstructions) {
+                    const innerText = window.jQuery(newInstructions).text();
+                    if (innerText.length) {
+                        newInstructionsHtml = newInstructions;
+                    }
                 }
             }
         }
+        return {
+            html: newInstructionsHtml,
+            title: newInstructionsTitle,
+        };
     }
-    return {
-        html: newInstructionsHtml,
-        title: newInstructionsTitle
-    };
-});
+);
 
 export function getTaskSolution(state: AppStore) {
     if (state.options.taskSolution) {
@@ -194,63 +197,71 @@ export function getTaskSolution(state: AppStore) {
     return selectLanguageStrings(state)?.solution;
 }
 
-export const getFormattedInstructionsForLevelSelector = memoize(({state, context}: {state: AppStore, context: QuickAlgoLibrary}) => {
-    const html = getInstructionsForLevelSelector({state, context}).html;
-    const platform = state.options.platform;
-    const taskLevel = state.task.currentLevel;
-    const taskVariant = state.options.taskVariant;
-
-    return formatTaskInstructions(html, platform, taskLevel, taskVariant);
-});
-
-export const getTaskSuccessMessageSelector = memoize((state: AppStore) => {
-    const context = quickAlgoLibraries.getContext(null, state.environment);
-    const instructionsJQuery = getFormattedInstructionsForLevelSelector({state, context});
-
-    return instructionsJQuery.find('.success-message').length ? instructionsJQuery.find('.success-message').html() : null;
-});
-
-export const getTaskHintsSelector = memoize((state: AppStore) => {
-    const context = quickAlgoLibraries.getContext(null, state.environment);
-    const html = getInstructionsForLevelSelector({state, context}).html;
-    const platform = state.options.platform;
-
-    let hints = [];
-
-    const addHintsForLevel = (level: TaskLevelName) => {
-        const instructionsJQuery = formatTaskInstructions(html, platform, level);
-        if (instructionsJQuery.find('.hints').length) {
-            const levelHints = instructionsJQuery.find('.hints').first().children('div').toArray().map(elm => {
-                return {
-                    content: elm.innerHTML.trim(),
-                    minScore: elm.getAttribute('data-min-score') ? Number(elm.getAttribute('data-min-score')) : undefined,
-                    id: elm.getAttribute('data-id') ? elm.getAttribute('data-id') : undefined,
-                    question: elm.hasAttribute('data-question'),
-                    previousHintId: elm.getAttribute('data-previous-hint-id') ? elm.getAttribute('data-previous-hint-id') : undefined,
-                    nextHintId: elm.getAttribute('data-next-hint-id') ? elm.getAttribute('data-next-hint-id') : undefined,
-                    yesHintId: elm.getAttribute('data-yes-hint-id') ? elm.getAttribute('data-yes-hint-id') : undefined,
-                    noHintId: elm.getAttribute('data-no-hint-id') ? elm.getAttribute('data-no-hint-id') : undefined,
-                    disablePrevious: elm.hasAttribute('data-disable-previous'),
-                    disableNext: elm.hasAttribute('data-disable-next'),
-                    immediate: elm.hasAttribute('data-immediate'),
-                    levels: [level],
-                };
-            });
-
-            hints = [...hints, ...levelHints];
-        }
-    };
-
-    if (Object.keys(state.platform.levels).length) {
-        for (let level of Object.keys(state.platform.levels)) {
-            addHintsForLevel(level as TaskLevelName);
-        }
-    } else {
-        addHintsForLevel(null);
+export const getFormattedInstructionsForLevelSelector = createSelector(
+    (arg: {state: AppStore, context: QuickAlgoLibrary}) => getInstructionsForLevelSelector(arg).html,
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => state.options.platform,
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => state.task.currentLevel,
+    ({state}: {state: AppStore, context: QuickAlgoLibrary}) => state.options.taskVariant,
+    (html, platform, taskLevel, taskVariant) => {
+        return formatTaskInstructions(html, platform, taskLevel, taskVariant);
     }
+);
 
-    return hints.length ? hints : null;
-});
+export const getTaskSuccessMessageSelector = createSelector(
+    (state: AppStore) => {
+        const context = quickAlgoLibraries.getContext(null, state.environment);
+        return getFormattedInstructionsForLevelSelector({state, context});
+    },
+    (instructionsJQuery) => {
+        return instructionsJQuery.find('.success-message').length ? instructionsJQuery.find('.success-message').html() : null;
+    }
+);
+
+export const getTaskHintsSelector = createSelector(
+    (state: AppStore) => {
+        const context = quickAlgoLibraries.getContext(null, state.environment);
+        return getInstructionsForLevelSelector({state, context}).html;
+    },
+    (state: AppStore) => state.options.platform,
+    (state: AppStore) => state.platform.levels,
+    (html, platform, levels) => {
+        let hints = [];
+
+        const addHintsForLevel = (level: TaskLevelName) => {
+            const instructionsJQuery = formatTaskInstructions(html, platform, level);
+            if (instructionsJQuery.find('.hints').length) {
+                const levelHints = instructionsJQuery.find('.hints').first().children('div').toArray().map(elm => {
+                    return {
+                        content: elm.innerHTML.trim(),
+                        minScore: elm.getAttribute('data-min-score') ? Number(elm.getAttribute('data-min-score')) : undefined,
+                        id: elm.getAttribute('data-id') ? elm.getAttribute('data-id') : undefined,
+                        question: elm.hasAttribute('data-question'),
+                        previousHintId: elm.getAttribute('data-previous-hint-id') ? elm.getAttribute('data-previous-hint-id') : undefined,
+                        nextHintId: elm.getAttribute('data-next-hint-id') ? elm.getAttribute('data-next-hint-id') : undefined,
+                        yesHintId: elm.getAttribute('data-yes-hint-id') ? elm.getAttribute('data-yes-hint-id') : undefined,
+                        noHintId: elm.getAttribute('data-no-hint-id') ? elm.getAttribute('data-no-hint-id') : undefined,
+                        disablePrevious: elm.hasAttribute('data-disable-previous'),
+                        disableNext: elm.hasAttribute('data-disable-next'),
+                        immediate: elm.hasAttribute('data-immediate'),
+                        levels: [level],
+                    };
+                });
+
+                hints = [...hints, ...levelHints];
+            }
+        };
+
+        if (Object.keys(levels).length) {
+            for (let level of Object.keys(levels)) {
+                addHintsForLevel(level as TaskLevelName);
+            }
+        } else {
+            addHintsForLevel(null);
+        }
+
+        return hints.length ? hints : null;
+    }
+);
 
 function getNodeText(node) {
     if ('text' === node.type) {

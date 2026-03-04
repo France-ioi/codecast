@@ -8,19 +8,22 @@ import {submissionChangePaneOpen} from '../submission/submission_slice';
 import {faList} from '@fortawesome/free-solid-svg-icons/faList';
 import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
 import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
-import {memoize} from 'proxy-memoize';
+import {createSelector} from '@reduxjs/toolkit';
 import {ErrorCodeData, testErrorCodeData} from '../submission/TestsPaneListTest';
 import {selectSubmissionsPaneEnabled, selectTaskTests} from '../submission/submission_selectors';
 import {TaskTest} from './task_types';
 
-const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: TaskTest} => {
-    const getTaskTestsByIndex = {};
-    for (let testIndex = 0; testIndex < taskTests.length; testIndex++) {
-        getTaskTestsByIndex[testIndex] = taskTests[testIndex];
-    }
+const getTaskTestsByIndex = createSelector(
+    (taskTests: TaskTest[]) => taskTests,
+    (taskTests): {[key: number]: TaskTest} => {
+        const result: {[key: number]: TaskTest} = {};
+        for (let testIndex = 0; testIndex < taskTests.length; testIndex++) {
+            result[testIndex] = taskTests[testIndex];
+        }
 
-    return getTaskTestsByIndex;
-});
+        return result;
+    }
+);
 
 export function TaskTestsSelector() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);

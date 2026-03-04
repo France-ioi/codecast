@@ -42,8 +42,6 @@ import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {testErrorCodeData} from './TestsPaneListTest';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {onEditSource} from '../task';
-import {ActionTypes} from '../recorder/actionTypes';
-import {memoize} from 'proxy-memoize';
 import {Range} from '../buffers/buffer_types';
 import {bufferDissociateFromSubmission} from '../buffers/buffers_slice';
 

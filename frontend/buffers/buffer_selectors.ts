@@ -2,11 +2,12 @@ import {AppStore} from '../store';
 import {BufferState} from './buffer_types';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {BuffersState} from './buffers_slice';
-import {memoize} from 'proxy-memoize';
+import {createSelector} from '@reduxjs/toolkit';
 
-export const selectSourceBuffers = memoize((state: AppStore): {[bufferName: string]: BufferState} => {
-    return selectSourceBuffersFromBufferState(state.buffers);
-});
+export const selectSourceBuffers = createSelector(
+    (state: AppStore) => state.buffers,
+    (buffers): {[bufferName: string]: BufferState} => selectSourceBuffersFromBufferState(buffers)
+);
 
 export function selectSourceBuffersFromBufferState (buffers: BuffersState): {[bufferName: string]: BufferState} {
     const sourceBuffers = {};

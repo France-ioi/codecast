@@ -56,7 +56,7 @@ import {AppStore, CodecastOptions} from '../../store';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
-import {memoize} from 'proxy-memoize';
+import {createSelector} from '@reduxjs/toolkit';
 import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
 import jwt from 'jsonwebtoken';
@@ -87,22 +87,24 @@ export function* getTaskAnswerAggregated() {
     }
 }
 
-export const selectTaskMetadata = memoize((state: AppStore) => {
-    const currentTask = state.task.currentTask;
-    const serverTask = null !== currentTask && isServerTask(currentTask);
+export const selectTaskMetadata = createSelector(
+    (state: AppStore) => state.task.currentTask,
+    (currentTask) => {
+        const serverTask = null !== currentTask && isServerTask(currentTask);
 
-    const metadata = window.json ?? window.PEMTaskMetaData ?? {
-        fullFeedback: true,
-        minWidth: "auto",
-    };
-    metadata.autoHeight = true;
-    if (!serverTask) {
-        metadata.disablePlatformProgress = true;
+        const metadata = window.json ?? window.PEMTaskMetaData ?? {
+            fullFeedback: true,
+            minWidth: "auto",
+        };
+        metadata.autoHeight = true;
+        if (!serverTask) {
+            metadata.disablePlatformProgress = true;
+        }
+        metadata.usesTokens = true; // To receive task token
+
+        return metadata;
     }
-    metadata.usesTokens = true; // To receive task token
-
-    return metadata;
-});
+);
 
 export function selectTaskTokenPayload(state: AppStore): TaskTokenPayload|null {
     const token = state.platform.taskToken;

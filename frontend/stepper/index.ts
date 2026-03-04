@@ -92,9 +92,7 @@ import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from '../submissi
 import {LayoutMobileMode} from '../task/layout/layout_types';
 import {shuffleArray} from '../utils/javascript';
 import {computeDelayForCurrentStep} from './speed';
-import {memoize} from 'proxy-memoize';
-import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
-import debounce from 'lodash.debounce';
+import {createSelector} from '@reduxjs/toolkit';
 import {RemoteDebugExecutor} from './remote/remote_debug_executer';
 import {Range} from '../buffers/buffer_types';
 import {StepperProgressParameters} from './stepper_types';
@@ -1036,15 +1034,17 @@ function* stepperExitSaga() {
     yield* put({type: ActionTypes.CompileClear});
 }
 
-export const getComputedSourceHighlightFromStateSelector = memoize<AppStore, ComputedSourceHighlight[]|null>((state: AppStore) => {
-    const stepperState = state.stepper.currentStepperState;
-    log.getLogger('stepper').debug('update source highlight', stepperState);
-    if (!stepperState) {
-        return null;
-    }
+export const getComputedSourceHighlightFromStateSelector = createSelector(
+    (state: AppStore) => state.stepper.currentStepperState,
+    (stepperState): ComputedSourceHighlight[]|null => {
+        log.getLogger('stepper').debug('update source highlight', stepperState);
+        if (!stepperState) {
+            return null;
+        }
 
-    return stepperState.computedSourceHighlight;
-});
+        return stepperState.computedSourceHighlight;
+    }
+);
 
 function* stepperRunBackgroundSaga({payload: {callback}}) {
     const state = yield* appSelect();
