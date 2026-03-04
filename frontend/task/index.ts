@@ -158,7 +158,7 @@ let oldSagasTasks = {};
 
 function* taskRefresh(taskId?: string) {
     const currentTask = yield* appSelect(state => state.task.currentTask);
-    if (null === currentTask && !taskId) {
+    if (!currentTask?.id && !taskId) {
         return;
     }
 

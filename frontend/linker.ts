@@ -262,7 +262,7 @@ export function link(rootBuilder, globalScope: App): Linker {
         preloadedState: {},
         middleware: getDefaultMiddleware => {
             return getDefaultMiddleware({
-                // immutableCheck: false,
+                immutableCheck: false,
                 serializableCheck: false,
             }).concat(sagaMiddleware, userTimingMiddleware)
         },
