@@ -153,7 +153,7 @@ const initialStateStepperState = {
     output: '', // Only used for python
     localVariables: {} as any, // Only used for blockly
     terminal: null as TermBuffer, // Only used for python
-    suspensions: [] as readonly any[],  // Only used for python // TODO: Don't put this in the store
+    suspensionsCount: null as number,
     programState: {} as any, // Only used for c
     lastProgramState: {} as any, // Only used for c
     ports: [] as ArduinoPort[], // Only used for arduino
@@ -505,7 +505,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 
     state.task.state = quickAlgoLibraries.getLibrariesInnerState(state.environment);
-    state.stepper.currentStepperState = JSON.parse(JSON.stringify(stepperContext.state));
+    state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
     }
@@ -519,7 +519,7 @@ function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void 
         Codecast.runner.enrichStepperState(draft, ContextEnrichingTypes.StepperIdle, stepperContext);
     });
 
-    state.stepper.currentStepperState = JSON.parse(JSON.stringify(stepperContext.state));
+    state.stepper.currentStepperState = stepperContext.state;
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;
 }

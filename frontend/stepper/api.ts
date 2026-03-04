@@ -370,7 +370,7 @@ async function stepOut(stepperContext: StepperContext) {
     // The program must be running.
     if (!isStuck(stepperContext.state)) {
         if (stepperContext.state.platform === CodecastPlatform.Python) {
-            const nbSuspensions = stepperContext.state.suspensions.length;
+            const nbSuspensions = stepperContext.state.suspensionsCount;
 
             // Take a first step.
             await executeSingleStep(stepperContext);
@@ -378,8 +378,8 @@ async function stepOut(stepperContext: StepperContext) {
             // The number of suspensions represents the number of layers of functions called.
             // We want it to be less, which means be got out of at least one level of function.
             await stepUntil(stepperContext, curState => {
-                log.getLogger('stepper').debug(curState.suspensions.length, nbSuspensions);
-                return (curState.suspensions.length < nbSuspensions);
+                log.getLogger('stepper').debug(curState.suspensionsCount, nbSuspensions);
+                return (curState.suspensionsCount < nbSuspensions);
             });
         } else {
             // Find the closest function scope.
@@ -395,8 +395,8 @@ async function stepOut(stepperContext: StepperContext) {
 
 async function stepOver(stepperContext: StepperContext) {
     if (stepperContext.state.platform === CodecastPlatform.Python) {
-        if (stepperContext.state.suspensions) {
-            const nbSuspensions = stepperContext.state.suspensions.length;
+        if (stepperContext.state.suspensionsCount) {
+            const nbSuspensions = stepperContext.state.suspensionsCount;
 
             // Take a first step.
             await executeSingleStep(stepperContext);
@@ -404,7 +404,7 @@ async function stepOver(stepperContext: StepperContext) {
             // The number of suspensions represents the number of layers of functions called.
             // We want to be at the same number or less, not inside a new function.
             await stepUntil(stepperContext, curState => {
-                return (curState.suspensions.length <= nbSuspensions);
+                return (curState.suspensionsCount <= nbSuspensions);
             });
         } else {
             // The program hasn't started yet, just execute a step.

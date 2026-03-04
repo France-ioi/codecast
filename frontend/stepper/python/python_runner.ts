@@ -776,7 +776,8 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
         if (context === ContextEnrichingTypes.StepperProgress) {
-            stepperState.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
+            const suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
+            stepperState.suspensionsCount = suspensions.length;
 
             // Don't reanalyse after program is finished :
             // keep the last state of the stack and set isFinished state.
@@ -784,7 +785,7 @@ mod.${className} = Sk.misceval.buildClass(mod, newClass${className}, "${classNam
                 stepperState.isFinished = true;
             } else {
                 log.getLogger('stepper').debug('INCREASE STEP NUM TO ', stepperState.analysis.stepNum + 1);
-                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1, this.definedConstants);
+                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1, this.definedConstants);
                 stepperState.directives = {
                     ordered: parseDirectives(stepperState.analysis),
                     functionCallStackMap: null,
