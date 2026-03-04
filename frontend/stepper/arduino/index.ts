@@ -15,7 +15,6 @@ In the stepper state:
 import range from 'node-range';
 import {call, put, select} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
-import update from 'immutability-helper';
 import './ace';
 import './style.scss';
 import {ActionTypes} from "./actionTypes";
@@ -32,6 +31,7 @@ import {appSelect} from '../../hooks';
 
 import {CodecastPlatform} from '../codecast_platform';
 import {App} from '../../app_types';
+import {produce} from 'immer';
 
 export enum PinMode {
   Input = 0,
@@ -203,13 +203,9 @@ export default function(bundle: Bundle) {
                     break;
             }
 
-            stepperContext.state = update(stepperContext.state, {
-                ports: {
-                    [pin]: {
-                        direction: {$set: direction},
-                        output: {$set: output}
-                    }
-                }
+            stepperContext.state = produce(stepperContext.state, draft => {
+                draft.ports[pin].direction = direction;
+                draft.ports[pin].output = output;
             });
         });
 
@@ -217,14 +213,8 @@ export default function(bundle: Bundle) {
             yield ['digitalWrite', pin.toInteger(), level.toInteger()];
         });
         stepperApi.onEffect('digitalWrite', function* digitalWriteEffect(stepperContext: StepperContext, pin, level) {
-            stepperContext.state = update(stepperContext.state, {
-                ports: {
-                    [pin]: {
-                        output: {
-                            $set: level
-                        }
-                    }
-                }
+            stepperContext.state = produce(stepperContext.state, draft => {
+                draft.ports[pin].output = level;
             });
         });
 
@@ -268,12 +258,8 @@ export default function(bundle: Bundle) {
             yield ['serialBegin', speed.toInteger()];
         });
         stepperApi.onEffect('serialBegin', function* (stepperContext: StepperContext, speed) {
-            stepperContext.state = update(stepperContext.state, {
-                serial: {
-                    speed: {
-                        $set: speed
-                    }
-                }
+            stepperContext.state = produce(stepperContext.state, draft => {
+                draft.serial.speed = speed;
             });
         });
 
