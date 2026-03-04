@@ -260,9 +260,14 @@ export function link(rootBuilder, globalScope: App): Linker {
     const store = configureStore({
         reducer: rootReducerWithSlices,
         preloadedState: {},
-        middleware: [sagaMiddleware, userTimingMiddleware],
+        middleware: getDefaultMiddleware => {
+            return getDefaultMiddleware({
+                immutableCheck: false,
+                serializableCheck: false,
+            }).concat(sagaMiddleware, userTimingMiddleware)
+        },
         devTools: true,
-    })
+    });
 
     function finalize(...args) {
         /* Call the deferred callbacks. */

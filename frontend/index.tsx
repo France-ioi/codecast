@@ -54,7 +54,7 @@ fromEntries.shim(); // will be a no-op if not needed
 
 // Disabling auto-freeze is recommended by proxy-memoize, cf https://github.com/dai-shi/proxy-memoize
 // This is because JavaScript does not support nested proxies of frozen objects
-setAutoFreeze(false);
+// setAutoFreeze(false);
 
 // Define all loggers.
 // You can change the level of a specific logger by inputting

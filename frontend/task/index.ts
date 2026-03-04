@@ -125,7 +125,6 @@ import {
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {DeferredPromise} from '../utils/app';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
-import jwt from 'jsonwebtoken';
 import {getAudioTimeStep} from './task_selectors';
 
 // @ts-ignore
@@ -159,7 +158,7 @@ let oldSagasTasks = {};
 
 function* taskRefresh(taskId?: string) {
     const currentTask = yield* appSelect(state => state.task.currentTask);
-    if (null === currentTask && !taskId) {
+    if (!currentTask?.id && !taskId) {
         return;
     }
 

@@ -92,14 +92,13 @@ import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from '../submissi
 import {LayoutMobileMode} from '../task/layout/layout_types';
 import {shuffleArray} from '../utils/javascript';
 import {computeDelayForCurrentStep} from './speed';
-import {memoize} from 'proxy-memoize';
-import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
-import debounce from 'lodash.debounce';
+import {createSelector} from '@reduxjs/toolkit';
 import {RemoteDebugExecutor} from './remote/remote_debug_executer';
 import {Range} from '../buffers/buffer_types';
 import {StepperProgressParameters} from './stepper_types';
 import {FileDescriptor} from '../task/libs/remote_lib_handler';
 import {RecorderStatus} from '../recorder/store';
+import {produce} from 'immer';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -154,7 +153,7 @@ const initialStateStepperState = {
     output: '', // Only used for python
     localVariables: {} as any, // Only used for blockly
     terminal: null as TermBuffer, // Only used for python
-    suspensions: [] as readonly any[],  // Only used for python // TODO: Don't put this in the store
+    suspensionsCount: null as number,
     programState: {} as any, // Only used for c
     lastProgramState: {} as any, // Only used for c
     ports: [] as ArduinoPort[], // Only used for arduino
@@ -440,11 +439,9 @@ function stepperRestartReducer(state: AppStore, {payload: {stepperState}}): void
     const {platform} = state.options;
 
     if (stepperState) {
-        Codecast.runner.enrichStepperState(stepperState, ContextEnrichingTypes.StepperRestart);
-        /**
-         * StepperState comes from an action so it's not an immer draft.
-         */
-        stepperState = {...stepperState};
+        stepperState = produce(stepperState, draft => {
+            Codecast.runner.enrichStepperState(draft, ContextEnrichingTypes.StepperRestart);
+        });
     } else {
         if (platform === CodecastPlatform.Python) {
             stepperState = state.stepper.initialStepperState;
@@ -470,8 +467,8 @@ function stepperRestartReducer(state: AppStore, {payload: {stepperState}}): void
     }
 
     state.stepper.status = StepperStatus.Idle;
-    state.stepper.initialStepperState = stepperState;
-    state.stepper.currentStepperState = stepperState;
+    state.stepper.initialStepperState = JSON.parse(JSON.stringify(stepperState));
+    state.stepper.currentStepperState = JSON.parse(JSON.stringify(stepperState));
     state.stepper.redo = [];
     state.task.resetDone = false;
     state.task.inputs = [];
@@ -482,7 +479,7 @@ function stepperTaskCancelledReducer(): void {
 }
 
 function stepperResetReducer(state: AppStore, {payload: {stepperState}}): void {
-    state.stepper = Object.freeze(stepperState);
+    state.stepper = stepperState;
 }
 
 function stepperStepReducer(state: AppStore): void {
@@ -500,14 +497,11 @@ function stepperStartedReducer(state: AppStoreReplay, action): void {
 }
 
 function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext, progress}}: {payload: {stepperContext: StepperContext, progress: boolean}}): void {
-    /**
-     * TODO: stepperState comes from an action so it's not an immer draft.
-     */
-    stepperContext.state = {...stepperContext.state};
-
     if (false !== progress) {
         // Set new currentStepperState state and go back to idle.
-        Codecast.runner.enrichStepperState(stepperContext.state, ContextEnrichingTypes.StepperProgress, stepperContext);
+        stepperContext.state = produce(stepperContext.state, draft => {
+            Codecast.runner.enrichStepperState(draft, ContextEnrichingTypes.StepperProgress, stepperContext);
+        });
     }
 
     state.task.state = quickAlgoLibraries.getLibrariesInnerState(state.environment);
@@ -520,11 +514,10 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 function stepperIdleReducer(state: AppStore, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
-    Codecast.runner.enrichStepperState(stepperContext.state, ContextEnrichingTypes.StepperIdle, stepperContext);
-    /**
-     * TODO: stepperState comes from an action so it's not an immer draft.
-     */
-    stepperContext.state = {...stepperContext.state};
+
+    stepperContext.state = produce(stepperContext.state, draft => {
+        Codecast.runner.enrichStepperState(draft, ContextEnrichingTypes.StepperIdle, stepperContext);
+    });
 
     state.stepper.currentStepperState = stepperContext.state;
     state.stepper.status = StepperStatus.Idle;
@@ -1036,15 +1029,17 @@ function* stepperExitSaga() {
     yield* put({type: ActionTypes.CompileClear});
 }
 
-export const getComputedSourceHighlightFromStateSelector = memoize<AppStore, ComputedSourceHighlight[]|null>((state: AppStore) => {
-    const stepperState = state.stepper.currentStepperState;
-    log.getLogger('stepper').debug('update source highlight', stepperState);
-    if (!stepperState) {
-        return null;
-    }
+export const getComputedSourceHighlightFromStateSelector = createSelector(
+    (state: AppStore) => state.stepper.currentStepperState,
+    (stepperState): ComputedSourceHighlight[]|null => {
+        log.getLogger('stepper').debug('update source highlight', stepperState);
+        if (!stepperState) {
+            return null;
+        }
 
-    return stepperState.computedSourceHighlight;
-});
+        return stepperState.computedSourceHighlight;
+    }
+);
 
 function* stepperRunBackgroundSaga({payload: {callback}}) {
     const state = yield* appSelect();

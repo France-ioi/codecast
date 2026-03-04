@@ -197,7 +197,7 @@ export const taskSlice = createSlice({
             state.contextStrings = action.payload ? JSON.parse(JSON.stringify(action.payload)) : {};
         },
         taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<QuickalgoTaskIncludeBlocks>) {
-            state.contextIncludeBlocks = action.payload;
+            state.contextIncludeBlocks = JSON.parse(JSON.stringify(action.payload));
         },
         taskSetBlocksPanelCollapsed(state: TaskState, action: PayloadAction<{collapsed: boolean, manual?: boolean}>) {
             state.blocksPanelCollapsed = action.payload.collapsed;

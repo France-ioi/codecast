@@ -77,7 +77,7 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
         log.getLogger('python_runner').debug(analysis);
     }
 
-    return Object.freeze(analysis);
+    return analysis;
 };
 
 /**
@@ -255,7 +255,7 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
         };
     }
 
-    return Object.freeze(copies);
+    return copies;
 }
 
 let variableReferenceCount = 1;

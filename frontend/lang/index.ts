@@ -8,8 +8,7 @@ import {call, put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {isLocalStorageEnabled} from "../common/utils";
 import {delay} from "../player/sagas";
-import {taskLoad} from '../task/task_actions';
-import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from '../task/task_slice';
+import {currentTaskChange, currentTaskChangePredefined} from '../task/task_slice';
 import {appSelect} from '../hooks';
 import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
 import {current, isDraft} from 'immer';
@@ -45,7 +44,7 @@ export default function(bundle: Bundle) {
 
         window.stringsLanguage = language.split('-')[0];
 
-        return setLanguageReducer(state, {payload: {language}});
+        setLanguageReducer(state, {payload: {language}});
     });
 
     bundle.defineAction(ActionTypes.LanguageSet);
@@ -103,8 +102,6 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
 
     state.options.language = language;
     updateLanguageCalls(state);
-
-    return state;
 }
 
 export function updateLanguageCalls(state: AppStore) {

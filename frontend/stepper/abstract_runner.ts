@@ -37,7 +37,7 @@ export default abstract class AbstractRunner {
 
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState): void {
         if (state.analysis) {
-            stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
+            stepperContext.state.lastAnalysis = state.analysis;
         }
     }
 
