@@ -288,7 +288,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
     } else if (node.attribs && ('data-show-source' in node.attribs || ('class' in node.attribs && -1 !== node.attribs['class'].indexOf('language-')))) {
         let code, lang;
         if ('data-show-source' in node.attribs) {
-            code = node.attribs['data-code'];
+            code = node.attribs['data-code'] ?? getNodeText(node);
             lang = node.attribs['data-lang'] ?? node.attribs['data-always-show-lang'];
         } else {
             code = getNodeText(node);
