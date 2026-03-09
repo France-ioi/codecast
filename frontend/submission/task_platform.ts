@@ -13,6 +13,7 @@ import {BlockDocument, BufferType} from '../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../stepper/js';
 import {extractTestsFromTask} from './tests';
 import {currentTaskChange, updateTaskTests} from '../task/task_slice';
+import merge from 'lodash.merge';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -36,10 +37,10 @@ export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<
             yield* delay(0);
 
             // @ts-ignore
-            let taskSettingsObject = 'undefined' !== typeof taskSettings ? taskSettings : null;
-            if (taskSettingsObject && !window.taskData) {
+            let clientExecutionParameters = 'undefined' !== typeof ClientExecutionParameters ? ClientExecutionParameters : null;
+            if (clientExecutionParameters && !window.taskData) {
                 // Convert taskSettings into window.taskData
-                window.taskData = getTaskDataFromTaskSettings(taskSettingsObject);
+                window.taskData = clientExecutionParameters;
             }
 
             return getServerTaskFromTaskData(window.taskData, task);
@@ -113,23 +114,57 @@ export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<
     }
 }
 
-export function getTaskDataFromTaskSettings(taskSettings: any) {
-    const taskData = taskSettings;
-    window.initBlocklySubTask = function () {
-    };
-    taskSettings.initTask(taskData);
-    delete taskSettings.initTask;
-
-    return taskData;
-}
-
 export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null): Task {
+    const defaultTask = {
+        commentSource: 'algorea',
+        gridInfos: {
+            hideSaveOrLoad: true,
+            actionDelay: 200,
+            includeBlocks: {
+                groupByCategory: true,
+                standardBlocks: {
+                    includeAll: false,
+                    wholeCategories: ['logic', 'loops', 'math', 'lists', 'variables', 'functions'],
+                    singleBlocks: ['input_num', 'text', 'text_print', 'text_join', 'text_append']
+                }
+            },
+            maxInstructions: 0,
+            libOptions: {
+                highlightRead: true
+            },
+            importModules: [],
+            checkEndEveryTurn: false,
+            panelCollapsed: true,
+            checkEndCondition: function (context, lastTurn) {
+                if (!lastTurn) return;
+                context.checkOutputHelper();
+                context.success = true;
+                throw (window.languageStrings.messages.outputCorrect);
+            },
+            computeGrade: function (context, message) {
+                var rate = 0;
+                if (context.success) {
+                    rate = 1;
+                    if (context.nbMoves > 100) {
+                        rate /= 2;
+                        message += window.languageStrings.messages.moreThan100Moves;
+                    }
+                }
+                return {
+                    successRate: rate,
+                    message: message
+                };
+            }
+        },
+        data: {
+            easy: []
+        }
+    };
+
+    taskData = merge(defaultTask, taskData);
+
     if (taskData.data && false !== taskData.gridInfos.allowClientExecution) {
         taskData.gridInfos.allowClientExecution = true;
-    }
-
-    if (taskData.blocklyOpts && taskData.blocklyOpts.includeBlocks) {
-        taskData.gridInfos.includeBlocks = taskData.blocklyOpts.includeBlocks;
     }
 
     if (window.PEMTaskMetaData) {

@@ -83,8 +83,8 @@ import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {
-    convertServerTaskToCodecastFormat, getServerTaskFromTaskData,
-    getTaskDataFromTaskSettings,
+    convertServerTaskToCodecastFormat,
+    getServerTaskFromTaskData,
     getTaskFromId
 } from "../submission/task_platform";
 import {
@@ -210,8 +210,8 @@ function* taskLoadSaga(app: App, action) {
             yield* call(taskRefresh, taskId);
         } else if (state.options.task) {
             yield* put(currentTaskChange({task: state.options.task}));
-        } else if (window.taskSettings) {
-            window.taskData = getTaskDataFromTaskSettings(window.taskSettings);
+        } else if (window.ClientExecutionParameters) {
+            window.taskData = window.ClientExecutionParameters;
             const serverTask = getServerTaskFromTaskData(window.taskData);
             if (serverTask.codecastParameters) {
                 yield* put({type: ActionTypes.OptionsChanged, payload: {options: serverTask.codecastParameters}});
