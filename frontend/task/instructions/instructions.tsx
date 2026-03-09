@@ -18,6 +18,7 @@ import {TaskInstructionsSlideshow} from './TaskInstructionsSlideshow';
 import {TaskStringNormalized} from '../task_types';
 import {TaskLimits} from '../TaskLimits';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {TaskExamples} from '../TaskExamples';
 
 function findStringForLanguage(taskStrings: TaskStringNormalized[], languages: string[]): TaskStringNormalized {
     for (let language of languages) {
@@ -316,6 +317,8 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
         </div>;
     } else if (node.attribs && 'data-task-limits' in node.attribs) {
         return <TaskLimits/>;
+    } else if (node.attribs && 'data-task-examples' in node.attribs) {
+        return <TaskExamples/>;
     } else if (node.attribs && 'data-slideshow' in node.attribs) {
         let children = processNodes(node.children, (node, index) => transformNode(node, index, context))
             .filter(a => 'string' !== typeof a);
