@@ -330,7 +330,7 @@ export class BlocklyHelper {
     }
 
     setIncludeBlocks(includeBlocks) {
-        this.includeBlocks = includeBlocks;
+        this.includeBlocks = JSON.parse(JSON.stringify(includeBlocks));
     }
 
     setAvailableBlocks(availableBlocks: Block[]) {
