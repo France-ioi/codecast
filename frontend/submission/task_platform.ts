@@ -156,9 +156,6 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
                 };
             }
         },
-        data: {
-            easy: []
-        }
     };
 
     taskData = merge(defaultTask, taskData);
