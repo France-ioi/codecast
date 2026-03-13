@@ -60,6 +60,7 @@ import {createSelector} from '@reduxjs/toolkit';
 import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
 import jwt from 'jsonwebtoken';
+import {getAvailablePlatforms} from '../libs/quickalgo_library_factory';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -329,6 +330,11 @@ export function* canReloadAnswer(answer: TaskAnswer) {
     const canChangePlatform = state.options.canChangePlatform;
     const platform = state.options.platform;
     if (!canChangePlatform && answer.platform !== platform) {
+        return false;
+    }
+
+    let availablePlatforms = yield* call(getAvailablePlatforms);
+    if (-1 === availablePlatforms.indexOf(answer.platform) && availablePlatforms.length) {
         return false;
     }
 

@@ -137,11 +137,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
 
-    let availablePlatforms = context.getSupportedPlatforms();
-    if (null !== currentTask && currentTask.supportedLanguages?.length && '*' !== currentTask.supportedLanguages) {
-        const taskAvailablePlatforms = getAvailablePlatformsFromSupportedLanguages(currentTask.supportedLanguages);
-        availablePlatforms = availablePlatforms.filter(platform => -1 !== taskAvailablePlatforms.indexOf(platform));
-    }
+    let availablePlatforms = yield* call(getAvailablePlatforms);
     if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
         if (platformAlreadyChanged) {
             throw new Error("Platform has already changed once, cannot converge to a valid platform");
@@ -225,6 +221,21 @@ function* addGetPythonCodeHelper(context: QuickAlgoLibrary) {
         new Promise((resolve, reject) => {
             store.dispatch(bufferGetPythonCode(context, resolve, reject));
         });
+}
+
+export function* getAvailablePlatforms() {
+    const environment = yield* appSelect(state => state.environment);
+    const currentTask = yield* appSelect(state => state.task.currentTask);
+
+    const context = quickAlgoLibraries.getContext(null, environment);
+
+    let availablePlatforms = context.getSupportedPlatforms();
+    if (null !== currentTask && currentTask.supportedLanguages?.length && '*' !== currentTask.supportedLanguages) {
+        const taskAvailablePlatforms = getAvailablePlatformsFromSupportedLanguages(currentTask.supportedLanguages);
+        availablePlatforms = availablePlatforms.filter(platform => -1 !== taskAvailablePlatforms.indexOf(platform));
+    }
+
+    return availablePlatforms;
 }
 
 
