@@ -102,7 +102,7 @@ html:not([active-view="task"]):not([active-view="solution"]) {
 }
 
 // Hide Quickalgo instructions
-#task {
+#task, #solution {
   display: none;
 }
 
