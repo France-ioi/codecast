@@ -1,8 +1,7 @@
 import {AnalysisSnapshot, AnalysisStackFrame} from "../analysis/analysis";
+import PR from 'packrattle';
 
 export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
-
-const PR = require('packrattle');
 
 const g: any = {};
 

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "./build/",
     "sourceMap": true,
-    "module": "commonjs",
+    "module": "nodenext",
     "target": "ES6",
     "skipLibCheck": true,
 

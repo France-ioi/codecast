@@ -8,6 +8,12 @@ body(id='app')
       img(src=rebaseUrl('assets/loading.gif'))
   if development
     script(type='module', src=rebaseUrl('@vite/client'))
+    script(type='module').
+      import RefreshRuntime from "!{rebaseUrl('@react-refresh')}"
+      RefreshRuntime.injectIntoGlobalHook(window)
+      window.$RefreshReg$ = () => {}
+      window.$RefreshSig$ = () => () => {}
+      window.__vite_plugin_react_preamble_installed__ = true
     script(type='module', src=rebaseUrl('frontend/index.tsx'))
   else
     script(type='text/javascript', src=rebaseUrl('build/index.js'))
