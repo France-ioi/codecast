@@ -659,7 +659,7 @@ export default class BlocklyRunner extends AbstractRunner {
         };
 
         if (context === ContextEnrichingTypes.StepperProgress) {
-            stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
+            stepperState.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
 
             if (Codecast.runner._isFinished) {
                 stepperState.isFinished = true;
