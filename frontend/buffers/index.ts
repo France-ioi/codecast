@@ -239,7 +239,7 @@ function* buffersSaga() {
 
     yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document, parameters}}) {
         const state: AppStore = yield* appSelect();
-        let newDocument = document ?? getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
+        let newDocument: Document = document ?? (yield* call(getDefaultSourceCode, state.options.platform));
         log.getLogger('editor').debug('Load new source code', newDocument);
         yield* call(createSourceBufferFromDocument, newDocument, state.options.platform, parameters ?? {});
     });
@@ -247,7 +247,7 @@ function* buffersSaga() {
     yield* takeEvery(bufferResetToDefaultSourceCode, function* ({payload: {bufferName}}) {
         const state: AppStore = yield* appSelect();
         const platform = state.buffers.buffers[bufferName].platform;
-        const document = getDefaultSourceCode(platform, state.environment, state.task.currentTask);
+        const document = yield* call(getDefaultSourceCode, platform);
 
         yield* put(bufferResetDocument({buffer: bufferName, document}));
     });
@@ -333,7 +333,7 @@ function* buffersSaga() {
 
         if (currentPlatform !== platform) {
             yield* call(createQuickalgoLibrary);
-            document = document ?? getDefaultSourceCode(platform, state.environment, state.task.currentTask);
+            document = document ?? (yield* call(getDefaultSourceCode, platform));
             yield* put(bufferResetDocument({buffer: bufferName, document}));
         }
     });

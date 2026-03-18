@@ -26,7 +26,7 @@ import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {QuickAlgoLibrariesActionType, quickAlgoLibraryResetAndReloadStateSaga} from './quickalgo_libraries';
 import {QuickAlgoLibrary} from './quickalgo_library';
 import {DebugLib} from './debug/debug_lib';
-import {QuickalgoLibraryInfos, QuickalgoTaskGridInfos} from '../task_types';
+import {isServerTask, QuickalgoLibraryInfos, QuickalgoTaskGridInfos} from '../task_types';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {selectAvailableExecutionModes} from '../../submission/submission_selectors';
 import {submissionChangeExecutionMode} from '../../submission/submission_slice';
@@ -59,7 +59,7 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
     let levelGridInfos: QuickalgoTaskGridInfos = {
         includeBlocks: {
             generatedBlocks: {
-                printer: ["print", "read", "manipulate"]
+                printer: ["print", "read"]
             },
             standardBlocks: {
                 includeAll: true,
@@ -183,6 +183,12 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
         // Don't freeze any objet inside context.infos.includeBlocks because
         // these objects can be modified by blockly_blocks.js,
         // for example for Scratch: `tsiSingleBlocks = this.blocksToScratch(tsiSingleBlocks);`
+
+        // Remove printer blocks if it's a server task because in this case we don't want to display them in the blocks
+        if (isServerTask(currentTask) && context.infos.includeBlocks.generatedBlocks && 'printer' in context.infos.includeBlocks.generatedBlocks) {
+            delete context.infos.includeBlocks.generatedBlocks['printer'];
+        }
+
         yield* put(taskSetContextIncludeBlocks(JSON.parse(JSON.stringify(context.infos.includeBlocks))));
     }
     if (context.infos && context.infos.panelCollapsed) {

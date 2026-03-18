@@ -59,7 +59,6 @@ export interface TaskTest {
 
 export interface QuickalgoTaskIncludeBlocks {
     groupByCategory?: boolean,
-    originalGroupByCategory?: boolean,
     generatedBlocks?: {[context: string]: string[]},
     standardBlocks?: {
         includeAll?: boolean,

@@ -98,6 +98,7 @@ export class BlocklyHelper {
     private mainContext: QuickAlgoLibrary;
     private placeholderBlocks: boolean;
     private strings: any;
+    public groupByCategory: boolean;
     private allBlocksAllowed: any;
     private limitedPointers: any;
     public blockCounts: any;
@@ -138,7 +139,6 @@ export class BlocklyHelper {
         this.highlightedBlocks = [];
 
         this.includeBlocks = {
-            groupByCategory: true,
             generatedBlocks: {},
             standardBlocks: {
                 includeAll: true,
@@ -146,6 +146,8 @@ export class BlocklyHelper {
                 singleBlocks: []
             }
         };
+
+        this.groupByCategory = true;
 
         this.allBlocksAllowed = [];
         this.blockCounts = {};
@@ -321,7 +323,7 @@ export class BlocklyHelper {
 
         // Refresh the toolbox for new procedures (same with variables
         // but it's already handled correctly there)
-        if (this.scratchMode && this.includeBlocks.groupByCategory && this.workspace.toolbox_
+        if (this.scratchMode && this.groupByCategory && this.workspace.toolbox_
             && (eventType === window.Blockly.Events.Change || this.dragJustTerminated)
         ) {
             this.dragJustTerminated = false;
@@ -372,7 +374,7 @@ export class BlocklyHelper {
 
     getOrigin() {
         // Get x/y origin
-        if (this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
+        if (this.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
             return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
         }
         return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
@@ -1418,7 +1420,7 @@ export class BlocklyHelper {
             if (this.scratchMode && !window.arrayContains(singleBlocks, 'math_number')) {
                 singleBlocks.push('math_number'); // TODO :: temporary
             }
-            if (!this.includeBlocks.groupByCategory) {
+            if (!this.groupByCategory) {
                 console.error('Task configuration error: groupByCategory must be activated for functions.');
             }
         }
@@ -1426,7 +1428,7 @@ export class BlocklyHelper {
 
         // Handle variable blocks, which are normally automatically added with
         // the VARIABLES category but can be customized here
-        window.Blockly.Variables.flyoutOptions.anyButton = !!this.includeBlocks.groupByCategory;
+        window.Blockly.Variables.flyoutOptions.anyButton = !!this.groupByCategory;
         if (typeof this.includeBlocks.variables !== 'undefined') {
             window.Blockly.Variables.flyoutOptions.fixed = (this.includeBlocks.variables.length > 0) ? this.includeBlocks.variables : [];
             if (typeof this.includeBlocks.variablesOnlyBlocks !== 'undefined') {
@@ -1520,7 +1522,7 @@ export class BlocklyHelper {
         for (let iCategory = 0; iCategory < orderedCategories.length; iCategory++) {
             let categoryName = orderedCategories[iCategory];
             let categoryInfo = categoriesInfos[categoryName];
-            if (this.includeBlocks.groupByCategory) {
+            if (this.groupByCategory) {
                 let colour = categoryInfo.colour;
                 if (typeof (colour) == "undefined") {
                     colour = colours.categories[categoryName]
@@ -1540,7 +1542,7 @@ export class BlocklyHelper {
             for (let iBlock = 0; iBlock < blocks.length; iBlock++) {
                 xmlString += blocks[iBlock];
             }
-            if (this.includeBlocks.groupByCategory) {
+            if (this.groupByCategory) {
                 xmlString += "</category>";
             }
         }

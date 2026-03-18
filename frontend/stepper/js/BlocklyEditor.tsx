@@ -10,6 +10,7 @@ import {BlockBufferState, BlockDocument} from '../../buffers/buffer_types';
 import {bufferResetToDefaultSourceCode} from '../../buffers/buffer_actions';
 import {ComputedSourceHighlight, SourceHighlightBlock} from '../index';
 import {callPlatformLog} from '../../submission/submission_actions';
+import {selectGroupByCategory} from './index';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -26,6 +27,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const contextId = useAppSelector(state => state.task.contextId);
     const language = useAppSelector(state => state.options.language.split('-')[0]);
+    const contextIncludeBlocks = useAppSelector(state => state.task.contextIncludeBlocks);
+    const groupByCategory = useAppSelector(selectGroupByCategory);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentValue = useRef(null);
@@ -194,7 +197,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             return;
         }
 
-        log.getLogger('editor').debug('[blockly.editor] load with data', context.infos.includeBlocks);
+        log.getLogger('editor').debug('[blockly.editor] load with data', contextIncludeBlocks);
         const blocklyHelper = context.blocklyHelper;
 
         const blocklyOptions = {
@@ -329,10 +332,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
     }, [props.state?.actions?.resize]);
 
-    const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
-
     return (
-        <div className={`blockly-editor ${groupsCategory ? 'group-by-category' : ''}`}>
+        <div className={`blockly-editor ${groupByCategory ? 'group-by-category' : ''}`}>
             <div id='blocklyContainer'>
                 <div id='blocklyDiv' className='language_blockly'/>
                 <textarea id='program' className='language_javascript' style={{width: '100%', height: '100%', display: 'none'}}/>

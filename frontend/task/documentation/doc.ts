@@ -186,6 +186,7 @@ function findConceptByFunction(filteredConcepts, functionName) {
 function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) {
     const language = state.documentation.language;
     const currentTask = state.task.currentTask;
+    const contextIncludeBlocks = state.task.contextIncludeBlocks;
 
     let documentationConcepts: DocumentationConcept[] = [];
     if (hasTaskInstructions && currentTask) {
@@ -227,7 +228,7 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
             // Fill library concepts with information from base concepts if needed
             allConcepts = window.conceptsFill(allConcepts, baseConcepts);
 
-            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList());
+            concepts = getConceptsFromBlocks(contextIncludeBlocks, allConcepts, context.getNotionsList());
             const disabledConcepts = context.conceptDisabledList ? context.conceptDisabledList : [];
             concepts = concepts.filter(concept => -1 === disabledConcepts.indexOf(concept.id));
         }

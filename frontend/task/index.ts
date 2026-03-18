@@ -433,7 +433,7 @@ function* taskLoadSaga(app: App, action) {
     state = yield* appSelect();
     const sourceBuffers = selectSourceBuffers(state);
     if (0 === Object.keys(sourceBuffers).length || isEmptyDocument(selectAnswer(state)?.document)) {
-        let newDocument = getDefaultSourceCode(state.options.platform, state.environment, state.task.currentTask);
+        let newDocument = yield* call(getDefaultSourceCode, state.options.platform);
         yield* call(createSourceBufferFromDocument, newDocument, state.options.platform);
     }
 
@@ -583,7 +583,7 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     if (!newLevelAnswer || isEmptyDocument(newLevelAnswer.document)) {
         newLevelAnswer = {
             version: RECORDING_FORMAT_VERSION,
-            document: getDefaultSourceCode(state.options.platform, state.environment, currentTask),
+            document: yield* call(getDefaultSourceCode, state.options.platform),
             platform: state.options.platform,
         }
     }
