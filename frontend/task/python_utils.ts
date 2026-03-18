@@ -321,7 +321,7 @@ export const getPythonBlocksUsage = function (document: Document, context: Quick
 
 export const checkPythonCode = function (document: Document, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
     const code = documentToString(document as unknown as TextDocument);
-    const includeBlocks = context.infos.includeBlocks;
+    const includeBlocks = state.task.contextIncludeBlocks;
     const forbidden = pythonForbidden(code, includeBlocks, context.getNotionsList());
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
 
@@ -350,7 +350,7 @@ export const checkPythonCode = function (document: Document, context: QuickAlgoL
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 
-    const availableModules = getAvailableModules(context);
+    const availableModules = getAvailableModules(state.task.contextIncludeBlocks);
     for (let availableModule of availableModules) {
         if ('printer' === availableModule) {
             // Printer lib is optional

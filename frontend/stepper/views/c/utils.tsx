@@ -344,7 +344,7 @@ export function getCSpecificBlocks(): Block[] {
 export const checkCCode = function (document: Document, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
     const code = documentToString(document as unknown as TextDocument);
 
-    const availableModules = getAvailableModules(context);
+    const availableModules = getAvailableModules(state.task.contextIncludeBlocks);
     for (let availableModule of availableModules) {
         if ('printer' === availableModule) {
             // Printer lib is optional

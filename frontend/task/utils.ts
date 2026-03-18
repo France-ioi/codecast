@@ -2,13 +2,13 @@ import {current, isDraft} from "immer";
 import {getMessage} from "../lang";
 import {AppStore} from "../store";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
-import {isServerTask, Task, TaskAnswer} from './task_types';
+import {isServerTask, QuickalgoTaskIncludeBlocks, Task, TaskAnswer} from './task_types';
 import {hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {BlockBufferHandler, TextBufferHandler} from '../buffers/document';
 import {Document} from '../buffers/buffer_types';
-import {QuickAlgoLibrary} from './libs/quickalgo_library';
+import {appSelect} from '../hooks';
 
 export enum TaskPlatformMode {
     Source = 'source',
@@ -122,11 +122,11 @@ export function extractVariantSpecific(item: any, variant: number, level?: TaskL
     }
 }
 
-export function getAvailableModules(context: QuickAlgoLibrary) {
-    if (context.infos.includeBlocks && context.infos.includeBlocks.generatedBlocks) {
+export function getAvailableModules(includeBlocks: QuickalgoTaskIncludeBlocks) {
+    if (includeBlocks && includeBlocks.generatedBlocks) {
         let availableModules = [];
-        for (let generatorName in context.infos.includeBlocks.generatedBlocks) {
-            if (context.infos.includeBlocks.generatedBlocks[generatorName].length) {
+        for (let generatorName in includeBlocks.generatedBlocks) {
+            if (includeBlocks.generatedBlocks[generatorName].length) {
                 availableModules.push(generatorName);
             }
         }
@@ -168,7 +168,11 @@ export function getBlocksUsage(answer: TaskAnswer|null, state: AppStore) {
     return null;
 }
 
-export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask?: Task): Document|null {
+export function* getDefaultSourceCode(platform: CodecastPlatform): Generator<any, Document|null> {
+    const environment = yield* appSelect(state => state.environment);
+    const currentTask = yield* appSelect(state => state.task.currentTask);
+    const contextIncludeBlocks = yield* appSelect(state => state.task.contextIncludeBlocks);
+
     const context = quickAlgoLibraries.getContext(null, environment);
     if (isServerTask(currentTask) && currentTask.sourceCodes) {
         const defaultSourceCode = currentTask.sourceCodes.find(sourceCode => {
@@ -192,7 +196,7 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
     }
 
     if (context && currentTask && !isServerTask(currentTask)) {
-        const availableModules = getAvailableModules(context);
+        const availableModules = getAvailableModules(contextIncludeBlocks);
         if (CodecastPlatform.Python === platform) {
             let content = '';
             for (let i = 0; i < availableModules.length; i++) {

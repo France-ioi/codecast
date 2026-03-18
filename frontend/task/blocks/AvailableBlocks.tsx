@@ -6,6 +6,7 @@ import {AvailableBlockCategory} from "./AvailableBlockCategory";
 import {getMessage} from "../../lang";
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {Block, BlockType} from './block_types';
+import {selectGroupByCategory} from '../../stepper/js';
 
 export interface AvailableBlocksProps {
     collapsed: boolean,
@@ -15,14 +16,10 @@ export function AvailableBlocks(props: AvailableBlocksProps) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => getContextBlocksDataSelector({state, context}));
     const showDirectives = useAppSelector(state => state.options.showDirectives);
+    const groupByCategory = useAppSelector(selectGroupByCategory);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
     const [isDragging, setDragging] = useState(false);
 
-    if (!context) {
-        return null;
-    }
-
-    const groupsCategory = !!(context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
     if (!blocks.length) {
         return null;
     }
@@ -55,7 +52,7 @@ export function AvailableBlocks(props: AvailableBlocksProps) {
                 <p className="subtitle">{getMessage('TASK_BLOCKS_SUBTITLE')}</p>
             </div>
 
-            {groupsCategory ?
+            {groupByCategory ?
                 <div className="task-available-categories">
                     {Object.entries(blocksByCategory).map(([category, blocks]) =>
                         <AvailableBlockCategory blocks={blocks} name={category} key={category} onDragging={onDragging}/>

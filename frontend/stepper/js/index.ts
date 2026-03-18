@@ -15,12 +15,20 @@ import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
-import {produce} from 'immer';
-import {isServerTask} from '../../task/task_types';
 import {BlocklyHelper} from './blockly_helper';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
+
+export function selectGroupByCategory(state: AppStore) {
+    const isMobile = LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type;
+
+    if (isMobile) {
+        return true;
+    }
+
+    return !!state.task.contextIncludeBlocks?.groupByCategory;
+}
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     if (!context) {
@@ -30,23 +38,17 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         context.blocklyHelper.unloadLevel();
     }
 
-    log.getLogger('blockly_runner').debug('[stepper/js] load blockly helper', context.infos.includeBlocks, context.infos.includeBlocks.groupByCategory);
     const state = yield* appSelect();
     const options = state.options;
+    const contextIncludeBlocks = state.task.contextIncludeBlocks;
+
+    log.getLogger('blockly_runner').debug('[stepper/js] load blockly helper', context.infos.includeBlocks, contextIncludeBlocks);
+
+    const groupByCategory = selectGroupByCategory(state);
+
     const language = options.language.split('-')[0];
     const languageTranslations = require('../../lang/blockly_' + language + '.js');
     const isMobile = yield* appSelect(state => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
-    if (context.infos && context.infos.includeBlocks) {
-        if (isMobile) {
-            if (undefined === context.infos.includeBlocks.originalGroupByCategory) {
-                context.infos.includeBlocks.originalGroupByCategory = !!context.infos.includeBlocks.groupByCategory;
-            }
-            context.infos.includeBlocks.groupByCategory = true;
-        } else if (undefined !== context.infos.includeBlocks.originalGroupByCategory) {
-            context.infos.includeBlocks.groupByCategory = !!context.infos.includeBlocks.originalGroupByCategory;
-        }
-    }
-    log.getLogger('blockly_runner').debug('group by category', context.infos.includeBlocks.groupByCategory);
 
     window.goog.provide('Blockly.Msg.' + language);
     window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
@@ -74,7 +76,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         };
     }
 
-    context.blocklyHelper = createBlocklyHelper(context, state, isServerTask(state.task.currentTask));
+    context.blocklyHelper = createBlocklyHelper(context, state);
     context.onChange = () => {};
 
     // There is a setTimeout delay in Blockly lib between blockly program loading and Blockly firing events.
@@ -88,8 +90,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         };
     }
 
-    const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
-    if (groupsCategory && 'tralalere' === options.app) {
+    if (groupByCategory && 'tralalere' === options.app) {
         overrideBlocklyFlyoutForCategories(isMobile);
     } else if (originalSetBackgroundPathVertical_) {
         window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
@@ -98,7 +99,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     yield* put(taskIncreaseContextId());
 }
 
-export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore, serverTask = false) {
+export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore) {
     const blocklyHelper = new BlocklyHelper(context.infos.maxInstructions, context);
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
 
@@ -111,20 +112,13 @@ export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore, 
         originalFireNow = window.Blockly.Events.fireNow_;
     }
 
-    // Remove printer blocks if it's a server task because in this case we don't want to display them in the blocks
-    // TODO: integrate this into getContextBlocksDataSelector?
-    const blocklyIncludeBlocks = produce(context.infos.includeBlocks, (includeBlocks) => {
-        if (serverTask && includeBlocks.generatedBlocks && 'printer' in includeBlocks.generatedBlocks) {
-            delete includeBlocks.generatedBlocks['printer'];
-        }
-    });
-
     const availableBlocks = getContextBlocksDataSelector({state, context});
 
     log.getLogger('blockly_runner').debug('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);
+    blocklyHelper.groupByCategory = selectGroupByCategory(state);
     blocklyHelper.setAvailableBlocks(availableBlocks);
-    blocklyHelper.setIncludeBlocks(blocklyIncludeBlocks);
+    blocklyHelper.setIncludeBlocks(state.task.contextIncludeBlocks);
 
     return blocklyHelper;
 }
@@ -319,7 +313,7 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
 const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, xmlText: string) {
     const xml = window.Blockly.Xml.textToDom(xmlText);
 
-    const blocklyHelper = createBlocklyHelper(context, state, isServerTask(state.task.currentTask));
+    const blocklyHelper = createBlocklyHelper(context, state);
     const language = state.options.language.split('-')[0];
     blocklyHelper.load(language, false, 1, {});
 

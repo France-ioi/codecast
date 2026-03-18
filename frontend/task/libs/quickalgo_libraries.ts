@@ -132,7 +132,8 @@ export default function(bundle: Bundle) {
             if (BufferType.Block === answer.document.type) {
                 const state = yield* appSelect();
                 answerContent = yield* call(getBlocklyCodeFromXml, answer.document as BlockDocument, 'python', state);
-                const availableModules = getAvailableModules(context);
+                const contextIncludeBlocks = yield* appSelect(state => state.task.contextIncludeBlocks);
+                const availableModules = getAvailableModules(contextIncludeBlocks);
                 let modules = '';
                 for (let i = 0; i < availableModules.length; i++) {
                     modules += 'from ' + availableModules[i] + ' import *\n';
