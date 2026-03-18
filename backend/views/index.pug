@@ -6,5 +6,9 @@ body(id='app')
   div(id='react-container')
     div(style='width: 256px; height: 256px; margin: 0 auto;')
       img(src=rebaseUrl('assets/loading.gif'))
-  script(type='text/javascript', src=rebaseUrl('build/index.js'))
+  if development
+    script(type='module', src=rebaseUrl('@vite/client'))
+    script(type='module', src=rebaseUrl('frontend/index.tsx'))
+  else
+    script(type='text/javascript', src=rebaseUrl('build/index.js'))
   script(type='text/javascript') Codecast.start(!{JSON.stringify(options)})

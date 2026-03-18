@@ -1,9 +1,11 @@
 import {QuickalgoTask} from '../../task_types';
 
-const images = [
-    {path: require('./img/carteDeFrance.png')},
-    {path: require('./img/pin.png')},
-];
+const assets: Record<string, string> = import.meta.glob('./**/*.{png,svg,jpg}', {
+    eager: true,
+    import: 'default'
+});
+
+const images = Object.values(assets).map((path) => ({ path }));
 
 export default {
     gridInfos: {
@@ -47,8 +49,8 @@ export default {
             map_lat_top: 51.6,
             map_lat_bottom: 41.7,
             // map2d options
-            pin_file:  images.find(image => -1 !== image.path.default.indexOf("pin.png")).path.default,
-            map_file:  images.find(image => -1 !== image.path.default.indexOf("carteDeFrance.png")).path.default,
+            pin_file:  images.find(image => -1 !== image.path.indexOf("pin.png")).path,
+            map_file:  images.find(image => -1 !== image.path.indexOf("carteDeFrance.png")).path,
         },
 
 

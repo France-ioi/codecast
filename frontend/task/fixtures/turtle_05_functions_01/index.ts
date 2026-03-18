@@ -1,12 +1,16 @@
 import {QuickalgoTask} from '../../task_types';
+import angles from './angles.png';
+import angles60 from './angles60.png';
+import grid5 from './grid5.png';
+import turtle from './turtle.png';
+import turtleUp from './turtleup.png';
 
 const images = [
-    {path: require('./angles.png')},
-    {path: require('./angles60.png')},
-    {path: require('./grid5.png')},
-    // {path: require('./icon.png')},
-    {id: 'turtleImg', path: require('./turtle.png')},
-    {id: 'turtleUpImg', path: require('./turtleup.png')},
+    { path: angles },
+    { path: angles60 },
+    { path: grid5 },
+    { id: 'turtleImg', path: turtle },
+    { id: 'turtleUpImg', path: turtleUp },
 ];
 
 export default {
@@ -15,8 +19,8 @@ export default {
         importModules: ['blockly-turtle'],
         images,
         hideSaveOrLoad: false,
-        turtleFileName: images.find(image => -1 !== image.path.default.indexOf("turtle.png")).path.default,
-        turtleUpFileName: images.find(image => -1 !== image.path.default.indexOf("turtleup.png")).path.default,
+        turtleFileName: images.find(image => -1 !== image.path.indexOf("turtle.png")).path,
+        turtleUpFileName: images.find(image => -1 !== image.path.indexOf("turtleup.png")).path,
         defaultMoveAmount: 50,
         actionDelay: 200,
         coords: {
@@ -36,7 +40,7 @@ export default {
                 singleBlocks: ["controls_repeat", "procedures_defnoreturn", "math_number"],
             }
         },
-        overlayFileName: images.find(image => -1 !== image.path.default.indexOf("grid5.png")).path.default,
+        overlayFileName: images.find(image => -1 !== image.path.indexOf("grid5.png")).path,
         turtleStepSize: 0.1,
         maxInstructions: {
             basic: 20,

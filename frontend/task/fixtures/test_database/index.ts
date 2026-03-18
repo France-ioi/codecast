@@ -1,13 +1,11 @@
 import {QuickalgoTask} from '../../task_types';
 
-const images = [
-    {path: require('./img/apple.jpg')},
-    {path: require('./img/banana.jpg')},
-    {path: require('./img/carteDeFrance.png')},
-    {path: require('./img/kiwi.jpg')},
-    {path: require('./img/pin.png')},
-    {path: require('./img/pin2.png')},
-];
+const assets: Record<string, string> = import.meta.glob('./**/*.{png,svg,jpg}', {
+    eager: true,
+    import: 'default'
+});
+
+const images = Object.values(assets).map((path) => ({ path }));
 
 let test_table = {
     columnNames: [
@@ -17,9 +15,9 @@ let test_table = {
         'number', 'image', 'string', 'date'
     ],
     records: [
-        [ 1, images.find(image => -1 !== image.path.default.indexOf("apple.jpg")).path.default, 'apple', '2018-01-01' ],
-        [ 2, images.find(image => -1 !== image.path.default.indexOf("banana.jpg")).path.default, 'banana', '2019-01-01' ],
-        [ 3, images.find(image => -1 !== image.path.default.indexOf("kiwi.jpg")).path.default, 'kiwi', '2020-01-01' ],
+        [ 1, images.find(image => -1 !== image.path.indexOf("apple.jpg")).path, 'apple', '2018-01-01' ],
+        [ 2, images.find(image => -1 !== image.path.indexOf("banana.jpg")).path, 'banana', '2019-01-01' ],
+        [ 3, images.find(image => -1 !== image.path.indexOf("kiwi.jpg")).path, 'kiwi', '2020-01-01' ],
         //[ 4, null, 'null_image_here_null_image_here_null_image_here_null_image_here', '2021-01-01' ],
     ]
 }
@@ -32,9 +30,9 @@ let valid_table = {
         'number', 'image', 'string', 'date'
     ],
     records: [
-        [ 1, images.find(image => -1 !== image.path.default.indexOf("apple.jpg")).path.default, 'apple', '2018-01-01' ],
-        [ 2, images.find(image => -1 !== image.path.default.indexOf("banana.jpg")).path.default, 'banana', '2019-01-01' ],
-        [ 3, images.find(image => -1 !== image.path.default.indexOf("kiwi.jpg")).path.default, 'kiwi', '2020-01-01' ]
+        [ 1, images.find(image => -1 !== image.path.indexOf("apple.jpg")).path, 'apple', '2018-01-01' ],
+        [ 2, images.find(image => -1 !== image.path.indexOf("banana.jpg")).path, 'banana', '2019-01-01' ],
+        [ 3, images.find(image => -1 !== image.path.indexOf("kiwi.jpg")).path, 'kiwi', '2020-01-01' ]
     ]
 }
 
@@ -127,9 +125,9 @@ export default {
             context.expectHash(1868819174);
         },
         databaseConfig: {
-            pin_file: images.find(image => -1 !== image.path.default.indexOf("pin.png")).path.default,
-            pin_file_mistake: images.find(image => -1 !== image.path.default.indexOf("pin2.png")).path.default,
-            map_file: images.find(image => -1 !== image.path.default.indexOf("carteDeFrance.png")).path.default,
+            pin_file: images.find(image => -1 !== image.path.indexOf("pin.png")).path,
+            pin_file_mistake: images.find(image => -1 !== image.path.indexOf("pin2.png")).path,
+            map_file: images.find(image => -1 !== image.path.indexOf("carteDeFrance.png")).path,
             map_lng_left: -4.85,
             map_lng_right: 9.65,
             map_lat_top: 51.6,
