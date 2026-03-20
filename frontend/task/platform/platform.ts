@@ -292,6 +292,16 @@ function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, 
         return null;
     }
 
+    // This should not happen but for backward-compatibility, do this
+    // to avoid losing the answer in case the answer has levels
+    // but the task does not recognize levels anymore
+    for (let level of taskLevelsList) {
+        if ('object' === typeof answer && level in answer) {
+            answer = answer[level];
+            break;
+        }
+    }
+
     if ('object' === typeof answer && answer.version) {
         return answer;
     }

@@ -36,6 +36,14 @@ export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<
             document.head.appendChild(script);
             yield* delay(0);
 
+            // For backward-compatibility
+            // @ts-ignore
+            let taskSettingsObject = 'undefined' !== typeof taskSettings ? taskSettings : null;
+            if (taskSettingsObject && !window.taskData) {
+                // Convert taskSettings into window.taskData
+                window.taskData = getTaskDataFromTaskSettings(taskSettingsObject);
+            }
+
             // @ts-ignore
             let clientExecutionParameters = 'undefined' !== typeof ClientExecutionParameters ? ClientExecutionParameters : null;
             if (clientExecutionParameters && !window.taskData) {
@@ -112,6 +120,16 @@ export function* convertServerTaskToCodecastFormat(task: TaskServer): Generator<
             },
         }
     }
+}
+
+export function getTaskDataFromTaskSettings(taskSettings: any) {
+    const taskData = taskSettings;
+    window.initBlocklySubTask = function () {
+    };
+    taskSettings.initTask(taskData);
+    delete taskSettings.initTask;
+
+    return taskData;
 }
 
 export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null): Task {
