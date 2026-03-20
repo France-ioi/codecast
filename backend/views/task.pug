@@ -25,4 +25,7 @@ body(id='app')
     script(type='text/javascript', src=rebaseUrl('build/index.js'))
     each file in files
       script(type='text/javascript', src=rebaseUrl('build/' + file))
-  script(type='text/javascript') Codecast.start(!{JSON.stringify(options)})
+  script(type='text/javascript').
+    window.addEventListener('load', () => {
+      Codecast.start(!{JSON.stringify(options)})
+    })

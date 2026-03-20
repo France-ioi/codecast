@@ -12,11 +12,14 @@ import {currentTaskChange, currentTaskChangePredefined} from '../task/task_slice
 import {appSelect} from '../hooks';
 import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
 import {current, isDraft} from 'immer';
+import enUS from './en-US.js';
+import frFR from './fr-FR.js';
+import nlBE from './nl-BE.js';
 
 export const Languages = {
-    'en-US': require('./en-US.js'),
-    'fr-FR': require('./fr-FR.js'),
-    'nl-BE': require('./nl-BE.js'),
+    'en-US': enUS,
+    'fr-FR': frFR,
+    'nl-BE': nlBE,
 };
 
 export default function(bundle: Bundle) {

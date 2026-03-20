@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     language: 'Flamand',
     COMPILE: 'Samenstellen',
     EXECUTE: 'Uitvoeren',
