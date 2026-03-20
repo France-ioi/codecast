@@ -565,6 +565,7 @@ html:not([active-view="task"]):not([active-view="solution"]) {
 .task-mission {
   color: #7c7c7c;
   max-width: 1200px;
+  width: 100%;
 
   pre {
     display: block;
