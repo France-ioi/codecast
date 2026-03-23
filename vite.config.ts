@@ -24,7 +24,7 @@ export default defineConfig(({mode}) => {
         base,
         plugins: [
             react(),
-            nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process']}),
+            nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util']}),
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
         ],
         resolve: {
