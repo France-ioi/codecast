@@ -12,9 +12,9 @@ import {currentTaskChange, currentTaskChangePredefined} from '../task/task_slice
 import {appSelect} from '../hooks';
 import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
 import {current, isDraft} from 'immer';
-import enUS from './en-US.js';
-import frFR from './fr-FR.js';
-import nlBE from './nl-BE.js';
+import enUS from './en-US';
+import frFR from './fr-FR';
+import nlBE from './nl-BE';
 
 export const Languages = {
     'en-US': enUS,
