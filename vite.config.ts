@@ -24,7 +24,7 @@ export default defineConfig(({mode}) => {
         base,
         plugins: [
             react({}),
-            nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util']}),
+            nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util', 'fs', 'vm']}),
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
         ],
         resolve: {
@@ -53,6 +53,10 @@ export default defineConfig(({mode}) => {
                         return 'images/[name][extname]'
                     },
                     codeSplitting: false,
+                },
+                onwarn(warning, warn) {
+                    if (warning.code === "EVAL") return; // ignore eval warning
+                    warn(warning); // default for other warnings
                 },
             },
         },
