@@ -2,6 +2,7 @@ import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
 import {nodePolyfills} from 'vite-plugin-node-polyfills';
 import {viteStaticCopy} from 'vite-plugin-static-copy';
+// import legacy from '@vitejs/plugin-legacy';
 import * as fs from 'fs';
 import * as path from 'path';
 import {fileURLToPath} from 'url';
@@ -13,12 +14,14 @@ const bundledFiles = fs.readFileSync('bundled_files.txt', 'utf8')
     .filter(line => line.length && line.trim()[0] !== '#')
     .map(file => {
         const fileName = file.includes(':') ? file.split(':')[1] : file
-        return {src: fileName.trim(), dest: ''}
-    })
+
+        return {src: fileName.trim(), dest: fileName.substring(0, fileName.lastIndexOf('/'))};
+    });
 
 export default defineConfig(({mode}) => {
     const isDev = mode === 'development'
-    const base = process.env['BUILD'] === 'lib' ? './' : jsonConfig.mountPath;
+    const isLib = process.env['BUILD'] === 'lib';
+    const base = isLib ? './' : jsonConfig.mountPath;
 
     return {
         base,
@@ -26,6 +29,12 @@ export default defineConfig(({mode}) => {
             react({}),
             nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util', 'fs', 'vm']}),
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
+            // ...(isLib ? [] : [legacy({
+            //     targets: ['defaults', 'not IE 11'],
+            //     modernPolyfills: true,
+            //     renderLegacyChunks: true,
+            //     // additionalLegacyPolyfills: ['regenerator-runtime/runtime']
+            // })]),
         ],
         resolve: {
             alias: {
@@ -42,9 +51,22 @@ export default defineConfig(({mode}) => {
             sourcemap: false,
             minify: 'terser',
             terserOptions: {compress: {unused: false}},
+            assetsInlineLimit: 0, // avoid images inlining
+            // ...(isLib ? {
+            //     lib: {
+            //         entry: {index: path.resolve(__dirname, 'frontend/index.tsx')},
+            //         name: 'Codecast',
+            //         formats: ['iife'] as const,
+            //         cssFileName: 'index',
+            //         assetsInlineLimit: 0, // avoid images inlining
+            //     },
+            // } : {}),
             rollupOptions: {
                 input: {index: path.resolve(__dirname, 'frontend/index.tsx')},
+                // ...(!isLib ? {input: {index: path.resolve(__dirname, 'frontend/index.tsx')}} : {}),
                 output: {
+                    format: isLib ? 'iife' : undefined,
+                    name: isLib ? 'Codecast' : undefined,
                     entryFileNames: '[name].js',
                     chunkFileNames: '[name].js',
                     assetFileNames: ({name}) => {

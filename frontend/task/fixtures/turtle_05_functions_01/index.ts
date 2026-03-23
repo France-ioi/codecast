@@ -8,7 +8,7 @@ import turtleUp from './turtleup.png';
 const images = [
     { path: angles },
     { path: angles60 },
-    { path: grid5 },
+    { id: 'grid5', path: grid5 },
     { id: 'turtleImg', path: turtle },
     { id: 'turtleUpImg', path: turtleUp },
 ];
@@ -19,8 +19,8 @@ export default {
         importModules: ['blockly-turtle'],
         images,
         hideSaveOrLoad: false,
-        turtleFileName: images.find(image => -1 !== image.path.indexOf("turtle.png")).path,
-        turtleUpFileName: images.find(image => -1 !== image.path.indexOf("turtleup.png")).path,
+        turtleFileName: images.find(image => 'turtleImg' === image.id).path,
+        turtleUpFileName: images.find(image => 'turtleUpImg' === image.id).path,
         defaultMoveAmount: 50,
         actionDelay: 200,
         coords: {
@@ -40,7 +40,7 @@ export default {
                 singleBlocks: ["controls_repeat", "procedures_defnoreturn", "math_number"],
             }
         },
-        overlayFileName: images.find(image => -1 !== image.path.indexOf("grid5.png")).path,
+        overlayFileName: images.find(image => 'grid5' === image.id).path,
         turtleStepSize: 0.1,
         maxInstructions: {
             basic: 20,

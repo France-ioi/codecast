@@ -1,6 +1,6 @@
-ace.define("ace/mode/arduino", [
+window.ace.define("ace/mode/arduino", [
     "require", "exports", "module",
-    "ace/lib/oop", "ace/mode/c_cpp", "ace/mode/c_cpp_highlight_rules"],
+    "ace/lib/oop", "ace/mode/c_cpp", "ace/mode/c_cpp_highlight_rules", "ace/mode/matching_brace_outdent", "ace/mode/behaviour/cstyle", "ace/mode/folding/cstyle"],
 function(acequire, exports, module) {
     "use strict";
 
