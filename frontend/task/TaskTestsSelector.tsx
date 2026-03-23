@@ -47,9 +47,9 @@ export function TaskTestsSelector() {
         }
     };
 
-    const existingImages = levelGridInfos?.images ? levelGridInfos.images.map(element => element.path.default) : [];
+    const existingImages = levelGridInfos?.images ? levelGridInfos.images.map(element => element.path) : [];
 
-    const getTestThumbNail = (testIndex) => {
+    const getTestThumbnail = (testIndex) => {
         const file = `test_${currentLevel}_${testIndex + 1}`;
         const element = existingImages.find(image => image.indexOf(file + '.') !== -1);
         if (element) {
@@ -107,9 +107,9 @@ export function TaskTestsSelector() {
                     key={index}
                     className={`tests-selector-tab${!tooManyTests ? ' is-selectable' : ''}${currentTestId === Number(index) ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
                     onClick={!tooManyTests ? () => selectTest(Number(index)) : () => {}}>
-                    {getTestThumbNail(Number(index)) && <div className="test-thumbnail">
+                    {getTestThumbnail(Number(index)) && <div className="test-thumbnail">
                         <img
-                            src={getTestThumbNail(Number(index))}
+                            src={getTestThumbnail(Number(index))}
                         />
                     </div>}
                     <span className={`test-title ${tooManyTests ? 'too-many-tests' : ''}`}>

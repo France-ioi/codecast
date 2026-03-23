@@ -710,8 +710,10 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }
     }
 
+    const layouts = import.meta.glob('./*.xml', { eager: true, as: 'raw' });
+
     const layout = layoutProps.layoutRequiredType ? layoutProps.layoutRequiredType + '.xml' : getAppropriateXmlLayout(layoutProps.layoutType, layoutProps.layoutMobileMode);
-    let layoutXml = require('./' + layout).default;
+    let layoutXml = layouts[`./${layout}`];
     const documentationOpen = Screen.DocumentationSmall === layoutProps.screen || Screen.DocumentationBig === layoutProps.screen;
     if (documentationOpen && (layoutProps.layoutType === LayoutType.MobileHorizontal || layoutProps.layoutType === LayoutType.MobileVertical || Screen.DocumentationBig === layoutProps.screen)) {
         layoutXml = '<Documentation/>';
