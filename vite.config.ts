@@ -23,7 +23,7 @@ export default defineConfig(({mode}) => {
     return {
         base,
         plugins: [
-            react(),
+            react({}),
             nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util']}),
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
         ],
@@ -71,5 +71,8 @@ export default defineConfig(({mode}) => {
                 },
             },
         },
+        optimizeDeps: {
+            exclude: ['@france-ioi/skulpt'],
+        }
     }
 })

@@ -24,7 +24,6 @@ import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
 import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
 import {AppErrorBoundary} from "./common/AppErrorBoundary";
-import {setAutoFreeze} from "immer";
 import {EnhancedStore} from "@reduxjs/toolkit";
 import {ConceptViewer} from "./task/documentation/doc";
 import {Documentation} from "./task/documentation/Documentation";
