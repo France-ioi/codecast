@@ -33,7 +33,7 @@ jobs:
     - name: Copy default config file
       run: cp config.json.template config.json
     - name: Build app
-      run: vite build --mode=production
+      run: yarn build
 
   lint:
 
