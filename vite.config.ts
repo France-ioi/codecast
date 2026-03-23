@@ -1,10 +1,10 @@
-import {defineConfig} from 'vite'
-import react from '@vitejs/plugin-react'
-import {nodePolyfills} from 'vite-plugin-node-polyfills'
-import {viteStaticCopy} from 'vite-plugin-static-copy'
-import * as fs from 'fs'
-import * as path from 'path'
-import {fileURLToPath} from 'url'
+import {defineConfig} from 'vite';
+import react from '@vitejs/plugin-react';
+import {nodePolyfills} from 'vite-plugin-node-polyfills';
+import {viteStaticCopy} from 'vite-plugin-static-copy';
+import * as fs from 'fs';
+import * as path from 'path';
+import {fileURLToPath} from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
