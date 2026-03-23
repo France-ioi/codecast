@@ -1797,10 +1797,10 @@
     immutable "^3.7.6"
     text-encoding-utf-8 "^1.0.1"
 
-"@france-ioi/skulpt@1.3.16":
-  version "1.3.16"
-  resolved "https://npm.pkg.github.com/download/@France-ioi/skulpt/1.3.16/1aeadb02a4203df3fa3b43e04dca64280d846775#1aeadb02a4203df3fa3b43e04dca64280d846775"
-  integrity sha512-wLwm4UOmZwOCDd/IvW6/04d07xxGBnI0O9pQW7F35JJi4jsfYmCCpe19qRewlFtKkRoCpqG/XwERoBOquB5dEg==
+"@france-ioi/skulpt@1.3.19":
+  version "1.3.19"
+  resolved "https://npm.pkg.github.com/download/@France-ioi/skulpt/1.3.19/0b1f1185ea953dbc077cb91786b3400bdfa80f12#0b1f1185ea953dbc077cb91786b3400bdfa80f12"
+  integrity sha512-lKGC9rnzQswpXWTxeWPbR6jmMbQYTDORz93eoCLnpKW6un5wM9IbSEIrGh2q8jwXtzG+bhbfJ5jUwmJmr6cQ0Q==
   dependencies:
     jsbi "^3.1.4"
     uuid "^8.2.0"
