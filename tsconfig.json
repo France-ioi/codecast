@@ -2,7 +2,8 @@
   "compilerOptions": {
     "outDir": "./build/",
     "sourceMap": true,
-    "module": "nodenext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "target": "ES6",
     "skipLibCheck": true,
 
@@ -19,14 +20,17 @@
     /// noUnusedLocals and noUnusedParameters are too restrictive (no way to add exceptions) so they should be checked by the eslint
 
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     //"skipLibCheck": true,
     //"forceConsistentCasingInFileNames": true
     "jsx": "react-jsx",
     "allowJs": true
   },
+  "include": ["frontend"],
   "exclude": [
     "bebras-modules",
     "build",
+    "node_modules"
   ],
   "$schema": "https://json.schemastore.org/tsconfig"
 }

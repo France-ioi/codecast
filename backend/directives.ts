@@ -1,6 +1,7 @@
-var PR = require('packrattle');
+import PR from 'packrattle';
 
-const g = module.exports.grammar = {};
+export const grammar: any = {};
+const g = grammar;
 
 g.whitespace = PR(/[ \t]+/).optional().drop();
 
@@ -130,7 +131,7 @@ var parseDirective = function (line) {
     return g.directive.run(str);
 };
 
-module.exports.enrichSyntaxTree = function (source, ast) {
+export function enrichSyntaxTree(source: string, ast: any) {
     var lines = source.split('\n');
     var lineOffsets = computeLineOffsets(lines);
     var functionNode;
@@ -177,4 +178,4 @@ module.exports.enrichSyntaxTree = function (source, ast) {
     };
 
     findBlocks(ast);
-};
+}

@@ -1,4 +1,4 @@
-import convertHtmlToReact, {processNodes} from '@hedgedoc/html-to-react';
+import * as htmlToReact from '@hedgedoc/html-to-react';
 import {platformsList} from '../../stepper/platforms';
 import {PlatformSelection} from '../../common/PlatformSelection';
 import {SmartContractStorage} from '../libs/smart_contract/SmartContractStorage';
@@ -320,7 +320,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
     } else if (node.attribs && 'data-task-examples' in node.attribs) {
         return <TaskExamples/>;
     } else if (node.attribs && 'data-slideshow' in node.attribs) {
-        let children = processNodes(node.children, (node, index) => transformNode(node, index, context))
+        let children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context))
             .filter(a => 'string' !== typeof a);
 
         return <TaskInstructionsSlideshow
@@ -348,12 +348,12 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
         // If the node is not a void element and has children then process them
         let children = null;
         if (VOID_ELEMENTS.indexOf(tagName) === -1) {
-            children = processNodes(node.children, (node, index) => transformNode(node, index, context));
+            children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context));
         }
 
         return React.createElement(tagName, props, children)
     } else if (node.attribs && 'class' in node.attribs && -1 !== node.attribs['class'].split(' ').indexOf('videoBtn')) {
-        let children = processNodes(node.children, (node, index) => transformNode(node, index, context));
+        let children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context));
         const props = generatePropsFromAttributes({
             style: 'data-style' in node.attribs ? node.attribs['data-style'] : null,
         }, index);
@@ -370,5 +370,6 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
 }
 
 export function convertHtmlInstructionsToReact(instructionsHtml: string, platform: CodecastPlatform) {
-    return convertHtmlToReact(instructionsHtml, {transform: (node, index) => transformNode(node, index, {platform})})
+    // @ts-ignore
+    return htmlToReact.default.default(instructionsHtml, {transform: (node, index) => transformNode(node, index, {platform})})
 }

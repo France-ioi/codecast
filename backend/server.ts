@@ -7,13 +7,17 @@ import bodyParser from 'body-parser';
 import {spawn} from 'child_process';
 import AnsiToHtml from 'ansi-to-html';
 import * as upload from './upload';
-import directives from './directives';
-import Arduino from './arduino';
+import * as directives from './directives';
+import * as Arduino from './arduino';
 import oauth from './oauth';
 import startWorker from './worker';
 import {buildOptions, parseCodecastUrl} from './options';
 import addOfflineRoutes from './offline';
 import {logCompileData, logLoadingData, logUploadData, statisticsSearch} from './statistics';
+import {fileURLToPath} from 'url';
+import {dirname} from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function buildApp(config, store, server) {
 
@@ -66,7 +70,7 @@ async function buildApp(config, store, server) {
 
     /* Enable OAuth2 authentification only if the database is configured. */
     if (config.database) {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             oauth(app, config, (err) => err ? reject(new Error('oauth initialization failed')) : resolve());
         });
     }
@@ -283,10 +287,11 @@ function addBackendRoutes(app, config, store) {
             };
 
 
-            const uploads = {
-                uploadId: id
+            const uploads: any = {
+                uploadId: id,
             };
 
+            // @ts-ignore
             s3client.upload(uploadMp3PostFormOptions, function (err, _url) {
                 if (err) {
                     return res.json({error: err.toString(), uploads});
@@ -294,10 +299,12 @@ function addBackendRoutes(app, config, store) {
 
                 uploads.mp3 = 'ok';
 
+                // @ts-ignore
                 s3client.upload(uploadJsonPostFormOptions, function (err, _url) {
                     if (err) return res.json({error: err.toString(), uploads});
                     uploads.json = 'ok';
 
+                    // @ts-ignore
                     s3client.upload(uploadSrtPostFormOptions, function (err, _url) {
                         if (err) return res.json({error: err.toString(), uploads});
                         uploads.srt = 'ok';
@@ -374,7 +381,7 @@ function addBackendRoutes(app, config, store) {
     }
 
     app.post('/compile', function (req, res) {
-        const env = {LANGUAGE: 'c'};
+        const env: any = {LANGUAGE: 'c'};
         env.SYSROOT = path.join(config.rootDir, 'sysroot');
 
         let {source, platform, logData, headers} = req.body;
@@ -385,7 +392,7 @@ function addBackendRoutes(app, config, store) {
         }
 
         if (headers) {
-            for (let [header, content] of Object.entries(headers)) {
+            for (let [header, content] of Object.entries<string>(headers)) {
                 fs.writeFileSync(path.join(config.rootDir, 'sysroot/usr/include', header), content);
             }
         }

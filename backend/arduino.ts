@@ -1,6 +1,7 @@
 function traverse(kind, attrs, children) {
     const newChildren = [];
     for (let child of children) {
+        // @ts-ignore
         child = traverse(...child);
         if (kind === 'TranslationUnitDecl') {
             if (child[0] === 'CXXRecordDecl') {
@@ -11,6 +12,7 @@ function traverse(kind, attrs, children) {
             }
         } else if (child[0] === 'CXXMemberCallExpr') {
             // rewrite Serial.method(…) into Serial_method(…)
+            // @ts-ignore
             newChildren.push(rewriteCXXMemberCallExpr(...child));
 
             continue;
@@ -48,6 +50,7 @@ function rewriteCXXMemberCallExpr(kind, attrs, children) {
     return [kind, attrs, children];
 }
 
-module.exports.transform = function (ast) {
+export function transform(ast: any) {
+    // @ts-ignore
     return traverse(...ast);
-};
+}

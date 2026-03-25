@@ -7,6 +7,7 @@
     "Sébastien Carlier <s.carlier@epixode.fr>",
     "Geoffrey Huck <geoffrey@geot.fr>"
   ],
+  "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -16,8 +17,8 @@
     "url": "https://github.com/France-ioi/codecast/issues"
   },
   "scripts": {
-    "dev": "nodemon --mode development --watch backend --exec yarn babel-node -- backend/server.js",
-    "start": "NODE_ENV=production nodemon --mode production --watch backend --exec yarn babel-node -- backend/server.js",
+    "dev": "nodemon --mode development --watch backend --ext ts,json --exec 'yarn tsx backend/server.ts'",
+    "start": "NODE_ENV=production nodemon --mode production --watch backend --ext ts,json --exec 'yarn tsx backend/server.ts'",
     "build": "vite build --mode production",
     "build-lib": "BUILD=lib vite build --mode production",
     "watch-lib": "BUILD=lib vite build --mode production --watch",
@@ -132,6 +133,7 @@
     "@eslint/js": "^10.0.1",
     "@jambit/eslint-plugin-typed-redux-saga": "^0.4.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
+    "@types/mysql": "^2.15.27",
     "@types/pako": "^2.0.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.0.0",
@@ -159,6 +161,7 @@
     "speed-measure-webpack-plugin": "^1.5.0",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.4.3",
+    "tsx": "^4.21.0",
     "typescript": "^5.4.0",
     "url-loader": "^4.1.1",
     "util": "^0.12.5",

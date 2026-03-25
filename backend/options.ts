@@ -1,6 +1,6 @@
 import url from 'url';
 
-export function buildCommonOptions(config, start) {
+export function buildCommonOptions(config, start): any {
     return {
         start,
         showStepper: true,
