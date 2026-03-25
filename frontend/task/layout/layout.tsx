@@ -710,7 +710,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }
     }
 
-    const layouts = import.meta.glob('./*.xml', { eager: true, query: '?raw', import: 'default' });
+    const layouts = import.meta.glob<string>('./*.xml', { eager: true, query: '?raw', import: 'default' });
 
     const layout = layoutProps.layoutRequiredType ? layoutProps.layoutRequiredType + '.xml' : getAppropriateXmlLayout(layoutProps.layoutType, layoutProps.layoutMobileMode);
     let layoutXml = layouts[`./${layout}`];
