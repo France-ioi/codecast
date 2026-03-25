@@ -26,6 +26,7 @@ export default defineConfig(({mode}) => {
         base,
         plugins: [
             react({}),
+            // Wait that https://github.com/davidmyersdev/vite-plugin-node-polyfills/pull/149 is merged to get rid of the oxc warning
             nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util', 'fs', 'vm']}),
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
         ],
@@ -40,6 +41,7 @@ export default defineConfig(({mode}) => {
         },
         build: {
             outDir: 'build',
+            cssCodeSplit: false,
             assetsDir: '.',
             sourcemap: false,
             minify: 'terser',
@@ -51,13 +53,11 @@ export default defineConfig(({mode}) => {
                     format: 'iife',
                     name: 'Codecast',
                     entryFileNames: '[name].js',
-                    chunkFileNames: '[name].js',
                     assetFileNames: ({name}) => {
                         if (name?.match(/\.(eot|ttf|woff2?)$/)) return 'fonts/[name][extname]'
-                        if (name?.endsWith('.css')) return '[name][extname]'
+                        if (name?.endsWith('.css')) return 'index[extname]'
                         return 'images/[name][extname]'
                     },
-                    codeSplitting: false,
                 },
                 onwarn(warning, warn) {
                     if (warning.code === "EVAL") return; // ignore eval warning
