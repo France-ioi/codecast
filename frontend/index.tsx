@@ -224,12 +224,6 @@ for (let environment of ['main', 'replay', 'background']) {
     window.Codecast.environments[environment] = {store, restart, monitoring};
 }
 
-window.Codecast.restartSagas = () => {
-    for (let [, {restart}] of Object.entries(window.Codecast.environments)) {
-        restart();
-    }
-}
-
 function clearUrl() {
     const currentUrl = url.parse(document.location.href, true);
     delete currentUrl.search;
@@ -278,7 +272,9 @@ window.Codecast.start = function(options) {
     // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
     /* Run the sagas (must be done before calling autoLogin) */
-    window.Codecast.restartSagas();
+    for (let [, {restart}] of Object.entries(window.Codecast.environments)) {
+        restart();
+    }
 
     if (!isLocalMode() && /editor|player|sandbox/.test(options.start)) {
         mainStore.dispatch({type: StatisticsActionTypes.StatisticsInitLogData});

@@ -30,7 +30,6 @@ export interface CodecastType {
     options?: CodecastOptions,
     environments: { [key: string]: CodecastEnvironment },
     start?: Function,
-    restartSagas?: Function,
     runner?: AbstractRunner,
 }
 
