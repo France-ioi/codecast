@@ -21,6 +21,7 @@ export default defineConfig(({mode}) => {
     const isDev = mode === 'development'
     const isLib = process.env['BUILD'] === 'lib';
     const base = isLib ? './' : (isDev ? jsonConfig.mountPath : path.join(jsonConfig.mountPath, 'build/'));
+    const target = ['chrome70'];
 
     return {
         base,
@@ -40,6 +41,7 @@ export default defineConfig(({mode}) => {
             extensions: ['.tsx', '.ts', '.js'],
         },
         build: {
+            target,
             outDir: 'build',
             cssCodeSplit: false,
             assetsDir: '.',
@@ -81,6 +83,9 @@ export default defineConfig(({mode}) => {
         },
         optimizeDeps: {
             exclude: ['@france-ioi/skulpt'],
+            esbuildOptions: {
+                target,
+            },
         }
     }
 })
