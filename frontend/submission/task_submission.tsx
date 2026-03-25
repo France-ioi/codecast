@@ -1,5 +1,10 @@
-import {apply, call, cancel, cancelled, fork, put, race} from "typed-redux-saga";
-import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
+import {apply, call, cancel, cancelled, fork, put, race, take} from "typed-redux-saga";
+import {
+    ActionTypes,
+    ActionTypes as StepperActionTypes,
+    stepperDisplayError,
+    stepperExecutionError
+} from "../stepper/actionTypes";
 import log from "loglevel";
 import {getNextLevelIndex, PlatformTaskGradingParameters, PlatformTaskGradingResult,} from "../task/platform/platform";
 import {selectAnswer} from "../task/selectors";
@@ -186,9 +191,20 @@ class TaskSubmissionExecutor {
 
         if (!(cacheKey in executionsCache)) {
             log.getLogger('tests').debug('Executions cache MISS', taskParameters, cacheKey);
-            executionsCache[cacheKey] = yield new Promise<TaskSubmissionResultPayload>(resolve => {
-                backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, task, level, testId, tests, answer, resolve}});
+
+            const deferredPromise = new DeferredPromise<TaskSubmissionResultPayload>();
+            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, task, level, testId, tests, answer, resolve: deferredPromise.resolve}});
+
+            const outcome = yield* race({
+                result: call(() => deferredPromise.promise),
+                error: take<ReturnType<typeof stepperExecutionError>>(ActionTypes.StepperExecutionError),
             });
+
+            if (outcome.result) {
+                executionsCache[cacheKey] = outcome.result;
+            } else if (outcome.error) {
+                executionsCache[cacheKey] = outcome.error.payload.testResult;
+            }
         } else {
             log.getLogger('tests').debug('Executions cache HIT', {level, testId, taskVariant}, cacheKey);
         }

@@ -15,6 +15,7 @@ import {App, Codecast, CodecastEnvironmentMonitoring} from './app_types';
 import buffersSlice from './buffers/buffers_slice';
 import {stepperExecutionError, stepperDisplayError} from './stepper/actionTypes';
 import {LibraryTestResult} from './task/libs/library_test_result';
+import url from 'url';
 
 export interface Linker {
     scope: App,
@@ -188,19 +189,24 @@ export function link(rootBuilder, globalScope: App): Linker {
             console.error(error);
             console.error(sagaStack);
 
-            const mainStore = Codecast.environments['main'].store;
-            if ('background' === globalScope.environment) {
-                mainStore.dispatch(stepperExecutionError(LibraryTestResult.fromString(error.message), false));
-            } else {
-                mainStore.dispatch(stepperDisplayError(error.message));
-                // When the error bubbles up to this onError listener, redux-saga terminates the saga. So we have to restart them
-            }
+            const dispatchError = () => {
+                const mainStore = Codecast.environments['main'].store;
+                if ('background' === globalScope.environment) {
+                    mainStore.dispatch(stepperExecutionError(LibraryTestResult.fromString('string' === typeof error ? error : error.message), false));
+                } else {
+                    mainStore.dispatch(stepperDisplayError('string' === typeof error ? error : error.message));
+                    // When the error bubbles up to this onError listener, redux-saga terminates the saga. So we have to restart them
+                }
+            };
 
             let currentDate = new Date().getTime();
             if (currentDate - lastSagaTermination > 1000) {
                 setTimeout(() => {
-                    Codecast.restartSagas();
+                    window.Codecast.environments[globalScope.environment].restart();
+                    dispatchError();
                 });
+            } else {
+                dispatchError();
             }
 
             lastSagaTermination = currentDate;
