@@ -45,7 +45,6 @@ export default defineConfig(({mode}) => {
             assetsDir: '.',
             sourcemap: false,
             minify: 'terser',
-            terserOptions: {compress: {unused: false}},
             assetsInlineLimit: 0, // avoid images inlining
             rollupOptions: {
                 input: {index: path.resolve(__dirname, 'frontend/index.tsx')},
