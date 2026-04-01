@@ -20,16 +20,13 @@ let lastHeapSize = 0;
    the worker loaded successfully.  Subsequent message are handled by the
    messageHandler function below. */
 self.onmessage = function(e) {
-    console.log('test message', e.data);
     if (e.data === null) {
-        console.log('change message handler');
         self.onmessage = messageHandler;
         self.postMessage(null);
     }
 };
 
 function messageHandler(e) {
-    console.log('message handler', e);
     const {id, command, payload} = e.data;
     const t = new Transaction(id);
     try {
@@ -97,7 +94,6 @@ Transaction.prototype.fail = function(error) {
 
 function init({sampleRate, numberOfChannels}) {
     cleanup();
-    console.log('worker init', numberOfChannels);
 
     if (numberOfChannels > 2) {
         throw new Error('invalid number of channels');
@@ -116,7 +112,6 @@ function reportMemoryUsage() {
     }
     if (heapSize !== lastHeapSize) {
         lastHeapSize = heapSize;
-        console.log('post memory usage', heapSize);
         self.postMessage({id: 'memoryUsage', done: false, payload: heapSize});
     }
 }

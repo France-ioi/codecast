@@ -287,8 +287,6 @@ export const getContextBlocksDataSelector = createSelector(
             }
         }));
 
-        console.log({blocks: availableBlocks})
-
         return availableBlocks;
     }
 );

@@ -54,7 +54,6 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     });
     const path = `../../lang/blockly_${language}.ts`;
     const languageTranslations: any = availableLanguages[path];
-    console.log({languageTranslations})
     const isMobile = yield* appSelect(state => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
 
     window.goog.provide('Blockly.Msg.' + language);

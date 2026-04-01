@@ -416,7 +416,6 @@ export class BlocklyHelper {
             this.programs[this.codeId].blockly = window.Blockly.Xml.domToText(xml);
             this.programs[this.codeId].blocklyJS = this.getCode("javascript");
             this.programs[this.codeId].blocklyPython = this.getCode("python");
-            console.log('python', this.programs[this.codeId].blocklyPython)
         }
     }
 
