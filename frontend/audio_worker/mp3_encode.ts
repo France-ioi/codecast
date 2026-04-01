@@ -1,4 +1,4 @@
-import {Mp3Encoder} from './lame';
+import {Mp3Encoder} from 'lamejs';
 import {floatTo16BitPCM} from './utils';
 
 export default function encode(audioBuffer, options, progressCallback) {
