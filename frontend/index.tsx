@@ -9,7 +9,6 @@ import {createRoot} from 'react-dom/client';
 import {Provider} from 'react-redux';
 import {HTML5toTouch} from 'rdndmb-html5-to-touch';
 import log from 'loglevel';
-import 'rc-slider/assets/index.css?global';
 import {AppStore} from './store';
 import {Bundle, link} from './linker';
 import commonBundle from './common/index';
