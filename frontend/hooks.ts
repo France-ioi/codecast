@@ -4,7 +4,7 @@ import type {AppStore} from './store'
 import {SelectEffect, Tail} from 'redux-saga/effects';
 import {SagaGenerator, select} from 'typed-redux-saga';
 import {useEffect, useMemo, useRef} from 'react';
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
 
 export const useAppSelector: TypedUseSelectorHook<AppStore> = useSelector
 

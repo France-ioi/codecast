@@ -1,6 +1,6 @@
 import {AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
-import merge from 'lodash.merge';
+import merge from 'lodash/merge';
 import {getCurrentImmerState} from "../utils";
 import {stepperMaxSpeed} from "../../stepper";
 import log from 'loglevel';

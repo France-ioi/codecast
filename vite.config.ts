@@ -6,6 +6,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {fileURLToPath} from 'url';
 
+// Run `npx vite-bundle-visualizer` to see bundle size
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
 const bundledFiles = fs.readFileSync('bundled_files.txt', 'utf8')

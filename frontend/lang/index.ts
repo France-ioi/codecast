@@ -1,5 +1,5 @@
 import IntlMessageFormat from 'intl-messageformat';
-import memoize from 'lodash.memoize';
+import memoize from 'lodash/memoize';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
