@@ -32,6 +32,29 @@ export default defineConfig(({mode}) => {
             // Wait that https://github.com/davidmyersdev/vite-plugin-node-polyfills/pull/149 is merged to get rid of the oxc warning
             nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util', 'fs', 'vm']}),
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
+            // Stub out Blueprint icon path bundles — icon paths are embedded directly in each
+            // generated icon component, so the dynamic loader and static allPaths bundle are unneeded.
+            // Without this, the IIFE build format inlines all dynamic imports, pulling in ~1MB of icon paths.
+            {
+                name: 'stub-blueprint-icon-paths',
+                load(id) {
+                    if (/@blueprintjs\/icons\/lib\/esm\/(allPaths|iconLoader)\.js$/.test(id) ||
+                        /@blueprintjs\/icons\/lib\/esm\/paths-loaders\/(allPathsLoader|splitPathsBySizeLoader)\.js$/.test(id) ||
+                        /@blueprintjs\/icons\/lib\/esm\/generated\/(16|20)px\/paths\.js$/.test(id)) {
+                        return `export const IconSvgPaths16 = {};
+export const IconSvgPaths20 = {};
+export const getIconPaths = () => undefined;
+export class Icons {
+    static setLoaderOptions() {}
+    static async load() {}
+    static async loadAll() {}
+    static getPaths() { return undefined; }
+    static isValidIconName() { return false; }
+}`;
+                    }
+                    return null;
+                },
+            },
         ],
         resolve: {
             alias: {
