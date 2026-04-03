@@ -1,5 +1,6 @@
 import React from "react";
-import {AnchorButton, Icon} from "@blueprintjs/core";
+import {AnchorButton} from "@blueprintjs/core";
+import {WarningSign, Share} from "@blueprintjs/icons";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {getMessage} from "../lang";
@@ -34,12 +35,12 @@ class _ExamplePicker extends React.PureComponent<ExamplePickerProps> {
             <div>
                 <label className='bp6-label'>
                     {getMessage('EXAMPLES_LABEL')}
-                    <AnchorButton href={examplesUrl} rightIcon='share'>
+                    <AnchorButton href={examplesUrl} rightIcon={<Share/>}>
                         {getMessage('EXAMPLES_BUTTON_TITLE')}
                     </AnchorButton>
                 </label>
                 <p>
-                    <Icon icon='warning-sign'/>{' '}
+                    <WarningSign/>{' '}
                     {getMessage('EXAMPLES_MESSAGE')}
                 </p>
             </div>

@@ -1,10 +1,10 @@
 import { Button, ControlGroup, Dialog, FormGroup, Icon, InputGroup } from "@blueprintjs/core";
 import React, {useRef, useState} from "react";
 import {getMessage} from "../lang";
-import {IconNames} from '@blueprintjs/icons';
 import {useAppSelector} from '../hooks';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {platformsList} from '../stepper/platforms';
+import { Console, Tick, Duplicate, Menu, Download } from '@blueprintjs/icons';
 
 interface LocalWorkDialogProps {
     open: boolean,
@@ -48,7 +48,7 @@ export function LocalWorkDialog(props: LocalWorkDialogProps) {
 
     return (
         <Dialog
-            icon="menu"
+            icon={<Menu/>}
             title={getMessage('MENU_LOCAL')}
             isOpen={props.open}
             onClose={props.onClose}
@@ -62,20 +62,20 @@ export function LocalWorkDialog(props: LocalWorkDialogProps) {
                         {getMessage('LOCAL_WORK_DESCRIPTION')}
                     </div>
                     <a href="assets/fioi.py" download>
-                        <Icon icon="download" style={{ height: '20px' }} />
+                        <Icon icon={<Download/>} style={{ height: '20px' }} />
                         {getMessage('LOCAL_WORK_DOWNLOAD_BUTTON')}
                     </a>
                 </FormGroup>
                 <FormGroup labelFor='shellCommand' label={getMessage('LOCAL_WORK_URL')}>
                     <ControlGroup>
                         <InputGroup
-                            leftIcon={IconNames.Console}
+                            leftIcon={<Console />}
                             type='text'
                             value={shellCommand}
                             readOnly
                             onFocus={handleFocus}
                         />
-                        <Button icon={copied ? 'tick' : 'duplicate'} onClick={copyCommand} />
+                        <Button icon={copied ? <Tick/> : <Duplicate/>} onClick={copyCommand} />
                         {copied && <div className="ml-1" style={{fontSize: '0.85rem', display: 'flex', alignItems: 'center'}}>
                             {getMessage('COPIED')}
                         </div>}

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Card} from 'react-bootstrap';
-import {Icon} from "@blueprintjs/core";
+import {Console} from "@blueprintjs/icons";
 import {PureTerminal} from "./PureTerminal";
 import {useDispatch} from "react-redux";
 import {AppStore} from "../../../store";
@@ -65,7 +65,7 @@ export function TerminalView() {
                 <div className="col-sm-12 terminal-view-header">
                     {getMessage('IOPANE_TERMINAL')}
                     {inputNeeded &&
-                        <Icon icon='console'/>
+                        <Console />
                     }
                 </div>
             </div>

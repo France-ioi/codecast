@@ -6,6 +6,7 @@ import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {Screen} from '../../common/screens';
 import {useAppSelector} from '../../hooks';
 import {useDispatch} from 'react-redux';
+import {Lightbulb} from '@blueprintjs/icons';
 
 export function TaskHintsDialog() {
     const screen = useAppSelector(state => state.screen);
@@ -22,7 +23,7 @@ export function TaskHintsDialog() {
     return (
         <Dialog
             title={getMessage('TRALALERE_MENU_HINTS')}
-            icon="lightbulb"
+            icon={<Lightbulb/>}
             className="hints-dialog"
             isOpen={hintsOpen}
             canOutsideClickClose={true}

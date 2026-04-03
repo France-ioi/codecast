@@ -1,6 +1,5 @@
 import React from "react";
 import {AnchorButton, Button, Callout, Icon, InputGroup, Intent, Label, Spinner} from "@blueprintjs/core";
-import {IconNames} from "@blueprintjs/icons";
 import {formatTime} from "../common/utils";
 import {FullWaveform} from "./waveform/FullWaveform";
 import {ActionTypes} from "./actionTypes";
@@ -8,6 +7,7 @@ import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import {EditorSaveState} from "./index";
 import {getMessage} from "../lang";
+import {CloudUpload, Cross, Download, Link, Play, Tick} from "@blueprintjs/icons";
 
 interface EditorOverviewProps {
     withoutWaveform?: boolean,
@@ -51,11 +51,11 @@ export function EditorOverview(props: EditorOverviewProps) {
             <Label>
                 {getMessage('EDITOR_RECORDING_URL')}
                 <InputGroup
-                    leftIcon={IconNames.LINK}
+                    leftIcon={<Link />}
                     type='text'
                     value={playerUrl}
                     readOnly
-                    rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
+                    rightElement={<AnchorButton href={playerUrl} icon={<Play />} minimal target='_blank' rel="noreferrer"/>}
                 />
             </Label>
             {/* list of available subtitles? */}
@@ -69,8 +69,8 @@ export function EditorOverview(props: EditorOverviewProps) {
             </div>
             <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
                 <div className='fill center'>
-                    <Button onClick={_saveAudio} icon={IconNames.DOWNLOAD} text={getMessage('EDITOR_DOWNLOAD_AUDIO')} className="mr-2"/>
-                    <Button onClick={_save} icon={IconNames.CLOUD_UPLOAD} text={getMessage('EDITOR_SAVE')} disabled={!canSave} intent={Intent.PRIMARY}/>
+                    <Button onClick={_saveAudio} icon={<Download />} text={getMessage('EDITOR_DOWNLOAD_AUDIO')} className="mr-2"/>
+                    <Button onClick={_save} icon={<CloudUpload />} text={getMessage('EDITOR_SAVE')} disabled={!canSave} intent={Intent.PRIMARY}/>
                 </div>
             </div>
             {!canSave &&
@@ -88,13 +88,13 @@ export function EditorOverview(props: EditorOverviewProps) {
                     }
                     {save.state === EditorSaveState.Failure &&
                         <div className='fill'>
-                            <Icon icon='cross' intent={Intent.DANGER} />
+                            <Cross className="bp6-intent-danger"/>
                             {getMessage('EDITOR_SAVE_ERROR')}{save.error}
                         </div>
                     }
                     {save.state === EditorSaveState.Success &&
                         <div className='fill'>
-                            <Icon icon='tick' intent={Intent.SUCCESS} />
+                            <Tick className="bp6-intent-success"/>
                             {getMessage('EDITOR_SAVED')}
                         </div>
                     }

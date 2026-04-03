@@ -1,5 +1,6 @@
 import React from "react";
 import {Button} from "@blueprintjs/core";
+import {Minimize, Fullscreen} from "@blueprintjs/icons";
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {connect} from "react-redux";
@@ -37,7 +38,7 @@ class _FullscreenButton extends React.PureComponent<FullscreenButtonProps> {
                 onClick={active ? this._leaveFullscreen : this._enterFullscreen}
                 disabled={!enabled}
                 title={tooltip}
-                icon={active ? 'minimize' : 'fullscreen'}
+                icon={active ? <Minimize/> : <Fullscreen/>}
             />
         );
     }

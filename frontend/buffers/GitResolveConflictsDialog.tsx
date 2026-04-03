@@ -1,4 +1,5 @@
 import {Button, Dialog, Intent} from "@blueprintjs/core";
+import {Menu} from "@blueprintjs/icons";
 import React, {FormEvent} from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from '../hooks';
@@ -47,7 +48,7 @@ export function GitResolveConflictsDialog({bufferName}: {bufferName: string}) {
 
     return (
         <Dialog
-            icon="menu"
+            icon={<Menu/>}
             className="git-solve-conflict-dialog"
             title={getMessage('GIT_RESOLVE_CONFLICTS')}
             isOpen={true}

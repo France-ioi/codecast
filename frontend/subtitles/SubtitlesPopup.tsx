@@ -1,5 +1,6 @@
 import React from "react";
 import {Alert, Checkbox, Dialog, Intent, Radio, RadioGroup, Spinner} from "@blueprintjs/core";
+import {Menu} from "@blueprintjs/icons";
 import {setPersistentOption} from "./options";
 import {ActionTypes} from './actionTypes';
 import {useDispatch} from "react-redux";
@@ -55,7 +56,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
     }
 
     return (
-        <Dialog icon='menu' title={getMessage('CLOSED_CAPTIONS_TITLE')} isOpen={props.open} onClose={props.onClose}>
+        <Dialog icon={<Menu/>} title={getMessage('CLOSED_CAPTIONS_TITLE')} isOpen={props.open} onClose={props.onClose}>
             <div className='bp6-dialog-body'>
                 {busy &&
                     <Spinner size={20}/>

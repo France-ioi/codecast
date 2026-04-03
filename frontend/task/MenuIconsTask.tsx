@@ -1,11 +1,11 @@
 import React from 'react';
 import {Button} from '@blueprintjs/core';
+import {Menu, Lightbulb, Help} from '@blueprintjs/icons';
 import {FullscreenButton} from "../common/FullscreenButton";
 import {useAppSelector} from "../hooks";
 import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import {useDispatch} from "react-redux";
 import {Screen} from '../common/screens';
-
 import {selectAvailableHints} from './hints/hints_selectors';
 import {selectShowDocumentation} from './documentation/doc';
 
@@ -42,13 +42,13 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
                 <FullscreenButton />
             </div>}
             {showDocumentation && <div className="menu-task-element is-blue">
-                <Button onClick={toggleDocumentation} icon='help'/>
+                <Button onClick={toggleDocumentation} icon={<Help/>}/>
             </div>}
             {showHints && <div className="menu-task-element is-blue">
-                <Button onClick={toggleHints} icon='lightbulb'/>
+                <Button onClick={toggleHints} icon={<Lightbulb/>}/>
             </div>}
             {showMenu && <div className="menu-task-element">
-                <Button onClick={props.toggleMenu} icon='menu'/>
+                <Button onClick={props.toggleMenu} icon={<Menu/>}/>
             </div>}
         </div>
     );

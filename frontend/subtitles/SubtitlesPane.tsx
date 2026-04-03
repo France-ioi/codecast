@@ -1,8 +1,8 @@
 import React from "react";
-import {InputGroup} from "@blueprintjs/core";
+import { InputGroup } from "@blueprintjs/core";
 import {SubtitlePaneItemEditor} from "./views/SubtitlePaneItemEditor";
 import {SubtitlePaneItemViewer} from "./views/SubtitlePaneItemViewer";
-import {IconNames} from "@blueprintjs/icons";
+
 import {SubtitlePaneItem} from "./SubtitlePaneItem";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -10,6 +10,7 @@ import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {NodeCue} from "subtitle";
 import {getMessage} from "../lang";
+import { Search } from "@blueprintjs/icons";
 
 interface SubtitlesPaneStateToProps {
     subtitles: any[],
@@ -53,7 +54,7 @@ class _SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
             <div className='subtitles-pane subtitles-pane-view vbox'>
                 {!editing &&
                     <InputGroup
-                        leftIcon={IconNames.SEARCH}
+                        leftIcon={<Search />}
                         type='text'
                         onChange={this._filterTextChanged}
                         value={filterText}

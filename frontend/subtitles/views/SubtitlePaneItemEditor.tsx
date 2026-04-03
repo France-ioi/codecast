@@ -1,8 +1,9 @@
 import React from "react";
 import {NodeCue} from "subtitle";
-import {Button, Icon} from "@blueprintjs/core";
-import {IconNames} from "@blueprintjs/icons";
+import { Button } from "@blueprintjs/core";
+
 import {formatTimeLong} from "../../common/utils";
+import { ChevronLeft, ChevronRight, Plus, Trash } from "@blueprintjs/icons";
 
 interface SubtitlePaneItemEditorProps {
     item: NodeCue,
@@ -31,7 +32,7 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
                         <div className='col-sm-6'>
                             <div className="subtitle-item-editor">
                                 <span className='is-narrow'>
-                                    <Button small disabled={start <= minStart} onClick={this._onShiftMinus} icon={IconNames.CHEVRON_LEFT}/>
+                                    <Button small disabled={start <= minStart} onClick={this._onShiftMinus} icon={<ChevronLeft />}/>
                                 </span>
                                 <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
                                 <span className='is-narrow'>
@@ -39,7 +40,7 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
                                         small
                                         disabled={start === 0 || start >= maxStart}
                                         onClick={this._onShiftPlus}
-                                        icon={IconNames.CHEVRON_RIGHT}
+                                        icon={<ChevronRight />}
                                     />
                                 </span>
                             </div>
@@ -48,7 +49,7 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
                             <div className="subtitle-item-editor">
                                 <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
                                 <span className='is-narrow'>
-                                    <Button small disabled={!this.props.onRemove} onClick={this._onRemove} icon={IconNames.TRASH} />
+                                    <Button small disabled={!this.props.onRemove} onClick={this._onRemove} icon={<Trash />} />
                                 </span>
                             </div>
                         </div>
@@ -58,7 +59,7 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
                 <div className='subtitles-split'>
                     <p>{formatTimeLong(audioTime)}</p>
                     <span className='is-narrow'>
-                        <Button small disabled={offset === 0 || audioTime < start} onClick={this._onInsertBelow} icon={IconNames.PLUS}/>
+                        <Button small disabled={offset === 0 || audioTime < start} onClick={this._onInsertBelow} icon={<Plus />}/>
                     </span>
                 </div>
             </div>

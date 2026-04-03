@@ -1,5 +1,5 @@
 import React from "react";
-import {Icon} from "@blueprintjs/core";
+import {ChevronDown, ChevronUp} from "@blueprintjs/icons";
 import classnames from 'classnames';
 import {LogoutButton} from "../common/LogoutButton";
 import {connect} from "react-redux";
@@ -41,8 +41,6 @@ class _StatisticsApp extends React.PureComponent<StatisticsAppProps> {
         const {collapsed} = this.state;
         const {activity} = this.props;
 
-        const iconName = (collapsed) ? 'chevron-down' : 'chevron-up';
-
         let screen = <p>{'undefined state'}</p>;
         if (activity === 'statistics') {
             screen = <StatisticsScreen />;
@@ -54,7 +52,7 @@ class _StatisticsApp extends React.PureComponent<StatisticsAppProps> {
             <div id='statistics-app'>
                 <div id='floating-controls' className={classnames({collapsed})}>
                     <span className='collapse-toggle' onClick={this._toggleCollapsed}>
-                        <Icon icon={iconName} />
+                        {collapsed ? <ChevronDown /> : <ChevronUp />}
                     </span>
                     <div className='btn-group'>
                         {/statistics/.test(activity) &&

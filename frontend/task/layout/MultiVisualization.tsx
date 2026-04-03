@@ -2,7 +2,6 @@ import React, {ReactElement, ReactNode} from 'react';
 import {connect} from "react-redux";
 import {Dropdown} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
-import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "./actionTypes";
 
 function mapStateToProps() {
@@ -48,7 +47,7 @@ class _MultiVisualization extends React.PureComponent<MultiVisualizationProps> {
                     <Dropdown.Menu>
                         {elements.map(({props: {metadata}}) =>
                             <Dropdown.Item key={metadata.id} onClick={() => this.selectVisualization(metadata.id)}>
-                                {metadata.icon && <Icon icon={metadata.icon as IconName}/>}
+                                {metadata.icon && <Icon icon={metadata.icon as React.JSX.Element}/>}
                                 <span>{metadata.title}</span>
                             </Dropdown.Item>
                         )}

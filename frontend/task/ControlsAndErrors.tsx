@@ -3,6 +3,7 @@ import {StepperControls} from "../stepper/views/StepperControls";
 import {stepperClearError} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
 import {Button, Icon} from "@blueprintjs/core";
+import {Cross, Maximize, Lightbulb, Stop, Notifications, Error} from "@blueprintjs/icons";
 import {ActionTypes} from "./layout/actionTypes";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCogs, faFileAlt, faPencilAlt, faPlay, faSpinner} from "@fortawesome/free-solid-svg-icons";
@@ -224,13 +225,13 @@ export function ControlsAndErrors() {
 
             {hasError && null === cancellableSubmission && <div className={`error-message ${errorClosable ? 'is-closable' : ''}`} onClick={onClearError}>
                 {errorClosable && <button type="button" className="close-button" onClick={onClearError}>
-                    <Icon icon="cross"/>
+                    <Cross/>
                 </button>}
                 <button type="button" className="maximize-button hidden-mobile" onClick={onMaximizeError}>
-                    <Icon icon="maximize"/>
+                    <Maximize/>
                 </button>
                 <div className="error-message-wrapper">
-                    <Icon icon="notifications" className="bell-icon"/>
+                    <Icon icon={<Notifications className="bell-icon"/>}/>
                     <div className="message">
                         {error}
                     </div>
@@ -242,7 +243,7 @@ export function ControlsAndErrors() {
                                 e.stopPropagation();
                             }}
                         >
-                            <Icon icon="lightbulb"/>
+                            <Lightbulb/>
                             <span>{getMessage('HINTS_CODE_HELP_ERROR_BUTTON')}</span>
                         </Button>
                     </div>}
@@ -255,13 +256,13 @@ export function ControlsAndErrors() {
                         <FontAwesomeIcon icon={faSpinner} className="fa-spin mr-2"/>
                         {getMessage(SubmissionExecutionScope.MyTests === cancellableSubmission?.scope ? 'SUBMISSION_EVALUATING_USER_TESTS' : 'SUBMISSION_EVALUATING_SUBMIT')}
                     </div>
-                    <Icon icon="stop" className="bell-icon stop-icon" onClick={cancelEvaluation}/>
+                    <Stop className="bell-icon stop-icon" onClick={cancelEvaluation}/>
                 </div>
             </div>}
 
             {hasError && errorDialogOpen && <DraggableDialog
                 rndProps={{}}
-                icon='error'
+                icon={<Error/>}
                 title={getMessage('ERROR')}
                 onClose={() => setErrorDialogOpen(false)}
             >

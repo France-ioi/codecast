@@ -1,5 +1,6 @@
 import React from "react";
 import {Dialog} from "@blueprintjs/core";
+import {Error} from "@blueprintjs/icons";
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {connect} from "react-redux";
@@ -36,7 +37,7 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
         return (
             <div className='error-wrapper'>
                 <Dialog
-                    icon="error"
+                    icon={<Error/>}
                     isOpen={true}
                     onClose={this._clearError}
                     isCloseButtonShown={closable}

@@ -1,10 +1,10 @@
 import {Dialog} from "@blueprintjs/core";
+import {Menu} from "@blueprintjs/icons";
 import {LanguageSelection} from "../lang/LanguageSelection";
 import {ExamplePicker} from "./ExamplePicker";
 import React from "react";
 import {useAppSelector} from "../hooks";
 import {isLocalMode} from "../utils/app";
-import {select} from "typed-redux-saga";
 import {StepperStatus} from "../stepper";
 import {useDispatch} from "react-redux";
 import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
@@ -69,7 +69,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
     const closable = props.closable !== false;
 
     return (
-        <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={props.open} onClose={props.onClose} canEscapeKeyClose={closable} canOutsideClickClose={closable} isCloseButtonShown={closable}>
+        <Dialog icon={<Menu/>} title={getMessage('SETTINGS_MENU_TITLE')} isOpen={props.open} onClose={props.onClose} canEscapeKeyClose={closable} canOutsideClickClose={closable} isCloseButtonShown={closable}>
             <div className='bp6-dialog-body'>
                 {canChangeLanguage && <div style={{marginBottom: '10px'}}>
                     <LanguageSelection closeMenu={props.onClose}/>

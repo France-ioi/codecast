@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Dialog, Icon} from '@blueprintjs/core';
+import {Cog, Record, Edit, Help} from '@blueprintjs/icons';
 import {MenuIconsTask} from "./MenuIconsTask";
 import {recordingEnabledChange} from "./task_slice";
 import {SettingsDialog} from "../common/SettingsDialog";
@@ -23,10 +24,11 @@ import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {bufferDownload, bufferReload} from '../buffers/buffer_actions';
 import {isServerTask} from './task_types';
 import {LocalWorkDialog} from './LocalWorkDialog';
-import {IconNames} from '@blueprintjs/icons';
+
 import { SmartContractLib } from './libs/smart_contract/smart_contract_lib';
 import {WorkWithGitDialog} from './WorkWithGitDialog';
 import {selectLayoutMobileMode} from './layout/layout';
+import { Console, GitBranch } from '@blueprintjs/icons';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -129,19 +131,19 @@ export function MenuTask() {
                 </div>}
             <div className={`task-menu`}>
                 {!hideSettings && <div className="menu-item" onClick={() => setSettingsOpen(!settingsOpen)}>
-                    <Icon icon="cog"/>
+                    <Cog/>
                     <span>{getMessage('MENU_SETTINGS')}</span>
                 </div>}
                 {!playerEnabled && canRecord && <div className="menu-item" onClick={toggleRecording}>
-                    <Icon icon="record" color="#ff001f"/>
+                    <Record color="#ff001f"/>
                     <span>{getMessage('MENU_RECORDER')}</span>
                 </div>}
                 {editorEnabled && <div className="menu-item" onClick={toggleEditRecording}>
-                    <Icon icon="edit"/>
+                    <Edit/>
                     <span>{getMessage('MENU_EDIT_RECORDING')}</span>
                 </div>}
                 {displayAbout && <div className="menu-item" onClick={() => setAboutOpen(!aboutOpen)}>
-                    <Icon icon="help"/>
+                    <Help/>
                     <span>{getMessage('MENU_ABOUT')}</span>
                 </div>}
                 {!(controls && 'reload' in controls && (false === controls['reload'] || '_' === controls['reload'])) &&
@@ -157,11 +159,11 @@ export function MenuTask() {
                     </React.Fragment>
                 }
                 {canLocalWork && <div className="menu-item" onClick={() => setLocalWorkOpen(!localWorkOpen)}>
-                    <Icon icon={IconNames.Console}/>
+                    <Console />
                     <span>{getMessage('MENU_LOCAL')}</span>
                 </div>}
                 {canWorkWithGit && <div className="menu-item" onClick={() => setWorkWithGitOpen(!workWithGitOpen)}>
-                    <Icon icon={IconNames.GIT_BRANCH}/>
+                    <GitBranch />
                     <span>{getMessage('MENU_SYNC_GIT')}</span>
                 </div>}
             </div>

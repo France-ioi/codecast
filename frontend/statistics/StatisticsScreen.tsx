@@ -10,6 +10,7 @@ import {
     Intent,
     Spinner
 } from "@blueprintjs/core";
+import {Error, Filter, Search} from "@blueprintjs/icons";
 import {CSVLink} from 'react-csv';
 import {DateRangePicker} from "@blueprintjs/datetime";
 import {ActionTypes} from "./actionTypes";
@@ -111,7 +112,7 @@ class _StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
         const {dateRange, folder, folderOptions, prefix, rowData, searchError, searchStatus} = this.props;
         return (
             <div className='text-center'>
-                <Alert icon="error" isOpen={!!searchError} onClose={this.handleErrorReset}>
+                <Alert icon={<Error/>} isOpen={!!searchError} onClose={this.handleErrorReset}>
                     Search Error: {searchError}
                     <br />
                     Try again....!
@@ -135,7 +136,7 @@ class _StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
                             <FormGroup label="Prefix" labelFor="input-prefix">
                                 <InputGroup
                                     id="input-prefix"
-                                    leftIcon="filter"
+                                    leftIcon={<Filter/>}
                                     onChange={this.handlePrefixChange}
                                     value={prefix}
                                 />
@@ -145,7 +146,7 @@ class _StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
                                 <Button
                                     id="btn-search"
                                     text="Search"
-                                    icon="search"
+                                    icon={<Search/>}
                                     intent={Intent.PRIMARY}
                                     onClick={this.handleSubmit}
                                 />

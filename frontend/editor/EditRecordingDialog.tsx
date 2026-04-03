@@ -1,4 +1,5 @@
 import {Dialog} from "@blueprintjs/core";
+import {Menu} from "@blueprintjs/icons";
 import React, {useEffect} from "react";
 import {EditorSave} from "./EditorSave";
 import {useDispatch} from "react-redux";
@@ -18,7 +19,7 @@ export function EditRecordingDialog(props: EditRecordingDialogProps) {
     }, []);
 
     return (
-        <Dialog icon='menu' title={getMessage('MENU_EDIT_RECORDING_TITLE')} isOpen={props.open} onClose={props.onClose} className="edit-recording-dialog">
+        <Dialog icon={<Menu/>} title={getMessage('MENU_EDIT_RECORDING_TITLE')} isOpen={props.open} onClose={props.onClose} className="edit-recording-dialog">
             <div className='bp6-dialog-body'>
                 <EditorSave/>
             </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import {Icon} from "@blueprintjs/core";
+import {ArrowDown, ArrowUp, Circle, FullCircle} from "@blueprintjs/icons";
 import classnames from 'classnames';
 import {ActionTypes} from "./actionTypes";
 import {ArduinoPort, PinMode} from "./index";
@@ -53,14 +53,14 @@ export class PortDisplay extends React.PureComponent<PortDisplayProps> {
                 {peripheral.type === 'LED' &&
                     <div className="arduino-peri-led" style={{color: colorToCss[peripheral.color]}}>
                         {(state.output === 0)
-                            ? <Icon icon='circle'/>
-                            : <Icon icon='full-circle'/>
+                            ? <Circle/>
+                            : <FullCircle/>
                         }
                     </div>
                 }
                 {peripheral.type === 'button' &&
                     <div className="arduino-peri-button clickable" onClick={this.onButtonToggle}>
-                        <Icon icon={state.input === 0 ? 'arrow-down' : 'arrow-up'}/>
+                        {state.input === 0 ? <ArrowDown/> : <ArrowUp/>}
                     </div>
                 }
                 {peripheral.type === 'slider' &&
