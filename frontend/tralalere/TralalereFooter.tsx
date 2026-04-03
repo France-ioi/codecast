@@ -2,7 +2,7 @@ import {TralalereBox} from "./TralalereBox";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import {TaskHints} from "../task/hints/TaskHints";
-import {Dialog, Icon} from "@blueprintjs/core";
+import {Dialog} from "@blueprintjs/core";
 import {TralalereControls} from "./TralalereControls";
 import React from "react";
 import {stepperClearError} from "../stepper/actionTypes";
@@ -17,6 +17,7 @@ import {nl2br} from '../common/utils';
 import {TaskTestsSubmissionResultOverview} from '../submission/TaskTestsSubmissionResultOverview';
 import {taskSetBlocksUsage} from '../task/task_slice';
 import {LayoutType} from '../task/layout/layout_types';
+import {Cross} from '@blueprintjs/icons';
 
 export interface TralalereFooterProps {
     instructionsExpanded?: boolean,
@@ -112,7 +113,7 @@ export function TralalereFooter (props: TralalereFooterProps) {
                     <div>
                         {hasError && <div className={`error-message ${errorClosable ? 'is-closable' : ''}`} onClick={onClearError}>
                             {errorClosable && <button type="button" className="close-button" onClick={onClearError}>
-                                <Icon icon="cross"/>
+                                <Cross/>
                             </button>}
                             <div className="error-message-wrapper">
                                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">

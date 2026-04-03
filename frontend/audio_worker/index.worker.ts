@@ -30,7 +30,7 @@ function messageHandler(e) {
     const {id, command, payload} = e.data;
     const t = new Transaction(id);
     try {
-        let result = false;
+        let result: any = false;
         switch (command) {
             case 'init':
                 result = init(payload);
@@ -51,7 +51,7 @@ function messageHandler(e) {
                 result.duration = audioBuffer.duration;
 
                 if (payload.raw) {
-                    result.raw = exportRaw(audioBuffer, payload.raw);
+                    result.raw = exportRaw(audioBuffer);
                 }
                 if (payload.wav) {
                     result.wav = exportWav(audioBuffer, payload.wav, function(progress) {

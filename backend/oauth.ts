@@ -1,12 +1,14 @@
 /* TODO: Add endpoint for guest login. */
 
-const mysql = require('mysql');
-const ClientOAuth2 = require('client-oauth2');
-const session = require('express-session');
-const MySQLStore = require('express-mysql-session')(session);
-const request = require('request');
-const randomstring = require('randomstring');
-const jwt = require("jsonwebtoken");
+import mysql from 'mysql';
+import ClientOAuth2 from 'client-oauth2';
+import session from 'express-session';
+import MySQLStoreFactory from 'express-mysql-session';
+import request from 'request';
+import randomstring from 'randomstring';
+import jwt from 'jsonwebtoken';
+
+const MySQLStore = (MySQLStoreFactory as any)(session);
 
 /*
 
@@ -17,7 +19,7 @@ ALTER TABLE user_configs ADD UNIQUE INDEX `ix_user_configs_user_id` (`user_id`);
 
 */
 
-module.exports = function (app, config, callback) {
+export default function (app: any, config: any, callback: (err: any) => void) {
     const oauthClientCache = {};
 
     app.set('trust proxy', 1) // trust first proxy
@@ -240,7 +242,7 @@ module.exports = function (app, config, callback) {
             });
         }
 
-        function done(err) {
+        function done(err = null) {
             db.end();
             if (err) {
                 return callback(err);
@@ -251,4 +253,4 @@ module.exports = function (app, config, callback) {
     }
 
     callback(null);
-};
+}

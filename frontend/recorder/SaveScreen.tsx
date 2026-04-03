@@ -5,7 +5,6 @@ import {
     ControlGroup,
     FormGroup,
     HTMLSelect,
-    Icon,
     InputGroup,
     Intent,
     ProgressBar,
@@ -17,7 +16,7 @@ import {useDispatch} from "react-redux";
 import {SaveStep} from "./save_screen";
 import {useAppSelector} from "../hooks";
 import {getMessage} from "../lang";
-import {IconNames} from '@blueprintjs/icons';
+import { Edit, Link, Play, Trash, User, Tick, FloppyDisk } from '@blueprintjs/icons';
 
 interface SaveScreenProps {
     onCancel?: () => void,
@@ -138,7 +137,7 @@ export function SaveScreen(props: SaveScreenProps) {
                     <Button
                         onClick={onChangeUser}
                         intent={Intent.NONE}
-                        icon='user'
+                        icon={<User/>}
                         className="ml-2"
                         text={getMessage('USER_CHANGE_USER')}
                     />
@@ -148,7 +147,7 @@ export function SaveScreen(props: SaveScreenProps) {
                 {busy ?
                     <Spinner size={20} className="mr-2" />
                     : (step === SaveStep.Done ?
-                        <Icon icon='tick' intent={Intent.SUCCESS} />
+                        <Tick className="bp6-intent-success"/>
                         : null)}
 
                 {message}
@@ -160,7 +159,7 @@ export function SaveScreen(props: SaveScreenProps) {
                 {canUpload && <Button
                     onClick={onUpload}
                     intent={canUpload ? Intent.PRIMARY : Intent.NONE}
-                    icon='floppy-disk'
+                    icon={<FloppyDisk/>}
                     className="mr-2"
                     text={getMessage('UPLOADING_BUTTON')}
                 />}
@@ -168,7 +167,7 @@ export function SaveScreen(props: SaveScreenProps) {
                     <Button
                         onClick={props.onCancel}
                         intent={Intent.DANGER}
-                        icon={'trash'}
+                        icon={<Trash/>}
                         text={getMessage('DELETE_RECORDING')}
                     />
                 }
@@ -177,12 +176,12 @@ export function SaveScreen(props: SaveScreenProps) {
             {playerUrl &&
                 <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')} className="mt-4">
                     <InputGroup
-                        leftIcon={IconNames.LINK}
+                        leftIcon={<Link />}
                         type='text'
                         value={playerUrl}
                         readOnly
                         onFocus={handleFocus}
-                        rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
+                        rightElement={<AnchorButton href={playerUrl} icon={<Play />} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
             }
@@ -190,12 +189,12 @@ export function SaveScreen(props: SaveScreenProps) {
             {editorUrl &&
                 <FormGroup labelFor='editorUrlInput' label={getMessage('EDITOR_LINK')} className="mt-4">
                     <InputGroup
-                        leftIcon={IconNames.LINK}
+                        leftIcon={<Link />}
                         type='text'
                         value={editorUrl}
                         readOnly
                         onFocus={handleFocus}
-                        rightElement={<AnchorButton href={editorUrl} icon={IconNames.EDIT} minimal target='_blank' rel="noreferrer"/>}
+                        rightElement={<AnchorButton href={editorUrl} icon={<Edit />} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
             }
@@ -203,12 +202,12 @@ export function SaveScreen(props: SaveScreenProps) {
             {playerUrl &&
                 <FormGroup labelFor='ltiUrlInput' label={getMessage('LTI_LINK')} className="mt-4">
                     <InputGroup
-                        leftIcon={IconNames.LINK}
+                        leftIcon={<Link />}
                         type='text'
                         value={ltiUrl}
                         readOnly
                         onFocus={handleFocus}
-                        rightElement={<AnchorButton href={ltiUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
+                        rightElement={<AnchorButton href={ltiUrl} icon={<Play />} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
             }

@@ -1,7 +1,6 @@
-import {Button, Dialog, FormGroup, InputGroup, Intent, Menu, MenuItem, Spinner} from "@blueprintjs/core";
+import { Button, Dialog, FormGroup, InputGroup, Intent, Menu, MenuItem, Spinner } from "@blueprintjs/core";
 import React, {useEffect, useState} from "react";
 import {getMessage} from "../lang";
-import {IconNames} from '@blueprintjs/icons';
 import {useAppSelector} from '../hooks';
 import {selectActiveBuffer} from '../buffers/buffer_selectors';
 import {GitSyncParams} from '../buffers/buffer_types';
@@ -10,6 +9,7 @@ import {ItemPredicate, Select2} from '@blueprintjs/select';
 import {useDispatch} from 'react-redux';
 import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
 import {TextBufferHandler} from '../buffers/document';
+import { Document, FolderClose, GitBranch, GitRepo, Menu as MenuIcon, CaretDown } from '@blueprintjs/icons';
 
 interface WorkWithGitDialogProps {
     open: boolean,
@@ -167,7 +167,7 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
 
     return (
         <Dialog
-            icon="menu"
+            icon={<MenuIcon/>}
             title={getMessage('MENU_SYNC_GIT')}
             isOpen={props.open}
             onClose={props.onClose}
@@ -178,7 +178,7 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
             <div className='bp6-dialog-body'>
                 <FormGroup labelFor='gitRepository' label={getMessage('GIT_REPOSITORY')}>
                     <InputGroup
-                        leftIcon={IconNames.GitRepo}
+                        leftIcon={<GitRepo />}
                         type='text'
                         placeholder={"git@github.com:..."}
                         value={gitSync.repository}
@@ -207,8 +207,8 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
                             onItemSelect={(e) => changeGitSyncParameter('branch', e)}
                         >
                             <Button
-                                icon={IconNames.GitBranch}
-                                rightIcon="caret-down"
+                                icon={<GitBranch />}
+                                rightIcon={<CaretDown/>}
                                 text={gitSync.branch ?? getMessage('SELECT') + '...'}
                             />
                         </Select2>
@@ -223,7 +223,7 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
                             <Menu>
                                 {activeFolder && <MenuItem
                                     key={null}
-                                    icon={IconNames.FolderClose}
+                                    icon={<FolderClose />}
                                     onClick={() => setActiveFolder(activeFolder.split('/').slice(0, -1).join('/'))}
                                     roleStructure="listoption"
                                     text={'..'}
@@ -231,7 +231,7 @@ export function WorkWithGitDialog(props: WorkWithGitDialogProps) {
                                 {filesList.map((fileElement, index) =>
                                     <MenuItem
                                         key={index}
-                                        icon={fileElement.directory ? IconNames.FolderClose : IconNames.Document}
+                                        icon={fileElement.directory ? <FolderClose /> : <Document />}
                                         onClick={() => clickFileElement(fileElement)}
                                         roleStructure="listoption"
                                         active={gitSync.file === (activeFolder ? activeFolder + '/' + fileElement.name : fileElement.name)}

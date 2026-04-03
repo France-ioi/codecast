@@ -1,5 +1,5 @@
 import React from "react";
-import {Icon} from "@blueprintjs/core";
+import {LogOut} from "@blueprintjs/icons";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 
@@ -32,7 +32,7 @@ class _LogoutButton extends React.PureComponent<LogoutButtonProps> {
 
         return (
             <a href={`${baseUrl}/logout`} target='login' className='btn btn-default'>
-                <Icon icon='log-out'/>
+                <LogOut/>
                 {` ${user.login}`}
             </a>
         );

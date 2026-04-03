@@ -3,7 +3,7 @@ import {call, delay, put, race, take, takeEvery, takeLatest} from 'typed-redux-s
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {spawnWorker} from '../utils/worker_utils';
 // @ts-ignore
-import AudioWorker from '../audio_worker/index.worker';
+import AudioWorker from '../audio_worker/index.worker?worker';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';

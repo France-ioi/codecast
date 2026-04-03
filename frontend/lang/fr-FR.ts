@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     language: 'Français',
     COMPILE: 'Compiler',
     EXECUTE: 'Exécuter',

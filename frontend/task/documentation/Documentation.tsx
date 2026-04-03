@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Button, Icon} from "@blueprintjs/core";
+import {ZoomIn, Properties, Code} from "@blueprintjs/icons";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {
@@ -155,7 +156,7 @@ export function Documentation(props: DocumentationProps) {
         <div className={`documentation ${Screen.DocumentationBig === screen ? 'is-big' : 'is-small'} ${props.standalone ? 'is-standalone' : ''}`}>
             {props.header ? props.header : <div className="documentation-header">
                 <div className="documentation-header-icon">
-                    <Icon icon="zoom-in"/>
+                    <Icon icon={<ZoomIn/>}/>
                 </div>
                 <h2>{getMessage('TASK_DOCUMENTATION')}</h2>
                 {canChangePlatform && <div className="documentation-language-selector">
@@ -173,7 +174,7 @@ export function Documentation(props: DocumentationProps) {
             </div>}
             <div className="documentation-language-dropdown">
                 <div className="documentation-tabs-menu">
-                    <Icon icon="code"/>
+                    <Icon icon={<Code/>}/>
                 </div>
                 {canChangePlatform && <div className="documentation-category-selector">
                     <DocumentationLanguageSelector/>
@@ -182,10 +183,10 @@ export function Documentation(props: DocumentationProps) {
             <div className="documentation-category-dropdown">
                 <div className="documentation-tabs-menu">
                     <a onClick={openDocumentationBig} className="hidden-mobile">
-                        <Icon icon="properties"/>
+                        <Icon icon={<Properties/>}/>
                     </a>
                     <span className="visible-mobile">
-                        <Icon icon="properties"/>
+                        <Icon icon={<Properties/>}/>
                     </span>
                 </div>
                 <div className="documentation-category-selector">
@@ -203,7 +204,7 @@ export function Documentation(props: DocumentationProps) {
             <div className="documentation-tabs">
                 <div className="documentation-tabs-menu">
                     <a onClick={openDocumentationBig}>
-                        <Icon icon="properties"/>
+                        <Icon icon={<Properties/>}/>
                     </a>
                 </div>
                 {displayedConcepts.map(concept =>
@@ -256,7 +257,7 @@ export function Documentation(props: DocumentationProps) {
                     <div className="documentation-aside">
                         <div className="documentation-category-title">
                             <div className="documentation-header-icon is-blue">
-                                <Icon icon="zoom-in"/>
+                                <Icon icon={<ZoomIn/>}/>
                             </div>
                             <h2>{selectedConcept.name}</h2>
                         </div>

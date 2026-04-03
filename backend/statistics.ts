@@ -1,7 +1,7 @@
-const mysql = require('mysql');
+import mysql from 'mysql';
 
 function getDB(config) {
-    return new Promise((resolve, reject) => {
+    return new Promise<mysql.Connection>((resolve, reject) => {
         const db = mysql.createConnection(config.database);
         db.connect(async function (err) {
             if (err) {
@@ -191,7 +191,7 @@ export async function logCompileData(config, logData) {
 }
 
 export function statisticsSearch({grants}, config, params) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise<{data: unknown}>(async (resolve, reject) => {
         try {
             const db = await getDB(config);
             let whereQueryParts = [];

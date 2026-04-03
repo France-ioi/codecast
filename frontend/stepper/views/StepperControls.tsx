@@ -1,6 +1,5 @@
 import React, {ReactElement, useState} from "react";
 import {Button, Intent, Slider} from "@blueprintjs/core";
-import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "../actionTypes";
 import {useDispatch} from "react-redux";
 import {StepperControlsType, stepperMaxSpeed, StepperStepMode} from "../index";
@@ -37,7 +36,7 @@ export function StepperControls(props: StepperControlsProps) {
     const dispatch = useDispatch();
     const speedDisabled = stepperControlsState.controls && 'speed' in stepperControlsState.controls && (false === stepperControlsState.controls['speed'] || '_' === stepperControlsState.controls['speed']);
 
-    const _button = (key: string, onClick: any, title: string, icon: IconName|React.JSX.Element, text?: string, classNames?: string): ReactElement => {
+    const _button = (key: string, onClick: any, title: string, icon: React.JSX.Element, text?: string, classNames?: string): ReactElement => {
         const {controls} = stepperControlsState;
 
         let disabled = false;

@@ -1,3 +1,6 @@
+// Import this to make sure ./folding/cstyle fold mode is defined
+import "ace-builds/src-min-noconflict/mode-c_cpp";
+
 window.ace.define(
     "ace/mode/archetype_highlight_rules",
     ["require", "exports", "module", "ace/lib/oop", "ace/mode/text_highlight_rules"],

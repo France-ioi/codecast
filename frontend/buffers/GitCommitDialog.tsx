@@ -1,4 +1,4 @@
-import {Button, Dialog, FormGroup, InputGroup, Intent} from "@blueprintjs/core";
+import { Button, Dialog, FormGroup, InputGroup, Intent } from "@blueprintjs/core";
 import React, {FormEvent, useState} from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from '../hooks';
@@ -7,7 +7,7 @@ import {isLocalStorageEnabled} from '../common/utils';
 import {bufferGitPush} from './buffer_actions';
 import {GitSyncParams} from './buffer_types';
 import {bufferInit} from './buffers_slice';
-import {IconNames} from '@blueprintjs/icons';
+import { Comment, User, Menu } from '@blueprintjs/icons';
 
 export function GitCommitDialog({bufferName}: {bufferName: string}) {
     const gitSync = useAppSelector(state => state.buffers.buffers[bufferName].gitSync);
@@ -31,7 +31,7 @@ export function GitCommitDialog({bufferName}: {bufferName: string}) {
 
     return (
         <Dialog
-            icon="menu"
+            icon={<Menu/>}
             title={getMessage('GIT_PUSH_LABEL')}
             isOpen={true}
             canOutsideClickClose={true}
@@ -43,7 +43,7 @@ export function GitCommitDialog({bufferName}: {bufferName: string}) {
                 <form onSubmit={doGitPush}>
                     <FormGroup labelFor='gitMessage' label={getMessage('GIT_COMMIT_MESSAGE')}>
                         <InputGroup
-                            leftIcon={IconNames.Comment}
+                            leftIcon={<Comment />}
                             type='text'
                             value={gitCommitMessage}
                             required
@@ -52,7 +52,7 @@ export function GitCommitDialog({bufferName}: {bufferName: string}) {
                     </FormGroup>
                     <FormGroup labelFor='gitUsername' label={getMessage('GIT_USERNAME')}>
                         <InputGroup
-                            leftIcon={IconNames.User}
+                            leftIcon={<User />}
                             type='text'
                             value={gitUsername}
                             required

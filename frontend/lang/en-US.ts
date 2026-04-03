@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     language: 'English',
     COMPILE: 'Compile',
     EXECUTE: 'Execute',

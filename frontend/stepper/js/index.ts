@@ -47,7 +47,13 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     const groupByCategory = selectGroupByCategory(state);
 
     const language = options.language.split('-')[0];
-    const languageTranslations = require('../../lang/blockly_' + language + '.js');
+
+    const availableLanguages = import.meta.glob('../../lang/blockly_*.ts', {
+        eager: true,
+        import: 'default',
+    });
+    const path = `../../lang/blockly_${language}.ts`;
+    const languageTranslations: any = availableLanguages[path];
     const isMobile = yield* appSelect(state => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
 
     window.goog.provide('Blockly.Msg.' + language);

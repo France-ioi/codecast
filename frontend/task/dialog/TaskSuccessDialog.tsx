@@ -7,6 +7,7 @@ import {taskLevelsList} from "../platform/platform_slice";
 import {callPlatformValidate} from '../../submission/submission_actions';
 import {taskChangeLevel} from '../task_actions';
 import {getNextLevelIndex} from '../platform/platform';
+import {SmallTick} from '@blueprintjs/icons';
 
 export interface TaskSuccessDialogProps {
     onClose: () => void,
@@ -69,7 +70,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                     ? (hasNextLevel
                         ? <>
                             <button className="simple-dialog-button" onClick={triggerNextAction}>
-                                <Icon icon="small-tick" size={24}/>
+                                <Icon icon={<SmallTick/>} size={24}/>
                                 <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                             </button>
                             {!taskSuccessStayOnCurrentVersionDisabled &&
@@ -80,7 +81,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                         </>
                         : <>
                             <button className="simple-dialog-button" onClick={triggerNextAction}>
-                                <Icon icon="small-tick" size={24}/>
+                                <Icon icon={<SmallTick/>} size={24}/>
                                 <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                             </button>
                             <button className="simple-dialog-button ml-2" onClick={props.onClose}>
@@ -89,7 +90,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                         </>
                     )
                     : <button className="simple-dialog-button" onClick={props.onClose}>
-                        <Icon icon="small-tick" size={24}/>
+                        <Icon icon={<SmallTick/>} size={24}/>
                         <span>{getMessage('OK')}</span>
                     </button>
                 }

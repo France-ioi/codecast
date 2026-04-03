@@ -1,5 +1,6 @@
 import React from "react";
 import {Intent, MenuItem} from "@blueprintjs/core";
+import {FloppyDisk, Blank} from "@blueprintjs/icons";
 
 interface SubtitlesEditorOptionProps {
     option: any,
@@ -11,7 +12,7 @@ export class SubtitlesEditorOption extends React.PureComponent<SubtitlesEditorOp
     render() {
         const {option, selected} = this.props;
         const text = <span>{option.label}</span>;
-        const icon = option.unsaved ? 'floppy-disk' : 'blank';
+        const icon = option.unsaved ? <FloppyDisk/> : <Blank/>;
         const intent = selected ? Intent.PRIMARY : Intent.NONE;
 
         return (

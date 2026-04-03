@@ -1,5 +1,4 @@
 import React, {ReactElement} from "react";
-import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
 import {StepperControlsType, StepperStepMode} from "../stepper";
@@ -36,7 +35,7 @@ export function TralalereControls(props: StepperControlsProps) {
 
     const dispatch = useDispatch();
 
-    const _button = (key: string, onClick: any, title: string, icon: IconName|React.JSX.Element, text?: string, classNames?: string): ReactElement => {
+    const _button = (key: string, onClick: any, title: string, icon: React.JSX.Element, text?: string, classNames?: string): ReactElement => {
         const {controls} = stepperControlsState;
 
         let disabled = false;

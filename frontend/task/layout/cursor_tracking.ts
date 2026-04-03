@@ -1,12 +1,11 @@
 import {useEffect, useRef} from 'react';
-import {throttle} from 'lodash';
+import throttle from 'lodash/throttle';
 import {useDispatch} from 'react-redux';
 import {CursorPosition, ActionTypes as LayoutActionTypes, CursorPoint, CursorPointRelative} from './actionTypes';
 import {useAppSelector} from '../../hooks';
 import {getRecorderState} from '../../recorder/selectors';
 import {RecorderStatus} from '../../recorder/store';
 import log from 'loglevel';
-import {getPlayerState} from '../../player/selectors';
 import scrollIntoView from "scroll-into-view-if-needed";
 
 export type ScreenPointToRecordingTransformer = (point: CursorPoint) => Partial<CursorPosition>;

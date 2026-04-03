@@ -33,7 +33,7 @@ jobs:
     - name: Copy default config file
       run: cp config.json.template config.json
     - name: Build app
-      run: webpack --mode=production
+      run: yarn build
 
   lint:
 
@@ -60,3 +60,5 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_PAT }}
     - name: Run linter
       run: yarn lint
+    - name: Run TSC
+      run: tsc --noEmit

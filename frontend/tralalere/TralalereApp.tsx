@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
 import {useAppSelector} from "../hooks";
-import {TaskLevelName, taskLevelsList} from "../task/platform/platform_slice";
+import {taskLevelsList} from "../task/platform/platform_slice";
 import {PromptModalDialog} from "../task/dialog/PromptModalDialog";
 import {ContextVisualization} from "../task/ContextVisualization";
 import {LayoutEditor} from "../task/layout/LayoutEditor";
@@ -23,7 +23,6 @@ import {taskSuccessClear} from "../task/task_slice";
 import {getMessage} from '../lang';
 import {platformTaskLink} from '../task/platform/actionTypes';
 import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
-
 import {selectAvailableHints} from '../task/hints/hints_selectors';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {taskChangeLevel} from '../task/task_actions';
@@ -35,6 +34,7 @@ import {InstructionsContext} from '../contexts';
 import {DebugDialog} from '../task/dialog/DebugDialog';
 import {getNextLevelIndex} from '../task/platform/platform';
 import { getTralalereImg } from './tralalere_assets';
+import {SmallTick} from '@blueprintjs/icons';
 
 const layoutEditorStyle = { backgroundImage: `url(${getTralalereImg('editor-cross.png')}` };
 
@@ -326,12 +326,11 @@ export function TralalereApp() {
 
                         <div className="simple-dialog-buttons mb-4">
                             <button className="tralalere-button next-button" onClick={increaseLevel}>
-                                <Icon icon="small-tick" size={24}/>
+                                <Icon icon={<SmallTick/>} size={24}/>
                                 <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                             </button>
                         </div>
                     </div>
-
                 </TralalereBox>
             </Dialog>
 

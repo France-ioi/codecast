@@ -13,7 +13,7 @@ import {
     ProgressBar,
     Spinner
 } from "@blueprintjs/core";
-import {IconNames} from "@blueprintjs/icons";
+import {User, Cross, Tick} from "@blueprintjs/icons";
 import {formatTime} from "../common/utils";
 import {ActionTypes} from "./actionTypes";
 import {useAppSelector} from "../hooks";
@@ -23,6 +23,7 @@ import {EditorSaveState} from "./index";
 import {getMessage} from "../lang";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {parseCodecastUrl} from '../common/options';
+import { CloudUpload, Edit, Link, Play } from "@blueprintjs/icons";
 
 export function EditorSave() {
     const editor = useAppSelector(state => state.editor);
@@ -104,14 +105,14 @@ export function EditorSave() {
                     <Button
                         onClick={onChangeUser}
                         intent={Intent.NONE}
-                        icon='user'
+                        icon={<User/>}
                         className="ml-2"
                         text={getMessage('USER_CHANGE_USER')}
                     />
                 </ControlGroup>
             </FormGroup>
             <div className='mt-2 mb-4'>
-                <Button onClick={_save} icon={IconNames.CLOUD_UPLOAD} text={getMessage('EDITOR_SAVE')} disabled={!canSave} intent={Intent.PRIMARY} className="mr-2"/>
+                <Button onClick={_save} icon={<CloudUpload />} text={getMessage('EDITOR_SAVE')} disabled={!canSave} intent={Intent.PRIMARY} className="mr-2"/>
             </div>
             {!canSave &&
                 <Callout intent={Intent.WARNING} title={getMessage('EDITOR_CANNOT_SAVE_TITLE')} className="mb-4">
@@ -132,13 +133,13 @@ export function EditorSave() {
                     }
                     {save.state === EditorSaveState.Failure &&
                         <div className='encoding-status fill'>
-                            <Icon icon='cross' intent={Intent.DANGER} className="mr-2" />
+                            <Cross className="mr-2 bp6-intent-danger"/>
                             {getMessage('EDITOR_SAVE_ERROR')}{save.error}
                         </div>
                     }
                     {save.state === EditorSaveState.Success &&
                         <div className='encoding-status fill'>
-                            <Icon icon='tick' intent={Intent.SUCCESS} className="mr-2" />
+                            <Tick className="mr-2 bp6-intent-success"/>
                             {getMessage('EDITOR_SAVED')}
                         </div>
                     }
@@ -148,12 +149,12 @@ export function EditorSave() {
             {playerUrl &&
                 <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')} className="mt-4">
                     <InputGroup
-                        leftIcon={IconNames.LINK}
+                        leftIcon={<Link />}
                         type='text'
                         value={playerUrl}
                         readOnly
                         onFocus={handleFocus}
-                        rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
+                        rightElement={<AnchorButton href={playerUrl} icon={<Play />} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
             }
@@ -161,12 +162,12 @@ export function EditorSave() {
             {editorUrl &&
                 <FormGroup labelFor='editorUrlInput' label={getMessage('EDITOR_LINK')} className="mt-2">
                     <InputGroup
-                        leftIcon={IconNames.LINK}
+                        leftIcon={<Link />}
                         type='text'
                         value={editorUrl}
                         readOnly
                         onFocus={handleFocus}
-                        rightElement={<AnchorButton href={editorUrl} icon={IconNames.EDIT} minimal target='_blank' rel="noreferrer"/>}
+                        rightElement={<AnchorButton href={editorUrl} icon={<Edit />} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
             }
@@ -174,12 +175,12 @@ export function EditorSave() {
             {playerUrl &&
                 <FormGroup labelFor='ltiUrlInput' label={getMessage('LTI_LINK')} className="mt-4">
                     <InputGroup
-                        leftIcon={IconNames.LINK}
+                        leftIcon={<Link />}
                         type='text'
                         value={ltiUrl}
                         readOnly
                         onFocus={handleFocus}
-                        rightElement={<AnchorButton href={ltiUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
+                        rightElement={<AnchorButton href={ltiUrl} icon={<Play />} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </FormGroup>
             }

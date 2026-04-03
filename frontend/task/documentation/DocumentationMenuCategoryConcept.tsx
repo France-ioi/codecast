@@ -5,7 +5,7 @@ import {DocumentationMenuConcept} from './DocumentationMenuConcept';
 import {faChevronDown} from '@fortawesome/free-solid-svg-icons/faChevronDown';
 import {faChevronUp} from '@fortawesome/free-solid-svg-icons/faChevronUp';
 import {Collapse} from 'react-bootstrap';
-import {Icon} from '@blueprintjs/core';
+import {Dot} from '@blueprintjs/icons';
 
 export interface DocumentationMenuCategoryConceptProps {
     category: DocumentationConcept,
@@ -21,7 +21,7 @@ export function DocumentationMenuCategoryConcept(props: DocumentationMenuCategor
             <div className="documentation-concepts-category-title" onClick={() => setExpanded(!expanded)}>
                 <div className="documentation-concepts-category-title-name">
                     <div className="documentation-tab-title">
-                        <Icon icon="dot"/>
+                        <Dot/>
                         <span>{category.name}</span>
                     </div>
                 </div>

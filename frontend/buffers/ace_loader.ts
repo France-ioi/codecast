@@ -1,3 +1,5 @@
-window.ace = require("ace-builds");
-window.ace.acequire = window.ace.require || window.ace.acequire;
-window.ace.config.set("loadWorkerFromBlob", false);
+import ace from "ace-builds";
+
+(window as any).ace = ace;
+(window as any).ace.acequire = ace.require;
+(window as any).ace.config.set("loadWorkerFromBlob", false);

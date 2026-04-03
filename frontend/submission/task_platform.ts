@@ -13,7 +13,7 @@ import {BlockDocument, BufferType} from '../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../stepper/js';
 import {extractTestsFromTask} from './tests';
 import {currentTaskChange, updateTaskTests} from '../task/task_slice';
-import merge from 'lodash.merge';
+import merge from 'lodash/merge';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();

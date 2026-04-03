@@ -1,5 +1,6 @@
 import React from "react";
 import {Button, Icon} from "@blueprintjs/core";
+import {ChevronRight, FullCircle} from "@blueprintjs/icons";
 import classnames from 'classnames';
 import {ArduinoPortPeripheralType} from "./index";
 
@@ -42,7 +43,7 @@ export class PeripheralConfig extends React.PureComponent<PeripheralConfigProps>
         return (
             <div className='arduino-peripheral'>
                 <div>
-                    <Button onClick={this.onSelectNext} disabled={readOnly} icon='chevron-right'/>
+                    <Button onClick={this.onSelectNext} disabled={readOnly} icon={<ChevronRight/>}/>
                 </div>
                 {value.type === 'none' &&
                 <p>{"—"}</p>}
@@ -50,7 +51,7 @@ export class PeripheralConfig extends React.PureComponent<PeripheralConfigProps>
                 <div className={classnames(['arduino-peri-led', readOnly || 'clickable'])}
                     onClick={this.onSelectNextLedColor}>
                     {"LED"}
-                    <Icon icon='full-circle' style={{color: colorToCss[value.color]}}/>
+                    <Icon icon={<FullCircle/>} style={{color: colorToCss[value.color]}}/>
                 </div>}
                 {value.type === 'button' &&
                 <p>{"BTN"}</p>}

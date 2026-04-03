@@ -1,5 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Button, ButtonGroup, Slider} from "@blueprintjs/core";
+import {Pause, VolumeOff, VolumeUp} from "@blueprintjs/icons";
+import {Play, Repeat} from "@blueprintjs/icons";
 import {formatTime} from "../common/utils";
 import {ActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
@@ -7,7 +9,6 @@ import {useDispatch} from "react-redux";
 import {getMessage} from "../lang";
 import {SubtitlesPopup} from "../subtitles/SubtitlesPopup";
 import {useAppSelector} from "../hooks";
-
 import {LayoutPlayerMode} from './layout/layout_types';
 
 export function PlayerControls() {
@@ -83,7 +84,7 @@ export function PlayerControls() {
                 <Button
                     onClick={onResumePlayback}
                     title={getMessage('RESUME_PLAYBACK')}
-                    icon={'play'}
+                    icon={<Play/>}
                 >
                     {getMessage('RESUME_PLAYBACK')}
                 </Button>
@@ -100,7 +101,7 @@ export function PlayerControls() {
                             onClick={onStartPlayback}
                             disabled={!canStartPlayback}
                             title={getMessage('START_PLAYBACK')}
-                            icon={isAtEnd ? 'repeat' : 'play'}
+                            icon={isAtEnd ? <Repeat/> : <Play/>}
                         />
                     }
                     {showPausePlayback &&
@@ -108,7 +109,7 @@ export function PlayerControls() {
                             onClick={onPausePlayback}
                             disabled={!canPausePlayback}
                             title={getMessage('PAUSE_PLAYBACK')}
-                            icon='pause'
+                            icon={<Pause/>}
                         />
                     }
                 </ButtonGroup>
@@ -119,14 +120,14 @@ export function PlayerControls() {
                         <Button
                             title={getMessage('SOUND_OFF')}
                             onClick={(isReady) ? () => handleMuteChange(false) : undefined}
-                            icon='volume-off'
+                            icon={<VolumeOff/>}
                             disabled={!isReady}
                         />
                         :
                         <Button
                             title={getMessage('SOUND_ON')}
                             onClick={(isReady) ? () => handleMuteChange( true) : undefined}
-                            icon='volume-up'
+                            icon={<VolumeUp/>}
                             disabled={!isReady}
                         />
                     }

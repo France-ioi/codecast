@@ -1,15 +1,15 @@
 import React from "react";
-import {Button, Checkbox} from "@blueprintjs/core";
+import { Button, Checkbox } from "@blueprintjs/core";
 import {ExpandedWaveform} from "./waveform/ExpandedWaveform";
 import {FullWaveform} from "./waveform/FullWaveform";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes"
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
-import {IconNames} from "@blueprintjs/icons";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
 import {getMessage} from "../lang";
+import { CloudUpload, SplitColumns, MergeColumns } from "@blueprintjs/icons";
 
 interface TrimEditorControlsProps {
     width: number
@@ -77,8 +77,8 @@ export function TrimEditorControls(props: TrimEditorControlsProps) {
         <div>
             <div className='hbox trim-editor-controls'>
                 <div className="trim-editor-controls-buttons">
-                    <Button onClick={addMarker} text={getMessage('EDITOR_SPLIT')} icon='split-columns'/>
-                    <Button onClick={removeMarker} text={getMessage('EDITOR_MERGE')} icon='merge-columns'/>
+                    <Button onClick={addMarker} text={getMessage('EDITOR_SPLIT')} icon={<SplitColumns/>}/>
+                    <Button onClick={removeMarker} text={getMessage('EDITOR_MERGE')} icon={<MergeColumns/>}/>
                     <div className='trim-selection-controls'>
                         <Checkbox checked={selectedInterval.value.skip} onChange={intervalSkipChanged}>
                             {getMessage('EDITOR_SKIP')}
@@ -88,7 +88,7 @@ export function TrimEditorControls(props: TrimEditorControlsProps) {
                         </Checkbox>
                     </div>
                 </div>
-                <Button onClick={save} icon={IconNames.CLOUD_UPLOAD} text={getMessage('EDITOR_SUBTITLES_SAVE')} />
+                <Button onClick={save} icon={<CloudUpload />} text={getMessage('EDITOR_SUBTITLES_SAVE')} />
             </div>
             <ExpandedWaveform
                 height={100}

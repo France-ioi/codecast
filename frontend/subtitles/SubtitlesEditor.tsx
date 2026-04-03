@@ -1,6 +1,5 @@
 import React from "react";
-import {Button, Callout, Intent, Menu, MenuItem, NonIdealState, Position, Spinner} from "@blueprintjs/core";
-import {IconNames} from "@blueprintjs/icons";
+import { Button, Callout, Intent, Menu, MenuItem, NonIdealState, Position } from "@blueprintjs/core";
 import {SubtitlesEditorOption} from "./SubtitlesEditorOption";
 import {SubtitlesEditorNewOption} from "./SubtitlesEditorNewOption";
 import Files from 'react-files';
@@ -11,6 +10,7 @@ import {SubtitlesOptions} from "./index";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
 import {getMessage} from "../lang";
+import { CloudDownload, CloudUpload, Cross, Download, Edit, Undo, Upload, Add, ArrowLeft } from "@blueprintjs/icons";
 
 interface SubtitlesEditorStateToProps {
     availableOptions: SubtitlesOptions,
@@ -59,7 +59,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                                     onSelect={this._selectOption}
                                 />
                             )}
-                            <MenuItem icon='add' text={getMessage('EDITOR_ADD_LANGUAGE')} popoverProps={{position: Position.TOP_RIGHT}}>
+                            <MenuItem icon={<Add/>} text={getMessage('EDITOR_ADD_LANGUAGE')} popoverProps={{position: Position.TOP_RIGHT}}>
                                 {langOptions.map(option =>
                                     <SubtitlesEditorNewOption
                                         key={option.value}
@@ -81,20 +81,20 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                                         accepts={this._fileAccepts}
                                         style={{display: 'inline-block'}}
                                     >
-                                        <Button icon={IconNames.UPLOAD}>{"Load"}</Button>
+                                        <Button icon={<Upload />}>{"Load"}</Button>
                                     </Files>
-                                    <Button onClick={this._saveSelected} icon={IconNames.DOWNLOAD} text={"Save"}/>
+                                    <Button onClick={this._saveSelected} icon={<Download />} text={"Save"}/>
                                     <Button
                                         onClick={this._reloadSelected}
-                                        icon={IconNames.CLOUD_DOWNLOAD}
+                                        icon={<CloudDownload />}
                                         disabled={!selected.url} text={"Revert"}
                                     />
-                                    <Button onClick={this._removeSelected} icon={IconNames.CROSS} text={'Remove'}/>
+                                    <Button onClick={this._removeSelected} icon={<Cross />} text={'Remove'}/>
                                 </div>
                             </div>
                             :
                             <NonIdealState
-                                icon='arrow-left'
+                                icon={<ArrowLeft/>}
                                 title={"No language selected"}
                                 description={"Load existing subtitles or add a new language, and click the Edit button."}
                             />
@@ -108,17 +108,17 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                             accepts={this._fileAccepts}
                             style={{display: 'inline-block'}}
                         >
-                            <Button icon={IconNames.UPLOAD}>{getMessage('EDITOR_SUBTITLES_LOAD')}</Button>
+                            <Button icon={<Upload />}>{getMessage('EDITOR_SUBTITLES_LOAD')}</Button>
                         </Files>
-                        <Button onClick={this._saveSelected} icon={IconNames.DOWNLOAD} text={getMessage('EDITOR_SUBTITLES_DOWNLOAD')}/>
+                        <Button onClick={this._saveSelected} icon={<Download />} text={getMessage('EDITOR_SUBTITLES_DOWNLOAD')}/>
                     </div>
                     <div className='buttons-bar'>
                         <Button
                             onClick={this._reloadSelected}
-                            icon={IconNames.UNDO}
+                            icon={<Undo />}
                             disabled={!selected.url} text={getMessage('EDITOR_SUBTITLES_REVERT')}
                         />
-                        <Button onClick={this._removeSelected} icon={IconNames.CROSS} text={getMessage('EDITOR_SUBTITLES_REMOVE')}/>
+                        <Button onClick={this._removeSelected} icon={<Cross />} text={getMessage('EDITOR_SUBTITLES_REMOVE')}/>
                     </div>
                 </div>
                 }
@@ -127,13 +127,13 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                         <Button
                             onClick={this._beginEdit}
                             disabled={!selected}
-                            icon={IconNames.EDIT}
+                            icon={<Edit />}
                             text={"Edit"}
                             style={{marginRight: '10px'}}
                         />
                         <Button
                             onClick={this._save}
-                            icon={IconNames.CLOUD_UPLOAD}
+                            icon={<CloudUpload />}
                             text={"Save"}
                             disabled={!canSave}
                             intent={unsaved ? Intent.PRIMARY : Intent.NONE}

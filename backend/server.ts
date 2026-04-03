@@ -7,15 +7,19 @@ import bodyParser from 'body-parser';
 import {spawn} from 'child_process';
 import AnsiToHtml from 'ansi-to-html';
 import * as upload from './upload';
-import directives from './directives';
-import Arduino from './arduino';
+import * as directives from './directives';
+import * as Arduino from './arduino';
 import oauth from './oauth';
 import startWorker from './worker';
 import {buildOptions, parseCodecastUrl} from './options';
 import addOfflineRoutes from './offline';
 import {logCompileData, logLoadingData, logUploadData, statisticsSearch} from './statistics';
+import {fileURLToPath} from 'url';
+import {dirname} from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-function buildApp(config, store, callback) {
+async function buildApp(config, store, server) {
 
     const app = express();
     const {rootDir} = config;
@@ -37,37 +41,19 @@ function buildApp(config, store, callback) {
     console.log('Is development? ', config.isDevelopment);
     console.log(`Local URL: ${config.baseUrl}/task?platform=c&ioMode=split`)
     if (config.isDevelopment) {
-        // Development route: /build is managed by webpack
-        const webpack = require('webpack');
-        const webpackConfig = require('../webpack.config.js')(undefined, {
-            mode: 'development',
-        });
-        const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-
-        webpackConfig.entry.index.unshift(`webpack-hot-middleware/client?path=${config.baseUrl}/__webpack_hmr`);
-        webpackConfig.plugins.push(new webpack.HotModuleReplacementPlugin());
-        webpackConfig.plugins.push(new ReactRefreshPlugin({
-            overlay: {
-                sockIntegration: 'whm',
+        // Development route: /build is managed by Vite
+        const { createServer: createViteServer } = await import('vite');
+        const vite = await createViteServer({
+            root: config.rootDir,
+            server: {
+                middlewareMode: true,
+                hmr: { server },
             },
-        }),);
-        const compiler = webpack(webpackConfig);
-
-        console.log('publicPath: ', webpackConfig.output.publicPath);
-
-        app.use(
-          require('webpack-dev-middleware')(compiler, {
-              publicPath: (webpackConfig.output.publicPath === '.') ? '.' : '/build/',
-              headers: {'Access-Control-Allow-Origin': '*'},
-          })
-        );
-
-        app.use(
-          require('webpack-hot-middleware')(compiler, {
-              path: '/__webpack_hmr',
-              heartbeat: 10 * 1000,
-          })
-        );
+            appType: 'custom',
+        });
+        app.use(vite.middlewares);
+        // Serve bebras-modules under /build/bebras-modules for task.pug compatibility
+        app.use('/build/bebras-modules', express.static(path.join(config.rootDir, 'bebras-modules')));
     } else {
         // Production route: /build serves static files in build/
         app.use('/build', express.static(path.join(rootDir, 'build')));
@@ -84,23 +70,15 @@ function buildApp(config, store, callback) {
 
     /* Enable OAuth2 authentification only if the database is configured. */
     if (config.database) {
-        return oauth(app, config, function (err) {
-            if (err) {
-                return callback('oauth initialization failed');
-            }
-
-            finalizeApp();
+        await new Promise<void>((resolve, reject) => {
+            oauth(app, config, (err) => err ? reject(new Error('oauth initialization failed')) : resolve());
         });
     }
 
-    function finalizeApp() {
-        addBackendRoutes(app, config, store);
-        addOfflineRoutes(app, config, store);
+    addBackendRoutes(app, config, store);
+    addOfflineRoutes(app, config, store);
 
-        callback(null, app);
-    }
-
-    finalizeApp();
+    return app;
 }
 
 function addBackendRoutes(app, config, store) {
@@ -309,10 +287,11 @@ function addBackendRoutes(app, config, store) {
             };
 
 
-            const uploads = {
-                uploadId: id
+            const uploads: any = {
+                uploadId: id,
             };
 
+            // @ts-ignore
             s3client.upload(uploadMp3PostFormOptions, function (err, _url) {
                 if (err) {
                     return res.json({error: err.toString(), uploads});
@@ -320,10 +299,12 @@ function addBackendRoutes(app, config, store) {
 
                 uploads.mp3 = 'ok';
 
+                // @ts-ignore
                 s3client.upload(uploadJsonPostFormOptions, function (err, _url) {
                     if (err) return res.json({error: err.toString(), uploads});
                     uploads.json = 'ok';
 
+                    // @ts-ignore
                     s3client.upload(uploadSrtPostFormOptions, function (err, _url) {
                         if (err) return res.json({error: err.toString(), uploads});
                         uploads.srt = 'ok';
@@ -400,7 +381,7 @@ function addBackendRoutes(app, config, store) {
     }
 
     app.post('/compile', function (req, res) {
-        const env = {LANGUAGE: 'c'};
+        const env: any = {LANGUAGE: 'c'};
         env.SYSROOT = path.join(config.rootDir, 'sysroot');
 
         let {source, platform, logData, headers} = req.body;
@@ -411,7 +392,7 @@ function addBackendRoutes(app, config, store) {
         }
 
         if (headers) {
-            for (let [header, content] of Object.entries(headers)) {
+            for (let [header, content] of Object.entries<string>(headers)) {
                 fs.writeFileSync(path.join(config.rootDir, 'sysroot/usr/include', header), content);
             }
         }
@@ -488,9 +469,9 @@ function addBackendRoutes(app, config, store) {
     });
 }
 
-fs.readFile('config.json', 'utf8', function (err, data) {
+fs.readFile('config.json', 'utf8', async function (err, data) {
     if (err) {
-        console.err('Cannot read config.json');
+        console.error('Cannot read config.json');
         process.exit(1);
     }
 
@@ -504,29 +485,31 @@ fs.readFile('config.json', 'utf8', function (err, data) {
         config.playerUrl = `${config.baseUrl}/task`;
     }
 
+    // Create server early so Vite HMR can attach to it
+    const rootApp = express();
+    let server;
+    if (config.https) {
+        const key = fs.readFileSync(config.https.key, 'utf-8');
+        const cert = fs.readFileSync(config.https.cert, 'utf-8');
+        server = https.createServer({ key, cert }, rootApp);
+    } else {
+        server = http.createServer(rootApp);
+    }
+
     const workerStore = startWorker(config);
-    buildApp(config, workerStore, function (err, app) {
-        if (err) {
-            console.log("app failed to start", err);
-            process.exit(1);
-        }
+
+    try {
+        const app = await buildApp(config, workerStore, server);
         if (config.mountPath) {
             console.log(`mounting app at ${config.mountPath}`);
-            const rootApp = express();
             rootApp.use(config.mountPath, app);
-            app = rootApp;
-        }
-
-        let server;
-        if (config.https) {
-            const key = fs.readFileSync(config.https.key, "utf-8");
-            const cert = fs.readFileSync(config.https.cert, "utf-8");
-            server = https.createServer({key, cert}, app);
         } else {
-            server = http.createServer(app);
+            rootApp.use(app);
         }
-
         server.listen(config.port);
         workerStore.dispatch({type: 'START'});
-    });
+    } catch (err) {
+        console.log('app failed to start', err);
+        process.exit(1);
+    }
 });

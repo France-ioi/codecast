@@ -1,7 +1,7 @@
 import React from 'react';
 import {DocumentationConcept, documentationConceptSelected} from "./documentation_slice";
 import {useAppSelector} from '../../hooks';
-import {Icon} from '@blueprintjs/core';
+import {Dot} from '@blueprintjs/icons';
 import {useDispatch} from 'react-redux';
 
 export interface DocumentationMenuConceptProps {
@@ -21,12 +21,12 @@ export function DocumentationMenuConcept(props: DocumentationMenuConceptProps) {
         <React.Fragment key={concept.id}>
             {selectedConceptId === concept.id ? <div className={`documentation-tab-left is-active`}>
                 <div className="documentation-tab-title">
-                    <Icon icon="dot"/>
+                    <Dot/>
                     <span>{concept.name}</span>
                 </div>
             </div> : <a className={`documentation-tab-left`} onClick={() => selectConcept(concept)}>
                 <div className="documentation-tab-title">
-                    <Icon icon="dot"/>
+                    <Dot/>
                     <span>{concept.name}</span>
                 </div>
             </a>}

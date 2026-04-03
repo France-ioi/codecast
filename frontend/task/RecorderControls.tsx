@@ -1,5 +1,6 @@
 import React from "react";
 import {Button, ButtonGroup, Dialog, Icon, Slider} from "@blueprintjs/core";
+import {Play, Pause, Stop, Time, Record} from "@blueprintjs/icons";
 import {formatTime} from "../common/utils";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -16,9 +17,7 @@ import {Vumeter} from "../recorder/Vumeter";
 import {useAppSelector} from "../hooks";
 import {SaveStep} from "../recorder/save_screen";
 import {getMessage} from "../lang";
-import {LayoutPlayerMode} from './layout/layout_types';
 import {CursorPosition} from './layout/CursorPosition';
-import {SubtitlesBand} from '../subtitles/SubtitlesBand';
 
 interface RecorderControlsProps {
     enabled?: boolean
@@ -93,27 +92,27 @@ export function RecorderControls(props: RecorderControlsProps) {
                         onClick={onStartRecording}
                         disabled={!canRecord}
                         title={getMessage('START_RECORDING')}
-                        icon={<Icon icon='record' color='#ff001f'/>}
+                        icon={<Record color='#ff001f'/>}
                     />
                     {playPause === 'play' ?
                         <Button
                             onClick={onStartPlayback}
                             disabled={!canPlay}
                             title={getMessage('START_PLAYBACK')}
-                            icon='play'
+                            icon={<Play/>}
                         />
                         :
                         <Button
                             onClick={onPause}
                             disabled={!canPause}
                             title={getMessage('PAUSE_PLAYBACK')}
-                            icon='pause'
+                            icon={<Pause/>}
                         />
                     }
                     <Button
                         onClick={onStopRecording}
                         disabled={!canStop}
-                        icon='stop'
+                        icon={<Stop/>}
                         title={getMessage('SAVE_RECORDING')}
                     />
                 </ButtonGroup>
@@ -127,7 +126,7 @@ export function RecorderControls(props: RecorderControlsProps) {
                 </div>
             }
             <div className="controls-time">
-                <Icon icon='time'/>
+                <Icon icon={<Time/>}/>
                 <span style={{marginLeft: '4px'}}>
                     {formatTime(position)}
                 </span>

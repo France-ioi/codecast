@@ -1,27 +1,11 @@
 import {QuickalgoTask} from '../../task_types';
 
-const images = [
-    {path: require('./box.png')},
-    {path: require('./icon.png')},
-    {path: require('./green_robot.png')},
-    {path: require('./marker.png')},
-    {path: require('./wall.png')},
-    {path: require('./test_easy_1.png')},
-    {path: require('./test_easy_2.png')},
-    {path: require('./test_easy_3.png')},
-    {path: require('./test_medium_1.png')},
-    {path: require('./test_medium_2.png')},
-    {path: require('./test_medium_3.png')},
-    {path: require('./test_hard_1.png')},
-    {path: require('./test_hard_2.png')},
-    {path: require('./test_hard_3.png')},
-    {path: require('./slides/diapo_01_blockly.png')},
-    {path: require('./slides/diapo_02_blockly.png')},
-    {path: require('./slides/diapo_03.png')},
-    {path: require('./slides/diapo_04.png')},
-    {path: require('./slides/diapo_05.png')},
-    {path: require('./slides/diapo_06.png')},
-];
+const assets: Record<string, string> = import.meta.glob('./**/*.{png,svg,jpg}', {
+    eager: true,
+    import: 'default'
+});
+
+const images = Object.values(assets).map((path) => ({ path }));
 
 export default {
     gridInfos: {

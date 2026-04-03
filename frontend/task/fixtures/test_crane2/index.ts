@@ -1,31 +1,11 @@
 import {QuickalgoTask} from '../../task_types';
 
-const images = [
-    {path: require('./icon.png')},
-    {path: require('./crane.png')},
-    {path: require('./crane.svg')},
-    {path: require('./assets/png/01.png')},
-    {path: require('./assets/png/02.png')},
-    {path: require('./assets/png/03.png')},
-    {path: require('./assets/png/04.png')},
-    {path: require('./assets/png/05.png')},
-    {path: require('./assets/png/06.png')},
-    {path: require('./assets/png/07.png')},
-    {path: require('./assets/png/08.png')},
-    {path: require('./assets/png/09.png')},
-    {path: require('./assets/png/10.png')},
-    {path: require('./assets/png/11.png')},
-    {path: require('./assets/png/hidden_01.png')},
-    {path: require('./assets/png/hidden_02.png')},
-    {path: require('./assets/png/hidden_03.png')},
-    {path: require('./assets/png/hidden_04.png')},
-    {path: require('./assets/png/hidden_05.png')},
-    {path: require('./assets/png/hidden_06.png')},
-    {path: require('./assets/png/hidden_07.png')},
-    {path: require('./assets/png/hidden_08.png')},
-    {path: require('./assets/png/hidden_09.png')},
-    {path: require('./assets/png/overlay.png')},
-];
+const assets: Record<string, string> = import.meta.glob('./**/*.{png,svg,jpg}', {
+    eager: true,
+    import: 'default'
+});
+
+const images = Object.values(assets).map((path) => ({ path }));
 
 export default {
     gridInfos: {

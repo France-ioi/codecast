@@ -3,7 +3,7 @@ import {ZoneLayout} from "./ZoneLayout";
 import {TaskInstructions} from "../TaskInstructions";
 import {ContextVisualization} from "../ContextVisualization";
 import {DOMParser} from 'xmldom';
-import React, {createElement, ReactElement, ReactNode} from 'react';
+import React, {createElement, ReactElement} from 'react';
 import {AppStore, CodecastOptions} from "../../store";
 import {ControlsAndErrors} from "../ControlsAndErrors";
 import {Bundle} from "../../linker";
@@ -35,6 +35,7 @@ import {App} from '../../app_types';
 import {quickAlgoLibraries, QuickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ReplayContext} from '../../player/sagas';
 import {TaskSolution} from '../TaskSolution';
+import {Edit, Document, Console, Code, Help} from '@blueprintjs/icons';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -91,7 +92,7 @@ export interface LayoutProps {
 export interface LayoutElementMetadata {
     id?: string,
     title?: string,
-    icon?: string,
+    icon?: React.JSX.Element,
     overflow?: boolean|string,
     desiredSize?: string,
     stackingOrientation?: RelativeLayoutOrientation,
@@ -648,7 +649,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
             metadata: {
                 id: 'editor',
                 title: getMessage('TASK_EDITOR'),
-                icon: 'edit',
+                icon: <Edit/>,
                 ...attrs,
             },
         }),
@@ -658,7 +659,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 metadata: {
                     id: 'instructions',
                     title: getMessage('TASK_DESCRIPTION'),
-                    icon: 'document',
+                    icon: <Document/>,
                     ...attrs,
                 },
             })
@@ -669,7 +670,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 metadata: {
                     id: 'io',
                     title: getMessage('TASK_IO'),
-                    icon: 'console',
+                    icon: <Console/>,
                     ...attrs,
                 },
             })
@@ -680,7 +681,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 metadata: {
                     id: 'variables',
                     title: getMessage('TASK_VARIABLES'),
-                    icon: 'code',
+                    icon: <Code/>,
                     ...attrs,
                 },
             }),
@@ -690,7 +691,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
             metadata: {
                 id: 'doc',
                 title: getMessage('TASK_DOCUMENTATION'),
-                icon: 'help',
+                icon: <Help/>,
                 ...attrs,
             },
         }),
@@ -710,8 +711,10 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }
     }
 
+    const layouts = import.meta.glob<string>('./*.xml', { eager: true, query: '?raw', import: 'default' });
+
     const layout = layoutProps.layoutRequiredType ? layoutProps.layoutRequiredType + '.xml' : getAppropriateXmlLayout(layoutProps.layoutType, layoutProps.layoutMobileMode);
-    let layoutXml = require('./' + layout).default;
+    let layoutXml = layouts[`./${layout}`];
     const documentationOpen = Screen.DocumentationSmall === layoutProps.screen || Screen.DocumentationBig === layoutProps.screen;
     if (documentationOpen && (layoutProps.layoutType === LayoutType.MobileHorizontal || layoutProps.layoutType === LayoutType.MobileVertical || Screen.DocumentationBig === layoutProps.screen)) {
         layoutXml = '<Documentation/>';

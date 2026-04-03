@@ -1,4 +1,5 @@
 import {Dialog, Icon} from "@blueprintjs/core";
+import {SmallTick} from "@blueprintjs/icons";
 import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
@@ -108,7 +109,7 @@ export function PromptModalDialog() {
                 {ModalType.dialog !== modalData.mode && ModalType.keypad !== modalData.mode &&
                     <div className="simple-dialog-buttons">
                         <button type="submit" className="simple-dialog-button">
-                            <Icon icon="small-tick" size={24}/>
+                            <Icon icon={<SmallTick/>} size={24}/>
                             <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText || ModalType.input === modalData.mode ? 'VALIDATE' : 'ALRIGHT'))}</span>
                         </button>
 

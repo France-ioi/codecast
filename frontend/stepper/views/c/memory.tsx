@@ -27,11 +27,11 @@ Document:
 import React from 'react';
 import Slider from 'rc-slider';
 import {Button, ButtonGroup} from '@blueprintjs/core';
+import {ArrowLeft, ArrowRight} from '@blueprintjs/icons';
 import classnames from 'classnames';
 import range from 'node-range';
 import * as C from '@france-ioi/persistent-c';
 import adt from 'adt';
-
 import {evalExpr, getList, getNumber, renderArrow, renderValue} from './utils';
 import {finalizeCursors, getCursorMap} from './array_utils';
 import {enumerateHeapBlocks} from '../../c/heap';
@@ -306,9 +306,9 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
                     </div>
                     <span style={{verticalAlign: '6px', marginRight: '2px'}}>
                         <ButtonGroup>
-                            <Button small onClick={this.onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')} icon='arrow-left'/>
+                            <Button small onClick={this.onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')} icon={<ArrowLeft/>}/>
                             <Button small onClick={this.onShiftRight} title={getMessage('MEMORY_SHIFT_VIEW_RIGHT')}
-                                icon='arrow-right'/>
+                                icon={<ArrowRight/>}/>
                         </ButtonGroup>
                     </span>
                 </div>

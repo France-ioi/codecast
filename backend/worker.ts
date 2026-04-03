@@ -17,6 +17,7 @@ function reducer(state, action) {
 
 function* mainSaga() {
     yield take('START');
+    // @ts-ignore
     yield takeEvery('SAVE', saveSaga);
 }
 

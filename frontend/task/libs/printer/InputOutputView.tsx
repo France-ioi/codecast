@@ -1,6 +1,6 @@
 import React from "react";
 import {Card} from 'react-bootstrap'
-import {Icon} from "@blueprintjs/core";
+import {Lock} from "@blueprintjs/icons";
 import {getMessage} from "../../../lang";
 import {useAppSelector} from '../../../hooks';
 import {Editor} from '../../../buffers/Editor';
@@ -42,7 +42,7 @@ export function InputOutputView() {
             {!(taskState && taskState.unknownInput) && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INPUT")}
-                    {!currentTestEditable && <Icon icon='lock'/>}
+                    {!currentTestEditable && <Lock/>}
                 </Card.Header>
                 <Card.Body>
                     {/*Use a buffer to allow recording cursor moves here*/}
@@ -60,7 +60,7 @@ export function InputOutputView() {
             {currentTask && <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_INITIAL_OUTPUT")}
-                    {!currentTestEditable && <Icon icon='lock'/>}
+                    {!currentTestEditable && <Lock/>}
                 </Card.Header>
                 <Card.Body>
                     {!currentTestEditable ?
@@ -90,7 +90,7 @@ export function InputOutputView() {
             <Card>
                 <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_OUTPUT")}
-                    <Icon icon='lock'/>
+                    <Lock/>
                 </Card.Header>
                 <Card.Body>
                     {taskState ?

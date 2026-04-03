@@ -6,7 +6,7 @@ import editURL from 'edit-url';
 import {buildCommonOptions} from './options';
 import {parseSync} from "subtitle";
 
-const request = require('request');
+import request from 'request';
 
 export default function (app, config, store) {
     app.use('/offline.zip', express.static(path.join(config.rootDir, 'offline.zip')));

@@ -6,7 +6,7 @@ import {asyncRequestJson} from '../utils/api';
 import {uploadBlobChannel} from '../utils/blobs';
 import {CodecastWorker, spawnWorker} from '../utils/worker_utils';
 // @ts-ignore
-import AudioWorker from '../audio_worker/index.worker';
+import AudioWorker from '../audio_worker/index.worker?worker';
 import {IntervalTree, TrimInterval} from './interval_tree';
 import {findInstantIndex} from '../player/utils';
 import {findSubtitleIndex} from '../subtitles/utils';

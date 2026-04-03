@@ -4,6 +4,8 @@ import {getMessage} from "../lang";
 import {useAppSelector} from "../hooks";
 import {AppStore} from "../store";
 import {RECORDING_FORMAT_VERSION} from '../version';
+import dartmouthLogo from './about/logo_dartmouth.png';
+import telecomLogo from './about/logo_telecom_paris_tech.png';
 
 export const selectDisplayAbout = (state: AppStore) => {
     return state.task.currentTask || (state.player && state.player.data && state.player.data.version && Number(state.player.data.version.split('.')[0]) < 7);
@@ -27,8 +29,8 @@ export function TaskAbout() {
             <div className="task-license">
                 <p>Content authored by Petra Bonfert-Taylor (Dartmouth College) and Rémi Sharrock (Télécom Paris) under Creative Commons CC BY-NC-SA 3.0 license.</p>
 
-                <img src={require('./about/logo_dartmouth.png').default}/>
-                <img src={require('./about/logo_telecom_paris_tech.png').default}/>
+                <img src={dartmouthLogo} />
+                <img src={telecomLogo} />
 
                 <hr/>
 

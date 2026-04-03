@@ -1,8 +1,7 @@
 import {NodeCue} from "subtitle";
 import React from "react";
 import {formatTimeLong} from "../../common/utils";
-import {Icon} from "@blueprintjs/core";
-import {IconNames} from "@blueprintjs/icons";
+import { ArrowRight } from "@blueprintjs/icons";
 
 interface SubtitlePaneItemViewerProps {
     item: NodeCue,
@@ -21,7 +20,7 @@ export class SubtitlePaneItemViewer extends React.PureComponent<SubtitlePaneItem
                         <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
                     </div>
                     <div>
-                        <Icon icon={IconNames.ARROW_RIGHT} size={14}/>
+                        <ArrowRight size={14} />
                     </div>
                     <div className='subtitles-timestamp-start-end'>
                         <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>

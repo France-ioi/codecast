@@ -12,7 +12,7 @@ import {BlockType} from '../task/blocks/block_types';
 import {bufferClearBlocksToInsert, bufferClearDeltasToApply, bufferClearGoToEnd} from './buffers_slice';
 import {batch, useDispatch} from 'react-redux';
 import {documentToString} from './document';
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
 import {useCursorPositionTracking} from '../task/layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from '../task/layout/actionTypes';
 import {ComputedSourceHighlight, SourceHighlightRange} from '../stepper';
