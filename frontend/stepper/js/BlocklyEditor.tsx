@@ -66,7 +66,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             context.blocklyHelper.loadPrograms();
             context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
             if (0 === context.blocklyHelper.programs[0].blocklyJS.trim().length) {
-                throw new Error("The reloaded answer is empty");
+                // TODO Blockly: re-enable this warning
+                // throw new Error("The reloaded answer is empty");
             }
         } catch (e) {
             console.error(e);
@@ -311,6 +312,10 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         if (selection === selectedBlockId.current || context.blocklyHelper?.scratchMode) {
             return;
         }
+
+        // TODO Blockly: Change Blockly selected block
+
+        return;
 
         window.Blockly.selected = null;
 

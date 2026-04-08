@@ -161,7 +161,8 @@ export class BlocklyHelper {
     load(locale, display, nbTestCases, options) {
         this.unloaded = false;
 
-        window.FioiBlockly.loadLanguage(locale);
+        // TODO Blockly: re-enable FioiBlockly
+        // window.FioiBlockly.loadLanguage(locale);
 
         if (this.scratchMode) {
             this.fixScratch();
@@ -175,15 +176,17 @@ export class BlocklyHelper {
             this.strings.startingBlockName = options.startingBlockName;
         }
 
-        if (options.maxListSize) {
-            window.FioiBlockly.maxListSize = options.maxListSize;
-        }
+        // TODO Blockly: re-enable FioiBlockly
+        // if (options.maxListSize) {
+        //     window.FioiBlockly.maxListSize = options.maxListSize;
+        // }
         this.placeholderBlocks = options.placeholderBlocks;
 
         this.options = options;
 
-        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
-        this.createSimpleGeneratorsAndBlocks();
+        // TODO Blockly: write code generators
+        // addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
+        // this.createSimpleGeneratorsAndBlocks();
 
         this.display = display;
 
@@ -229,7 +232,8 @@ export class BlocklyHelper {
             }
 
             // Clean events if the previous unload wasn't done properly
-            window.Blockly.removeEvents();
+            // TODO Blockly: events
+            // window.Blockly.removeEvents();
 
             // Inject Blockly
             this.workspace = window.Blockly.inject(this.divId, wsConfig);
@@ -263,12 +267,13 @@ export class BlocklyHelper {
             this.programs[iCode] = {blockly: null, blocklyJS: "", blocklyPython: "", javascript: ""};
             this.languages[iCode] = "blockly";
             this.setCodeId(iCode);
-            if (this.startingBlock || options.startingExample) {
-                let xml = this.getDefaultContent();
-                window.Blockly.Events.recordUndo = false;
-                window.Blockly.Xml.domToWorkspace(window.Blockly.Xml.textToDom(xml), this.workspace);
-                window.Blockly.Events.recordUndo = true;
-            }
+            // TODO Blockly: 2-way sync
+            // if (this.startingBlock || options.startingExample) {
+            //     let xml = this.getDefaultContent();
+            //     window.Blockly.Events.recordUndo = false;
+            //     window.Blockly.Xml.domToWorkspace(window.Blockly.Xml.textToDom(xml), this.workspace);
+            //     window.Blockly.Events.recordUndo = true;
+            // }
             this.savePrograms();
         }
 
@@ -337,7 +342,8 @@ export class BlocklyHelper {
 
     setAvailableBlocks(availableBlocks: Block[]) {
         this.availableBlocks = availableBlocks;
-        this.createGeneratorsAndBlocksForAvailableBlocks();
+        // TODO Blocky: write code generators
+        // this.createGeneratorsAndBlocksForAvailableBlocks();
     }
 
     getEmptyContent() {
@@ -385,6 +391,9 @@ export class BlocklyHelper {
     }
 
     savePrograms() {
+        // TODO Blockly: 2-way sync
+        return;
+
         if (this.unloaded) {
             console.error('savePrograms called after unload');
             return;
@@ -420,6 +429,9 @@ export class BlocklyHelper {
     }
 
     loadPrograms() {
+        // TODO Blockly: 2-way sync
+        return;
+
         if (this.workspace != null) {
             let xml = window.Blockly.Xml.textToDom(this.programs[this.codeId].blockly);
             this.workspace.clear();
@@ -649,6 +661,9 @@ export class BlocklyHelper {
     }
 
     getCode(language, codeWorkspace = undefined, noReportValue = false, noConstraintCheck = false) {
+        // TODO Blockly: write code generators
+        return '';
+
         if (codeWorkspace == undefined) {
             codeWorkspace = this.workspace;
         }
@@ -1088,8 +1103,9 @@ export class BlocklyHelper {
 
 
     getDefaultColours() {
-        window.Blockly.HSV_SATURATION = 0.65;
-        window.Blockly.HSV_VALUE = 0.80;
+        //TODO Blockly: Blockly.utils.colour.setHsvSaturation
+        // window.Blockly.HSV_SATURATION = 0.65;
+        // window.Blockly.HSV_VALUE = 0.80;
         let colours = {
             categories: {
                 actuator: 212,
@@ -1197,6 +1213,9 @@ export class BlocklyHelper {
     }
 
     getToolboxXml() {
+        // TODO Blockly: define toolbox
+        return ``;
+
         let categoriesInfos = {};
         let colours = this.getDefaultColours();
 
