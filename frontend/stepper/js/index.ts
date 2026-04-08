@@ -17,6 +17,8 @@ import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
 import {BlocklyHelper} from './blockly_helper';
 import * as Blockly from 'blockly/core';
+import 'blockly/blocks';
+import 'blockly/javascript';
 
 // TODO Blockly: don't expose Blockly to all window
 window.Blockly = Blockly;
