@@ -1214,7 +1214,75 @@ export class BlocklyHelper {
 
     getToolboxXml() {
         // TODO Blockly: define toolbox
-        return ``;
+        return ` <!-- Logic -->
+  <category name="Logic" colour="%{BKY_LOGIC_HUE}">
+    <block type="controls_if"></block>
+    <block type="logic_compare"></block>
+    <block type="logic_operation"></block>
+    <block type="logic_boolean"></block>
+    <block type="logic_negate"></block>
+  </category>
+
+  <!-- Loops -->
+  <category name="Loops" colour="%{BKY_LOOPS_HUE}">
+    <block type="controls_repeat_ext">
+      <value name="TIMES">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="controls_whileUntil"></block>
+    <block type="controls_for">
+      <value name="FROM">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="TO">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+      <value name="BY">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="controls_flow_statements"></block>
+  </category>
+
+  <!-- Math -->
+  <category name="Math" colour="%{BKY_MATH_HUE}">
+    <block type="math_number"></block>
+    <block type="math_arithmetic"></block>
+    <block type="math_single"></block>
+    <block type="math_round"></block>
+    <block type="math_random_int"></block>
+  </category>
+
+  <!-- Text -->
+  <category name="Text" colour="%{BKY_TEXTS_HUE}">
+    <block type="text"></block>
+    <block type="text_join"></block>
+    <block type="text_length"></block>
+    <block type="text_print"></block>
+  </category>
+
+  <!-- Lists -->
+  <category name="Lists" colour="%{BKY_LISTS_HUE}">
+    <block type="lists_create_with"></block>
+    <block type="lists_length"></block>
+    <block type="lists_getIndex"></block>
+    <block type="lists_setIndex"></block>
+  </category>
+
+  <!-- Variables -->
+  <category name="Variables" colour="%{BKY_VARIABLES_HUE}" custom="VARIABLE"></category>
+
+  <!-- Functions -->
+  <category name="Functions" colour="%{BKY_PROCEDURES_HUE}" custom="PROCEDURE"></category>`;
 
         let categoriesInfos = {};
         let colours = this.getDefaultColours();
