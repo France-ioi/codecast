@@ -342,8 +342,7 @@ export class BlocklyHelper {
 
     setAvailableBlocks(availableBlocks: Block[]) {
         this.availableBlocks = availableBlocks;
-        // TODO Blocky: write code generators
-        // this.createGeneratorsAndBlocksForAvailableBlocks();
+        this.createGeneratorsAndBlocksForAvailableBlocks();
     }
 
     getEmptyContent() {
@@ -1094,8 +1093,9 @@ export class BlocklyHelper {
             this.completeBlockHandler(blockInfo, generatorName, this.mainContext);
             this.completeBlockJson(blockInfo, generatorName, category, this.mainContext); /* category.category is category name */
             this.completeBlockXml(blockInfo);
-            this.completeCodeGenerators(blockInfo, generatorName);
-            this.applyCodeGenerators(blockInfo);
+            // TODO Blockly: write code geneators
+            // this.completeCodeGenerators(blockInfo, generatorName);
+            // this.applyCodeGenerators(blockInfo);
             this.createBlock(blockInfo);
             this.applyBlockOptions(blockInfo);
         }
@@ -1128,18 +1128,18 @@ export class BlocklyHelper {
             blocks: {}
         };
 
-        if (typeof this.mainContext.provideBlocklyColours == "function") {
-            let providedColours = this.mainContext.provideBlocklyColours();
-
-            for (let group in providedColours) {
-                if (!(group in colours)) {
-                    colours[group] = {};
-                }
-                for (let name in providedColours[group]) {
-                    colours[group][name] = providedColours[group][name];
-                }
-            }
-        }
+        // if (typeof this.mainContext.provideBlocklyColours == "function") {
+        //     let providedColours = this.mainContext.provideBlocklyColours();
+        //
+        //     for (let group in providedColours) {
+        //         if (!(group in colours)) {
+        //             colours[group] = {};
+        //         }
+        //         for (let name in providedColours[group]) {
+        //             colours[group][name] = providedColours[group][name];
+        //         }
+        //     }
+        // }
 
         return colours;
     }
@@ -1207,89 +1207,21 @@ export class BlocklyHelper {
         if (!this.scratchMode) {
             let defCat = ["logic", "loops", "math", "texts", "lists", "colour"];
             for (let iCat in defCat) {
-                window.Blockly.Blocks[defCat[iCat]].HUE = colours.categories[defCat[iCat]];
+                // TODO Blockly: colors
+                // window.Blockly.Blocks[defCat[iCat]].HUE = colours.categories[defCat[iCat]];
             }
         }
     }
 
     getToolboxXml() {
         // TODO Blockly: define toolbox
-        return ` <!-- Logic -->
-  <category name="Logic" colour="%{BKY_LOGIC_HUE}">
-    <block type="controls_if"></block>
-    <block type="logic_compare"></block>
-    <block type="logic_operation"></block>
-    <block type="logic_boolean"></block>
-    <block type="logic_negate"></block>
-  </category>
-
-  <!-- Loops -->
-  <category name="Loops" colour="%{BKY_LOOPS_HUE}">
-    <block type="controls_repeat_ext">
-      <value name="TIMES">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="controls_whileUntil"></block>
-    <block type="controls_for">
-      <value name="FROM">
-        <shadow type="math_number">
-          <field name="NUM">1</field>
-        </shadow>
-      </value>
-      <value name="TO">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-      <value name="BY">
-        <shadow type="math_number">
-          <field name="NUM">1</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="controls_flow_statements"></block>
-  </category>
-
-  <!-- Math -->
-  <category name="Math" colour="%{BKY_MATH_HUE}">
-    <block type="math_number"></block>
-    <block type="math_arithmetic"></block>
-    <block type="math_single"></block>
-    <block type="math_round"></block>
-    <block type="math_random_int"></block>
-  </category>
-
-  <!-- Text -->
-  <category name="Text" colour="%{BKY_TEXTS_HUE}">
-    <block type="text"></block>
-    <block type="text_join"></block>
-    <block type="text_length"></block>
-    <block type="text_print"></block>
-  </category>
-
-  <!-- Lists -->
-  <category name="Lists" colour="%{BKY_LISTS_HUE}">
-    <block type="lists_create_with"></block>
-    <block type="lists_length"></block>
-    <block type="lists_getIndex"></block>
-    <block type="lists_setIndex"></block>
-  </category>
-
-  <!-- Variables -->
-  <category name="Variables" colour="%{BKY_VARIABLES_HUE}" custom="VARIABLE"></category>
-
-  <!-- Functions -->
-  <category name="Functions" colour="%{BKY_PROCEDURES_HUE}" custom="PROCEDURE"></category>`;
 
         let categoriesInfos = {};
         let colours = this.getDefaultColours();
 
         // Reset the flyoutOptions for the variables and the procedures
-        window.Blockly.Variables.resetFlyoutOptions();
-        window.Blockly.Procedures.resetFlyoutOptions();
+        // window.Blockly.Variables.resetFlyoutOptions();
+        // window.Blockly.Procedures.resetFlyoutOptions();
 
         // Initialize allBlocksAllowed
         this.allBlocksAllowed = [];
@@ -1323,7 +1255,7 @@ export class BlocklyHelper {
             if (!this.scratchMode) {
                 let defCat = ["logic", "loops", "math", "texts", "lists", "colour"];
                 for (let iCat in defCat) {
-                    window.Blockly.Blocks[defCat[iCat]].HUE = colours.categories[defCat[iCat]];
+                    // window.Blockly.Blocks[defCat[iCat]].HUE = colours.categories[defCat[iCat]];
                 }
             }
         }
@@ -1424,13 +1356,13 @@ export class BlocklyHelper {
                     blocksXml: []
                 };
             }
-            if (categoryName == 'variables') {
-                window.Blockly.Variables.flyoutOptions.any = true;
-                continue;
-            } else if (categoryName == 'functions') {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks = {noret: true, ret: true, ifret: true, noifret: true};
-                continue;
-            }
+            // if (categoryName == 'variables') {
+            //     window.Blockly.Variables.flyoutOptions.any = true;
+            //     continue;
+            // } else if (categoryName == 'functions') {
+            //     window.Blockly.Procedures.flyoutOptions.includedBlocks = {noret: true, ret: true, ifret: true, noifret: true};
+            //     continue;
+            // }
             let blocks = stdBlocks[categoryName];
             if (blocks) {
                 if (!(blocks instanceof Array)) { // just for now, maintain backwards compatibility
@@ -1448,114 +1380,114 @@ export class BlocklyHelper {
             }
         }
 
-        let proceduresOptions = this.includeBlocks.procedures;
-        if (typeof proceduresOptions !== 'undefined') {
-            if (proceduresOptions.noret) {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks['noret'] = true;
-            }
-            if (proceduresOptions.ret) {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks['ret'] = true;
-            }
-            if (proceduresOptions.ifret) {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks['ifret'] = true;
-            }
-            if (proceduresOptions.noifret) {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks['noifret'] = true;
-            }
-            window.Blockly.Procedures.flyoutOptions.disableArgs = !!proceduresOptions.disableArgs;
-        }
-
-        let singleBlocks = stdInclude.singleBlocks;
-        for (let iBlock = 0; iBlock < singleBlocks.length; iBlock++) {
-            let blockName = singleBlocks[iBlock];
-            if (blockName == 'procedures_defnoreturn') {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks['noret'] = true;
-            } else if (blockName == 'procedures_defreturn') {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks['ret'] = true;
-            } else if (blockName == 'procedures_ifreturn') {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks['ifret'] = true;
-            } else if (blockName == 'procedures_return') {
-                window.Blockly.Procedures.flyoutOptions.includedBlocks['noifret'] = true;
-            } else {
-                continue;
-            }
-            // If we're here, a block has been found
-            this.addBlocksAllowed([blockName, 'procedures_callnoreturn', 'procedures_callreturn']);
-            singleBlocks.splice(iBlock, 1);
-            iBlock--;
-        }
-        if (window.Blockly.Procedures.flyoutOptions.includedBlocks['noret']
-            || window.Blockly.Procedures.flyoutOptions.includedBlocks['ret']
-            || window.Blockly.Procedures.flyoutOptions.includedBlocks['ifret']
-            || window.Blockly.Procedures.flyoutOptions.includedBlocks['noifret']) {
-            if (window.Blockly.Procedures.flyoutOptions.includedBlocks['noret']) {
-                this.addBlocksAllowed(['procedures_defnoreturn', 'procedures_callnoreturn']);
-            }
-            if (window.Blockly.Procedures.flyoutOptions.includedBlocks['ret']) {
-                this.addBlocksAllowed(['procedures_defreturn', 'procedures_callreturn']);
-            }
-            if (window.Blockly.Procedures.flyoutOptions.includedBlocks['ifret']) {
-                this.addBlocksAllowed(['procedures_ifreturn', 'procedures_return']);
-            }
-            if (window.Blockly.Procedures.flyoutOptions.includedBlocks['noifret']) {
-                this.addBlocksAllowed(['procedures_return']);
-            }
-            categoriesInfos['functions'] = {
-                blocksXml: []
-            };
-            if (this.scratchMode && !window.arrayContains(singleBlocks, 'math_number')) {
-                singleBlocks.push('math_number'); // TODO :: temporary
-            }
-            if (!this.groupByCategory) {
-                console.error('Task configuration error: groupByCategory must be activated for functions.');
-            }
-        }
-        this.addBlocksAndCategories(singleBlocks, stdBlocks, categoriesInfos);
+        // let proceduresOptions = this.includeBlocks.procedures;
+        // if (typeof proceduresOptions !== 'undefined') {
+        //     if (proceduresOptions.noret) {
+        //         window.Blockly.Procedures.flyoutOptions.includedBlocks['noret'] = true;
+        //     }
+        //     if (proceduresOptions.ret) {
+        //         window.Blockly.Procedures.flyoutOptions.includedBlocks['ret'] = true;
+        //     }
+        //     if (proceduresOptions.ifret) {
+        //         window.Blockly.Procedures.flyoutOptions.includedBlocks['ifret'] = true;
+        //     }
+        //     if (proceduresOptions.noifret) {
+        //         window.Blockly.Procedures.flyoutOptions.includedBlocks['noifret'] = true;
+        //     }
+        //     window.Blockly.Procedures.flyoutOptions.disableArgs = !!proceduresOptions.disableArgs;
+        // }
+        //
+        // let singleBlocks = stdInclude.singleBlocks;
+        // for (let iBlock = 0; iBlock < singleBlocks.length; iBlock++) {
+        //     let blockName = singleBlocks[iBlock];
+        //     if (blockName == 'procedures_defnoreturn') {
+        //         window.Blockly.Procedures.flyoutOptions.includedBlocks['noret'] = true;
+        //     } else if (blockName == 'procedures_defreturn') {
+        //         window.Blockly.Procedures.flyoutOptions.includedBlocks['ret'] = true;
+        //     } else if (blockName == 'procedures_ifreturn') {
+        //         window.Blockly.Procedures.flyoutOptions.includedBlocks['ifret'] = true;
+        //     } else if (blockName == 'procedures_return') {
+        //         window.Blockly.Procedures.flyoutOptions.includedBlocks['noifret'] = true;
+        //     } else {
+        //         continue;
+        //     }
+        //     // If we're here, a block has been found
+        //     this.addBlocksAllowed([blockName, 'procedures_callnoreturn', 'procedures_callreturn']);
+        //     singleBlocks.splice(iBlock, 1);
+        //     iBlock--;
+        // }
+        // if (window.Blockly.Procedures.flyoutOptions.includedBlocks['noret']
+        //     || window.Blockly.Procedures.flyoutOptions.includedBlocks['ret']
+        //     || window.Blockly.Procedures.flyoutOptions.includedBlocks['ifret']
+        //     || window.Blockly.Procedures.flyoutOptions.includedBlocks['noifret']) {
+        //     if (window.Blockly.Procedures.flyoutOptions.includedBlocks['noret']) {
+        //         this.addBlocksAllowed(['procedures_defnoreturn', 'procedures_callnoreturn']);
+        //     }
+        //     if (window.Blockly.Procedures.flyoutOptions.includedBlocks['ret']) {
+        //         this.addBlocksAllowed(['procedures_defreturn', 'procedures_callreturn']);
+        //     }
+        //     if (window.Blockly.Procedures.flyoutOptions.includedBlocks['ifret']) {
+        //         this.addBlocksAllowed(['procedures_ifreturn', 'procedures_return']);
+        //     }
+        //     if (window.Blockly.Procedures.flyoutOptions.includedBlocks['noifret']) {
+        //         this.addBlocksAllowed(['procedures_return']);
+        //     }
+        //     categoriesInfos['functions'] = {
+        //         blocksXml: []
+        //     };
+        //     if (this.scratchMode && !window.arrayContains(singleBlocks, 'math_number')) {
+        //         singleBlocks.push('math_number'); // TODO :: temporary
+        //     }
+        //     if (!this.groupByCategory) {
+        //         console.error('Task configuration error: groupByCategory must be activated for functions.');
+        //     }
+        // }
+        // this.addBlocksAndCategories(singleBlocks, stdBlocks, categoriesInfos);
 
         // Handle variable blocks, which are normally automatically added with
         // the VARIABLES category but can be customized here
-        window.Blockly.Variables.flyoutOptions.anyButton = !!this.groupByCategory;
-        if (typeof this.includeBlocks.variables !== 'undefined') {
-            window.Blockly.Variables.flyoutOptions.fixed = (this.includeBlocks.variables.length > 0) ? this.includeBlocks.variables : [];
-            if (typeof this.includeBlocks.variablesOnlyBlocks !== 'undefined') {
-                window.Blockly.Variables.flyoutOptions.includedBlocks = {get: false, set: false, incr: false};
-                for (let iBlock = 0; iBlock < this.includeBlocks.variablesOnlyBlocks.length; iBlock++) {
-                    window.Blockly.Variables.flyoutOptions.includedBlocks[this.includeBlocks.variablesOnlyBlocks[iBlock]] = true;
-                }
-            }
+        // window.Blockly.Variables.flyoutOptions.anyButton = !!this.groupByCategory;
+        // if (typeof this.includeBlocks.variables !== 'undefined') {
+        //     window.Blockly.Variables.flyoutOptions.fixed = (this.includeBlocks.variables.length > 0) ? this.includeBlocks.variables : [];
+        //     if (typeof this.includeBlocks.variablesOnlyBlocks !== 'undefined') {
+        //         window.Blockly.Variables.flyoutOptions.includedBlocks = {get: false, set: false, incr: false};
+        //         for (let iBlock = 0; iBlock < this.includeBlocks.variablesOnlyBlocks.length; iBlock++) {
+        //             window.Blockly.Variables.flyoutOptions.includedBlocks[this.includeBlocks.variablesOnlyBlocks[iBlock]] = true;
+        //         }
+        //     }
+        //
+        //     let varAnyIdx = window.Blockly.Variables.flyoutOptions.fixed.indexOf('*');
+        //     if (varAnyIdx > -1) {
+        //         window.Blockly.Variables.flyoutOptions.fixed.splice(varAnyIdx, 1);
+        //         window.Blockly.Variables.flyoutOptions.any = true;
+        //     }
+        //
+        //     let blocksXml = window.Blockly.Variables.flyoutCategory();
+        //     let xmlSer = new XMLSerializer();
+        //     for (let i = 0; i < blocksXml.length; i++) {
+        //         blocksXml[i] = xmlSer.serializeToString(blocksXml[i]);
+        //     }
+        //
+        //     categoriesInfos["variables"] = {
+        //         blocksXml: blocksXml,
+        //         colour: 330
+        //     }
+        // }
 
-            let varAnyIdx = window.Blockly.Variables.flyoutOptions.fixed.indexOf('*');
-            if (varAnyIdx > -1) {
-                window.Blockly.Variables.flyoutOptions.fixed.splice(varAnyIdx, 1);
-                window.Blockly.Variables.flyoutOptions.any = true;
-            }
-
-            let blocksXml = window.Blockly.Variables.flyoutCategory();
-            let xmlSer = new XMLSerializer();
-            for (let i = 0; i < blocksXml.length; i++) {
-                blocksXml[i] = xmlSer.serializeToString(blocksXml[i]);
-            }
-
-            categoriesInfos["variables"] = {
-                blocksXml: blocksXml,
-                colour: 330
-            }
-        }
-
-        if (window.Blockly.Variables.flyoutOptions.includedBlocks['get']) {
-            this.addBlocksAllowed(['variables_get']);
-        }
-        if (window.Blockly.Variables.flyoutOptions.includedBlocks['set']) {
-            this.addBlocksAllowed(['variables_set']);
-        }
-        if (window.Blockly.Variables.flyoutOptions.includedBlocks['incr']) {
-            this.addBlocksAllowed(['math_change']);
-        }
+        // if (window.Blockly.Variables.flyoutOptions.includedBlocks['get']) {
+        //     this.addBlocksAllowed(['variables_get']);
+        // }
+        // if (window.Blockly.Variables.flyoutOptions.includedBlocks['set']) {
+        //     this.addBlocksAllowed(['variables_set']);
+        // }
+        // if (window.Blockly.Variables.flyoutOptions.includedBlocks['incr']) {
+        //     this.addBlocksAllowed(['math_change']);
+        // }
 
         // Disable arguments in procedures if variables are not allowed
-        if (!window.Blockly.Variables.flyoutOptions.any && proceduresOptions && typeof proceduresOptions.disableArgs == 'undefined') {
-            window.Blockly.Procedures.flyoutOptions.disableArgs = true;
-        }
+        // if (!window.Blockly.Variables.flyoutOptions.any && proceduresOptions && typeof proceduresOptions.disableArgs == 'undefined') {
+        //     window.Blockly.Procedures.flyoutOptions.disableArgs = true;
+        // }
 
         let orderedCategories = [];
         if (this.includeBlocks.blocksOrder) {
