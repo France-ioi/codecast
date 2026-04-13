@@ -1,4 +1,21 @@
 export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMode ) {
+    window.Blockly.Blocks['robot_start'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField(strings.startingBlockName);
+            this.setNextStatement(true);
+            this.setColour(210);
+            this.setTooltip('');
+            this.deletable_ = false;
+            this.editable_ = false;
+            this.movable_ = false;
+            //    this.setHelpUrl('http://www.example.com/');
+        }
+    };
+
+    // TODO Blockly: write code generators
+    return;
+
     window.Blockly.Blocks['controls_untilWhile'] = window.Blockly.Blocks['controls_whileUntil'];
     window.Blockly.JavaScript['controls_untilWhile'] = window.Blockly.JavaScript['controls_whileUntil'];
     window.Blockly.Python['controls_untilWhile'] = window.Blockly.Python['controls_whileUntil'];

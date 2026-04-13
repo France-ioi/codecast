@@ -5,6 +5,7 @@ import {getStandardBlocklyBlocks} from './standard_blockly_blocks';
 import {getStandardScratchBlocks} from './standard_scratch_blocks';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {QuickAlgoLibrary} from '../../task/libs/quickalgo_library';
+import * as Blockly from 'blockly/core';
 
 let blocklySets = {
     allDefault: {
@@ -184,8 +185,8 @@ export class BlocklyHelper {
 
         this.options = options;
 
+        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
         // TODO Blockly: write code generators
-        // addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
         // this.createSimpleGeneratorsAndBlocks();
 
         this.display = display;
@@ -373,8 +374,8 @@ export class BlocklyHelper {
             }
         }
 
-        let xml = window.Blockly.Xml.textToDom(this.getEmptyContent())
-        window.Blockly.Xml.domToWorkspace(xml, this.workspace);
+        let xml = Blockly.utils.xml.textToDom(this.getEmptyContent())
+        Blockly.Xml.domToWorkspace(xml, this.workspace);
     }
 
     getOrigin() {
@@ -390,9 +391,6 @@ export class BlocklyHelper {
     }
 
     savePrograms() {
-        // TODO Blockly: 2-way sync
-        return;
-
         if (this.unloaded) {
             console.error('savePrograms called after unload');
             return;
@@ -408,7 +406,9 @@ export class BlocklyHelper {
         this.programs[this.codeId].javascript = window.jQuery("#program").val();
         if (this.workspace != null) {
             let xml = window.Blockly.Xml.workspaceToDom(this.workspace);
-            this.cleanBlockAttributes(xml);
+
+            // TODO Blockly: 2-way sync
+            // this.cleanBlockAttributes(xml);
 
             // The additional variable contain all additional things that we can save, for example quickpi sensors,
             // subject title when edition is enabled...
@@ -428,13 +428,10 @@ export class BlocklyHelper {
     }
 
     loadPrograms() {
-        // TODO Blockly: 2-way sync
-        return;
-
         if (this.workspace != null) {
-            let xml = window.Blockly.Xml.textToDom(this.programs[this.codeId].blockly);
+            let xml = Blockly.utils.xml.textToDom(this.programs[this.codeId].blockly);
             this.workspace.clear();
-            this.cleanBlockAttributes(xml, this.getOrigin());
+            // this.cleanBlockAttributes(xml, this.getOrigin());
             window.Blockly.Xml.domToWorkspace(xml, this.workspace);
 
             let additionalXML = xml.getElementsByTagName("additional");
@@ -1680,7 +1677,7 @@ export class BlocklyHelper {
 
     getStartingExampleIds(xml) {
         this.startingExampleIds = [];
-        let blockList = window.Blockly.Xml.textToDom(xml).getElementsByTagName('block');
+        let blockList = Blockly.utils.xml.textToDom(xml).getElementsByTagName('block');
         for (let i = 0; i < blockList.length; i++) {
             let block = blockList[i];
             let blockId = block.getAttribute('id');

@@ -98,12 +98,13 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     // We overload this function to catch the Blockly firing event instant so that we know when the program
     // is successfully reloaded and that the events won't trigger an editor content update which would trigger
     // a stepper.exit
-    if ('main' === state.environment) {
-        window.Blockly.Events.fireNow_ = () => {
-            originalFireNow();
-            context.blocklyHelper.reloading = false;
-        };
-    }
+    // TODO Blockly: check if it's still necessary
+    // if ('main' === state.environment) {
+    //     window.Blockly.Events.fireNow_ = () => {
+    //         originalFireNow();
+    //         context.blocklyHelper.reloading = false;
+    //     };
+    // }
 
     if (groupByCategory && 'tralalere' === options.app) {
         overrideBlocklyFlyoutForCategories(isMobile);
@@ -409,13 +410,14 @@ export async function getBlocklyCodeFromXml(document: BlockDocument, lang: strin
     blocklyHelper.programs[0].blockly = blocklyXmlCode;
     log.getLogger('blockly_runner').debug('xml code', blocklyXmlCode);
 
-    blocklyHelper.reloading = true;
+    // TODO Blockly: check if it's still necessary
+    // blocklyHelper.reloading = true;
     blocklyHelper.loadPrograms();
     // Wait that program is loaded (Blockly fires some event including an onChange event
-    if ('main' === state.environment) {
-        await delay(0);
-    }
-    blocklyHelper.reloading = false;
+    // if ('main' === state.environment) {
+    //     await delay(0);
+    // }
+    // blocklyHelper.reloading = false;
 
     return blocklyHelper.getCode(lang, null, true, true);
 }

@@ -11,6 +11,7 @@ import {bufferResetToDefaultSourceCode} from '../../buffers/buffer_actions';
 import {ComputedSourceHighlight, SourceHighlightBlock} from '../index';
 import {callPlatformLog} from '../../submission/submission_actions';
 import {selectGroupByCategory} from './index';
+import * as Blockly from 'blockly/core';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -58,7 +59,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
 
         log.getLogger('editor').debug('imported content', context.blocklyHelper.programs[0].blockly);
-        context.blocklyHelper.reloading = true;
+        // context.blocklyHelper.reloading = true;
 
         // Check that all blocks exist and program is valid. Otherwise, reload default answer and cancel
         try {
@@ -145,14 +146,13 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const onBlocklyEvent = (event) => {
         log.getLogger('editor').debug('blockly event', event);
-        const eventType = event ? event.constructor : null;
 
-        let isBlockEvent = event ? (
-            eventType === window.Blockly.Events.Create ||
-            eventType === window.Blockly.Events.Delete ||
-            eventType === window.Blockly.Events.Move ||
-            eventType === window.Blockly.Events.Change) : true;
-
+        let isBlockEvent = [
+            Blockly.Events.BLOCK_DRAG,
+            Blockly.Events.BLOCK_MOVE,
+            Blockly.Events.BLOCK_CREATE,
+            Blockly.Events.BLOCK_CHANGE,
+        ].includes(event.type);
         if ('selected' === event.element) {
             if (event.newValue !== selectedBlockId.current) {
                 log.getLogger('editor').debug('is selected');
@@ -164,7 +164,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         if (isBlockEvent) {
             const blocklyHelper = context.blocklyHelper;
-            log.getLogger('editor').debug('on editor change');
+            log.getLogger('editor').debug('on editor change', loaded.current, blocklyHelper.reloading, blocklyHelper.languages);
             if (blocklyHelper.languages && blocklyHelper.languages.length && loaded.current && !blocklyHelper.reloading) {
                 blocklyHelper.savePrograms();
                 const answer = {...blocklyHelper.programs[0]};
@@ -174,8 +174,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                     log.getLogger('editor').debug('new value', answer);
                     props.onEditPlain(document);
 
-                    if (eventType !== window.Blockly.Events.Create && (eventType === window.Blockly.Events.Change || event.oldCoordinate)) {
-                        const details = `block_update;${eventType.prototype.type};${documentToString(document)}`;
+                    if (event.type !== Blockly.Events.BLOCK_CREATE && (event.type === Blockly.Events.BLOCK_CHANGE || event.oldCoordinate)) {
+                        const details = `block_update;${event.type.prototype.type};${documentToString(document)}`;
                         dispatch(callPlatformLog(['activity', details]));
                     }
 
