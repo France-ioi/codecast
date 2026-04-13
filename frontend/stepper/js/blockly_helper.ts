@@ -1260,23 +1260,23 @@ export class BlocklyHelper {
             }
         }
 
-        // if (this.includeBlocks.generatedBlocks && 'singleBlocks' in this.includeBlocks.generatedBlocks) {
-        //     for (let blockType in this.includeBlocks.generatedBlocks.singleBlocks) {
-        //         this.addBlocksAndCategories(
-        //             this.includeBlocks.generatedBlocks.singleBlocks[blockType],
-        //             this.mainContext.customBlocks[blockType],
-        //             categoriesInfos
-        //         );
-        //     }
-        // }
-        // for (let blockType in this.includeBlocks.generatedBlocks) {
-        //     if (blockType == 'wholeCategories' || blockType == 'singleBlocks') continue;
-        //     this.addBlocksAndCategories(
-        //         this.includeBlocks.generatedBlocks[blockType],
-        //         this.mainContext.customBlocks[blockType],
-        //         categoriesInfos
-        //     );
-        // }
+        if (this.includeBlocks.generatedBlocks && 'singleBlocks' in this.includeBlocks.generatedBlocks) {
+            for (let blockType in this.includeBlocks.generatedBlocks.singleBlocks) {
+                this.addBlocksAndCategories(
+                    this.includeBlocks.generatedBlocks.singleBlocks[blockType],
+                    this.mainContext.customBlocks[blockType],
+                    categoriesInfos
+                );
+            }
+        }
+        for (let blockType in this.includeBlocks.generatedBlocks) {
+            if (blockType == 'wholeCategories' || blockType == 'singleBlocks') continue;
+            this.addBlocksAndCategories(
+                this.includeBlocks.generatedBlocks[blockType],
+                this.mainContext.customBlocks[blockType],
+                categoriesInfos
+            );
+        }
 
         for (let genName in this.simpleGenerators) {
             for (let iGen = 0; iGen < this.simpleGenerators[genName].length; iGen++) {
@@ -1397,7 +1397,7 @@ export class BlocklyHelper {
         //     window.Blockly.Procedures.flyoutOptions.disableArgs = !!proceduresOptions.disableArgs;
         // }
         //
-        // let singleBlocks = stdInclude.singleBlocks;
+        let singleBlocks = stdInclude.singleBlocks;
         // for (let iBlock = 0; iBlock < singleBlocks.length; iBlock++) {
         //     let blockName = singleBlocks[iBlock];
         //     if (blockName == 'procedures_defnoreturn') {
@@ -1442,37 +1442,37 @@ export class BlocklyHelper {
         //         console.error('Task configuration error: groupByCategory must be activated for functions.');
         //     }
         // }
-        // this.addBlocksAndCategories(singleBlocks, stdBlocks, categoriesInfos);
+        this.addBlocksAndCategories(singleBlocks, stdBlocks, categoriesInfos);
 
         // Handle variable blocks, which are normally automatically added with
         // the VARIABLES category but can be customized here
         // window.Blockly.Variables.flyoutOptions.anyButton = !!this.groupByCategory;
-        // if (typeof this.includeBlocks.variables !== 'undefined') {
-        //     window.Blockly.Variables.flyoutOptions.fixed = (this.includeBlocks.variables.length > 0) ? this.includeBlocks.variables : [];
-        //     if (typeof this.includeBlocks.variablesOnlyBlocks !== 'undefined') {
-        //         window.Blockly.Variables.flyoutOptions.includedBlocks = {get: false, set: false, incr: false};
-        //         for (let iBlock = 0; iBlock < this.includeBlocks.variablesOnlyBlocks.length; iBlock++) {
-        //             window.Blockly.Variables.flyoutOptions.includedBlocks[this.includeBlocks.variablesOnlyBlocks[iBlock]] = true;
-        //         }
-        //     }
-        //
-        //     let varAnyIdx = window.Blockly.Variables.flyoutOptions.fixed.indexOf('*');
-        //     if (varAnyIdx > -1) {
-        //         window.Blockly.Variables.flyoutOptions.fixed.splice(varAnyIdx, 1);
-        //         window.Blockly.Variables.flyoutOptions.any = true;
-        //     }
-        //
-        //     let blocksXml = window.Blockly.Variables.flyoutCategory();
-        //     let xmlSer = new XMLSerializer();
-        //     for (let i = 0; i < blocksXml.length; i++) {
-        //         blocksXml[i] = xmlSer.serializeToString(blocksXml[i]);
-        //     }
-        //
-        //     categoriesInfos["variables"] = {
-        //         blocksXml: blocksXml,
-        //         colour: 330
-        //     }
-        // }
+        if (typeof this.includeBlocks.variables !== 'undefined') {
+            // window.Blockly.Variables.flyoutOptions.fixed = (this.includeBlocks.variables.length > 0) ? this.includeBlocks.variables : [];
+            // if (typeof this.includeBlocks.variablesOnlyBlocks !== 'undefined') {
+            //     window.Blockly.Variables.flyoutOptions.includedBlocks = {get: false, set: false, incr: false};
+            //     for (let iBlock = 0; iBlock < this.includeBlocks.variablesOnlyBlocks.length; iBlock++) {
+            //         window.Blockly.Variables.flyoutOptions.includedBlocks[this.includeBlocks.variablesOnlyBlocks[iBlock]] = true;
+            //     }
+            // }
+
+            // let varAnyIdx = window.Blockly.Variables.flyoutOptions.fixed.indexOf('*');
+            // if (varAnyIdx > -1) {
+            //     window.Blockly.Variables.flyoutOptions.fixed.splice(varAnyIdx, 1);
+            //     window.Blockly.Variables.flyoutOptions.any = true;
+            // }
+
+            // let blocksXml = window.Blockly.Variables.flyoutCategory();
+            // let xmlSer = new XMLSerializer();
+            // for (let i = 0; i < blocksXml.length; i++) {
+            //     blocksXml[i] = xmlSer.serializeToString(blocksXml[i]);
+            // }
+            //
+            // categoriesInfos["variables"] = {
+            //     blocksXml: blocksXml,
+            //     colour: 330
+            // }
+        }
 
         // if (window.Blockly.Variables.flyoutOptions.includedBlocks['get']) {
         //     this.addBlocksAllowed(['variables_get']);
