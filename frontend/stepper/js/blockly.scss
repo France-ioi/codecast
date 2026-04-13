@@ -11,6 +11,10 @@
     height: 100%;
 }
 
+.blocklyToolbox {
+  z-index: 15;
+}
+
 .blocklyDropDownDiv {
     position: fixed;
     left: 0;

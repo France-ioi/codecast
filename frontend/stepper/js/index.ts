@@ -16,6 +16,13 @@ import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
 import {BlocklyHelper} from './blockly_helper';
+import * as Blockly from 'blockly/core';
+import 'blockly/blocks';
+import 'blockly/javascript';
+
+// TODO Blockly: don't expose Blockly to all window
+window.Blockly = Blockly;
+console.log({Blockly})
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
@@ -56,11 +63,13 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     const languageTranslations: any = availableLanguages[path];
     const isMobile = yield* appSelect(state => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
 
-    window.goog.provide('Blockly.Msg.' + language);
-    window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
+    for (const key in languageTranslations.Msg) {
+        Blockly.Msg[key] = languageTranslations.Msg[key];
+    }
 
-    window.Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
-    window.Blockly.JavaScript.addReservedWords('highlightBlock');
+    // TODO Blockly: write code generators
+    // window.Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
+    // window.Blockly.JavaScript.addReservedWords('highlightBlock');
 
     if (!window.quickAlgoInterface) {
         window.quickAlgoInterface = {
@@ -317,6 +326,9 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
 }
 
 const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, xmlText: string) {
+    // TODO Blockly: 2-way sync
+    return [];
+
     const xml = window.Blockly.Xml.textToDom(xmlText);
 
     const blocklyHelper = createBlocklyHelper(context, state);

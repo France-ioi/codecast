@@ -71,7 +71,8 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context = context;
         this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;
         this.delayFactory = new window.DelayFactory();
-        adaptJsBlocks(window.Blockly);
+        // TODO Blockly: write code generators
+        // adaptJsBlocks(window.Blockly);
     }
 
     public static hasBlocks(): boolean {
