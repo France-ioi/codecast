@@ -778,6 +778,29 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
 function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
     let state = yield* appSelect();
 
+    const taskContext = quickAlgoLibraries.getContext(null, state.environment);
+
+    // If check end condition every turn, check it now before calling a new Quickalgo action. We need to do it here
+    // also because when we do infinite loop without any Quickalgo
+    // execution inside, it does not go through quickalgo_executor
+    if (taskContext?.infos.checkEndEveryTurn) {
+        try {
+            taskContext.infos.checkEndCondition(taskContext, false);
+        } catch (executionResult: unknown) {
+            log.getLogger('stepper').debug('[stepper] end condition fulfilled', executionResult);
+
+            yield* put({
+                type: ActionTypes.StepperInterrupting,
+            });
+
+            Codecast.runner.stop();
+
+            yield* put(stepperExecutionEndConditionReached(executionResult));
+
+            return;
+        }
+    }
+
     if (!state.stepper.synchronizingAnalysis) {
         /* Emit a progress action so that an up-to-date state gets displayed. */
 
