@@ -1,0 +1,11 @@
+import "ace-builds/src-min-noconflict/mode-c_cpp";
+import "ace-builds/src-min-noconflict/mode-java";
+import "ace-builds/src-min-noconflict/mode-python";
+import "ace-builds/src-min-noconflict/mode-javascript";
+import "ace-builds/src-min-noconflict/mode-ocaml";
+import "ace-builds/src-min-noconflict/snippets/html";
+import "ace-builds/src-min-noconflict/ext-language_tools";
+import "ace-builds/src-min-noconflict/theme-github";
+import "./modes/archetype";
+import "./modes/michelson";
+import "../stepper/arduino/ace";

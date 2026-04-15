@@ -2,7 +2,7 @@ import {appSelect} from '../../hooks';
 import {loadOptionsFromQuery} from '../../common/options';
 import {CodecastOptions} from '../../store';
 import {call} from 'typed-redux-saga';
-import {importPlatformModules} from '../libs/import_modules';
+import {getImportedPlatformChunks, importPlatformModules} from '../libs/import_modules';
 import {isServerTask} from '../task_types';
 import {asyncGetFile} from '../../utils/api';
 import {selectTaskMetadata} from './platform';
@@ -203,8 +203,11 @@ export function* taskFillResources(resources: any) {
     };
 
     // Import necessary platform modules without waiting for them to be imported, the declaration is enough
+
     const platform = yield* appSelect(state => state.options.platform);
     yield* call(importPlatformModules, platform, window.modulesPath);
+
+    const importedPlatformChunks = getImportedPlatformChunks();
 
     window.jQuery('script.module').each(function() {
         const scriptSrc = window.jQuery(this).attr('src');
@@ -212,6 +215,12 @@ export function* taskFillResources(resources: any) {
             resources.task_modules.push({type: 'javascript', url: scriptSrc, id: window.jQuery(this).attr('id')});
         }
     });
+
+    for (let scriptSrc of importedPlatformChunks) {
+        if (scriptSrc && !resources.task_modules.find(resource => scriptSrc === resource.url)) {
+            resources.task_modules.push({type: 'javascript', url: scriptSrc, id: scriptSrc});
+        }
+    }
 
     try {
         yield* call(taskGetResourcesImportCorrectSolutions, resources);

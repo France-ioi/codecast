@@ -1,4 +1,3 @@
-import './buffers/ace_loader';
 import './style.scss';
 import url from 'url';
 import React from 'react';
@@ -26,9 +25,6 @@ import {AppErrorBoundary} from "./common/AppErrorBoundary";
 import {EnhancedStore} from "@reduxjs/toolkit";
 import {ConceptViewer} from "./task/documentation/doc";
 import {Documentation} from "./task/documentation/Documentation";
-import '@france-ioi/skulpt/dist/skulpt.min.js';
-import '@france-ioi/skulpt/dist/skulpt-stdlib.js';
-import '@france-ioi/skulpt/dist/debugger.js';
 import {DndProvider} from "react-dnd-multi-backend";
 import {CustomDragLayer} from "./task/CustomDragLayer";
 import {TralalereApp} from "./tralalere/TralalereApp";

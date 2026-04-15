@@ -22,7 +22,7 @@ body(id='app')
     each file in files
       script(type='text/javascript', src=rebaseUrl('build/' + file))
   else
-    script(type='text/javascript', src=rebaseUrl('build/index.js'))
+    script(type='module', src=rebaseUrl('build/index.modern.js'))
     each file in files
       script(type='text/javascript', src=rebaseUrl('build/' + file))
   script(type='text/javascript').

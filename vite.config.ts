@@ -22,8 +22,11 @@ const bundledFiles = fs.readFileSync('bundled_files.txt', 'utf8')
 export default defineConfig(({mode}) => {
     const isDev = mode === 'development'
     const isLib = process.env['BUILD'] === 'lib';
+    const modernBuild = process.env['MODERN'] === '1';
     const base = isLib ? './' : (isDev ? jsonConfig.mountPath : path.join(jsonConfig.mountPath, 'build/'));
     const target = ['chrome70'];
+
+    const suffix = modernBuild ? '.modern' : '';
 
     return {
         base,
@@ -68,27 +71,32 @@ export class Icons {
         build: {
             target,
             outDir: 'build',
+            emptyOutDir: false,
             cssCodeSplit: false,
             assetsDir: '.',
             sourcemap: false,
             minify: 'terser',
             assetsInlineLimit: 0, // avoid images inlining
-            rollupOptions: {
+            rolldownOptions: {
                 input: {index: path.resolve(__dirname, 'frontend/index.tsx')},
                 output: {
-                    format: 'iife',
+                    format: modernBuild ? 'esm' : 'iife',
                     name: 'Codecast',
-                    entryFileNames: '[name].js',
-                    assetFileNames: ({name}) => {
-                        if (name?.match(/\.(eot|ttf|woff2?)$/)) return 'fonts/[name][extname]'
-                        if (name?.endsWith('.css')) return 'index[extname]'
+                    entryFileNames: `[name]${suffix}.js`,
+                    chunkFileNames: `[name]${suffix}.js`,
+                    assetFileNames: ({names}) => {
+                        if (names.some(e => e.match(/\.(eot|ttf|woff2?)$/))) return 'fonts/[name][extname]'
+                        if (names.some(e => e.endsWith('.css'))) return 'index[extname]'
                         return 'images/[name][extname]'
                     },
                 },
-                onwarn(warning, warn) {
-                    if (warning.code === "EVAL") return; // ignore eval warning
-                    warn(warning); // default for other warnings
-                },
+                onLog(level, log, defaultHandler) {
+                    // ignore eval warning
+                    if (log.code === 'EVAL') {
+                        return;
+                    }
+                    defaultHandler(level, log);
+                }
             },
         },
         worker: {
@@ -108,9 +116,6 @@ export class Icons {
         },
         optimizeDeps: {
             exclude: ['@france-ioi/skulpt'],
-            esbuildOptions: {
-                target,
-            },
-        }
+        },
     }
 })
