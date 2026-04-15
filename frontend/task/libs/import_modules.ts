@@ -325,8 +325,25 @@ async function importModules(modulesList, modulesPath) {
 
 let jsLibLoaded = null;
 
+let importedPlatformChunks: string[] = [];
+
 export async function importPlatformModules(platform, modulesPath) {
     if (!hasBlockPlatform(platform)) {
+        const before = performance.getEntriesByType('resource').map(e => e.name);
+
+        await import('@france-ioi/skulpt/dist/skulpt.min.js');
+        await import('@france-ioi/skulpt/dist/skulpt-stdlib.js');
+        await import('@france-ioi/skulpt/dist/debugger.js');
+
+        const after = performance.getEntriesByType('resource').map(e => e.name);
+        const newUrls = after.filter(url => !before.includes(url));
+
+        for (const url of newUrls) {
+            if (url.endsWith('.js')) {
+                importedPlatformChunks.push(url);
+            }
+        }
+
         await importModules(['fonts-loader-1.0', 'quickAlgo_utils', 'quickAlgo_i18n'], modulesPath);
         return;
     }
@@ -342,6 +359,10 @@ export async function importPlatformModules(platform, modulesPath) {
     }
 
     await importModules(modulesToImport[platform], modulesPath);
+}
+
+export function getImportedPlatformChunks() {
+    return importedPlatformChunks;
 }
 
 export function loadFonts(theme: string, task: Task|null) {
