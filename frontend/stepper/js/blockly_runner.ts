@@ -402,8 +402,7 @@ export default class BlocklyRunner extends AbstractRunner {
             let interpreter = this.interpreters[iInterpreter];
             let wasPaused = interpreter.paused_;
             while(!this.context.programEnded[iInterpreter]) {
-                if(!this.context.allowInfiniteLoop &&
-                    (this.context.curSteps[iInterpreter].total + this.context.curSteps[iInterpreter].microSteps >= this.maxIter
+                if((this.context.curSteps[iInterpreter].total + this.context.curSteps[iInterpreter].microSteps >= this.maxIter
                         || this.context.curSteps[iInterpreter].withoutAction + this.context.curSteps[iInterpreter].microSteps >= this.maxIterWithoutAction)) {
                     break;
                 }
@@ -450,6 +449,10 @@ export default class BlocklyRunner extends AbstractRunner {
 
             if(this.context.programEnded[iInterpreter] && !this.interpreterEnded[iInterpreter]) {
                 this.interpreterEnded[iInterpreter] = true;
+            }
+
+            if (this.executeOnResolve) {
+                this.executeOnResolve();
             }
 
             log.getLogger('blockly_runner').debug('end run sync block');
