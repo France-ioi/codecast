@@ -19,8 +19,8 @@
   "scripts": {
     "dev": "nodemon --mode development --watch backend --ext ts,json --exec 'yarn tsx backend/server.ts'",
     "start": "NODE_ENV=production nodemon --mode production --watch backend --ext ts,json --exec 'yarn tsx backend/server.ts'",
-    "build": "vite build --mode production",
-    "build-lib": "BUILD=lib vite build --mode production",
+    "build": "rm -rf build/* && vite build --mode production",
+    "build-lib": "rm -rf build/* && BUILD=lib vite build --mode production && BUILD=lib MODERN=1 vite build --mode production",
     "watch-lib": "BUILD=lib vite build --mode production --watch",
     "pack-offline": "rm -rf build && yarn run build-lib && zip -r offline.zip build assets",
     "lint": "./node_modules/.bin/eslint frontend/ --ext .tsx,.ts"

@@ -22,8 +22,11 @@ const bundledFiles = fs.readFileSync('bundled_files.txt', 'utf8')
 export default defineConfig(({mode}) => {
     const isDev = mode === 'development'
     const isLib = process.env['BUILD'] === 'lib';
+    const modernBuild = process.env['MODERN'] === '1';
     const base = isLib ? './' : (isDev ? jsonConfig.mountPath : path.join(jsonConfig.mountPath, 'build/'));
     const target = ['chrome70'];
+
+    const suffix = modernBuild ? '.modern' : '';
 
     return {
         base,
@@ -68,6 +71,7 @@ export class Icons {
         build: {
             target,
             outDir: 'build',
+            emptyOutDir: false,
             cssCodeSplit: false,
             assetsDir: '.',
             sourcemap: false,
@@ -76,14 +80,29 @@ export class Icons {
             rolldownOptions: {
                 input: {index: path.resolve(__dirname, 'frontend/index.tsx')},
                 output: {
-                    format: 'iife',
+                    format: modernBuild ? 'esm' : 'iife',
                     name: 'Codecast',
-                    entryFileNames: '[name].js',
+                    entryFileNames: `[name]${suffix}.js`,
+                    chunkFileNames: `[name]${suffix}.js`,
                     assetFileNames: ({names}) => {
                         if (names.some(e => e.match(/\.(eot|ttf|woff2?)$/))) return 'fonts/[name][extname]'
                         if (names.some(e => e.endsWith('.css'))) return 'index[extname]'
                         return 'images/[name][extname]'
                     },
+                    ...(modernBuild ? {
+                        codeSplitting: {
+                            groups: [
+                                {
+                                    test: /node_modules\/ace-builds/,
+                                    name: 'ace',
+                                },
+                                {
+                                    test: /node_modules\/@france-ioi\/skulpt/,
+                                    name: 'skulpt',
+                                },
+                            ],
+                        },
+                    } : {}),
                 },
                 onLog(level, log, defaultHandler) {
                     // ignore eval warning
@@ -111,6 +130,6 @@ export class Icons {
         },
         optimizeDeps: {
             exclude: ['@france-ioi/skulpt'],
-        }
+        },
     }
 })
