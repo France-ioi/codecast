@@ -335,6 +335,9 @@ export async function importPlatformModules(platform, modulesPath) {
         await import('@france-ioi/skulpt/dist/skulpt-stdlib.js');
         await import('@france-ioi/skulpt/dist/debugger.js');
 
+        await import('../../buffers/ace_loader');
+        await import('../../buffers/ace_modes');
+
         const after = performance.getEntriesByType('resource').map(e => e.name);
         const newUrls = after.filter(url => !before.includes(url));
 

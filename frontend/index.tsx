@@ -1,4 +1,3 @@
-import './buffers/ace_loader';
 import './style.scss';
 import url from 'url';
 import React from 'react';

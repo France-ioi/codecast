@@ -89,20 +89,6 @@ export class Icons {
                         if (names.some(e => e.endsWith('.css'))) return 'index[extname]'
                         return 'images/[name][extname]'
                     },
-                    ...(modernBuild ? {
-                        codeSplitting: {
-                            groups: [
-                                {
-                                    test: /node_modules\/ace-builds/,
-                                    name: 'ace',
-                                },
-                                {
-                                    test: /node_modules\/@france-ioi\/skulpt/,
-                                    name: 'skulpt',
-                                },
-                            ],
-                        },
-                    } : {}),
                 },
                 onLog(level, log, defaultHandler) {
                     // ignore eval warning

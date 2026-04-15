@@ -17,8 +17,6 @@ import {useCursorPositionTracking} from '../task/layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from '../task/layout/actionTypes';
 import {ComputedSourceHighlight, SourceHighlightRange} from '../stepper';
 
-const AceRange = window.ace.acequire('ace/range').Range;
-
 export interface EditorProps {
     name?: string,
     state?: TextBufferState,
@@ -50,6 +48,8 @@ export interface EditorProps {
 }
 
 function toRange(selection) {
+    const AceRange = window.ace.acequire('ace/range').Range;
+
     return new AceRange(
         selection.start.row, selection.start.column,
         selection.end.row, selection.end.column
@@ -220,6 +220,8 @@ export function Editor(props: EditorProps) {
             return;
         }
 
+        const AceRange = window.ace.acequire('ace/range').Range;
+
         let cursorPosition = pos ? pos : editor.current.getCursorPosition();
         // const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
         const indentationCurrentLine = editor.current.session.doc.getLine(cursorPosition.row).search(/\S|$/);
@@ -252,6 +254,8 @@ export function Editor(props: EditorProps) {
     };
 
     const doSetSelection = (selection_) => {
+        const AceRange = window.ace.acequire('ace/range').Range;
+
         wrapModelToEditor(() => {
             if (sameSelection(selection.current, selection_)) {
                 return;
