@@ -73,22 +73,25 @@ export class Icons {
             sourcemap: false,
             minify: 'terser',
             assetsInlineLimit: 0, // avoid images inlining
-            rollupOptions: {
+            rolldownOptions: {
                 input: {index: path.resolve(__dirname, 'frontend/index.tsx')},
                 output: {
                     format: 'iife',
                     name: 'Codecast',
                     entryFileNames: '[name].js',
-                    assetFileNames: ({name}) => {
-                        if (name?.match(/\.(eot|ttf|woff2?)$/)) return 'fonts/[name][extname]'
-                        if (name?.endsWith('.css')) return 'index[extname]'
+                    assetFileNames: ({names}) => {
+                        if (names.some(e => e.match(/\.(eot|ttf|woff2?)$/))) return 'fonts/[name][extname]'
+                        if (names.some(e => e.endsWith('.css'))) return 'index[extname]'
                         return 'images/[name][extname]'
                     },
                 },
-                onwarn(warning, warn) {
-                    if (warning.code === "EVAL") return; // ignore eval warning
-                    warn(warning); // default for other warnings
-                },
+                onLog(level, log, defaultHandler) {
+                    // ignore eval warning
+                    if (log.code === 'EVAL') {
+                        return;
+                    }
+                    defaultHandler(level, log);
+                }
             },
         },
         worker: {
@@ -108,9 +111,6 @@ export class Icons {
         },
         optimizeDeps: {
             exclude: ['@france-ioi/skulpt'],
-            esbuildOptions: {
-                target,
-            },
         }
     }
 })
