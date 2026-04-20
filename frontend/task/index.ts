@@ -223,6 +223,10 @@ function* taskLoadSaga(app: App, action) {
     }
 
     const taskParams = yield* call(platformApi.getTaskParams, null, null);
+
+    if (taskParams?.options?.logBlocks) {
+        taskParams.options.log = true;
+    }
     yield* put(platformTaskParamsUpdated(taskParams));
 
     if (taskParams.options.log) {

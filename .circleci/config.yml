@@ -41,9 +41,8 @@ jobs:
           name: "Copy new files"
           command: |
             ls -asl build
-            cp build/index.js bebras-modules/ext/codecast/7.6/index.js
+            cp build/*.js bebras-modules/ext/codecast/7.6/
             cp build/index.css bebras-modules/ext/codecast/7.6/index.css
-            cp build/index.worker.worker.js bebras-modules/ext/codecast/7.6/index.worker.worker.js
       - run:
           name: "Commit changes"
           command: |
