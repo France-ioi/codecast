@@ -160,13 +160,13 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(callPlatformLog, function* ({payload: {details}}) {
+        yield* takeEvery(callPlatformLog, function* ({payload: {details, tag}}) {
             const state = yield* appSelect();
             // Don't interact with the platform in replay mode
             const levelGridInfos = state.task.levelGridInfos;
             const taskParams = state.platform.taskParams;
 
-            if (!(taskParams?.options?.log || levelGridInfos?.logOption) || 'main' !== state.environment) {
+            if (!(('blocks' !== tag && taskParams?.options?.log) || taskParams?.options?.logBlocks || levelGridInfos?.logOption) || 'main' !== state.environment) {
                 return;
             }
 

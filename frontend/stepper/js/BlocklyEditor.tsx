@@ -175,7 +175,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
                     if (eventType !== window.Blockly.Events.Create && (eventType === window.Blockly.Events.Change || event.oldCoordinate)) {
                         const details = `block_update;${eventType.prototype.type};${documentToString(document)}`;
-                        dispatch(callPlatformLog(['activity', details]));
+                        dispatch(callPlatformLog(['activity', details], 'blocks'));
                     }
 
                     // log.getLogger('editor').debug('timeout before removing highlight');

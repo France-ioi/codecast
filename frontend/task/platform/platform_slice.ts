@@ -30,6 +30,7 @@ export interface PlatformTaskParams {
     randomSeed: string,
     options: {
         log?: boolean,
+        logBlocks?: boolean,
         version?: TaskLevelName,
         level?: TaskLevelName,
     },
