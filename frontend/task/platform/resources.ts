@@ -218,7 +218,7 @@ export function* taskFillResources(resources: any) {
 
     for (let scriptSrc of importedPlatformChunks) {
         if (scriptSrc && !resources.task_modules.find(resource => scriptSrc === resource.url)) {
-            resources.task_modules.push({type: 'javascript', url: scriptSrc, id: scriptSrc});
+            resources.task_modules.push({type: 'javascript', url: scriptSrc, id: scriptSrc, module: true});
         }
     }
 
