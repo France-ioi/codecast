@@ -312,6 +312,7 @@ export default {
     SUBMISSION_EXECUTE_THIS_TEST: 'Exécuter sur ce test',
     SUBMISSION_EXECUTE_MY_TESTS: 'Mes tests',
     SUBMISSION_EXECUTE_SUBMIT: 'Soumettre',
+    SUBMISSION_READ_ONLY: 'Mode lecture seule – soumission indisponible',
 
     BUFFER_TAB_FILENAME: 'Code {i}',
     BUFFER_TAB_PENDING_SUBMISSION: 'Soumission en cours',
