@@ -152,9 +152,10 @@ function* linkTaskPlatformSaga() {
     }
     yield* call(platformApi.initWithTask, taskApi);
 
-    window.taskGetResourcesPost = (res, callback) => {
+    window.taskGetResourcesPostListeners ??= [];
+    window.taskGetResourcesPostListeners.push((res, callback) => {
         Codecast.environments['main'].store.dispatch(taskGetResourcesPost(res, callback));
-    };
+    });
 }
 
 export function* subscribePlatformHelper() {

@@ -155,6 +155,7 @@ declare global {
         taskGetResourcesPost: (res, callback) => void,
         FontsLoader: any,
         implementGetResources?: (task: any) => void,
+        taskGetResourcesPostListeners: ((res: any, callback: any) => void)[],
         log: any,
         quickAlgoLanguageStrings: any,
         taskStrings?: any,
