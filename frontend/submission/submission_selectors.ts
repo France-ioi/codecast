@@ -7,6 +7,7 @@ import {TaskLevelName} from '../task/platform/platform_slice';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {doesPlatformHaveClientRunner} from '../stepper';
 import {remoteDebugSupportedPlatforms} from '../stepper/remote/remote_debug_executer';
+import {selectTaskTokenPayload} from '../task/platform/platform';
 
 export const selectTaskTests = createSelector(
     [(state: AppStore) => state.task.taskTests, (state: AppStore) => state.task.currentLevel, (state: AppStore) => state.submission],
@@ -82,8 +83,12 @@ export function selectTaskSelectorEnabled(state: AppStore) {
 }
 
 export const selectAvailableExecutionModes = createSelector(
-    [(state: AppStore) => state.options.platform, (state: AppStore) => state.task.currentTask],
-    (platform, currentTask): TaskSubmissionEvaluateOn[] => {
+    [
+        (state: AppStore) => state.options.platform,
+        (state: AppStore) => state.task.currentTask,
+        selectTaskTokenPayload,
+    ],
+    (platform, currentTask, tokenPayload): TaskSubmissionEvaluateOn[] => {
         const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
         const serverTask = null !== currentTask && isServerTask(currentTask);
 
@@ -93,7 +98,7 @@ export const selectAvailableExecutionModes = createSelector(
         if (platformHasClientRunner && (!serverTask || allowClientExecution)) {
             availableExecutionModes.push(TaskSubmissionEvaluateOn.Client);
         }
-        if (serverTask) {
+        if (serverTask && false !== tokenPayload?.bSubmissionPossible) {
             availableExecutionModes.push(TaskSubmissionEvaluateOn.Server);
         }
         if (!hasBlockPlatform(platform) && (!currentTask || currentTask.gridInfos.remoteDebugEnabled) && -1 !== remoteDebugSupportedPlatforms.indexOf(platform)) {

@@ -300,6 +300,7 @@ export default {
     SUBMISSION_EXECUTE_THIS_TEST: 'Execute on this test',
     SUBMISSION_EXECUTE_MY_TESTS: 'My tests',
     SUBMISSION_EXECUTE_SUBMIT: 'Submit',
+    SUBMISSION_READ_ONLY: 'Read-only mode – submission unavailable',
 
     BUFFER_TAB_FILENAME: 'Code {i}',
     BUFFER_TAB_PENDING_SUBMISSION: 'Evaluating submission',

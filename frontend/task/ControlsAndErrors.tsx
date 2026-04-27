@@ -158,7 +158,11 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {(clientExecutionRunning || availableExecutionModes.length <= 1) &&
+                    {availableExecutionModes.length === 0 && <div>
+                        {getMessage('SUBMISSION_READ_ONLY')}
+                    </div>}
+
+                    {(clientExecutionRunning || availableExecutionModes.length === 1) &&
                         <React.Fragment>
                             {TaskSubmissionEvaluateOn.Client === executionMode
                                 && <div className="stepper-controls-container-flex">
