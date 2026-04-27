@@ -48,6 +48,8 @@ import {appSelect} from '../hooks';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
+import './ace_loader';
+import './ace_modes';
 import {
     BufferState,
     BufferStateParameters,
