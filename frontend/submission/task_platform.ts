@@ -204,12 +204,12 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
     };
 }
 
-export function* longPollServerSubmissionResults(submissionId: string, submissionIndex: number, serverSubmission: TaskSubmissionServer, callback: (TaskSubmissionServerResult) => void) {
+export function* longPollServerSubmissionResults(submissionId: string, submissionIndex: number, serverSubmission: TaskSubmissionServer, callback: (result: TaskSubmissionServerResult) => void) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
 
     const hasTests = state.task.currentTask.tests?.length;
-    const totalUrl = `${taskPlatformUrl}/submissions/${submissionId}?longPolling${!hasTests ? '&withTests' : ''}`;
+    const totalUrl = `${taskPlatformUrl}/submissions/${submissionId}?longPolling${!hasTests ? '&withTests' : ''}&token=${state.platform.taskToken}&platform=${state.platform.platformName}`;
 
     const newCurrentTask = {...state.task.currentTask};
     newCurrentTask.tests = [...state.task.currentTask.tests];
