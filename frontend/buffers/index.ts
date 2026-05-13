@@ -90,6 +90,7 @@ import {StepperStatus} from '../stepper';
 import {canReloadAnswer} from '../task/platform/platform';
 import {bufferGitSyncSagas} from './buffer_git_sync';
 import {compressDocument, uncompressDocument} from './compression';
+import {isServerSubmission} from '../submission/submission_selectors';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -192,7 +193,7 @@ function* createBufferFromSubmission(submissionId: number) {
     const state: AppStore = yield* appSelect();
 
     const submission = state.submission.taskSubmissions[submissionId];
-    if (!submission?.result?.sourceCode?.source) {
+    if (!isServerSubmission(submission) || !submission?.result?.sourceCode?.source) {
         return;
     }
 

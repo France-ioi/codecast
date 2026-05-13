@@ -94,6 +94,10 @@ export enum TaskSubmissionMode {
 
 export interface TaskSubmissionResult {
     tests: TaskSubmissionTestResult[],
+    compilationError?: boolean,
+    compilationMessage?: string | null,
+    errorMessage?: string | null,
+    mode?: TaskSubmissionMode,
 }
 
 export interface TaskSubmissionClient extends TaskSubmission {

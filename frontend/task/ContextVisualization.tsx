@@ -8,7 +8,7 @@ import {isTestPublic, TaskTestGroupType} from './task_types';
 import {getMessage} from '../lang';
 import {
     isServerSubmission
-} from '../submission/submission';
+} from '../submission/submission_selectors';
 import {submissionChangeDisplayedError, SubmissionErrorType} from '../submission/submission_slice';
 import {Alert} from "react-bootstrap";
 import {toHtml} from '../utils/sanitize';
@@ -17,7 +17,6 @@ import {Button, Spinner} from '@blueprintjs/core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {
-    selectSubmissionsPaneEnabled,
     selectTaskSelectorEnabled,
     selectTaskTests
 } from '../submission/submission_selectors';

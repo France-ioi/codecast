@@ -10,7 +10,7 @@ import {getMessage} from '../lang';
 import {faSpinner, faTimes} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {SubmissionResultLabel} from './SubmissionResultLabel';
-import {isServerSubmission} from './submission';
+import {isServerSubmission} from './submission_selectors';
 
 export interface TestsPaneProps {
     open: boolean,

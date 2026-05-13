@@ -1,6 +1,10 @@
 import {AppStore} from '../store';
 import {isServerTask, TaskTest, TaskTestGroupType} from '../task/task_types';
-import {TaskSubmissionEvaluateOn, TaskSubmissionMode} from './submission_types';
+import {
+    TaskSubmission,
+    TaskSubmissionEvaluateOn,
+    TaskSubmissionMode, TaskSubmissionServer, TaskSubmissionServerExecutionMetadata, TaskSubmissionServerTestResult
+} from './submission_types';
 import {createSelector} from '@reduxjs/toolkit';
 import {mapServerTestToTaskTest} from './tests';
 import {TaskLevelName} from '../task/platform/platform_slice';
@@ -8,6 +12,93 @@ import {hasBlockPlatform} from '../stepper/platforms';
 import {doesPlatformHaveClientRunner} from '../stepper';
 import {remoteDebugSupportedPlatforms} from '../stepper/remote/remote_debug_executer';
 import {selectTaskTokenPayload} from '../task/platform/platform';
+import {selectCurrentTest} from '../task/task_slice';
+import {SubmissionExecutionScope} from './submission_slice';
+import {Range} from '../buffers/buffer_types';
+
+export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
+    return TaskSubmissionEvaluateOn.Server === object.type;
+}
+
+export function selectCurrentServerSubmission(state: AppStore) {
+    const currentSubmission= selectCurrentSubmission(state);
+
+    return null !== currentSubmission && TaskSubmissionEvaluateOn.Server === currentSubmission.type ? currentSubmission : null;
+}
+
+export function selectCurrentSubmission(state: AppStore): TaskSubmission|null {
+    if (null === state.submission.currentSubmissionId) {
+        return null;
+    }
+
+    return state.submission.taskSubmissions[state.submission.currentSubmissionId];
+}
+
+export function selectCancellableSubmissionIndex(state: AppStore): number|null {
+    if (null !== state.buffers.activeBufferName && null !== state.buffers.buffers[state.buffers.activeBufferName].submissionIndex) {
+        const submissionIndex = state.buffers.buffers[state.buffers.activeBufferName].submissionIndex;
+        const submission = state.submission.taskSubmissions[submissionIndex];
+        if (submission && !submission.evaluated && !submission.crashed) {
+            return submissionIndex;
+        }
+    }
+
+    const pendingUserTestSubmissionIndex = state.submission.taskSubmissions.findIndex(submission => SubmissionExecutionScope.MyTests === submission.scope && !submission.evaluated && !submission.crashed);
+    if (-1 !== pendingUserTestSubmissionIndex) {
+        return pendingUserTestSubmissionIndex;
+    }
+
+    return null;
+}
+
+export function selectActiveBufferPendingSubmissionIndex(state: AppStore): number|null {
+    if (null === state.buffers.activeBufferName || null === state.buffers.buffers[state.buffers.activeBufferName].submissionIndex) {
+        return null;
+    }
+
+    const submissionIndex = state.buffers.buffers[state.buffers.activeBufferName].submissionIndex;
+    const submission = state.submission.taskSubmissions[submissionIndex];
+    if (submission && !submission.evaluated && !submission.crashed) {
+        return submissionIndex;
+    }
+
+    return null;
+}
+
+export const selectErrorHighlightFromSubmission = (state: AppStore): Range|null => {
+    if (null === state.submission.currentSubmissionId) {
+        return null;
+    }
+
+    const currentSubmission = state.submission.taskSubmissions[state.submission.currentSubmissionId];
+    if (!isServerSubmission(currentSubmission) || !currentSubmission.result) {
+        return null;
+    }
+
+    const getRangeFromErrorLine = (metadata: TaskSubmissionServerExecutionMetadata) => {
+        if (metadata.errorline) {
+            return {start: {row: metadata.errorline - 1, column: 0}, end: {row: metadata.errorline - 1, column: 999}};
+        }
+
+        return null;
+    }
+
+    const currentTest = selectCurrentTest(state);
+    if (null !== currentTest) {
+        const testResult: TaskSubmissionServerTestResult = currentSubmission.result.tests.find(testResult => testResult.testId === currentTest.id) as TaskSubmissionServerTestResult;
+        if (testResult?.metadata) {
+            return getRangeFromErrorLine(testResult.metadata);
+        }
+    }
+
+    if (currentSubmission.result.metadata?.errorline) {
+        const metadata = currentSubmission.result.metadata;
+
+        return getRangeFromErrorLine(metadata);
+    }
+
+    return null;
+};
 
 export const selectTaskTests = createSelector(
     [(state: AppStore) => state.task.taskTests, (state: AppStore) => state.task.currentLevel, (state: AppStore) => state.submission],

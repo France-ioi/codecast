@@ -12,7 +12,7 @@ import {BlocksUsage} from "../blocks/BlocksUsage";
 import {
     selectActiveBufferPendingSubmissionIndex,
     selectErrorHighlightFromSubmission
-} from '../../submission/submission';
+} from '../../submission/submission_selectors';
 import {platformsList} from '../../stepper/platforms';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {LayoutMobileMode, LayoutType, LayoutView} from './layout_types';

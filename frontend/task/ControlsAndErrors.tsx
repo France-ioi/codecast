@@ -28,7 +28,7 @@ import {selectAvailableExecutionModes, selectTaskTests} from '../submission/subm
 import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
 import {callPlatformValidate, submissionCancel} from '../submission/submission_actions';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
-import {selectCancellableSubmissionIndex} from '../submission/submission';
+import {selectCancellableSubmissionIndex} from '../submission/submission_selectors';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {Screen} from '../common/screens';
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
