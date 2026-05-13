@@ -1,9 +1,8 @@
-import {call, put} from "typed-redux-saga";
+import {call} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {Task, TaskAnswer, TaskServer, TaskTest} from '../task/task_types';
 import {appSelect} from '../hooks';
-import {SubmissionTestErrorCode, TaskSubmissionServer, TaskSubmissionServerResult} from './submission_types';
-import {submissionUpdateTaskSubmission} from './submission_slice';
+import {TaskSubmissionServerResult} from './submission_types';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
 import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms';
 import {documentToString} from '../buffers/document';
@@ -11,8 +10,6 @@ import {CodecastPlatform} from '../stepper/codecast_platform';
 import {delay} from '../player/sagas';
 import {BlockDocument, BufferType} from '../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../stepper/js';
-import {extractTestsFromTask} from './tests';
-import {currentTaskChange, updateTaskTests} from '../task/task_slice';
 import merge from 'lodash/merge';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
@@ -204,56 +201,41 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
     };
 }
 
-export function* longPollServerSubmissionResults(submissionId: string, submissionIndex: number, serverSubmission: TaskSubmissionServer, callback: (result: TaskSubmissionServerResult) => void) {
+export function* longPollServerSubmissionResults(submissionId: string, callback: (result: TaskSubmissionServerResult) => void) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
 
     const hasTests = state.task.currentTask.tests?.length;
-    const totalUrl = `${taskPlatformUrl}/submissions/${submissionId}?longPolling${!hasTests ? '&withTests' : ''}&token=${state.platform.taskToken}&platform=${state.platform.platformName}`;
-
-    const newCurrentTask = {...state.task.currentTask};
-    newCurrentTask.tests = [...state.task.currentTask.tests];
-    let needUpdateTests = false;
+    const totalUrl = `${taskPlatformUrl}/submissions/${submissionId}`;
+    const queryParameters = {
+        longPolling: '1',
+        ...(!hasTests ? {withTests: '1'} : {}),
+        ...(state.platform.taskToken ? {token: state.platform.taskToken} : {}),
+        ...(state.platform.platformName ? {platform: state.platform.platformName} : {}),
+    };
 
     while (true) {
-        const result = (yield* call(asyncGetJson, totalUrl)) as TaskSubmissionServerResult|null;
+        const result = (yield* call(asyncGetJson, totalUrl, queryParameters)) as TaskSubmissionServerResult|null;
         if (result.evaluated) {
-            for (let test of result.tests) {
-                test.score = test.score / 100;
-                if (test.score > 0 && test.score < 1 && SubmissionTestErrorCode.WrongAnswer === test.errorCode) {
-                    test.errorCode = SubmissionTestErrorCode.PartialSuccess;
-                }
-
-                // If the test has a clientId, change the id of the test to use the client id
-                let hasUserTest = false;
-                if (test.test?.clientId) {
-                    const userTest = state.task.taskTests.find(otherTest => otherTest.id === test.test.clientId);
-                    if (userTest) {
-                        test.test.id = userTest.id;
-                        test.testId = userTest.id;
-                        hasUserTest = true;
-                    }
-                }
-                if (!hasUserTest && test.test?.id && !state.task.currentTask.tests.find(otherTest => otherTest.id === test.test.id)) {
-                    newCurrentTask.tests.push(test.test);
-                    needUpdateTests = true;
-                }
-            }
-
-            if (needUpdateTests) {
-                const taskVariant = state.options.taskVariant;
-                const tests = extractTestsFromTask(newCurrentTask, taskVariant);
-                yield* put(currentTaskChange({task: newCurrentTask}));
-                yield* put(updateTaskTests(tests));
-            }
-
-            yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result}}));
-
             callback(result);
-
             return;
         }
     }
+}
+
+export function* getServerSubmission(submissionId: string) {
+    const state = yield* appSelect();
+    const taskPlatformUrl = state.options.taskPlatformUrl;
+    const hasTests = state.task.currentTask.tests?.length;
+
+    const totalUrl = `${taskPlatformUrl}/submissions/${submissionId}`;
+    const queryParameters = {
+        ...(!hasTests ? {withTests: '1'} : {}),
+        ...(state.platform.taskToken ? {token: state.platform.taskToken} : {}),
+        ...(state.platform.platformName ? {platform: state.platform.platformName} : {}),
+    };
+
+    return (yield* call(asyncGetJson, totalUrl, queryParameters)) as TaskSubmissionServerResult|null;
 }
 
 export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, platform: CodecastPlatform, userTests: TaskTest[]) {
