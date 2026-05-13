@@ -17,6 +17,7 @@ export interface SubmissionNormalized {
     firstExpectedOutput: string | null,
     evaluated: boolean,
     confirmed: boolean,
+    date: string,
     manualCorrection: boolean,
     manualScoreDiffComment: string | null,
     mode: TaskSubmissionMode,
@@ -97,13 +98,6 @@ export interface TaskSubmissionResult {
     compilationMessage?: string | null,
     errorMessage?: string | null,
     mode?: TaskSubmissionMode,
-    sourceCode?: {
-        params: {
-            sLangProg: string,
-        },
-        name: string,
-        source: string,
-    },
 }
 
 export interface TaskSubmissionClient extends TaskSubmission {
@@ -118,6 +112,13 @@ export interface TaskSubmissionServer extends TaskSubmission {
 export interface TaskSubmissionServerResult extends SubmissionNormalized {
     subTasks?: SubmissionSubtaskNormalized[],
     tests: TaskSubmissionServerTestResult[],
+    sourceCode?: {
+        params: {
+            sLangProg: string,
+        },
+        name: string,
+        source: string,
+    },
     scoreToken?: string,
 }
 

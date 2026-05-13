@@ -6,7 +6,7 @@ import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclama
 import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf';
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {isServerSubmission} from './submission';
+import {isServerSubmission} from './submission_selectors';
 import {updateCurrentTestId} from '../task/task_slice';
 import {useDispatch} from 'react-redux';
 import {useAppSelector} from '../hooks';

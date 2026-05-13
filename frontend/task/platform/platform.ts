@@ -27,10 +27,12 @@ import {
 import {Action, ActionCreator} from "redux";
 import {
     platformSaveAnswer,
-    platformSaveScore, platformTaskParamsUpdated,
+    platformSaveScore,
     platformTaskRandomSeedUpdated,
-    platformTokenUpdated, TaskLevel,
-    TaskLevelName, taskLevelsList,
+    platformTokenUpdated,
+    TaskLevel,
+    TaskLevelName,
+    taskLevelsList,
 } from "./platform_slice";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
@@ -52,7 +54,7 @@ import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {hasBlockPlatform} from '../../stepper/platforms';
-import {AppStore, CodecastOptions} from '../../store';
+import {AppStore} from '../../store';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
@@ -93,17 +95,19 @@ export const selectTaskMetadata = createSelector(
     (currentTask) => {
         const serverTask = null !== currentTask && isServerTask(currentTask);
 
-        const metadata = window.json ?? window.PEMTaskMetaData ?? {
+        const defaultMetadata = {
             fullFeedback: true,
             minWidth: "auto",
         };
-        metadata.autoHeight = true;
-        if (!serverTask) {
-            metadata.disablePlatformProgress = true;
-        }
-        metadata.usesTokens = true; // To receive task token
 
-        return metadata;
+        return {
+            ...(window.json ?? window.PEMTaskMetaData ?? defaultMetadata),
+            autoHeight: true,
+            ...(!serverTask ? {disablePlatformProgress: true} : {}),
+            usesTokens: true, // To receive task token
+            apiVersion: 2,
+            minApiVersion: 1,
+        };
     }
 );
 
@@ -356,7 +360,7 @@ export function* canReloadAnswer(answer: TaskAnswer) {
     return true;
 }
 
-function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: ReturnType<typeof taskReloadAnswerEvent>) {
+function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}}: ReturnType<typeof taskReloadAnswerEvent>) {
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         if (taskLevels && Object.keys(taskLevels).length && answer) {
@@ -397,9 +401,16 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
                 if (!(yield* call(canReloadAnswer, answerObject))) {
                     throw new Error("This answer is not accepted: " + answer)
                 }
+
                 yield* put(platformAnswerLoaded(answerObject));
                 yield* put(platformTaskRefresh());
             }
+
+            if (options.idUserAnswer) {
+                const {score, message} = yield* call([taskGrader, taskGrader.reloadServerSubmissionFromId], options.idUserAnswer);
+                yield* put(platformAnswerGraded({score, message}));
+            }
+
             yield* call(success);
         } else {
             yield* call(success);
@@ -619,7 +630,8 @@ export interface PlatformTaskGradingResult {
 }
 
 export interface TaskGrader {
-    gradeAnswer: (parameters: PlatformTaskGradingParameters) => Generator<Effect, PlatformTaskGradingResult, any>;
+    gradeAnswer: (parameters: PlatformTaskGradingParameters) => Generator<Effect, PlatformTaskGradingResult>;
+    reloadServerSubmissionFromId: (submissionId: string) => Generator<Effect, PlatformTaskGradingResult>;
 }
 
 export interface PlatformBundleParameters {

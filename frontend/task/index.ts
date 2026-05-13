@@ -107,7 +107,7 @@ import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
-import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmission} from '../submission/submission';
+import {isServerSubmission, selectCurrentServerSubmission} from '../submission/submission_selectors';
 import {
     bufferDissociateFromSubmission,
     bufferEdit,
@@ -416,7 +416,7 @@ function* taskLoadSaga(app: App, action) {
     }
 
     context = quickAlgoLibraries.getContext(null, state.environment);
-    const tabsEnabled = context?.infos?.tabsEnabled;
+    const tabsEnabled = !!context?.infos?.tabsEnabled;
     yield* put({type: ActionTypes.TabsEnabledChanged, payload: {tabsEnabled}});
 
     yield* call(openDocumentationIfNecessary);

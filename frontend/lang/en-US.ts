@@ -320,6 +320,7 @@ export default {
     SUBMISSION_RESULTS_CRASHED: "An error has occured during submission evaluation.",
     SUBMISSION_RESULTS_CRASHED_NETWORK: "You are currently offline.",
     SUBMISSION_RESULTS_CRASHED_UNKNOWN: "Could not send submission to evaluation server.",
+    SUBMISSION_RESULTS_CRASHED_TIMEOUT: "Evaluation timed out. No result was received from the evaluation server.",
     SUBMISSION_RESULTS_LABEL: 'Submission in {platform}',
     SUBMISSION_TEST_NUMBER: "Test #{testNumber}",
     SUBMISSION_USER_TEST_WARNING: "Warning: this evaluation has been done on your own tests. To get a grade, please Submit your answer.",

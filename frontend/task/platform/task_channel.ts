@@ -3,7 +3,8 @@ import {
     taskGetAnswerEvent,
     taskGetHeightEvent, taskGetMetadataEvent,
     taskGetStateEvent,
-    taskGetViewsEvent, taskGradeAnswerEvent, taskLoadEvent, taskReloadAnswerEvent, taskReloadStateEvent,
+    taskGetViewsEvent, taskGradeAnswerEvent, taskLoadEvent, taskReloadAnswerEvent,
+    TaskReloadAnswerOptions, taskReloadStateEvent,
     taskShowViewsEvent,
     taskUnloadEvent, taskUpdateTokenEvent
 } from "./actionTypes";
@@ -52,6 +53,9 @@ function makeTask(emit, state: AppStore) {
         },
         reloadAnswer: function (answer, success, error) {
             emit(taskReloadAnswerEvent(answer, success ?? (() => {}), error ?? (() => {})));
+        },
+        reloadAnswerWithOptions: function (answer, options: TaskReloadAnswerOptions, success, error) {
+            emit(taskReloadAnswerEvent(answer, success ?? (() => {}), error ?? (() => {}), options));
         },
         reloadState: function (state, success, error) {
             emit(taskReloadStateEvent(state, success ?? (() => {}), error ?? (() => {})));
