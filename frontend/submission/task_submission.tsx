@@ -263,9 +263,10 @@ class TaskSubmissionExecutor {
             }
 
             const submissionId = submissionData.submissionId;
-            submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId);
+            const deferredResult = new DeferredPromise<PlatformTaskGradingResult>();
+            submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId, deferredResult);
 
-            return yield submissionExecutionTasks[submissionIndex].toPromise();
+            return yield* call(() => deferredResult.promise);
         } catch (ex: any) {
             yield* put(submissionUpdateTaskSubmission({
                 id: submissionIndex,
@@ -284,7 +285,7 @@ class TaskSubmissionExecutor {
         }
     }
 
-    *gradeAnswerLongPolling(submissionIndex: number, serverSubmission: TaskSubmissionServer, submissionId: string) {
+    *gradeAnswerLongPolling(submissionIndex: number, serverSubmission: TaskSubmissionServer, submissionId: string, deferredResult: DeferredPromise<PlatformTaskGradingResult>) {
         let longPollingTask;
         try {
             const deferredPromise = new DeferredPromise<TaskSubmissionServerResult>();
@@ -329,21 +330,19 @@ class TaskSubmissionExecutor {
                     }
                 }
 
-                return {
+                const result = {
                     score: submissionResult.score / 100,
                     message: submissionResult.errorMessage,
                     scoreToken: submissionResult.scoreToken,
                 };
+                deferredResult.resolve(result);
             } else {
                 yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
-
-                return {
-                    score: 0,
-                };
+                const result = {score: 0};
+                deferredResult.resolve(result);
             }
         } catch (e) {
-            console.error(e);
-            throw e;
+            deferredResult.reject(e);
         } finally {
             if (yield* cancelled()) {
                 if (longPollingTask) {
