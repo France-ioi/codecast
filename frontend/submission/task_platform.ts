@@ -133,6 +133,7 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
     const defaultTask = {
         commentSource: 'algorea',
         gridInfos: {
+            context: 'printer',
             hideSaveOrLoad: true,
             actionDelay: 200,
             includeBlocks: {
@@ -141,7 +142,11 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
                     includeAll: false,
                     wholeCategories: ['logic', 'loops', 'math', 'lists', 'variables', 'functions'],
                     singleBlocks: ['input_num', 'text', 'text_print', 'text_join', 'text_append']
-                }
+                },
+                generatedBlocks: {
+                    printer: ["print", "read"]
+                },
+                // pythonAdditionalFunctions: ["len"],
             },
             maxInstructions: 0,
             libOptions: {

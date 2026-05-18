@@ -1233,6 +1233,14 @@ export class BlocklyHelper {
                 continue;
             }
 
+            // Don't show printer lib blocks if similar Blockly standard blocks are already included
+            if ('printer' === block.generatorName && 'print' === block.name && this.includeBlocks?.standardBlocks?.singleBlocks?.includes('text_print')) {
+                continue;
+            }
+            if ('printer' === block.generatorName && 'read' === block.name && this.includeBlocks?.standardBlocks?.singleBlocks?.includes('input_num')) {
+                continue;
+            }
+
             let colours = this.getDefaultColours();
             const blockInfo = this.getBlockFromCustomBlocks(block.generatorName, block.category, block.name);
 
