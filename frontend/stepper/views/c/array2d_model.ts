@@ -2,7 +2,7 @@ import * as C from '@france-ioi/persistent-c';
 
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
 import {getCursorMap} from './array_utils';
-import {getMessage, getMessageFormat} from "../../../lang";
+import {getMessage, getMessageFormat} from '../../../lang/messages';
 
 export const extractView = function(context, stackFrame, refExpr, options) {
     const {programState} = context;

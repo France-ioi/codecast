@@ -9,8 +9,8 @@ import {AppStore} from "../store";
 import {SubtitlesOptions} from "./index";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
-import {getMessage} from "../lang";
 import { CloudDownload, CloudUpload, Cross, Download, Edit, Undo, Upload, Add, ArrowLeft } from "@blueprintjs/icons";
+import {getMessage} from '../lang/messages';
 
 interface SubtitlesEditorStateToProps {
     availableOptions: SubtitlesOptions,

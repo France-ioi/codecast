@@ -5,7 +5,6 @@ import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
 import {useDispatch} from "react-redux";
 import {isTestPublic, TaskTestGroupType} from './task_types';
-import {getMessage} from '../lang';
 import {
     isServerSubmission
 } from '../submission/submission_selectors';
@@ -23,6 +22,7 @@ import {
 import {TaskSubmissionServerTestResult} from '../submission/submission_types';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {TestResultVisualization} from '../submission/TestResultVisualization';
+import {getMessage} from '../lang/messages';
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();

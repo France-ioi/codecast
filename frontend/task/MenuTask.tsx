@@ -7,7 +7,6 @@ import {SettingsDialog} from "../common/SettingsDialog";
 import {EditRecordingDialog} from "../editor/EditRecordingDialog";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
-import {getMessage} from "../lang";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
@@ -29,6 +28,7 @@ import { SmartContractLib } from './libs/smart_contract/smart_contract_lib';
 import {WorkWithGitDialog} from './WorkWithGitDialog';
 import {selectLayoutMobileMode} from './layout/layout';
 import { Console, GitBranch } from '@blueprintjs/icons';
+import {getMessage} from '../lang/messages';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);

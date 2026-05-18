@@ -1,7 +1,6 @@
 import React from "react";
 import {Card} from 'react-bootstrap'
 import {Lock} from "@blueprintjs/icons";
-import {getMessage} from "../../../lang";
 import {useAppSelector} from '../../../hooks';
 import {Editor} from '../../../buffers/Editor';
 import {inputBufferLibTest, outputBufferLibTest, PrinterLib, PrinterLibState} from './printer_lib';
@@ -10,8 +9,9 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {InputEmptyState} from './InputEmptyState';
 import {BufferEditor} from '../../../buffers/BufferEditor';
-import {selectCurrentTest} from '../../task_slice';
 import {TaskTestGroupType} from '../../task_types';
+import {getMessage} from '../../../lang/messages';
+import {selectCurrentTest} from '../../task_selectors';
 
 // To avoid re-rendering because of new object
 const bufferNonEditableOptions = {

@@ -2,6 +2,7 @@ import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
 import {nodePolyfills} from 'vite-plugin-node-polyfills';
 import {viteStaticCopy} from 'vite-plugin-static-copy';
+// import circleDependency from 'vite-plugin-circular-dependency';
 import * as fs from 'fs';
 import * as path from 'path';
 import {fileURLToPath} from 'url';
@@ -58,6 +59,9 @@ export class Icons {
                     return null;
                 },
             },
+            // circleDependency({
+            //     outputFilePath: "./circleDep.json",
+            // }),
         ],
         resolve: {
             alias: {

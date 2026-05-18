@@ -1,9 +1,9 @@
 import {Task, TaskTest, TaskTestServer} from '../task/task_types';
-import {getMessage} from '../lang';
 import {extractVariantSpecific} from '../task/utils';
 import {TaskLevelName} from '../task/platform/platform_slice';
 import {SubmissionTestErrorCode, TaskSubmissionServerTestResult, TaskSubmissionTestResult} from './submission_types';
 import {testErrorCodeData} from './TestsPaneListTest';
+import {getMessage} from '../lang/messages';
 
 export function extractTestsFromTask(task: Task, variant: number = null): TaskTest[] {
     const tests = getTestsFromTask(task, variant);

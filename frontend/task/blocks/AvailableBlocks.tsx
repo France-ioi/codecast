@@ -3,10 +3,10 @@ import {getContextBlocksDataSelector} from "./blocks";
 import {useAppSelector} from "../../hooks";
 import {AvailableBlock} from "./AvailableBlock";
 import {AvailableBlockCategory} from "./AvailableBlockCategory";
-import {getMessage} from "../../lang";
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {Block, BlockType} from './block_types';
 import {selectGroupByCategory} from '../../stepper/js';
+import {getMessage} from '../../lang/messages';
 
 export interface AvailableBlocksProps {
     collapsed: boolean,

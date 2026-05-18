@@ -6,12 +6,12 @@ import {getFormattedInstructionsForLevelSelector} from '../instructions/instruct
 import {TaskHint} from './hints_slice';
 import React from 'react';
 import Markdown from 'react-markdown';
-import {getMessage} from '../../lang';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {getContextBlocksDataSelector} from '../blocks/blocks';
 import {Block, BlockType} from '../blocks/block_types';
 import {platformsList} from '../../stepper/platforms';
 import {selectTaskTokenPayload} from '../platform/platform';
+import {getMessage} from '../../lang/messages';
 
 interface CodeHelpParameters {
     code: string,

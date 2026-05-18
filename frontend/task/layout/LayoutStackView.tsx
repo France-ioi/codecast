@@ -1,8 +1,8 @@
 import React from "react";
 import {useAppSelector} from "../../hooks";
-import {getMessage} from "../../lang";
 import {AnalysisStackView} from "../../stepper/analysis/AnalysisStackView";
 import {TaskSubmissionEvaluateOn} from '../../submission/submission_types';
+import {getMessage} from '../../lang/messages';
 
 export function LayoutStackView() {
     const currentStepperState = useAppSelector(state => state.stepper ? state.stepper.currentStepperState : null);

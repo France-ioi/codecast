@@ -66,7 +66,7 @@ import {Bundle} from "../linker";
 import {QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from "../task/libs/quickalgo_libraries";
-import {selectCurrentTest, taskResetDone, taskUpdateState, updateCurrentTestId} from "../task/task_slice";
+import {taskResetDone, taskUpdateState, updateCurrentTestId} from "../task/task_slice";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {selectAnswer} from "../task/selectors";
@@ -99,6 +99,7 @@ import {StepperProgressParameters} from './stepper_types';
 import {FileDescriptor} from '../task/libs/remote_lib_handler';
 import {RecorderStatus} from '../recorder/store';
 import {produce} from 'immer';
+import {selectCurrentTest} from '../task/task_selectors';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms

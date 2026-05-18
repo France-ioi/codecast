@@ -3,11 +3,11 @@ import {Menu} from "@blueprintjs/icons";
 import React, {FormEvent} from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from '../hooks';
-import {getMessage} from '../lang';
 import {GitSyncParams} from './buffer_types';
 import {bufferInit, bufferRemove, bufferResetDocument} from './buffers_slice';
 import {BufferEditor} from './BufferEditor';
 import {platformsList} from '../stepper/platforms';
+import {getMessage} from '../lang/messages';
 
 export function GitResolveConflictsDialog({bufferName}: {bufferName: string}) {
     const bufferState = useAppSelector(state => state.buffers.buffers[bufferName]);

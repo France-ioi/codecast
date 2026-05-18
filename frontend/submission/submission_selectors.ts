@@ -12,9 +12,9 @@ import {hasBlockPlatform} from '../stepper/platforms';
 import {doesPlatformHaveClientRunner} from '../stepper';
 import {remoteDebugSupportedPlatforms} from '../stepper/remote/remote_debug_executer';
 import {selectTaskTokenPayload} from '../task/platform/platform';
-import {selectCurrentTest} from '../task/task_slice';
 import {SubmissionExecutionScope} from './submission_slice';
 import {Range} from '../buffers/buffer_types';
+import {selectCurrentTest} from '../task/task_selectors';
 
 export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
     return TaskSubmissionEvaluateOn.Server === object.type;

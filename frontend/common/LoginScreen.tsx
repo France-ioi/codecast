@@ -1,9 +1,9 @@
 import React from "react";
 import {ButtonGroup} from "@blueprintjs/core";
-import {getMessage} from "../lang";
 import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "./actionTypes";
+import {getMessage} from '../lang/messages';
 
 export function LoginScreen() {
     const {baseUrl, authProviders} = useAppSelector(state => state.options);

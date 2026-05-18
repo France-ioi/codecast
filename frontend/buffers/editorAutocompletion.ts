@@ -1,6 +1,5 @@
-import {getMessage} from "../lang";
-
 import {Block, BlockType} from '../task/blocks/block_types';
+import {getMessage} from '../lang/messages';
 
 export const addAutocompletion = function (blocks: Block[], strings: any) {
     let langTools = window.ace.acequire("ace/ext/language_tools");

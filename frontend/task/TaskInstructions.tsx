@@ -1,6 +1,5 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../hooks";
-import {getMessage} from "../lang";
 import {Button} from '@blueprintjs/core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons/faPlus';
@@ -17,6 +16,7 @@ import {getDomElementFromDomTree, useCursorPositionTracking} from './layout/curs
 import {CursorPoint, CursorPosition} from './layout/actionTypes';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {simulationInstance} from './instructions/animation';
+import {getMessage} from '../lang/messages';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,

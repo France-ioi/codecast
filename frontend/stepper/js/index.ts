@@ -4,7 +4,6 @@ import {Bundle} from "../../linker";
 import {selectAnswer} from "../../task/selectors";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {delay} from "../api";
-import {getMessage, getMessageChoices} from "../../lang";
 import {put} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
 import {taskIncreaseContextId} from "../../task/task_slice";
@@ -16,6 +15,7 @@ import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
 import {BlocklyHelper} from './blockly_helper';
+import {getMessage, getMessageChoices} from '../../lang/messages';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;

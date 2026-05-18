@@ -1,12 +1,12 @@
 import React from 'react';
 import {Button} from '@blueprintjs/core';
-import {getMessage} from '../lang';
 import {useDispatch} from 'react-redux';
 import {bufferResetToDefaultSourceCode} from '../buffers/buffer_actions';
 import {useAppSelector} from '../hooks';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {isServerTask} from './task_types';
+import {getMessage} from '../lang/messages';
 
 export function TaskLimits() {
     const task = useAppSelector(state => state.task.currentTask);

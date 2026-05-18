@@ -18,10 +18,8 @@ import CraneFixture from './fixtures/test_crane';
 import Crane2Fixture from './fixtures/test_crane2';
 import MapFixture from './fixtures/test_map';
 import OpenCvFixture from './fixtures/test_opencv';
-import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
-import {selectTaskTests} from '../submission/submission_selectors';
 import {BlocksUsage, QuickalgoLibraryInfos, QuickalgoTaskIncludeBlocks, Task, TaskState, TaskTest} from './task_types';
 
 const availableTasks = {
@@ -75,22 +73,6 @@ export const taskInitialState = {
     availablePlatforms: [],
     levelGridInfos: null,
 } as TaskState;
-
-export const selectCurrentTestData = (state: AppStore) => {
-    const currentTest = selectCurrentTest(state);
-
-    return null !== currentTest ? currentTest.data : {};
-}
-
-export const selectCurrentTest = (state: AppStore): TaskTest|null => {
-    const taskTests = selectTaskTests(state);
-
-    if (null == state.task.currentTestId || !(state.task.currentTestId in taskTests)) {
-        return null;
-    }
-
-    return taskTests[state.task.currentTestId];
-}
 
 export interface TaskInputEnteredPayload {
     input: string,

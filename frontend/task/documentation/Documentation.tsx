@@ -14,13 +14,13 @@ import {DocumentationConcept, documentationConceptSelected} from "./documentatio
 import {Screen} from "../../common/screens";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
-import {getMessage} from "../../lang";
 import {TaskInstructions} from '../TaskInstructions';
 import {DocumentationLanguageSelector} from './DocumentationLanguageSelector';
 import {DocumentationMenuConcept} from './DocumentationMenuConcept';
 import {DocumentationMenuCategoryConcept} from './DocumentationMenuCategoryConcept';
 import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
 import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
+import {getMessage} from '../../lang/messages';
 
 interface DocumentationProps {
     standalone: boolean,

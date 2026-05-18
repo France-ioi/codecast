@@ -1,8 +1,8 @@
 import {NotionsBag} from './notions';
 import {QuickalgoTaskIncludeBlocks} from '../task_types';
 import {Block, BlockType} from './block_types';
-import {getMessage} from '../../lang';
 import {analysisDirectiveViewDict} from '../../stepper/views';
+import {getMessage} from '../../lang/messages';
 
 export const pythonNotionsToBlocks = {
     'dicts_create_with': ['dict_brackets'],

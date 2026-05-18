@@ -7,13 +7,13 @@ import {faCaretDown} from '@fortawesome/free-solid-svg-icons/faCaretDown';
 import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneListTest';
 import {selectTaskTests} from './submission_selectors';
 import {TaskSubmissionServer} from './submission_types';
-import {getMessage} from '../lang';
 import {faPlus} from '@fortawesome/free-solid-svg-icons/faPlus';
 import {submissionCloseCurrentSubmission} from './submission_slice';
 import {submissionCreateTest} from './submission_actions';
 import {useDispatch} from 'react-redux';
 import {TaskTestGroupType} from '../task/task_types';
-import {selectCurrentTest} from '../task/task_slice';
+import {getMessage} from '../lang/messages';
+import {selectCurrentTest} from '../task/task_selectors';
 
 export interface SubmissionResultSubTaskProps {
     submission: TaskSubmissionServer,

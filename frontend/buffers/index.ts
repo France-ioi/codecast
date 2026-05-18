@@ -42,7 +42,6 @@ import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
 import log from 'loglevel';
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from '../stepper/actionTypes';
-import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {appSelect} from '../hooks';
 import {hasBlockPlatform} from '../stepper/platforms';
@@ -91,6 +90,7 @@ import {canReloadAnswer} from '../task/platform/platform';
 import {bufferGitSyncSagas} from './buffer_git_sync';
 import {compressDocument, uncompressDocument} from './compression';
 import {isServerSubmission} from '../submission/submission_selectors';
+import {getMessage} from '../lang/messages';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);

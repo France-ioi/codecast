@@ -1,7 +1,8 @@
 import range from 'node-range';
 
 import {getVariable} from './utils';
-import {getMessage} from "../../../lang";
+
+import {getMessage} from '../../../lang/messages';
 
 /**
  extractView(context, name, options) looks up `name` in `stackFrame` and

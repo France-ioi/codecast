@@ -1,11 +1,11 @@
 import React, {useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../../hooks";
-import {getMessage, getMessageChoices} from "../../lang";
 import {AllowExecutionOverBlocksLimit, AppStore} from "../../store";
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {Button, Intent} from '@blueprintjs/core';
 import {faShoePrints} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {getMessage, getMessageChoices} from '../../lang/messages';
 
 export function BlocksUsage() {
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);

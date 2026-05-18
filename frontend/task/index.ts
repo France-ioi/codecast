@@ -97,7 +97,6 @@ import {selectTaskTests} from '../submission/submission_selectors';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
-import {getMessage, Languages} from '../lang';
 import {isServerTask, TaskServer, TaskTest} from './task_types';
 import {extractTestsFromTask} from '../submission/tests';
 import {taskChangeLevel, taskLoad} from './task_actions';
@@ -126,6 +125,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import {DeferredPromise} from '../utils/app';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 import {getAudioTimeStep} from './task_selectors';
+import {getMessage, Languages} from '../lang/messages';
 
 // @ts-ignore
 if (!String.prototype.format) {

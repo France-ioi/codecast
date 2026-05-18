@@ -6,7 +6,6 @@ extracted from the stepper by the analysis module.
 import React from 'react';
 import * as C from '@france-ioi/persistent-c';
 
-import {getMessage, LocalizedError} from '../../../lang';
 import {C_directiveViewDict} from "../index";
 import {Block, BlockType} from '../../../task/blocks/block_types';
 import {Document, TextDocument} from '../../../buffers/buffer_types';
@@ -14,6 +13,7 @@ import {QuickAlgoLibrary} from '../../../task/libs/quickalgo_library';
 import {AppStore} from '../../../store';
 import {getAvailableModules} from '../../../task/utils';
 import {documentToString} from '../../../buffers/document';
+import {getMessage, LocalizedError} from '../../../lang/messages';
 
 interface ViewElement {
     kind: any,

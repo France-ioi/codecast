@@ -19,7 +19,6 @@ import {LayoutEditor} from "./LayoutEditor";
 import {LayoutDirective} from "./LayoutDirective";
 import {Screen} from "../../common/screens";
 import {Documentation} from "../documentation/Documentation";
-import {getMessage} from "../../lang";
 import {call, put, takeEvery} from "typed-redux-saga";
 import {PlayerInstant} from "../../player";
 import {askConfirmation} from "../../alert";
@@ -36,6 +35,7 @@ import {quickAlgoLibraries, QuickAlgoLibraries} from '../libs/quick_algo_librari
 import {ReplayContext} from '../../player/sagas';
 import {TaskSolution} from '../TaskSolution';
 import {Edit, Document, Console, Code, Help} from '@blueprintjs/icons';
+import {getMessage} from '../../lang/messages';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;

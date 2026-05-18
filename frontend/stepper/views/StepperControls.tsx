@@ -16,11 +16,11 @@ import {
     faTachometerAlt,
     faWalking,
 } from '@fortawesome/free-solid-svg-icons';
-import {getMessage} from "../../lang";
 import {getStepperControlsSelector} from "../selectors";
 import {useAppSelector} from "../../hooks";
-import {selectCurrentTest} from '../../task/task_slice';
 import {LayoutType} from '../../task/layout/layout_types';
+import {getMessage} from '../../lang/messages';
+import {selectCurrentTest} from '../../task/task_selectors';
 
 interface StepperControlsProps {
     enabled: boolean,

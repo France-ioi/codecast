@@ -3,8 +3,8 @@ import {useAppSelector} from "../../hooks";
 import {toHtml} from "../../utils/sanitize";
 import {TaskHint} from "./hints_slice";
 import {formatTaskInstructions} from '../utils';
-import {getMessage} from '../../lang';
 import {formatCodeHelpHint} from './codehelp';
+import {getMessage} from '../../lang/messages';
 
 export interface TaskHintProps {
     hint?: TaskHint,

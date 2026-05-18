@@ -16,8 +16,8 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Vumeter} from "../recorder/Vumeter";
 import {useAppSelector} from "../hooks";
 import {SaveStep} from "../recorder/save_screen";
-import {getMessage} from "../lang";
 import {CursorPosition} from './layout/CursorPosition';
+import {getMessage} from '../lang/messages';
 
 interface RecorderControlsProps {
     enabled?: boolean

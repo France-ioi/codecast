@@ -1,6 +1,5 @@
 import { Button, Dialog, FormGroup, InputGroup, Intent, Menu, MenuItem, Spinner } from "@blueprintjs/core";
 import React, {useEffect, useState} from "react";
-import {getMessage} from "../lang";
 import {useAppSelector} from '../hooks';
 import {selectActiveBuffer} from '../buffers/buffer_selectors';
 import {GitSyncParams} from '../buffers/buffer_types';
@@ -10,6 +9,7 @@ import {useDispatch} from 'react-redux';
 import {bufferCreateSourceBuffer} from '../buffers/buffer_actions';
 import {TextBufferHandler} from '../buffers/document';
 import { Document, FolderClose, GitBranch, GitRepo, Menu as MenuIcon, CaretDown } from '@blueprintjs/icons';
+import {getMessage} from '../lang/messages';
 
 interface WorkWithGitDialogProps {
     open: boolean,

@@ -1,10 +1,10 @@
 import { Button, ControlGroup, Dialog, FormGroup, Icon, InputGroup } from "@blueprintjs/core";
 import React, {useRef, useState} from "react";
-import {getMessage} from "../lang";
 import {useAppSelector} from '../hooks';
 import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {platformsList} from '../stepper/platforms';
 import { Console, Tick, Duplicate, Menu, Download } from '@blueprintjs/icons';
+import {getMessage} from '../lang/messages';
 
 interface LocalWorkDialogProps {
     open: boolean,
