@@ -1049,14 +1049,6 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(ActionTypes.WindowResized, function* () {
-            const context = quickAlgoLibraries.getContext(null, 'main');
-            const state = yield* appSelect();
-            if (hasBlockPlatform(selectActiveBufferPlatform(state)) && state.task.currentTask) {
-                yield* call(loadBlocklyHelperSaga, context);
-            }
-        });
-
         yield* takeEvery([ActionTypes.WindowResized, LayoutActionTypes.LayoutMobileModeChanged], function* () {
             const state = yield* appSelect();
             const context = quickAlgoLibraries.getContext(null, 'main');
