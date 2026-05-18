@@ -143,10 +143,11 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
                     wholeCategories: ['logic', 'loops', 'math', 'lists', 'variables', 'functions'],
                     singleBlocks: ['input_num', 'text', 'text_print', 'text_join', 'text_append']
                 },
-                generatedBlocks: {
-                    printer: ["print", "read"]
-                },
-                // pythonAdditionalFunctions: ["len"],
+                ...((!taskData?.gridInfos?.context || 'printer' === taskData.gridInfos.context) ? {
+                    generatedBlocks: {
+                        printer: ["print", "read"]
+                    },
+                } : {}),
             },
             maxInstructions: 0,
             libOptions: {
