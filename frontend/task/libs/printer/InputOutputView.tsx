@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Card} from 'react-bootstrap'
 import {Lock} from "@blueprintjs/icons";
 import {useAppSelector} from '../../../hooks';
@@ -32,10 +32,10 @@ export function InputOutputView() {
     const libExpectedOutput = taskState ? taskState.expectedOutput : '';
     const consumedInput = PrinterLib.getConsumedTextFromEvents(taskState);
     const consumedInputLines = consumedInput.split("\n").length;
-    const consumedHighlight: Range = {
+    const consumedHighlight: Range = useMemo(() => ({
         start: {row: 0, column: 0},
         end: {row: consumedInputLines - 1, column: consumedInput.split("\n")[consumedInputLines - 1].length},
-    };
+    }), [consumedInput]);
 
     return (
         <div className={`input-output-view ${printerLibColumn && 'is-column'}`}>

@@ -6,6 +6,7 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {faClock, faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {capitalizeFirstLetter} from '../common/utils';
 import {getMessage} from '../lang/messages';
+import {platformsList} from '../stepper/platforms';
 
 export interface SubmissionResultLabelProps {
     submission: TaskSubmissionServer,
@@ -34,7 +35,7 @@ export function SubmissionResultLabel(props: SubmissionResultLabelProps) {
                     </div>)
             }
             <div className="submission-label-name">
-                <p>{getMessage('SUBMISSION_RESULTS_LABEL').format({platform: capitalizeFirstLetter(submission.platform)})}</p>
+                <p>{getMessage('SUBMISSION_RESULTS_LABEL').format({platform: platformsList[submission.platform].name})}</p>
                 <p className="submission-label-date">
                     <FontAwesomeIcon icon={faClock}/>
                     <span className="ml-1">{dateTime.toLocaleString(DateTime.DATETIME_SHORT)}</span>
