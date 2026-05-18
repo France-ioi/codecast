@@ -287,7 +287,7 @@ export function Editor(props: EditorProps) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
                        and scrolling is handled by individual events. */
-                    editor.current.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
+                    editor.current.scrollToLine(range.end.row, /*center*/true, /*animate*/true);
                 }
             }
         });
