@@ -10,11 +10,11 @@ import {useDispatch} from "react-redux";
 import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {IoMode} from "../stepper/io";
-import {getMessage} from "../lang";
 import {PlatformSelection} from './PlatformSelection';
 import {getJsLibLoaded} from '../task/libs/import_modules';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
+import {getMessage} from '../lang/messages';
 
 interface SettingsDialogProps {
     open: boolean,

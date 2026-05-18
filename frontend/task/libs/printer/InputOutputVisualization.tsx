@@ -3,8 +3,8 @@ import {TerminalView} from "./TerminalView";
 import {InputOutputView} from "./InputOutputView";
 import {IoMode} from "../../../stepper/io";
 import {useAppSelector} from "../../../hooks";
-import {getMessage} from "../../../lang";
-import {selectCurrentTest} from '../../task_slice';
+import {getMessage} from '../../../lang/messages';
+import {selectCurrentTest} from '../../task_selectors';
 
 export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.options.ioMode);

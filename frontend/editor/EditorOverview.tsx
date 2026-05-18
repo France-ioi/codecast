@@ -6,8 +6,8 @@ import {ActionTypes} from "./actionTypes";
 import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import {EditorSaveState} from "./index";
-import {getMessage} from "../lang";
 import {CloudUpload, Cross, Download, Link, Play, Tick} from "@blueprintjs/icons";
+import {getMessage} from '../lang/messages';
 
 interface EditorOverviewProps {
     withoutWaveform?: boolean,

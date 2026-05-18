@@ -1,7 +1,7 @@
 import {Bundle} from "../../linker";
 import {apply, call, put, spawn, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
-import {selectCurrentTestData, taskUpdateState} from "../task_slice";
+import {taskUpdateState} from "../task_slice";
 import {makeContext, QuickalgoLibraryCall} from "../../stepper/api";
 import {createRunnerSaga} from "../../stepper";
 import log from 'loglevel';
@@ -17,6 +17,7 @@ import {BlockDocument, BufferType} from '../../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../../stepper/js';
 import {selectAnswer} from '../selectors';
 import {getAvailableModules} from '../utils';
+import {selectCurrentTestData} from '../task_selectors';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',

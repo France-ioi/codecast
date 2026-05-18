@@ -11,7 +11,6 @@ import {createDisplayHelper} from './display_helper';
 import {getAvailablePlatformsFromSupportedLanguages, hasBlockPlatform} from '../../stepper/platforms';
 import {loadBlocklyHelperSaga} from '../../stepper/js';
 import {
-    selectCurrentTestData,
     taskIncreaseContextId,
     taskSetAvailablePlatforms,
     taskSetBlocksPanelCollapsed,
@@ -34,6 +33,7 @@ import {OpenCvLib} from './opencv/opencv_lib';
 import {Codecast} from '../../app_types';
 import {bufferGetPythonCode} from '../../buffers/buffer_actions';
 import {BlocklyHelper} from '../../stepper/js/blockly_helper';
+import {selectCurrentTestData} from '../task_selectors';
 
 const availableLibs = {
     'smart_contract': SmartContractLib,

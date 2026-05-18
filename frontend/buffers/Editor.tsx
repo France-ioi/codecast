@@ -2,7 +2,6 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
 import {Range, TextBufferState} from './buffer_types';
-import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
@@ -16,6 +15,7 @@ import debounce from 'lodash/debounce';
 import {useCursorPositionTracking} from '../task/layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from '../task/layout/actionTypes';
 import {ComputedSourceHighlight, SourceHighlightRange} from '../stepper';
+import {getMessage} from '../lang/messages';
 
 export interface EditorProps {
     name?: string,

@@ -41,7 +41,6 @@ import {taskLoaded} from '../task_slice';
 import {appSelect} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {SubmissionExecutionScope} from '../../submission/submission_slice';
-import {getMessage} from '../../lang';
 import {LayoutView} from '../layout/layout_types';
 import {taskLoad} from '../task_actions';
 import {levelScoringData} from '../../submission/scoring';
@@ -63,6 +62,7 @@ import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
 import jwt from 'jsonwebtoken';
 import {getAvailablePlatforms} from '../libs/quickalgo_library_factory';
+import {getMessage} from '../../lang/messages';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;

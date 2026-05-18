@@ -9,7 +9,6 @@ import {
     documentationLanguageChanged,
 } from "./documentation_slice";
 import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
-import {getMessage} from "../../lang";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
 import {
@@ -27,6 +26,7 @@ import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {bufferResetDocument} from '../../buffers/buffers_slice';
 import {AppStore} from '../../store';
 import {bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
+import {getMessage} from '../../lang/messages';
 
 let openerChannel;
 

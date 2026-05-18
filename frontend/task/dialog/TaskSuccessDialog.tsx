@@ -2,12 +2,12 @@ import {Dialog, Icon} from "@blueprintjs/core";
 import React from "react";
 import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
-import {getMessage} from "../../lang";
 import {taskLevelsList} from "../platform/platform_slice";
 import {callPlatformValidate} from '../../submission/submission_actions';
 import {taskChangeLevel} from '../task_actions';
 import {getNextLevelIndex} from '../platform/platform';
 import {SmallTick} from '@blueprintjs/icons';
+import {getMessage} from '../../lang/messages';
 
 export interface TaskSuccessDialogProps {
     onClose: () => void,

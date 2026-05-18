@@ -1,7 +1,8 @@
 import React from "react";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
-import {getMessage} from "../lang";
+
+import {getMessage} from '../lang/messages';
 
 interface MemoryUsageStateToProps {
     heapSize: string

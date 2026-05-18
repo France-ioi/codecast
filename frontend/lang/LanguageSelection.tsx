@@ -1,9 +1,9 @@
 import React from "react";
-import {getMessage, Languages} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {isLocalStorageEnabled} from "../common/utils";
 import {useAppSelector} from '../hooks';
+import {getMessage, Languages} from './messages';
 
 interface LanguageSelectionProps {
     closeMenu: Function

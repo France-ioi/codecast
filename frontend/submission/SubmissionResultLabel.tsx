@@ -2,10 +2,10 @@ import React from "react";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {DateTime} from 'luxon';
 import {TaskSubmissionServer} from './submission_types';
-import {getMessage} from '../lang';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {faClock, faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {capitalizeFirstLetter} from '../common/utils';
+import {getMessage} from '../lang/messages';
 
 export interface SubmissionResultLabelProps {
     submission: TaskSubmissionServer,

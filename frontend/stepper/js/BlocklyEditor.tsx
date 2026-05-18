@@ -4,13 +4,14 @@ import {BlockBufferHandler, documentToString} from "../../buffers/document";
 import log from 'loglevel';
 import {stepperDisplayError} from '../actionTypes';
 import {useDispatch} from 'react-redux';
-import {getMessage} from '../../lang';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {BlockBufferState, BlockDocument} from '../../buffers/buffer_types';
 import {bufferResetToDefaultSourceCode} from '../../buffers/buffer_actions';
 import {ComputedSourceHighlight, SourceHighlightBlock} from '../index';
 import {callPlatformLog} from '../../submission/submission_actions';
 import {selectGroupByCategory} from './index';
+import {selectActiveView} from '../../task/layout/layout';
+import {getMessage} from '../../lang/messages';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -29,6 +30,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const language = useAppSelector(state => state.options.language.split('-')[0]);
     const contextIncludeBlocks = useAppSelector(state => state.task.contextIncludeBlocks);
     const groupByCategory = useAppSelector(selectGroupByCategory);
+    const activeView = useAppSelector(selectActiveView);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentValue = useRef(null);
@@ -253,6 +255,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     }
 
     useEffect(() => {
+        console.log('change active view', activeView);
+
         onLoad();
 
         return () => {
@@ -262,7 +266,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                 context.blocklyHelper.unloadLevel();
             }
         };
-    }, [currentTask, currentLevel, contextId, props.readOnly]);
+    }, [currentTask, currentLevel, contextId, props.readOnly, activeView]);
 
     const updateDocumentConditionnally = () => {
         const newDocument = currentValue.current ?? BlockBufferHandler.getEmptyDocument();

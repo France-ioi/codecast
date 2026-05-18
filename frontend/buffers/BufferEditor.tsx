@@ -47,7 +47,7 @@ export function BufferEditor(props: BufferEditorProps) {
     const highlights = bufferState.source ? useAppSelector(getComputedSourceHighlightFromStateSelector) : null;
     const [prevWidth, setPrevWidth] = useState(0);
     const [prevHeight, setPrevHeight] = useState(0);
-    const {width, height} = useResizeDetector<HTMLDivElement>();
+    const {ref, width, height} = useResizeDetector<HTMLDivElement>();
 
     const dispatch = useDispatch();
 
@@ -57,7 +57,7 @@ export function BufferEditor(props: BufferEditorProps) {
         }
         setPrevWidth(width);
         setPrevHeight(height);
-    }, [width, height])
+    }, [width, height]);
 
     const onInit = useCallback(() => {
         dispatch(bufferInit({buffer: bufferName, type: bufferType}));
@@ -84,38 +84,42 @@ export function BufferEditor(props: BufferEditorProps) {
     }, [bufferName]);
 
     if (BufferType.Block === bufferType) {
-        return <BlocklyEditor
-            key={bufferName}
-            name={bufferName}
-            state={bufferState as BlockBufferState}
-            highlights={highlights}
-            onInit={onInit}
-            onSelect={onSelect}
-            onEditPlain={onEditPlain}
-            readOnly={props.readOnly}
-        />
+        return <div ref={ref} style={{width: '100%', height: '100%'}}>
+            <BlocklyEditor
+                key={bufferName}
+                name={bufferName}
+                state={bufferState as BlockBufferState}
+                highlights={highlights}
+                onInit={onInit}
+                onSelect={onSelect}
+                onEditPlain={onEditPlain}
+                readOnly={props.readOnly}
+            />
+        </div>
     }
 
-    return <Editor
-        key={bufferName}
-        name={bufferName}
-        state={bufferState as TextBufferState}
-        highlights={highlights}
-        onInit={onInit}
-        onEdit={onEdit}
-        onEditPlain={onEditPlain}
-        onSelect={onSelect}
-        onScroll={onScroll}
-        onDropBlock={onDropBlock}
-        readOnly={props.readOnly}
-        shield={props.shield}
-        theme={props.theme}
-        mode={props.mode}
-        width={props.requiredWidth}
-        height={props.requiredHeight}
-        hasAutocompletion={props.hasAutocompletion}
-        hasScrollMargin={bufferState.source}
-        dragEnabled={props.dragEnabled}
-        {...props.editorProps}
-    />;
+    return <div ref={ref} style={{width: '100%', height: '100%'}}>
+        <Editor
+            key={bufferName}
+            name={bufferName}
+            state={bufferState as TextBufferState}
+            highlights={highlights}
+            onInit={onInit}
+            onEdit={onEdit}
+            onEditPlain={onEditPlain}
+            onSelect={onSelect}
+            onScroll={onScroll}
+            onDropBlock={onDropBlock}
+            readOnly={props.readOnly}
+            shield={props.shield}
+            theme={props.theme}
+            mode={props.mode}
+            width={props.requiredWidth}
+            height={props.requiredHeight}
+            hasAutocompletion={props.hasAutocompletion}
+            hasScrollMargin={bufferState.source}
+            dragEnabled={props.dragEnabled}
+            {...props.editorProps}
+        />
+    </div>;
 }

@@ -5,7 +5,6 @@ import {apply, put, race, take, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../../../store";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
 import {
-    selectCurrentTestData,
     taskInputEntered,
     taskInputNeeded,
     updateCurrentTestId,
@@ -19,7 +18,6 @@ import log from 'loglevel';
 import {PayloadAction} from "@reduxjs/toolkit";
 import {appSelect} from '../../../hooks';
 import {TestResultDiffLog} from '../../../submission/submission';
-import {getMessage} from '../../../lang';
 import {LibraryTestResult} from '../library_test_result';
 import {SubmissionTestErrorCode, TaskSubmissionServerTestResult,} from '../../../submission/submission_types';
 import {submissionUpdateCurrentTest} from '../../../submission/submission_actions';
@@ -28,6 +26,8 @@ import {App} from '../../../app_types';
 import {documentToString, getBufferHandler, TextBufferHandler} from '../../../buffers/document';
 import {bufferEdit, bufferResetDocument} from '../../../buffers/buffers_slice';
 import {isTestPublic, TaskTest} from '../../task_types';
+import {getMessage} from '../../../lang/messages';
+import {selectCurrentTestData} from '../../task_selectors';
 
 export function getTerminalText(events) {
     return events

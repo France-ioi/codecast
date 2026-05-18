@@ -4,7 +4,8 @@ import React, {useEffect} from "react";
 import {EditorSave} from "./EditorSave";
 import {useDispatch} from "react-redux";
 import {ActionTypes} from './actionTypes';
-import {getMessage} from "../lang";
+
+import {getMessage} from '../lang/messages';
 
 interface EditRecordingDialogProps {
     open: boolean,

@@ -6,9 +6,9 @@ import {GitSyncParams} from './buffer_types';
 import {asyncRequestJson} from '../utils/api';
 import {documentToString, TextBufferHandler} from './document';
 import {stepperDisplayError} from '../stepper/actionTypes';
-import {getMessage} from '../lang';
 import {isLocalStorageEnabled} from '../common/utils';
 import {createSourceBufferFromDocument} from './index';
+import {getMessage} from '../lang/messages';
 
 export function* bufferGitSyncSagas() {
     yield* takeEvery(bufferGitPull, function* ({payload: {bufferName, source, revision}}) {

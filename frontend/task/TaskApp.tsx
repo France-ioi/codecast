@@ -17,7 +17,6 @@ import {ActionTypes} from "../subtitles/actionTypes";
 import {SubtitlesEditor} from "../subtitles/SubtitlesEditor";
 import {LoginScreen} from "../common/LoginScreen";
 import {selectActiveView, ZOOM_LEVEL_LOW} from "./layout/layout";
-import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {SubtitlesPane} from "../subtitles/SubtitlesPane";
@@ -32,6 +31,7 @@ import {DebugDialog} from './dialog/DebugDialog';
 import {LayoutPlayerMode, LayoutView} from './layout/layout_types';
 import {useCursorPositionTracking} from './layout/cursor_tracking';
 import {CursorPosition} from './layout/CursorPosition';
+import {getMessage} from '../lang/messages';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);

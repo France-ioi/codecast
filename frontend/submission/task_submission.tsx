@@ -28,7 +28,6 @@ import {DeferredPromise} from '../utils/app';
 import {getTaskLevelTests, selectSubmissionsPaneEnabled, selectTaskTests} from './submission_selectors';
 import {isServerTask, isTestPublic, TaskAnswer, TaskTestGroupType} from '../task/task_types';
 import {platformAnswerGraded} from '../task/platform/actionTypes';
-import {getMessage} from '../lang';
 import {
     SubmissionTestErrorCode,
     TaskSubmissionEvaluateOn,
@@ -47,6 +46,7 @@ import {displayModal} from '../common/prompt_modal';
 import {ModalType} from '../common/modal_slice';
 import {extractTestsFromTask} from './tests';
 import {CodecastPlatform} from '../stepper/codecast_platform';
+import {getMessage} from '../lang/messages';
 
 const executionsCache = {};
 const submissionExecutionTasks = {};

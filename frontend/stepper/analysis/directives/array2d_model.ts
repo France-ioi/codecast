@@ -1,6 +1,7 @@
 import {getVariable} from './utils';
 import {getCursorMap} from './array_utils';
-import {getMessage} from "../../../lang";
+
+import {getMessage} from '../../../lang/messages';
 
 export const extractView = function(context, name: string, options) {
     const {analysis} = context;

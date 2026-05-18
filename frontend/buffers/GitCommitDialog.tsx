@@ -2,12 +2,12 @@ import { Button, Dialog, FormGroup, InputGroup, Intent } from "@blueprintjs/core
 import React, {FormEvent, useState} from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from '../hooks';
-import {getMessage} from '../lang';
 import {isLocalStorageEnabled} from '../common/utils';
 import {bufferGitPush} from './buffer_actions';
 import {GitSyncParams} from './buffer_types';
 import {bufferInit} from './buffers_slice';
 import { Comment, User, Menu } from '@blueprintjs/icons';
+import {getMessage} from '../lang/messages';
 
 export function GitCommitDialog({bufferName}: {bufferName: string}) {
     const gitSync = useAppSelector(state => state.buffers.buffers[bufferName].gitSync);

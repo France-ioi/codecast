@@ -1,6 +1,5 @@
 import React from "react";
 import {Alert, Intent} from '@blueprintjs/core';
-import {getMessage} from '../lang';
 import {useAppSelector} from '../hooks';
 import {TestsPaneListSubTask} from './TestsPaneListSubTask';
 import {TestsPaneListTest} from './TestsPaneListTest';
@@ -21,6 +20,7 @@ import {TaskSubmission, TaskSubmissionMode, TaskSubmissionServer} from './submis
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {TestsPaneListUserTests} from './TestsPaneListUserTests';
 import {TaskTestGroupType} from '../task/task_types';
+import {getMessage} from '../lang/messages';
 
 export interface SubmissionResultProps {
     submission?: TaskSubmission,

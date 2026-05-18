@@ -4,12 +4,12 @@ import {StepperContext} from "../api";
 import {AnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "../analysis/analysis";
 import {fetchLatestBlocklyAnalysis} from "./analysis";
 import log from "loglevel";
-import {getMessage} from '../../lang';
 import {Codecast} from '../../app_types';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {ContextEnrichingTypes} from '../actionTypes';
 import debounce from 'lodash/debounce';
 import {adaptJsBlocks} from './js_adapter';
+import {getMessage} from '../../lang/messages';
 
 const debounceHideBlocklyDropdown = debounce(() => {
     window.Blockly?.DropDownDiv?.hideWithoutAnimation();

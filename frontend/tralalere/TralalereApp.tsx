@@ -20,7 +20,6 @@ import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 import {StepperStatus} from "../stepper";
 import {selectAnswer} from "../task/selectors";
 import {taskSuccessClear} from "../task/task_slice";
-import {getMessage} from '../lang';
 import {platformTaskLink} from '../task/platform/actionTypes';
 import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
 import {selectAvailableHints} from '../task/hints/hints_selectors';
@@ -35,6 +34,7 @@ import {DebugDialog} from '../task/dialog/DebugDialog';
 import {getNextLevelIndex} from '../task/platform/platform';
 import { getTralalereImg } from './tralalere_assets';
 import {SmallTick} from '@blueprintjs/icons';
+import {getMessage} from '../lang/messages';
 
 const layoutEditorStyle = { backgroundImage: `url(${getTralalereImg('editor-cross.png')}` };
 

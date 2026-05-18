@@ -5,7 +5,8 @@ import {setPersistentOption} from "./options";
 import {ActionTypes} from './actionTypes';
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
-import {getMessage} from "../lang";
+
+import {getMessage} from '../lang/messages';
 
 interface SubtitlesPopupProps {
     open: boolean,

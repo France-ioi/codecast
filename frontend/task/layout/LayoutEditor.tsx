@@ -18,13 +18,13 @@ import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {LayoutMobileMode, LayoutType, LayoutView} from './layout_types';
 import {BufferEditorTabs} from '../../buffers/BufferEditorTabs';
 import {faBell} from '@fortawesome/free-solid-svg-icons/faBell';
-import {getMessage} from '../../lang';
 import {bufferDuplicateSourceBuffer} from '../../buffers/buffer_actions';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {TaskRestartButton} from '../TaskRestartButton';
 import {BlockType} from '../blocks/block_types';
 import {MenuTask} from '../MenuTask';
 import {selectActiveView, selectLayoutMobileMode} from './layout';
+import {getMessage} from '../../lang/messages';
 
 export interface LayoutEditorProps {
     style?: any,

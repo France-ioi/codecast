@@ -15,7 +15,6 @@ import {
     submissionSlice,
     submissionUpdateTaskSubmission,
 } from './submission_slice';
-import {getMessage} from '../lang';
 import {addAutoRecordingBehaviour} from '../recorder/record';
 import {
     isServerSubmission,
@@ -44,6 +43,7 @@ import {testErrorCodeData} from './TestsPaneListTest';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {onEditSource} from '../task';
 import {bufferDissociateFromSubmission} from '../buffers/buffers_slice';
+import {getMessage} from '../lang/messages';
 
 export interface TestResultDiffLog {
     remainingInput?: string,

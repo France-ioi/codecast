@@ -3,7 +3,7 @@ import {FibonacciHeap, INode} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
-import {getMessage, getMessageFormat} from "../../../lang";
+import {getMessage, getMessageFormat} from '../../../lang/messages';
 
 interface HeapNode {
     key: any,

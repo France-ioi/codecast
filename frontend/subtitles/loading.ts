@@ -10,9 +10,9 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
-import {getMessage} from "../lang";
 import log from 'loglevel';
 import {appSelect} from '../hooks';
+import {getMessage} from '../lang/messages';
 
 export default function(bundle: Bundle) {
     /* Clear (unload) the currently loaded subtitles, if any. */

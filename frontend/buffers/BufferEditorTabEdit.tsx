@@ -1,5 +1,4 @@
 import React, {FormEvent, useState} from "react";
-import {getMessage} from '../lang';
 import {Button} from '@blueprintjs/core';
 import {useAppSelector} from '../hooks';
 import {PlatformSelection} from '../common/PlatformSelection';
@@ -8,6 +7,7 @@ import {bufferInit} from './buffers_slice';
 import {hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {getJsLibLoaded} from '../task/libs/import_modules';
 import {bufferChangePlatform} from './buffer_actions';
+import {getMessage} from '../lang/messages';
 
 export interface BufferEditorTabEditProps {
     bufferName: string,

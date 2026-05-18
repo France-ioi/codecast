@@ -1,12 +1,12 @@
 import {Dialog} from "@blueprintjs/core";
 import React from "react";
-import {getMessage} from "../../lang";
 import {TaskHints} from '../hints/TaskHints';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 import {Screen} from '../../common/screens';
 import {useAppSelector} from '../../hooks';
 import {useDispatch} from 'react-redux';
 import {Lightbulb} from '@blueprintjs/icons';
+import {getMessage} from '../../lang/messages';
 
 export function TaskHintsDialog() {
     const screen = useAppSelector(state => state.screen);

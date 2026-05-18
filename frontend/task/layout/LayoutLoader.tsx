@@ -7,7 +7,8 @@ import {StepperStatus} from "../../stepper";
 import {useResizeDetector} from 'react-resize-detector';
 import {getNotionsBagFromIncludeBlocks} from '../blocks/notions';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
-import {selectCurrentTest} from '../task_slice';
+
+import {selectCurrentTest} from '../task_selectors';
 
 const selectLayoutLoaderProps = createSelector(
     [

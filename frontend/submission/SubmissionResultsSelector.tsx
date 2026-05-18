@@ -3,7 +3,6 @@ import {useAppSelector} from "../hooks";
 import {Dropdown} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission_types';
-import {getMessage} from '../lang';
 import {
     submissionChangeCurrentSubmissionId, submissionCloseCurrentSubmission,
     SubmissionExecutionScope
@@ -11,6 +10,7 @@ import {
 import {faClock} from '@fortawesome/free-solid-svg-icons';
 import {useDispatch} from 'react-redux';
 import {SubmissionResultLabel} from './SubmissionResultLabel';
+import {getMessage} from '../lang/messages';
 
 export interface SubmissionResultsSelectorProps {
 }

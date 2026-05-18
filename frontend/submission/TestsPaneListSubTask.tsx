@@ -8,7 +8,8 @@ import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneLi
 import {selectTaskTests} from './submission_selectors';
 import {SubmissionTestErrorCode, TaskSubmissionServer} from './submission_types';
 import {TaskSubtaskNormalized} from '../task/task_types';
-import {selectCurrentTest} from '../task/task_slice';
+
+import {selectCurrentTest} from '../task/task_selectors';
 
 export interface SubmissionResultSubTaskProps {
     submission: TaskSubmissionServer,

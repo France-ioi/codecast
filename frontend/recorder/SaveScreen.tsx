@@ -15,8 +15,8 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {useDispatch} from "react-redux";
 import {SaveStep} from "./save_screen";
 import {useAppSelector} from "../hooks";
-import {getMessage} from "../lang";
 import { Edit, Link, Play, Trash, User, Tick, FloppyDisk } from '@blueprintjs/icons';
+import {getMessage} from '../lang/messages';
 
 interface SaveScreenProps {
     onCancel?: () => void,

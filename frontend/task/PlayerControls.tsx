@@ -6,10 +6,10 @@ import {formatTime} from "../common/utils";
 import {ActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
 import {useDispatch} from "react-redux";
-import {getMessage} from "../lang";
 import {SubtitlesPopup} from "../subtitles/SubtitlesPopup";
 import {useAppSelector} from "../hooks";
 import {LayoutPlayerMode} from './layout/layout_types';
+import {getMessage} from '../lang/messages';
 
 export function PlayerControls() {
     const player = useAppSelector(state => state.player);

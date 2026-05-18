@@ -20,10 +20,10 @@ import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import {LoginScreen} from "../common/LoginScreen";
 import {EditorSaveState} from "./index";
-import {getMessage} from "../lang";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {parseCodecastUrl} from '../common/options';
 import { CloudUpload, Edit, Link, Play } from "@blueprintjs/icons";
+import {getMessage} from '../lang/messages';
 
 export function EditorSave() {
     const editor = useAppSelector(state => state.editor);

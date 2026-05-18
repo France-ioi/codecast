@@ -10,7 +10,6 @@ import {faCogs, faFileAlt, faPencilAlt, faPlay, faSpinner} from "@fortawesome/fr
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "../submission/TaskTestsSubmissionResultOverview";
-import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
 import {
     submissionChangeExecutionMode,
@@ -21,7 +20,6 @@ import {Dropdown} from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
 import {isTestPublic} from './task_types';
-import {selectCurrentTest} from './task_slice';
 import {LibraryTestResult} from './libs/library_test_result';
 import {getStepperControlsSelector} from '../stepper/selectors';
 import {selectAvailableExecutionModes, selectTaskTests} from '../submission/submission_selectors';
@@ -33,6 +31,8 @@ import {selectActiveBufferPlatform} from '../buffers/buffer_selectors';
 import {Screen} from '../common/screens';
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {selectLayoutMobileMode} from './layout/layout';
+import {getMessage} from '../lang/messages';
+import {selectCurrentTest} from './task_selectors';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);

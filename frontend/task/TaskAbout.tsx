@@ -1,11 +1,11 @@
 import React from 'react';
 import {selectTaskMetadata} from "./platform/platform";
-import {getMessage} from "../lang";
 import {useAppSelector} from "../hooks";
 import {AppStore} from "../store";
 import {RECORDING_FORMAT_VERSION} from '../version';
 import dartmouthLogo from './about/logo_dartmouth.png';
 import telecomLogo from './about/logo_telecom_paris_tech.png';
+import {getMessage} from '../lang/messages';
 
 export const selectDisplayAbout = (state: AppStore) => {
     return state.task.currentTask || (state.player && state.player.data && state.player.data.version && Number(state.player.data.version.split('.')[0]) < 7);
