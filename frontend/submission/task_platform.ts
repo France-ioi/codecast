@@ -229,12 +229,12 @@ export function* longPollServerSubmissionResults(submissionId: string, callback:
     }
 }
 
-export function* getServerSubmission(submissionId: string) {
+export function* getServerSubmissionFromUserAnswerId(submissionId: string) {
     const state = yield* appSelect();
     const taskPlatformUrl = state.options.taskPlatformUrl;
     const hasTests = state.task.currentTask.tests?.length;
 
-    const totalUrl = `${taskPlatformUrl}/submissions/${submissionId}`;
+    const totalUrl = `${taskPlatformUrl}/submissions/user-answer/${submissionId}`;
     const queryParameters = {
         ...(!hasTests ? {withTests: '1'} : {}),
         ...(state.platform.taskToken ? {token: state.platform.taskToken} : {}),

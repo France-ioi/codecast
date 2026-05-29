@@ -407,7 +407,7 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}
             }
 
             if (options.idUserAnswer) {
-                const {score, message} = yield* call([taskGrader, taskGrader.reloadServerSubmissionFromId], options.idUserAnswer);
+                const {score, message} = yield* call([taskGrader, taskGrader.reloadServerSubmissionFromUserAnswerId], options.idUserAnswer);
                 yield* put(platformAnswerGraded({score, message}));
             }
 
@@ -631,7 +631,7 @@ export interface PlatformTaskGradingResult {
 
 export interface TaskGrader {
     gradeAnswer: (parameters: PlatformTaskGradingParameters) => Generator<Effect, PlatformTaskGradingResult>;
-    reloadServerSubmissionFromId: (submissionId: string) => Generator<Effect, PlatformTaskGradingResult>;
+    reloadServerSubmissionFromUserAnswerId: (userAnswerId: string) => Generator<Effect, PlatformTaskGradingResult>;
 }
 
 export interface PlatformBundleParameters {
