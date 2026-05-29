@@ -20,7 +20,7 @@ import {
     submissionStartExecutingTest,
     submissionUpdateTaskSubmission,
 } from "./submission_slice";
-import {getServerSubmission, longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
+import {getServerSubmissionFromUserAnswerId, longPollServerSubmissionResults, makeServerSubmission} from "./task_platform";
 import {appSelect} from '../hooks';
 import {currentTaskChange, TaskActionTypes, updateCurrentTestId, updateTaskTests} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
@@ -377,8 +377,8 @@ class TaskSubmissionExecutor {
         }
     }
 
-    *reloadServerSubmissionFromId(submissionId: string) {
-        const submissionResult = yield* getServerSubmission(submissionId);
+    *reloadServerSubmissionFromUserAnswerId(userAnswerId: string) {
+        const submissionResult = yield* getServerSubmissionFromUserAnswerId(userAnswerId);
 
         const serverSubmission: TaskSubmissionServer = {
             evaluated: false,
