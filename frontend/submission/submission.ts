@@ -109,7 +109,7 @@ export default function (bundle: Bundle) {
                         }
                     }
                     const context = quickAlgoLibraries.getContext(null, 'main');
-                    if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
+                    if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult && SubmissionTestErrorCode.NoError !== testResult.errorCode) {
                         error = context.getErrorFromTestResult(testResult);
                     }
                     if (null === error && testResult.errorMessage) {
