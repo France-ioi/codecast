@@ -63,6 +63,7 @@ import {taskFillResources} from './resources';
 import jwt from 'jsonwebtoken';
 import {getAvailablePlatforms} from '../libs/quickalgo_library_factory';
 import {getMessage} from '../../lang/messages';
+import {DeferredPromise} from '../../utils/app';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -390,7 +391,10 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}
             const currentTask = yield* appSelect(state => state.task.currentTask);
             if (!isServerTask(currentTask)) {
                 // Grade with updateScore = true and showResult = false
-                yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, success, error, true, false));
+
+                const deferredPromise = new DeferredPromise();
+                yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, deferredPromise.resolve, deferredPromise.reject, true, false));
+                yield deferredPromise;
             }
 
             yield* call(taskAnswerReloadedSaga);
@@ -405,16 +409,14 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}
                 yield* put(platformAnswerLoaded(answerObject));
                 yield* put(platformTaskRefresh());
             }
-
-            if (options.idUserAnswer) {
-                const {score, message} = yield* call([taskGrader, taskGrader.reloadServerSubmissionFromUserAnswerId], options.idUserAnswer);
-                yield* put(platformAnswerGraded({score, message}));
-            }
-
-            yield* call(success);
-        } else {
-            yield* call(success);
         }
+
+        if (options.idUserAnswer) {
+            const {score, message} = yield* call([taskGrader, taskGrader.reloadServerSubmissionFromUserAnswerId], options.idUserAnswer);
+            yield* put(platformAnswerGraded({score, message}));
+        }
+
+        yield* call(success);
     } catch (ex: any) {
         console.error(`Answer cannot be reloaded (${answer}): ${ex.message}`, ex);
         yield* put(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE').s));
