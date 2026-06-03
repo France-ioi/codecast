@@ -78,7 +78,7 @@ export class Icons {
             emptyOutDir: false,
             cssCodeSplit: false,
             assetsDir: '.',
-            sourcemap: false,
+            sourcemap: !isLib,
             minify: 'terser',
             assetsInlineLimit: 0, // avoid images inlining
             rolldownOptions: {
