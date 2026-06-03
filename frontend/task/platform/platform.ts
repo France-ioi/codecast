@@ -91,26 +91,26 @@ export function* getTaskAnswerAggregated() {
     }
 }
 
-export const selectTaskMetadata = createSelector(
-    (state: AppStore) => state.task.currentTask,
-    (currentTask) => {
-        const serverTask = null !== currentTask && isServerTask(currentTask);
+export function selectTaskMetadata() {
+    // Don't use state.task.currentTask here because it may not be defined yet;
+    // task.getMetaData is called before task.load so before loading the task from the back-end
+    const urlParameters = new URLSearchParams(window.location.search);
+    const serverTask = urlParameters.has('taskId') || window.PEMTaskMetaData;
 
-        const defaultMetadata = {
-            fullFeedback: true,
-            minWidth: "auto",
-        };
+    const defaultMetadata = {
+        fullFeedback: true,
+        minWidth: "auto",
+    };
 
-        return {
-            ...(window.json ?? window.PEMTaskMetaData ?? defaultMetadata),
-            autoHeight: true,
-            ...(!serverTask ? {disablePlatformProgress: true} : {}),
-            usesTokens: true, // To receive task token
-            apiVersion: 2,
-            minApiVersion: 1,
-        };
-    }
-);
+    return {
+        ...(window.json ?? window.PEMTaskMetaData ?? defaultMetadata),
+        autoHeight: true,
+        ...(!serverTask ? {disablePlatformProgress: true} : {}),
+        usesTokens: true, // To receive task token
+        apiVersion: 2,
+        minApiVersion: 1,
+    };
+}
 
 export function selectTaskTokenPayload(state: AppStore): TaskTokenPayload|null {
     const token = state.platform.taskToken;
