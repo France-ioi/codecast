@@ -253,6 +253,7 @@ export default {
     TASK_BLOCK_CATEGORY_UNDEFINED: "Divers",
     TASK_LIMIT_TIME: "Limite de temps :",
     TASK_LIMIT_MEMORY: "Limite de mémoire :",
+    TASK_NOT_READY: "Ce sujet doit être vérifié. Si tout fonctionne bien, retirez la ligne \"window.TASK_NEEDS_ADDITIONAL_CHECKS = true\" en haut du fichier index.html, ce bandeau disparaîtra.",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Se placer dans un agencement :",
     LAYOUT_DefaultLayoutDesktop: 'Ordinateur',

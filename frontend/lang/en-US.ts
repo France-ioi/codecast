@@ -247,6 +247,7 @@ export default {
     TASK_BLOCK_CATEGORY_UNDEFINED: "Other",
     TASK_LIMIT_TIME: "Time limit:",
     TASK_LIMIT_MEMORY: "Memory limit:",
+    TASK_NOT_READY: "This task needs to be verified. If everything works correctly, remove the line \"window.TASK_NEEDS_ADDITIONAL_CHECKS = true\" at the top of the index.html file, and this banner will disappear.",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
     LAYOUT_DefaultLayoutDesktop: 'Desktop',
