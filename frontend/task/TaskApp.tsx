@@ -154,6 +154,10 @@ export function TaskApp() {
                             <span className="task-header__algo">ALGO</span>
                         </div>
 
+                        {!!window.TASK_NEEDS_ADDITIONAL_CHECKS && <div className="task-warning-banner">
+                            <p>{getMessage('TASK_NOT_READY')}</p>
+                        </div>}
+
                         {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
 
                         <div className="task-body">

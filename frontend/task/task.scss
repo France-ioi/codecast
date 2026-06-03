@@ -1223,3 +1223,17 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   align-items: center;
   border: none;
 }
+
+.task-warning-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #efa124;
+  font-weight: bold;
+  text-align: center;
+  padding: 16px;
+
+  p {
+    margin-bottom: 0;
+  }
+}
