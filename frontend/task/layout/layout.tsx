@@ -36,6 +36,7 @@ import {ReplayContext} from '../../player/sagas';
 import {TaskSolution} from '../TaskSolution';
 import {Edit, Document, Console, Code, Help} from '@blueprintjs/icons';
 import {getMessage} from '../../lang/messages';
+import {selectShowDifferentViews} from '../platform/platform';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -788,7 +789,8 @@ export function selectActiveView(state: AppStore): LayoutView|null {
 export function selectLayoutMobileMode(state: AppStore): LayoutMobileMode {
     let layoutMobileMode = state.layout.mobileMode;
     const currentTask = state.task.currentTask;
-    if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
+    const showViews = selectShowDifferentViews(state);
+    if (LayoutMobileMode.Instructions === layoutMobileMode && (!currentTask || showViews)) {
         layoutMobileMode = LayoutMobileMode.Editor;
     }
 

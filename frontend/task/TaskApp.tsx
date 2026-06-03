@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
-import {Dialog, Intent, ProgressBar} from "@blueprintjs/core";
+import {Dialog, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
 import {RecorderControls} from "./RecorderControls";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {PlayerControls} from "./PlayerControls";
@@ -53,6 +53,7 @@ export function TaskApp() {
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
     const taskSuccess = useAppSelector(state => state.task.success);
     const activeView = useAppSelector(selectActiveView);
+    const taskLoaded = useAppSelector(state => state.task.loaded);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
 
     let progress = null;
@@ -138,6 +139,9 @@ export function TaskApp() {
 
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform} cursor-main-zone`} data-cursor-zone="task-app">
+            {!taskLoaded && <div className="app-spinner">
+                <Spinner size={50}/>
+            </div>}
             <div className="layout-general">
                 <div className={`task-section`}>
                     {LayoutView.Task !== activeView && <TestsPane

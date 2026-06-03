@@ -210,9 +210,9 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
     return nextLevel;
 }
 
-function* showDifferentViews() {
-    const levelGridInfos = yield* appSelect(state => state.task.levelGridInfos);
-    const {supportsTabs} = yield* appSelect(state => state.platform.taskParams);
+export function selectShowDifferentViews(state: AppStore): boolean {
+    const levelGridInfos = state.task.levelGridInfos;
+    const {supportsTabs} = state.platform.taskParams;
     if (!supportsTabs || !levelGridInfos) {
         return false;
     }
@@ -222,7 +222,7 @@ function* showDifferentViews() {
         return levelGridInfos.showViews;
     }
 
-    const levels = yield* appSelect(state => state.platform.levels);
+    const levels = state.platform.levels;
     if (context?.showViews && 1 >= Object.keys(levels).length) {
         return context.showViews();
     }
@@ -232,13 +232,13 @@ function* showDifferentViews() {
 
 function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGetViewsEvent>) {
     const views = yield* call(getSupportedViews);
-    const showViews = yield* call(showDifferentViews);
+    const showViews = yield* appSelect(selectShowDifferentViews);
 
     yield* call(success, views, showViews);
 }
 
 function* getSupportedViews() {
-    const showViews = yield* call(showDifferentViews);
+    const showViews = yield* appSelect(selectShowDifferentViews);
     const hasSolution = yield* appSelect(getTaskSolution);
 
     if (showViews) {

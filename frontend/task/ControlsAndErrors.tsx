@@ -33,6 +33,7 @@ import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {selectLayoutMobileMode} from './layout/layout';
 import {getMessage} from '../lang/messages';
 import {selectCurrentTest} from './task_selectors';
+import {selectShowDifferentViews} from './platform/platform';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -50,6 +51,7 @@ export function ControlsAndErrors() {
     const availableExecutionModes = useAppSelector(selectAvailableExecutionModes);
     const codeHelpEnabled = useAppSelector(state => state.options.codeHelp?.enabled);
     const layoutMobileMode = useAppSelector(selectLayoutMobileMode);
+    const showViews = useAppSelector(selectShowDifferentViews);
 
     let hasError = !!stepperError;
     const hasModes = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
@@ -125,10 +127,10 @@ export function ControlsAndErrors() {
 
     return (
         <div className="controls-and-errors cursor-main-zone" data-cursor-zone="controls-and-errors">
-            {(showStepper || hasModes) && <div className="mode-selector">
+            {(showStepper || hasModes) && <div className={`mode-selector ${hasModes ? 'has-modes' : ''}`}>
                 {hasModes &&
                     <React.Fragment>
-                        {currentTask && <div
+                        {currentTask && !showViews && <div
                             className={`mode ${LayoutMobileMode.Instructions === layoutMobileMode ? 'is-active' : ''}`}
                             onClick={() => selectMode(LayoutMobileMode.Instructions)}
                         >
