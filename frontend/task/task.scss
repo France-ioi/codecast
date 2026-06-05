@@ -603,6 +603,9 @@ html:not([active-view="task"]):not([active-view="solution"]) {
     font-size: 1.15em !important;
     margin-top: 1.25rem;
   }
+  h3:first-of-type {
+    margin-top: 0 !important;
+  }
   h1, h2, h3, h4, h5, h6 {
     color: #30242B;
     margin-bottom: 1rem;
