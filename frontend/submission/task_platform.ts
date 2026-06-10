@@ -129,7 +129,7 @@ export function getTaskDataFromTaskSettings(taskSettings: any) {
     return taskData;
 }
 
-export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null): Task {
+export function getServerTaskFromTaskData(taskData: Task, task: TaskServer = null): Task {
     const defaultTask = {
         commentSource: 'algorea',
         gridInfos: {
@@ -186,12 +186,7 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
     }
 
     if (window.PEMTaskMetaData) {
-        if (window.PEMTaskMetaData.supportedLanguages) {
-            taskData.supportedLanguages = window.PEMTaskMetaData.supportedLanguages.join(',');
-        }
-        if (window.PEMTaskMetaData.useLatex) {
-            taskData.useLatex = !!window.PEMTaskMetaData.useLatex;
-        }
+        convertPEMTaskMetadataToServerTask(taskData, window.PEMTaskMetaData);
     }
 
     if (task?.useLatex) {
@@ -205,6 +200,25 @@ export function getServerTaskFromTaskData(taskData: any, task: TaskServer = null
         ...(task ?? {}),
         ...taskData,
     };
+}
+
+export function convertPEMTaskMetadataToServerTask(taskData: Task, PEMTaskMetaData: any) {
+    if (PEMTaskMetaData.supportedLanguages) {
+        taskData.supportedLanguages = PEMTaskMetaData.supportedLanguages.join(',');
+    }
+    if (PEMTaskMetaData.useLatex) {
+        taskData.useLatex = !!PEMTaskMetaData.useLatex;
+    }
+    if (PEMTaskMetaData.limits) {
+        taskData.limits = (Object.entries(PEMTaskMetaData.limits) as any).map(([language, limit]) => ({
+            language,
+            maxTime: limit.time,
+            maxMemory: limit.memory,
+        }));
+    }
+    if (PEMTaskMetaData.hasUserTests) {
+        taskData.userTests = true;
+    }
 }
 
 export function* longPollServerSubmissionResults(submissionId: string, callback: (result: TaskSubmissionServerResult) => void) {
