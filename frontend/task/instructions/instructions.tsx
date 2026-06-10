@@ -298,22 +298,29 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
 
         const sourceMode = platformsList[context.platform].aceSourceMode;
 
+        let children = null;
+        if (VOID_ELEMENTS.indexOf(node.tagName) === -1) {
+            children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context));
+        }
+
         return <div style={{marginBottom: 20}} data-lang={lang} className="code-block code">
             {'data-show-header' in node.attribs && !!platformsList[lang] && <div className="code-header">
                 {platformsList[lang].name}
             </div>}
-            <Editor
-                content={code.trim()}
-                readOnly
-                mode={sourceMode}
-                width="100%"
-                hideGutter
-                hideCursor
-                showPrintMargin={false}
-                highlightActiveLine={false}
-                dragEnabled={false}
-                maxLines={Infinity}
-            />
+            {!!code.trim() ?
+                <Editor
+                    content={code.trim()}
+                    readOnly
+                    mode={sourceMode}
+                    width="100%"
+                    hideGutter
+                    hideCursor
+                    showPrintMargin={false}
+                    highlightActiveLine={false}
+                    dragEnabled={false}
+                    maxLines={Infinity}
+                />
+                : (null !== children ? <div className="editor">{React.createElement(node.tagName, {}, children)}</div> : null)}
         </div>;
     } else if (node.attribs && 'data-task-limits' in node.attribs) {
         return <TaskLimits/>;
@@ -351,7 +358,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context));
         }
 
-        return React.createElement(tagName, props, children)
+        return React.createElement(tagName, props, children);
     } else if (node.attribs && 'class' in node.attribs && -1 !== node.attribs['class'].split(' ').indexOf('videoBtn')) {
         let children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context));
         const props = generatePropsFromAttributes({
