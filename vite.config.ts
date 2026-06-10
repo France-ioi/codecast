@@ -33,7 +33,6 @@ export default defineConfig(({mode}) => {
         base,
         plugins: [
             react({}),
-            // Wait that https://github.com/davidmyersdev/vite-plugin-node-polyfills/pull/149 is merged to get rid of the oxc warning
             nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util', 'fs', 'vm']}),
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
             // Stub out Blueprint icon path bundles — icon paths are embedded directly in each
