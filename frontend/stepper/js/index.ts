@@ -389,7 +389,8 @@ export async function getBlocklyCodeFromXml(document: BlockDocument, lang: strin
     log.getLogger('blockly_runner').debug('display', context.display);
     const blocklyXmlCode = document.content.blockly;
     if (!blocklyHelper.workspace) {
-        blocklyHelper.load(language, context.display, 1, {});
+        // Load without display
+        blocklyHelper.load(language, false, 1, {});
     }
     if (0 === blocklyHelper.programs.length) {
         blocklyHelper.programs.push({});
