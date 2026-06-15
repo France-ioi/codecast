@@ -1,78 +1,65 @@
+import {javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript';
+import {pythonGenerator, Order as PythonOrder} from 'blockly/python';
+import * as Blockly from 'blockly/core';
+
 export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMode ) {
-    window.Blockly.Blocks['robot_start'] = {
-        init: function () {
-            this.appendDummyInput()
-                .appendField(strings.startingBlockName);
-            this.setNextStatement(true);
-            this.setColour(210);
-            this.setTooltip('');
-            this.deletable_ = false;
-            this.editable_ = false;
-            this.movable_ = false;
-            //    this.setHelpUrl('http://www.example.com/');
-        }
-    };
+    Blockly.Blocks['controls_untilWhile'] = Blockly.Blocks['controls_whileUntil'];
+    javascriptGenerator.forBlock['controls_untilWhile'] = javascriptGenerator.forBlock['controls_whileUntil'];
+    pythonGenerator.forBlock['controls_untilWhile'] = pythonGenerator.forBlock['controls_whileUntil'];
 
-    // TODO Blockly: write code generators
-    return;
-
-    window.Blockly.Blocks['controls_untilWhile'] = window.Blockly.Blocks['controls_whileUntil'];
-    window.Blockly.JavaScript['controls_untilWhile'] = window.Blockly.JavaScript['controls_whileUntil'];
-    window.Blockly.Python['controls_untilWhile'] = window.Blockly.Python['controls_whileUntil'];
-
-    window.Blockly.Blocks['math_angle'] = {
+    Blockly.Blocks['math_angle'] = {
         init: function () {
             this.setOutput(true, 'Number');
             this.appendDummyInput()
-                .appendField(new window.Blockly.FieldAngle(90), "ANGLE");
-            this.setColour(window.Blockly.Blocks.math.HUE);
+                .appendField(new Blockly.FieldAngle(90), "ANGLE");
+            this.setColour(Blockly.Blocks.math.HUE);
         }
     };
-    window.Blockly.JavaScript['math_angle'] = function (block) {
-        return ['' + block.getFieldValue('ANGLE'), window.Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    javascriptGenerator.forBlock['math_angle'] = function (block) {
+        return ['' + block.getFieldValue('ANGLE'), JavascriptOrder.FUNCTION_CALL];
     };
-    window.Blockly.Python['math_angle'] = function (block) {
-        return ['' + block.getFieldValue('ANGLE'), window.Blockly.Python.ORDER_FUNCTION_CALL];
+    pythonGenerator.forBlock['math_angle'] = function (block) {
+        return ['' + block.getFieldValue('ANGLE'), PythonOrder.FUNCTION_CALL];
     };
 
-    window.Blockly.Blocks['math_extra_single'] = {
+    Blockly.Blocks['math_extra_single'] = {
         /**
          * Block for advanced math operators with single operand.
-         * @this window.Blockly.Block
+         * @this Blockly.Block
          */
         init: function () {
             var OPERATORS =
                 [
-                    [window.Blockly.Msg.MATH_SINGLE_OP_ABSOLUTE, 'ABS'],
+                    [Blockly.Msg.MATH_SINGLE_OP_ABSOLUTE, 'ABS'],
                     ['-', 'NEG']
                 ];
-            this.setHelpUrl(window.Blockly.Msg.MATH_SINGLE_HELPURL);
-            this.setColour(window.Blockly.Blocks.math.HUE);
+            this.setHelpUrl(Blockly.Msg.MATH_SINGLE_HELPURL);
+            this.setColour(Blockly.Blocks.math.HUE);
             this.setOutput(true, 'Number');
             this.appendValueInput('NUM')
                 .setCheck('Number')
-                .appendField(new window.Blockly.FieldDropdown(OPERATORS), 'OP');
+                .appendField(new Blockly.FieldDropdown(OPERATORS), 'OP');
             // Assign 'this' to a variable for use in the tooltip closure below.
             var thisBlock = this;
             this.setTooltip(function () {
                 var mode = thisBlock.getFieldValue('OP');
                 var TOOLTIPS = {
-                    'ABS': window.Blockly.Msg.MATH_SINGLE_TOOLTIP_ABS,
-                    'NEG': window.Blockly.Msg.MATH_SINGLE_TOOLTIP_NEG
+                    'ABS': Blockly.Msg.MATH_SINGLE_TOOLTIP_ABS,
+                    'NEG': Blockly.Msg.MATH_SINGLE_TOOLTIP_NEG
                 };
                 return TOOLTIPS[mode];
             });
         }
     };
 
-    window.Blockly.JavaScript['math_extra_single'] = window.Blockly.JavaScript['math_single'];
-    window.Blockly.Python['math_extra_single'] = window.Blockly.Python['math_single'];
+    javascriptGenerator.forBlock['math_extra_single'] = javascriptGenerator.forBlock['math_single'];
+    pythonGenerator.forBlock['math_extra_single'] = pythonGenerator.forBlock['math_single'];
 
 
-    window.Blockly.Blocks['math_extra_double'] = {
+    Blockly.Blocks['math_extra_double'] = {
         /**
          * Block for advanced math operators with double operand.
-         * @this window.Blockly.Block
+         * @this Blockly.Block
          */
         init: function () {
             var OPERATORS =
@@ -80,10 +67,10 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
                     ['min', 'MIN'],
                     ['max', 'MAX']
                 ];
-            this.setColour(window.Blockly.Blocks.math.HUE);
+            this.setColour(Blockly.Blocks.math.HUE);
             this.setInputsInline(true);
             this.setOutput(true, 'Number');
-            this.appendDummyInput('OP').appendField(new window.Blockly.FieldDropdown([["min", "MIN"], ["max", "MAX"], ["", ""]]), "OP");
+            this.appendDummyInput('OP').appendField(new Blockly.FieldDropdown([["min", "MIN"], ["max", "MAX"], ["", ""]]), "OP");
             this.appendDummyInput().appendField(" entre ");
             this.appendValueInput('A').setCheck('Number');
             this.appendDummyInput().appendField(" et ");
@@ -101,35 +88,35 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         }
     };
 
-    window.Blockly.JavaScript['math_extra_double'] = function (block) {
+    javascriptGenerator.forBlock['math_extra_double'] = function (block) {
         // Math operators with double operand.
         var operator = block.getFieldValue('OP');
-        var arg1 = window.Blockly.JavaScript.valueToCode(block, 'A', window.Blockly.JavaScript.ORDER_NONE) || '0';
-        var arg2 = window.Blockly.JavaScript.valueToCode(block, 'B', window.Blockly.JavaScript.ORDER_NONE) || '0';
+        var arg1 = javascriptGenerator.valueToCode(block, 'A', JavascriptOrder.NONE) || '0';
+        var arg2 = javascriptGenerator.valueToCode(block, 'B', JavascriptOrder.NONE) || '0';
         if (operator == 'MIN') {
             var code = "Math.min(" + arg1 + ", " + arg2 + ")";
         }
         if (operator == 'MAX') {
             var code = "Math.max(" + arg1 + ", " + arg2 + ")";
         }
-        return [code, window.Blockly.JavaScript.ORDER_FUNCTION_CALL];
+        return [code, JavascriptOrder.FUNCTION_CALL];
     };
 
-    window.Blockly.Python['math_extra_double'] = function (block) {
+    pythonGenerator.forBlock['math_extra_double'] = function (block) {
         // Math operators with double operand.
         var operator = block.getFieldValue('OP');
-        var arg1 = window.Blockly.Python.valueToCode(block, 'A', window.Blockly.Python.ORDER_NONE) || '0';
-        var arg2 = window.Blockly.Python.valueToCode(block, 'B', window.Blockly.Python.ORDER_NONE) || '0';
+        var arg1 = pythonGenerator.valueToCode(block, 'A', PythonOrder.NONE) || '0';
+        var arg2 = pythonGenerator.valueToCode(block, 'B', PythonOrder.NONE) || '0';
         if (operator == 'MIN') {
             var code = "Math.min(" + arg1 + ", " + arg2 + ")";
         }
         if (operator == 'MAX') {
             var code = "Math.max(" + arg1 + ", " + arg2 + ")";
         }
-        return [code, window.Blockly.Python.ORDER_FUNCTION_CALL];
+        return [code, PythonOrder.FUNCTION_CALL];
     };
 
-    window.Blockly.Blocks['controls_loop'] = {
+    Blockly.Blocks['controls_loop'] = {
         init: function () {
             this.appendDummyInput()
                 .appendField(strings.loopRepeat);
@@ -143,14 +130,14 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
             this.setHelpUrl("");
         }
     }
-    window.Blockly.JavaScript['controls_loop'] = function (block) {
-        var statements = window.Blockly.JavaScript.statementToCode(block, 'inner_blocks');
+    javascriptGenerator.forBlock['controls_loop'] = function (block) {
+        var statements = javascriptGenerator.statementToCode(block, 'inner_blocks');
         var code = 'while(true){\n' + statements + '}\n';
         return code;
     };
 
 
-    window.Blockly.Blocks['controls_infiniteloop'] = {
+    Blockly.Blocks['controls_infiniteloop'] = {
         init: function () {
             this.appendStatementInput("inner_blocks")
                 .setCheck(null)
@@ -162,22 +149,22 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
             this.setHelpUrl("");
         }
     }
-    window.Blockly.JavaScript['controls_infiniteloop'] = function (block) {
-        var statements = window.Blockly.JavaScript.statementToCode(block, 'inner_blocks');
+    javascriptGenerator.forBlock['controls_infiniteloop'] = function (block) {
+        var statements = javascriptGenerator.statementToCode(block, 'inner_blocks');
         var code = 'while(true){\n' + statements + '}\n';
         return code;
     };
-    window.Blockly.Python['controls_infiniteloop'] = function (block) {
+    pythonGenerator.forBlock['controls_infiniteloop'] = function (block) {
         // Do while/until loop.
-        var branch = window.Blockly.Python.statementToCode(block, 'inner_blocks');
-        branch = window.Blockly.Python.addLoopTrap(branch, block.id) ||
-            window.Blockly.Python.PASS;
+        var branch = pythonGenerator.statementToCode(block, 'inner_blocks');
+        branch = pythonGenerator.addLoopTrap(branch, block) ||
+            pythonGenerator.PASS;
 
         return 'while True:\n' + branch;
     };
 
     if (scratchMode) {
-        window.Blockly.Blocks['robot_start'] = {
+        Blockly.Blocks['robot_start'] = {
             init: function () {
                 this.jsonInit({
                     "id": "event_whenflagclicked",
@@ -187,7 +174,7 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
                     "args0": [
                       {
                         "type": "field_image",
-                        "src": window.Blockly.mainWorkspace.options.pathToMedia + "icons/event_whenflagclicked.svg",
+                        "src": Blockly.mainWorkspace.options.pathToMedia + "icons/event_whenflagclicked.svg",
                         "width": 24,
                         "height": 24,
                         "alt": "flag",
@@ -196,15 +183,15 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
                     ],*/
                     "inputsInline": true,
                     "nextStatement": null,
-                    "category": window.Blockly.Categories.event,
-                    "colour": window.Blockly.Colours.event.primary,
-                    "colourSecondary": window.Blockly.Colours.event.secondary,
-                    "colourTertiary": window.Blockly.Colours.event.tertiary
+                    "category": Blockly.Categories.event,
+                    "colour": Blockly.Colours.event.primary,
+                    "colourSecondary": Blockly.Colours.event.secondary,
+                    "colourTertiary": Blockly.Colours.event.tertiary
                 });
             }
         };
 
-        window.Blockly.Blocks['placeholder_statement'] = {
+        Blockly.Blocks['placeholder_statement'] = {
             init: function () {
                 this.jsonInit({
                     "id": "placeholder_statement",
@@ -212,7 +199,7 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
                     "inputsInline": true,
                     "previousStatement": null,
                     "nextStatement": null,
-                    "category": window.Blockly.Categories.event,
+                    "category": Blockly.Categories.event,
                     "colour": "#BDCCDB",
                     "colourSecondary": "#BDCCDB",
                     "colourTertiary": "#BDCCDB"
@@ -221,30 +208,30 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
             }
         };
 
-        window.Blockly.JavaScript['control_forever'] = function (block) {
-            var statements = window.Blockly.JavaScript.statementToCode(block, 'SUBSTACK');
+        javascriptGenerator.forBlock['control_forever'] = function (block) {
+            var statements = javascriptGenerator.statementToCode(block, 'SUBSTACK');
             var code = 'while(true){\n' + statements + '}\n';
             return code;
         };
-        window.Blockly.Python['control_forever'] = function (block) {
+        pythonGenerator.forBlock['control_forever'] = function (block) {
             // Do while/until loop.
-            var branch = window.Blockly.Python.statementToCode(block, 'SUBSTACK');
-            branch = window.Blockly.Python.addLoopTrap(branch, block.id) ||
-                window.Blockly.Python.PASS;
+            var branch = pythonGenerator.statementToCode(block, 'SUBSTACK');
+            branch = pythonGenerator.addLoopTrap(branch, block) ||
+                pythonGenerator.PASS;
 
             return 'while True:\n' + branch;
         };
 
     } else {
         if (!showIfMutator) {
-            var old = window.Blockly.Blocks.controls_if.init;
-            window.Blockly.Blocks.controls_if.init = function () {
+            var old = Blockly.Blocks.controls_if.init;
+            Blockly.Blocks.controls_if.init = function () {
                 old.call(this);
                 this.setMutator(undefined)
             };
         }
 
-        window.Blockly.Blocks['robot_start'] = {
+        Blockly.Blocks['robot_start'] = {
             init: function () {
                 this.appendDummyInput()
                     .appendField(strings.startingBlockName);
@@ -258,7 +245,7 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
             }
         };
 
-        window.Blockly.Blocks['placeholder_statement'] = {
+        Blockly.Blocks['placeholder_statement'] = {
             init: function () {
                 this.appendDummyInput()
                     .appendField("                    ");
@@ -271,19 +258,19 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         };
     }
 
-    window.Blockly.JavaScript['robot_start'] = function (block) {
+    javascriptGenerator.forBlock['robot_start'] = function (block) {
         return "";
     };
 
-    window.Blockly.Python['robot_start'] = function (block) {
+    pythonGenerator.forBlock['robot_start'] = function (block) {
         return "";
     };
 
-    window.Blockly.JavaScript['placeholder_statement'] = function (block) {
+    javascriptGenerator.forBlock['placeholder_statement'] = function (block) {
         return "";
     };
 
-    window.Blockly.Python['placeholder_statement'] = function (block) {
+    pythonGenerator.forBlock['placeholder_statement'] = function (block) {
         return "pass";
     }
 }

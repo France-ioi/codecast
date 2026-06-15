@@ -19,6 +19,7 @@ import {getMessage, getMessageChoices} from '../../lang/messages';
 import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
 import 'blockly/javascript';
+import {javascriptGenerator} from 'blockly/javascript';
 
 // TODO Blockly: don't expose Blockly to all window
 window.Blockly = Blockly;
@@ -69,7 +70,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
 
     // TODO Blockly: write code generators
     // window.Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
-    // window.Blockly.JavaScript.addReservedWords('highlightBlock');
+    javascriptGenerator.addReservedWords('highlightBlock');
 
     if (!window.quickAlgoInterface) {
         window.quickAlgoInterface = {
@@ -327,18 +328,11 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
 }
 
 const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, xmlText: string) {
-    // TODO Blockly: 2-way sync
-    return [];
-
-    const xml = window.Blockly.Xml.textToDom(xmlText);
+    const xml = Blockly.utils.xml.textToDom(xmlText);
 
     const blocklyHelper = createBlocklyHelper(context, state);
     const language = state.options.language.split('-')[0];
     blocklyHelper.load(language, false, 1, {});
-
-    if (!window.Blockly.mainWorkspace) {
-        window.Blockly.mainWorkspace = blocklyHelper.workspace;
-    }
 
     window.Blockly.Xml.domToWorkspace(xml, blocklyHelper.workspace);
 

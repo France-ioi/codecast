@@ -1,7 +1,8 @@
+import { javascriptGenerator, Order as JavascriptOrder } from 'blockly/javascript';
 
 export function adaptJsBlocks(Blockly) {
     if (Blockly) {
-        Blockly.JavaScript['input_num'] = function (block) {
+        javascriptGenerator.forBlock['input_num'] = function (block) {
             Blockly.JavaScript.definitions_['input_funcs'] = "var stdinBuffer = '';\n"
                 + "function readStdin() {\n"
                 + "    if (stdinBuffer == '')\n"
@@ -11,10 +12,10 @@ export function adaptJsBlocks(Blockly) {
                 + "    return stdinBuffer;\n"
                 + "};";
             var code = 'parseInt(readStdin())';
-            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+            return [code, JavascriptOrder.ATOMIC];
         };
 
-        Blockly.JavaScript['input_num_next'] = function (block) {
+        javascriptGenerator.forBlock['input_num_next'] = function (block) {
             Blockly.JavaScript.definitions_['input_funcs'] = "var stdinBuffer = '';\n"
                 + "function readStdin() {\n"
                 + "    if (stdinBuffer == '')\n"
@@ -34,10 +35,10 @@ export function adaptJsBlocks(Blockly) {
                 + "    return w[0];\n"
                 + "};";
             var code = 'parseInt(input_word())';
-            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+            return [code, JavascriptOrder.ATOMIC];
         };
 
-        Blockly.JavaScript['input_char'] = function (block) {
+        javascriptGenerator.forBlock['input_char'] = function (block) {
             Blockly.JavaScript.definitions_['input_funcs'] = "var stdinBuffer = '';\n"
                 + "function readStdin() {\n"
                 + "    if (stdinBuffer == '')\n"
@@ -52,10 +53,10 @@ export function adaptJsBlocks(Blockly) {
             +"    return buf.substr(0, 1);\n";
             +"};\n";
             var code = 'input_char()';
-            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+            return [code, JavascriptOrder.ATOMIC];
         };
 
-        Blockly.JavaScript['input_word'] = function (block) {
+        javascriptGenerator.forBlock['input_word'] = function (block) {
             Blockly.JavaScript.definitions_['input_funcs'] = "var stdinBuffer = '';\n"
                 + "function readStdin() {\n"
                 + "    if (stdinBuffer == '')\n"
@@ -75,10 +76,10 @@ export function adaptJsBlocks(Blockly) {
                 + "    return w[0];\n"
                 + "};";
             var code = 'input_word()';
-            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+            return [code, JavascriptOrder.ATOMIC];
         };
 
-        Blockly.JavaScript['input_line'] = function (block) {
+        javascriptGenerator.forBlock['input_line'] = function (block) {
             Blockly.JavaScript.definitions_['input_funcs'] = "var stdinBuffer = '';\n"
                 + "function readStdin() {\n"
                 + "    if (stdinBuffer == '')\n"
@@ -88,10 +89,10 @@ export function adaptJsBlocks(Blockly) {
                 + "    return stdinBuffer;\n"
                 + "};";
             var code = 'readStdin()';
-            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+            return [code, JavascriptOrder.ATOMIC];
         };
 
-        Blockly.JavaScript['input_num_list'] = function (block) {
+        javascriptGenerator.forBlock['input_num_list'] = function (block) {
             Blockly.JavaScript.definitions_['input_funcs'] = "var stdinBuffer = '';\n"
                 + "function readStdin() {\n"
                 + "    if (stdinBuffer == '')\n"
@@ -108,15 +109,15 @@ export function adaptJsBlocks(Blockly) {
                 + "    return parts;\n"
                 + "};";
             var code = 'input_num_list()';
-            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+            return [code, JavascriptOrder.ATOMIC];
         };
 
 
-        Blockly.JavaScript['text_print'] = function (block) {
-            return "print(" + (Blockly.JavaScript.valueToCode(block, "TEXT", Blockly.JavaScript.ORDER_NONE) || "''") + ");\n";
+        javascriptGenerator.forBlock['text_print'] = function (block) {
+            return "print(" + (javascriptGenerator.valueToCode(block, "TEXT", JavascriptOrder.NONE) || "''") + ");\n";
         };
-        Blockly.JavaScript['text_print_noend'] = function (block) {
-            return "print(" + (Blockly.JavaScript.valueToCode(block, "TEXT", Blockly.JavaScript.ORDER_NONE) || "''") + ", '');\n";
+        javascriptGenerator.forBlock['text_print_noend'] = function (block) {
+            return "print(" + (javascriptGenerator.valueToCode(block, "TEXT", JavascriptOrder.NONE) || "''") + ", '');\n";
         };
     }
 }

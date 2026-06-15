@@ -7,6 +7,21 @@ import {Block, BlockType} from '../../task/blocks/block_types';
 import {QuickAlgoLibrary} from '../../task/libs/quickalgo_library';
 import * as Blockly from 'blockly/core';
 import {BlocklyOptions} from 'blockly/core';
+import {JavascriptGenerator, javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript';
+import {PythonGenerator, pythonGenerator, Order as PythonOrder} from 'blockly/python';
+
+const codeGenerators: Record<string, JavascriptGenerator | PythonGenerator> = {
+    javascript: javascriptGenerator,
+    python: pythonGenerator,
+};
+
+function getCodeGeneratorForLanguage(language: string) {
+    if (!(language in codeGenerators)) {
+        throw new Error(`There does not exist a generator for this language: ${language}.`);
+    }
+
+    return codeGenerators[language];
+}
 
 let blocklySets = {
     allDefault: {
@@ -81,7 +96,7 @@ export class BlocklyHelper {
     private definitions: any;
     private simpleGenerators: any;
     private codeId: number;
-    public workspace: any;
+    public workspace: Blockly.Workspace;
     private options: any;
     private initialScale: number;
     private divId: string;
@@ -188,7 +203,7 @@ export class BlocklyHelper {
 
         addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
         // TODO Blockly: write code generators
-        // this.createSimpleGeneratorsAndBlocks();
+        this.createSimpleGeneratorsAndBlocks();
 
         this.display = display;
 
@@ -677,10 +692,7 @@ export class BlocklyHelper {
         }
     }
 
-    getCode(language, codeWorkspace = undefined, noReportValue = false, noConstraintCheck = false) {
-        // TODO Blockly: write code generators
-        return '';
-
+    getCode(language: 'javascript'|'python', codeWorkspace: Blockly.Workspace = undefined, noReportValue: boolean = false, noConstraintCheck: boolean = false) {
         if (codeWorkspace == undefined) {
             codeWorkspace = this.workspace;
         }
@@ -688,15 +700,11 @@ export class BlocklyHelper {
             // Safeguard: avoid generating code when we use too many blocks
             return 'throw "' + this.strings.tooManyBlocks + '";';
         }
+
+        const codeGenerator = getCodeGeneratorForLanguage(language);
+
         let blocks = codeWorkspace.getTopBlocks(true);
-        let languageObj = null;
-        if (language == "javascript") {
-            languageObj = window.Blockly.JavaScript;
-        }
-        if (language == "python") {
-            languageObj = window.Blockly.Python;
-        }
-        languageObj.init(codeWorkspace);
+        codeGenerator.init(codeWorkspace);
 
         let oldReportValues = this.reportValues;
         if (noReportValue) {
@@ -715,7 +723,7 @@ export class BlocklyHelper {
         let comments = [];
         for (let b = 0; b < blocks.length; b++) {
             let block = blocks[b];
-            let blockCode = languageObj.blockToCode(block);
+            let blockCode = codeGenerator.blockToCode(block);
             if (window.arrayContains(["procedures_defnoreturn", "procedures_defreturn"], block.type)) {
                 // For function blocks, the code is stored in languageObj.definitions_
             } else {
@@ -725,8 +733,10 @@ export class BlocklyHelper {
             }
         }
 
-        for (let def in languageObj.definitions_) {
-            code.push(languageObj.definitions_[def]);
+        // @ts-ignore
+        for (let def in codeGenerator.definitions_) {
+            // @ts-ignore
+            code.push(codeGenerator.definitions_[def]);
         }
 
         let codeString = code.join("\n");
@@ -882,7 +892,7 @@ export class BlocklyHelper {
         }
     }
 
-    completeCodeGenerators(blockInfo, objectName) {
+    completeCodeGenerators(blockInfo) {
         if (typeof blockInfo.codeGenerators == "undefined") {
             blockInfo.codeGenerators = {};
         }
@@ -899,9 +909,9 @@ export class BlocklyHelper {
         let output = blockInfo.blocklyJson.output;
         let blockParams = blockInfo.params;
 
-        for (let language in {JavaScript: null, Python: null}) {
+        for (let [language, codeGenerator] of Object.entries(codeGenerators)) {
             // Prevent the function name to be used as a variable
-            window.Blockly[language].addReservedWords(code);
+            codeGenerator.addReservedWords(code);
 
             if (typeof blockInfo.codeGenerators[language] == "undefined") {
                 function setCodeGeneratorForLanguage(language) {
@@ -921,9 +931,9 @@ export class BlocklyHelper {
                                 }
 
                                 if (blockParams && blockParams[iArgs0] == 'Statement') {
-                                    params += "function () {\n  " + window.Blockly.JavaScript.statementToCode(block, 'PARAM_' + iParam) + "}";
+                                    params += "function () {\n  " + codeGenerator.statementToCode(block, 'PARAM_' + iParam) + "}";
                                 } else {
-                                    params += window.Blockly[language].valueToCode(block, 'PARAM_' + iParam, window.Blockly[language].ORDER_ATOMIC);
+                                    params += codeGenerator.valueToCode(block, 'PARAM_' + iParam, 0);
                                 }
                                 iParam += 1;
                             }
@@ -966,7 +976,7 @@ export class BlocklyHelper {
                             return [reportedCode, window.Blockly[language].ORDER_NONE];
                         }
                     }
-                };
+                }
                 setCodeGeneratorForLanguage(language);
             }
         }
@@ -974,7 +984,9 @@ export class BlocklyHelper {
 
     applyCodeGenerators(block) {
         for (let language in block.codeGenerators) {
-            window.Blockly[language][block.name] = block.codeGenerators[language];
+            const generator = getCodeGeneratorForLanguage(language);
+
+            generator.forBlock[block.name] = block.codeGenerators[language];
         }
     }
 
@@ -1002,10 +1014,10 @@ export class BlocklyHelper {
         let pyDefinitions = this.definitions['python'] ? this.definitions['python'] : [];
 
         // Prevent the function name to be used as a variable
-        window.Blockly.JavaScript.addReservedWords(code);
-        window.Blockly.Python.addReservedWords(code);
+        javascriptGenerator.addReservedWords(code);
+        pythonGenerator.addReservedWords(code);
 
-        window.Blockly.JavaScript[label] = function (block) {
+        javascriptGenerator.forBlock[label] = function (block) {
             for (let iDef = 0; iDef < jsDefinitions.length; iDef++) {
                 let def = jsDefinitions[iDef];
                 window.Blockly.Javascript.definitions_[def.label] = def.code;
@@ -1015,17 +1027,17 @@ export class BlocklyHelper {
                 if (iParam != 0) {
                     params += ", ";
                 }
-                params += window.Blockly.JavaScript.valueToCode(block, 'NAME_' + (iParam + 1), window.Blockly.JavaScript.ORDER_ATOMIC);
+                params += javascriptGenerator.valueToCode(block, 'NAME_' + (iParam + 1), JavascriptOrder.ATOMIC);
             }
             if (type == 0) {
                 return code + "(" + params + ");\n";
             } else if (type == 1) {
-                return [code + "(" + params + ")", window.Blockly.JavaScript.ORDER_NONE];
+                return [code + "(" + params + ")", JavascriptOrder.NONE];
             }
 
             return null;
         };
-        window.Blockly.Python[label] = function (block) {
+        pythonGenerator.forBlock[label] = function (block) {
             for (let iDef = 0; iDef < pyDefinitions.length; iDef++) {
                 let def = pyDefinitions[iDef];
                 window.Blockly.Python.definitions_[def.label] = def.code;
@@ -1035,12 +1047,12 @@ export class BlocklyHelper {
                 if (iParam != 0) {
                     params += ", ";
                 }
-                params += window.Blockly.Python.valueToCode(block, 'NAME_' + (iParam + 1), window.Blockly.Python.ORDER_ATOMIC);
+                params += pythonGenerator.valueToCode(block, 'NAME_' + (iParam + 1), PythonOrder.ATOMIC);
             }
             if (type == 0) {
                 return code + "(" + params + ")\n";
             } else if (type == 1) {
-                return [code + "(" + params + ")", window.Blockly.Python.ORDER_NONE];
+                return [code + "(" + params + ")", PythonOrder.NONE];
             }
 
             return null;
@@ -1111,8 +1123,8 @@ export class BlocklyHelper {
             this.completeBlockJson(blockInfo, generatorName, category, this.mainContext); /* category.category is category name */
             this.completeBlockXml(blockInfo);
             // TODO Blockly: write code geneators
-            // this.completeCodeGenerators(blockInfo, generatorName);
-            // this.applyCodeGenerators(blockInfo);
+            this.completeCodeGenerators(blockInfo);
+            this.applyCodeGenerators(blockInfo);
             this.createBlock(blockInfo);
             this.applyBlockOptions(blockInfo);
         }

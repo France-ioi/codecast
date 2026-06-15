@@ -72,7 +72,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;
         this.delayFactory = new window.DelayFactory();
         // TODO Blockly: write code generators
-        // adaptJsBlocks(window.Blockly);
+        adaptJsBlocks(window.Blockly);
     }
 
     public static hasBlocks(): boolean {
@@ -309,11 +309,12 @@ export default class BlocklyRunner extends AbstractRunner {
             };
         }
 
-        if(window.Blockly.JavaScript.externalFunctions) {
-            for(let name in window.Blockly.JavaScript.externalFunctions) {
-                interpreter.setProperty(scope, name, interpreter.createNativeFunction(makeNative(window.Blockly.JavaScript.externalFunctions[name])));
-            }
-        }
+        // TODO Blockly: remove this if not useful
+        // if(window.Blockly.JavaScript.externalFunctions) {
+        //     for(let name in window.Blockly.JavaScript.externalFunctions) {
+        //         interpreter.setProperty(scope, name, interpreter.createNativeFunction(makeNative(window.Blockly.JavaScript.externalFunctions[name])));
+        //     }
+        // }
 
         interpreter.setProperty(scope, "program_end", interpreter.createAsyncFunction(createAsync((callback) => {
             this.program_end(callback);
