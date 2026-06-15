@@ -300,9 +300,12 @@ export class BlocklyHelper {
 
         let ws = this.workspace;
         if (ws != null) {
+            window.Blockly.Events.disable();
             try {
                 ws.dispose();
             } catch (e) {
+            } finally {
+                window.Blockly.Events.enable();
             }
         }
     }
@@ -430,9 +433,21 @@ export class BlocklyHelper {
     loadPrograms() {
         if (this.workspace != null) {
             let xml = Blockly.utils.xml.textToDom(this.programs[this.codeId].blockly);
+
+            // No undo after reload: disable all events and clear workspace while reloading
+            window.Blockly.Events.disable();
             this.workspace.clear();
             // this.cleanBlockAttributes(xml, this.getOrigin());
-            window.Blockly.Xml.domToWorkspace(xml, this.workspace);
+
+            try {
+                window.Blockly.Xml.domToWorkspace(xml, this.workspace);
+            } finally {
+                // Wait that blocks are loaded (Blockyl fires events with setTimeout...)
+                setTimeout(() => {
+                    window.Blockly.Events.enable();
+                }, 0);
+            }
+            // window.Blockly.Xml.domToWorkspace(xml, this.workspace);
 
             let additionalXML = xml.getElementsByTagName("additional");
             if (additionalXML.length > 0) {
@@ -1230,6 +1245,14 @@ export class BlocklyHelper {
         // *** Blocks from the lib
         for (let block of this.availableBlocks) {
             if (BlockType.Function !== block.type) {
+                continue;
+            }
+
+            // Don't show printer lib blocks if similar Blockly standard blocks are already included
+            if ('printer' === block.generatorName && 'print' === block.name && this.includeBlocks?.standardBlocks?.singleBlocks?.includes('text_print')) {
+                continue;
+            }
+            if ('printer' === block.generatorName && 'read' === block.name && this.includeBlocks?.standardBlocks?.singleBlocks?.includes('input_num')) {
                 continue;
             }
 

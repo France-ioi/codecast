@@ -1,4 +1,3 @@
-import './buffers/ace_loader';
 import './style.scss';
 import url from 'url';
 import React from 'react';
@@ -26,9 +25,6 @@ import {AppErrorBoundary} from "./common/AppErrorBoundary";
 import {EnhancedStore} from "@reduxjs/toolkit";
 import {ConceptViewer} from "./task/documentation/doc";
 import {Documentation} from "./task/documentation/Documentation";
-import '@france-ioi/skulpt/dist/skulpt.min.js';
-import '@france-ioi/skulpt/dist/skulpt-stdlib.js';
-import '@france-ioi/skulpt/dist/debugger.js';
 import {DndProvider} from "react-dnd-multi-backend";
 import {CustomDragLayer} from "./task/CustomDragLayer";
 import {TralalereApp} from "./tralalere/TralalereApp";
@@ -159,6 +155,7 @@ declare global {
         taskGetResourcesPost: (res, callback) => void,
         FontsLoader: any,
         implementGetResources?: (task: any) => void,
+        taskGetResourcesPostListeners: ((res: any, callback: any) => void)[],
         log: any,
         quickAlgoLanguageStrings: any,
         taskStrings?: any,
@@ -170,6 +167,7 @@ declare global {
         instructionsPostProcessing?: (() => void)[],
         MathJax: any,
         blocklyUserScale: number,
+        TASK_NEEDS_ADDITIONAL_CHECKS?: boolean,
     }
 }
 

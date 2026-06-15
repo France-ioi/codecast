@@ -4,7 +4,6 @@ import {StatisticsState} from "./statistics";
 import {initialStateFullscreen} from "./common/fullscreen";
 import {Error} from "./common/error";
 import {mainViewGeometries} from "./common/resize";
-import {Languages} from './lang';
 import {Stepper} from "./stepper";
 import {initialStateCompile} from "./stepper/compile";
 import {initialStateExamples} from "./common/examples";
@@ -29,6 +28,7 @@ import {SubmissionState} from "./submission/submission_slice";
 import {CodecastPlatform} from './stepper/codecast_platform';
 import {BuffersState} from './buffers/buffers_slice';
 import {RecorderState} from './recorder/store';
+import {Languages} from './lang/messages';
 
 export enum CodecastOptionsMode {
     Edit = 'edit',

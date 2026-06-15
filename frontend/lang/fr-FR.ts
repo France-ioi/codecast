@@ -253,6 +253,7 @@ export default {
     TASK_BLOCK_CATEGORY_UNDEFINED: "Divers",
     TASK_LIMIT_TIME: "Limite de temps :",
     TASK_LIMIT_MEMORY: "Limite de mémoire :",
+    TASK_NOT_READY: "Ce sujet doit être vérifié. Si tout fonctionne bien, retirez la ligne \"window.TASK_NEEDS_ADDITIONAL_CHECKS = true\" en haut du fichier index.html, ce bandeau disparaîtra.",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Se placer dans un agencement :",
     LAYOUT_DefaultLayoutDesktop: 'Ordinateur',
@@ -312,6 +313,7 @@ export default {
     SUBMISSION_EXECUTE_THIS_TEST: 'Exécuter sur ce test',
     SUBMISSION_EXECUTE_MY_TESTS: 'Mes tests',
     SUBMISSION_EXECUTE_SUBMIT: 'Soumettre',
+    SUBMISSION_READ_ONLY: 'Mode lecture seule – soumission indisponible',
 
     BUFFER_TAB_FILENAME: 'Code {i}',
     BUFFER_TAB_PENDING_SUBMISSION: 'Soumission en cours',
@@ -328,6 +330,7 @@ export default {
     SUBMISSION_RESULTS_CRASHED: "Une erreur s'est produite durant l'évaluation.",
     SUBMISSION_RESULTS_CRASHED_NETWORK: "Vous n'êtes actuellement pas connecté à Internet.",
     SUBMISSION_RESULTS_CRASHED_UNKNOWN: "Impossible d'envoyer la soumission au serveur d'évaluation.",
+    SUBMISSION_RESULTS_CRASHED_TIMEOUT: "Délai d'évaluation dépassé, le serveur d'évaluation n'a pas répondu dans le temps imparti.",
     SUBMISSION_RESULTS_LABEL: 'Soumission en {platform}',
     SUBMISSION_RESULTS_SELECT: 'Précédentes soumissions',
     SUBMISSION_EVALUATING_USER_TESTS: "Évaluation serveur en cours sur les tests perso...",

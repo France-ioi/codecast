@@ -9,8 +9,8 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {NodeCue} from "subtitle";
-import {getMessage} from "../lang";
 import { Search } from "@blueprintjs/icons";
+import {getMessage} from '../lang/messages';
 
 interface SubtitlesPaneStateToProps {
     subtitles: any[],

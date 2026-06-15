@@ -4,7 +4,8 @@ import {useAppSelector} from "../../../hooks";
 import { SmartContractResultLogLine, isContract } from './smart_contract_lib';
 import {SmartContractViewTransaction} from './SmartContractViewTransaction';
 import {Alert} from "react-bootstrap";
-import {getMessage} from '../../../lang';
+
+import {getMessage} from '../../../lang/messages';
 
 export function SmartContractView() {
     const taskState = useAppSelector((state: AppStore) => state.task.state?.smart_contract);

@@ -9,7 +9,8 @@ import {LibraryTestResult} from '../task/libs/library_test_result';
 import {QuickalgoLibraryCall, StepperContext} from './api';
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 import {Codecast} from '../app_types';
-import {getMessage} from '../lang';
+
+import {getMessage} from '../lang/messages';
 
 const EXECUTOR_TIMEOUT = 60*1000; // ms
 

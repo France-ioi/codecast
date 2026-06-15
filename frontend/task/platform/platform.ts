@@ -27,10 +27,12 @@ import {
 import {Action, ActionCreator} from "redux";
 import {
     platformSaveAnswer,
-    platformSaveScore, platformTaskParamsUpdated,
+    platformSaveScore,
     platformTaskRandomSeedUpdated,
-    platformTokenUpdated, TaskLevel,
-    TaskLevelName, taskLevelsList,
+    platformTokenUpdated,
+    TaskLevel,
+    TaskLevelName,
+    taskLevelsList,
 } from "./platform_slice";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
@@ -39,7 +41,6 @@ import {taskLoaded} from '../task_slice';
 import {appSelect} from '../../hooks';
 import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {SubmissionExecutionScope} from '../../submission/submission_slice';
-import {getMessage} from '../../lang';
 import {LayoutView} from '../layout/layout_types';
 import {taskLoad} from '../task_actions';
 import {levelScoringData} from '../../submission/scoring';
@@ -52,7 +53,7 @@ import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {hasBlockPlatform} from '../../stepper/platforms';
-import {AppStore, CodecastOptions} from '../../store';
+import {AppStore} from '../../store';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
@@ -61,6 +62,8 @@ import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
 import jwt from 'jsonwebtoken';
 import {getAvailablePlatforms} from '../libs/quickalgo_library_factory';
+import {getMessage} from '../../lang/messages';
+import {DeferredPromise} from '../../utils/app';
 
 let getTaskAnswer: () => Generator<unknown, TaskAnswer>;
 let getTaskState: () => Generator;
@@ -88,24 +91,26 @@ export function* getTaskAnswerAggregated() {
     }
 }
 
-export const selectTaskMetadata = createSelector(
-    (state: AppStore) => state.task.currentTask,
-    (currentTask) => {
-        const serverTask = null !== currentTask && isServerTask(currentTask);
+export function selectTaskMetadata() {
+    // Don't use state.task.currentTask here because it may not be defined yet;
+    // task.getMetaData is called before task.load so before loading the task from the back-end
+    const urlParameters = new URLSearchParams(window.location.search);
+    const serverTask = urlParameters.has('taskId') || window.PEMTaskMetaData;
 
-        const metadata = window.json ?? window.PEMTaskMetaData ?? {
-            fullFeedback: true,
-            minWidth: "auto",
-        };
-        metadata.autoHeight = true;
-        if (!serverTask) {
-            metadata.disablePlatformProgress = true;
-        }
-        metadata.usesTokens = true; // To receive task token
+    const defaultMetadata = {
+        fullFeedback: true,
+        minWidth: "auto",
+    };
 
-        return metadata;
-    }
-);
+    return {
+        ...(window.json ?? window.PEMTaskMetaData ?? defaultMetadata),
+        autoHeight: true,
+        ...(!serverTask ? {disablePlatformProgress: true} : {}),
+        usesTokens: true, // To receive task token
+        apiVersion: 2,
+        minApiVersion: 1,
+    };
+}
 
 export function selectTaskTokenPayload(state: AppStore): TaskTokenPayload|null {
     const token = state.platform.taskToken;
@@ -152,9 +157,10 @@ function* linkTaskPlatformSaga() {
     }
     yield* call(platformApi.initWithTask, taskApi);
 
-    window.taskGetResourcesPost = (res, callback) => {
+    window.taskGetResourcesPostListeners ??= [];
+    window.taskGetResourcesPostListeners.push((res, callback) => {
         Codecast.environments['main'].store.dispatch(taskGetResourcesPost(res, callback));
-    };
+    });
 }
 
 export function* subscribePlatformHelper() {
@@ -204,9 +210,9 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
     return nextLevel;
 }
 
-function* showDifferentViews() {
-    const levelGridInfos = yield* appSelect(state => state.task.levelGridInfos);
-    const {supportsTabs} = yield* appSelect(state => state.platform.taskParams);
+export function selectShowDifferentViews(state: AppStore): boolean {
+    const levelGridInfos = state.task.levelGridInfos;
+    const {supportsTabs} = state.platform.taskParams;
     if (!supportsTabs || !levelGridInfos) {
         return false;
     }
@@ -216,7 +222,7 @@ function* showDifferentViews() {
         return levelGridInfos.showViews;
     }
 
-    const levels = yield* appSelect(state => state.platform.levels);
+    const levels = state.platform.levels;
     if (context?.showViews && 1 >= Object.keys(levels).length) {
         return context.showViews();
     }
@@ -226,13 +232,13 @@ function* showDifferentViews() {
 
 function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGetViewsEvent>) {
     const views = yield* call(getSupportedViews);
-    const showViews = yield* call(showDifferentViews);
+    const showViews = yield* appSelect(selectShowDifferentViews);
 
     yield* call(success, views, showViews);
 }
 
 function* getSupportedViews() {
-    const showViews = yield* call(showDifferentViews);
+    const showViews = yield* appSelect(selectShowDifferentViews);
     const hasSolution = yield* appSelect(getTaskSolution);
 
     if (showViews) {
@@ -256,9 +262,16 @@ function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof
     yield* call(success);
 }
 
-function* taskUpdateTokenEventSaga ({payload: {token, success}}: ReturnType<typeof taskUpdateTokenEvent>) {
-    yield* put(platformTokenUpdated(token));
-    yield* call(success);
+function* taskUpdateTokenEventSaga ({payload: {token, success, error}}: ReturnType<typeof taskUpdateTokenEvent>) {
+    const deferredPromise = new DeferredPromise<void>();
+    yield* put(platformTokenUpdated({token, deferredPromise: deferredPromise}));
+
+    try {
+        yield deferredPromise.promise;
+        yield* call(success);
+    } catch (e) {
+        yield* call(error, `Task token could not be updated: ${String(e)}`);
+    }
 }
 
 function* taskGetHeightEventSaga ({payload: {success}}: ReturnType<typeof taskGetHeightEvent>) {
@@ -270,7 +283,7 @@ function* taskUnloadEventSaga ({payload: {success}}: ReturnType<typeof taskUnloa
     yield* call(success);
 }
 
-function* taskGetMetaDataEventSaga ({payload: {success, error: _error}}: ReturnType<typeof taskGetMetadataEvent>) {
+function* taskGetMetaDataEventSaga ({payload: {success}}: ReturnType<typeof taskGetMetadataEvent>) {
     const metadata = yield* appSelect(selectTaskMetadata);
 
     yield* call(success, metadata);
@@ -355,7 +368,7 @@ export function* canReloadAnswer(answer: TaskAnswer) {
     return true;
 }
 
-function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: ReturnType<typeof taskReloadAnswerEvent>) {
+function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}}: ReturnType<typeof taskReloadAnswerEvent>) {
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         if (taskLevels && Object.keys(taskLevels).length && answer) {
@@ -385,7 +398,10 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
             const currentTask = yield* appSelect(state => state.task.currentTask);
             if (!isServerTask(currentTask)) {
                 // Grade with updateScore = true and showResult = false
-                yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, success, error, true, false));
+
+                const deferredPromise = new DeferredPromise();
+                yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(JSON.stringify(convertedAnswer), null, deferredPromise.resolve, deferredPromise.reject, true, false));
+                yield deferredPromise;
             }
 
             yield* call(taskAnswerReloadedSaga);
@@ -396,13 +412,18 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
                 if (!(yield* call(canReloadAnswer, answerObject))) {
                     throw new Error("This answer is not accepted: " + answer)
                 }
+
                 yield* put(platformAnswerLoaded(answerObject));
                 yield* put(platformTaskRefresh());
             }
-            yield* call(success);
-        } else {
-            yield* call(success);
         }
+
+        if (options.idUserAnswer) {
+            const {score, message} = yield* call([taskGrader, taskGrader.reloadServerSubmissionFromUserAnswerId], options.idUserAnswer);
+            yield* put(platformAnswerGraded({score, message}));
+        }
+
+        yield* call(success);
     } catch (ex: any) {
         console.error(`Answer cannot be reloaded (${answer}): ${ex.message}`, ex);
         yield* put(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE').s));
@@ -618,7 +639,8 @@ export interface PlatformTaskGradingResult {
 }
 
 export interface TaskGrader {
-    gradeAnswer: (parameters: PlatformTaskGradingParameters) => Generator<Effect, PlatformTaskGradingResult, any>;
+    gradeAnswer: (parameters: PlatformTaskGradingParameters) => Generator<Effect, PlatformTaskGradingResult>;
+    reloadServerSubmissionFromUserAnswerId: (userAnswerId: string) => Generator<Effect, PlatformTaskGradingResult>;
 }
 
 export interface PlatformBundleParameters {

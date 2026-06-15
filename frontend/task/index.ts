@@ -97,7 +97,6 @@ import {selectTaskTests} from '../submission/submission_selectors';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
-import {getMessage, Languages} from '../lang';
 import {isServerTask, TaskServer, TaskTest} from './task_types';
 import {extractTestsFromTask} from '../submission/tests';
 import {taskChangeLevel, taskLoad} from './task_actions';
@@ -107,7 +106,7 @@ import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {TaskSubmissionResultPayload} from '../submission/submission_types';
 import {LayoutMobileMode, LayoutType} from './layout/layout_types';
 import {createQuickalgoLibrary} from './libs/quickalgo_library_factory';
-import {isServerSubmission, selectCurrentServerSubmission, selectCurrentSubmission} from '../submission/submission';
+import {isServerSubmission, selectCurrentServerSubmission} from '../submission/submission_selectors';
 import {
     bufferDissociateFromSubmission,
     bufferEdit,
@@ -126,6 +125,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import {DeferredPromise} from '../utils/app';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 import {getAudioTimeStep} from './task_selectors';
+import {getMessage, Languages} from '../lang/messages';
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -156,22 +156,26 @@ window.changeTaskLevel = (levelName: TaskLevelName) => {
 
 let oldSagasTasks = {};
 
-function* taskRefresh(taskId?: string) {
+function* taskRefresh(taskId?: string, deferredPromise?: DeferredPromise<void>) {
     const currentTask = yield* appSelect(state => state.task.currentTask);
-    if (!currentTask?.id && !taskId) {
+    taskId = taskId ?? currentTask?.id;
+
+    if (!taskId) {
+        deferredPromise?.resolve();
         return;
     }
 
     let task: TaskServer | null = null;
     try {
         const newPlatformState = yield* appSelect(state => state.platform);
-        task = yield* getTaskFromId(taskId ?? currentTask?.id, newPlatformState.taskToken, newPlatformState.platformName);
+        task = yield* getTaskFromId(taskId, newPlatformState.taskToken, newPlatformState.platformName);
     } catch (e) {
         console.error(e);
         yield* put({
             type: ActionTypes.Error,
-            payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`}
+            payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`},
         });
+        deferredPromise?.reject(new Error(`Impossible to fetch task id ${taskId}`));
         return;
     }
 
@@ -184,6 +188,8 @@ function* taskRefresh(taskId?: string) {
     if (convertedTask?.gridInfos?.hints?.length) {
         yield* put(hintsLoaded(convertedTask.gridInfos.hints));
     }
+
+    deferredPromise?.resolve();
 }
 
 function* taskLoadSaga(app: App, action) {
@@ -203,7 +209,7 @@ function* taskLoadSaga(app: App, action) {
             }
             if (urlParameters.has('sToken')) {
                 // Will trigger task refresh
-                yield* put(platformTokenUpdated(urlParameters.get('sToken')));
+                yield* put(platformTokenUpdated({token: urlParameters.get('sToken')}));
             }
 
             const taskId = urlParameters.get('taskId');
@@ -223,6 +229,10 @@ function* taskLoadSaga(app: App, action) {
     }
 
     const taskParams = yield* call(platformApi.getTaskParams, null, null);
+
+    if (taskParams?.options?.logBlocks) {
+        taskParams.options.log = true;
+    }
     yield* put(platformTaskParamsUpdated(taskParams));
 
     if (taskParams.options.log) {
@@ -412,7 +422,7 @@ function* taskLoadSaga(app: App, action) {
     }
 
     context = quickAlgoLibraries.getContext(null, state.environment);
-    const tabsEnabled = context?.infos?.tabsEnabled;
+    const tabsEnabled = !!context?.infos?.tabsEnabled;
     yield* put({type: ActionTypes.TabsEnabledChanged, payload: {tabsEnabled}});
 
     yield* call(openDocumentationIfNecessary);
@@ -1024,7 +1034,7 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(platformTokenUpdated, function*() {
+        yield* takeEvery(platformTokenUpdated, function* ({payload: {deferredPromise}}) {
             const newToken = yield* appSelect(state => state.platform.taskToken);
             if (newToken) {
                 const payload = yield* appSelect(selectTaskTokenPayload);
@@ -1033,7 +1043,9 @@ export default function (bundle: Bundle) {
                     yield* put(platformTaskRandomSeedUpdated(randomSeed));
                 }
 
-                yield* call(taskRefresh);
+                yield* call(taskRefresh, null, deferredPromise);
+            } else {
+                deferredPromise?.resolve();
             }
         });
 
@@ -1042,14 +1054,6 @@ export default function (bundle: Bundle) {
             const state = yield* appSelect();
             if (context && context.changeSoundEnabled) {
                 context.changeSoundEnabled(state.task.soundEnabled);
-            }
-        });
-
-        yield* takeEvery(ActionTypes.WindowResized, function* () {
-            const context = quickAlgoLibraries.getContext(null, 'main');
-            const state = yield* appSelect();
-            if (hasBlockPlatform(selectActiveBufferPlatform(state)) && state.task.currentTask) {
-                yield* call(loadBlocklyHelperSaga, context);
             }
         });
 

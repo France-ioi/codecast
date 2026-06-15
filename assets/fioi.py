@@ -80,11 +80,12 @@ def send_submission(payload):
         print(f'Failed to send submission. Status code: {response.status_code}')
 
 
-def check_submission_status(submission_id):
+def check_submission_status(submission_id, token=None):
     url = f'{ENDPOINT_URL}/submissions/{submission_id}'
+    params = {'token': token} if token else {}
     print("Waiting for evaluation...", end='')
     while True:
-        response = requests.get(url)
+        response = requests.get(url, params=params)
         if response.status_code == 200:
             json_response = response.json()
             if json_response.get('evaluated'):
@@ -143,7 +144,7 @@ def process_submit(args):
     submission_id = send_submission(payload)
 
     if submission_id is not None:
-        result = check_submission_status(submission_id)
+        result = check_submission_status(submission_id, args.token)
         if result is not None:
             print()
             display_submission_info(result, args.verbose)

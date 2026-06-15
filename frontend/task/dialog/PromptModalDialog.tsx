@@ -3,7 +3,6 @@ import {SmallTick} from "@blueprintjs/icons";
 import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
-import {getMessage} from "../../lang";
 import {cancelModal, validateModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
 import {NumericKeypad} from "../blocks/NumericKeypad";
@@ -11,6 +10,7 @@ import {TralalereBox} from "../../tralalere/TralalereBox";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import log from 'loglevel';
+import {getMessage} from '../../lang/messages';
 
 export function PromptModalDialog() {
     const modalData = useAppSelector(state => state.modal);

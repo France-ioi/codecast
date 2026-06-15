@@ -8,7 +8,6 @@ Codecast note: this module comes from https://github.com/France-ioi/bebras-modul
 */
 
 import {getAvailableModules} from "./utils";
-import {getMessage, getMessageChoices} from "../lang";
 import {getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_library";
@@ -18,6 +17,7 @@ import {BlockType} from './blocks/block_types';
 import {pythonBlocksList, pythonNotionsToBlocks} from './blocks/python_blocks';
 import {Document, TextDocument} from '../buffers/buffer_types';
 import {documentToString} from '../buffers/document';
+import {getMessage, getMessageChoices} from '../lang/messages';
 
 const pythonCountPatterns = [
     // Comments

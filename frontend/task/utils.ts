@@ -1,5 +1,4 @@
 import {current, isDraft} from "immer";
-import {getMessage} from "../lang";
 import {AppStore} from "../store";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
 import {isServerTask, QuickalgoTaskIncludeBlocks, Task, TaskAnswer} from './task_types';
@@ -9,6 +8,7 @@ import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {BlockBufferHandler, TextBufferHandler} from '../buffers/document';
 import {Document} from '../buffers/buffer_types';
 import {appSelect} from '../hooks';
+import {getMessage} from '../lang/messages';
 
 export enum TaskPlatformMode {
     Source = 'source',

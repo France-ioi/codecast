@@ -247,6 +247,7 @@ export default {
     TASK_BLOCK_CATEGORY_UNDEFINED: "Other",
     TASK_LIMIT_TIME: "Time limit:",
     TASK_LIMIT_MEMORY: "Memory limit:",
+    TASK_NOT_READY: "This task needs to be verified. If everything works correctly, remove the line \"window.TASK_NEEDS_ADDITIONAL_CHECKS = true\" at the top of the index.html file, and this banner will disappear.",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
     LAYOUT_DefaultLayoutDesktop: 'Desktop',
@@ -300,6 +301,7 @@ export default {
     SUBMISSION_EXECUTE_THIS_TEST: 'Execute on this test',
     SUBMISSION_EXECUTE_MY_TESTS: 'My tests',
     SUBMISSION_EXECUTE_SUBMIT: 'Submit',
+    SUBMISSION_READ_ONLY: 'Read-only mode – submission unavailable',
 
     BUFFER_TAB_FILENAME: 'Code {i}',
     BUFFER_TAB_PENDING_SUBMISSION: 'Evaluating submission',
@@ -319,6 +321,7 @@ export default {
     SUBMISSION_RESULTS_CRASHED: "An error has occured during submission evaluation.",
     SUBMISSION_RESULTS_CRASHED_NETWORK: "You are currently offline.",
     SUBMISSION_RESULTS_CRASHED_UNKNOWN: "Could not send submission to evaluation server.",
+    SUBMISSION_RESULTS_CRASHED_TIMEOUT: "Evaluation timed out. No result was received from the evaluation server.",
     SUBMISSION_RESULTS_LABEL: 'Submission in {platform}',
     SUBMISSION_TEST_NUMBER: "Test #{testNumber}",
     SUBMISSION_USER_TEST_WARNING: "Warning: this evaluation has been done on your own tests. To get a grade, please Submit your answer.",

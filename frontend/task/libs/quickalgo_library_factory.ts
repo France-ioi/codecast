@@ -11,7 +11,6 @@ import {createDisplayHelper} from './display_helper';
 import {getAvailablePlatformsFromSupportedLanguages, hasBlockPlatform} from '../../stepper/platforms';
 import {loadBlocklyHelperSaga} from '../../stepper/js';
 import {
-    selectCurrentTestData,
     taskIncreaseContextId,
     taskSetAvailablePlatforms,
     taskSetBlocksPanelCollapsed,
@@ -34,6 +33,7 @@ import {OpenCvLib} from './opencv/opencv_lib';
 import {Codecast} from '../../app_types';
 import {bufferGetPythonCode} from '../../buffers/buffer_actions';
 import {BlocklyHelper} from '../../stepper/js/blockly_helper';
+import {selectCurrentTestData} from '../task_selectors';
 
 const availableLibs = {
     'smart_contract': SmartContractLib,
@@ -183,11 +183,6 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
         // Don't freeze any objet inside context.infos.includeBlocks because
         // these objects can be modified by blockly_blocks.js,
         // for example for Scratch: `tsiSingleBlocks = this.blocksToScratch(tsiSingleBlocks);`
-
-        // Remove printer blocks if it's a server task because in this case we don't want to display them in the blocks
-        if (isServerTask(currentTask) && context.infos.includeBlocks.generatedBlocks && 'printer' in context.infos.includeBlocks.generatedBlocks) {
-            delete context.infos.includeBlocks.generatedBlocks['printer'];
-        }
 
         yield* put(taskSetContextIncludeBlocks(JSON.parse(JSON.stringify(context.infos.includeBlocks))));
     }

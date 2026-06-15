@@ -1,9 +1,8 @@
 import {Bundle} from "../linker";
 import {call, put, race, take, takeEvery} from "typed-redux-saga";
-import {AppStore} from "../store";
 import {platformApi} from "../task/platform/platform";
 import {appSelect} from '../hooks';
-import {addNewTaskTest, selectCurrentTest, removeTaskTest, updateCurrentTestId, updateTaskTest} from '../task/task_slice';
+import {addNewTaskTest, removeTaskTest, updateCurrentTestId, updateTaskTest} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
 import {
     quickAlgoLibraryResetAndReloadStateSaga
@@ -16,18 +15,19 @@ import {
     submissionSlice,
     submissionUpdateTaskSubmission,
 } from './submission_slice';
-import {getMessage} from '../lang';
 import {addAutoRecordingBehaviour} from '../recorder/record';
-import {selectSubmissionsPaneEnabled, selectTaskTests} from './submission_selectors';
+import {
+    isServerSubmission,
+    selectCurrentServerSubmission,
+    selectSubmissionsPaneEnabled,
+    selectTaskTests
+} from './submission_selectors';
 import {taskSubmissionExecutor} from './task_submission';
 import {selectAnswer} from '../task/selectors';
 import {TaskTest, TaskTestGroupType} from '../task/task_types';
 import {getRandomId} from '../utils/app';
 import {
     SubmissionTestErrorCode,
-    TaskSubmission,
-    TaskSubmissionEvaluateOn,
-    TaskSubmissionServer, TaskSubmissionServerExecutionMetadata, TaskSubmissionServerTestResult
 } from './submission_types';
 import {
     callPlatformLog,
@@ -42,92 +42,8 @@ import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {testErrorCodeData} from './TestsPaneListTest';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {onEditSource} from '../task';
-import {Range} from '../buffers/buffer_types';
 import {bufferDissociateFromSubmission} from '../buffers/buffers_slice';
-
-export function isServerSubmission(object: TaskSubmission): object is TaskSubmissionServer {
-    return TaskSubmissionEvaluateOn.Server === object.type;
-}
-
-export function selectCurrentServerSubmission(state: AppStore) {
-    const currentSubmission= selectCurrentSubmission(state);
-
-    return null !== currentSubmission && TaskSubmissionEvaluateOn.Server === currentSubmission.type ? currentSubmission : null;
-}
-
-export function selectCurrentSubmission(state: AppStore): TaskSubmission|null {
-    if (null === state.submission.currentSubmissionId) {
-        return null;
-    }
-
-    return state.submission.taskSubmissions[state.submission.currentSubmissionId];
-}
-
-export function selectCancellableSubmissionIndex(state: AppStore): number|null {
-    if (null !== state.buffers.activeBufferName && null !== state.buffers.buffers[state.buffers.activeBufferName].submissionIndex) {
-        const submissionIndex = state.buffers.buffers[state.buffers.activeBufferName].submissionIndex;
-        const submission = state.submission.taskSubmissions[submissionIndex];
-        if (submission && !submission.evaluated && !submission.crashed) {
-            return submissionIndex;
-        }
-    }
-
-    const pendingUserTestSubmissionIndex = state.submission.taskSubmissions.findIndex(submission => SubmissionExecutionScope.MyTests === submission.scope && !submission.evaluated && !submission.crashed);
-    if (-1 !== pendingUserTestSubmissionIndex) {
-        return pendingUserTestSubmissionIndex;
-    }
-
-    return null;
-}
-
-export function selectActiveBufferPendingSubmissionIndex(state: AppStore): number|null {
-    if (null === state.buffers.activeBufferName || null === state.buffers.buffers[state.buffers.activeBufferName].submissionIndex) {
-        return null;
-    }
-
-    const submissionIndex = state.buffers.buffers[state.buffers.activeBufferName].submissionIndex;
-    const submission = state.submission.taskSubmissions[submissionIndex];
-    if (submission && !submission.evaluated && !submission.crashed) {
-        return submissionIndex;
-    }
-
-    return null;
-}
-
-export const selectErrorHighlightFromSubmission = (state: AppStore): Range|null => {
-    if (null === state.submission.currentSubmissionId) {
-        return null;
-    }
-
-    const currentSubmission = state.submission.taskSubmissions[state.submission.currentSubmissionId];
-    if (!isServerSubmission(currentSubmission) || !currentSubmission.result) {
-        return null;
-    }
-
-    const getRangeFromErrorLine = (metadata: TaskSubmissionServerExecutionMetadata) => {
-        if (metadata.errorline) {
-            return {start: {row: metadata.errorline - 1, column: 0}, end: {row: metadata.errorline - 1, column: 999}};
-        }
-
-        return null;
-    }
-
-    const currentTest = selectCurrentTest(state);
-    if (null !== currentTest) {
-        const testResult: TaskSubmissionServerTestResult = currentSubmission.result.tests.find(testResult => testResult.testId === currentTest.id) as TaskSubmissionServerTestResult;
-        if (testResult?.metadata) {
-            return getRangeFromErrorLine(testResult.metadata);
-        }
-    }
-
-    if (currentSubmission.result.metadata?.errorline) {
-        const metadata = currentSubmission.result.metadata;
-
-        return getRangeFromErrorLine(metadata);
-    }
-
-    return null;
-};
+import {getMessage} from '../lang/messages';
 
 export interface TestResultDiffLog {
     remainingInput?: string,
@@ -160,13 +76,13 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(callPlatformLog, function* ({payload: {details}}) {
+        yield* takeEvery(callPlatformLog, function* ({payload: {details, tag}}) {
             const state = yield* appSelect();
             // Don't interact with the platform in replay mode
             const levelGridInfos = state.task.levelGridInfos;
             const taskParams = state.platform.taskParams;
 
-            if (!(taskParams?.options?.log || levelGridInfos?.logOption) || 'main' !== state.environment) {
+            if (!(('blocks' !== tag && taskParams?.options?.log) || taskParams?.options?.logBlocks || levelGridInfos?.logOption) || 'main' !== state.environment) {
                 return;
             }
 
@@ -193,7 +109,7 @@ export default function (bundle: Bundle) {
                         }
                     }
                     const context = quickAlgoLibraries.getContext(null, 'main');
-                    if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
+                    if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult && SubmissionTestErrorCode.NoError !== testResult.errorCode) {
                         error = context.getErrorFromTestResult(testResult);
                     }
                     if (null === error && testResult.errorMessage) {

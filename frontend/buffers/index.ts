@@ -35,16 +35,6 @@ import {
     TextBufferHandler,
     uncompressIntoDocument
 } from "./document";
-import "ace-builds/src-min-noconflict/mode-c_cpp";
-import "ace-builds/src-min-noconflict/mode-java";
-import "ace-builds/src-min-noconflict/mode-python";
-import "ace-builds/src-min-noconflict/mode-javascript";
-import "ace-builds/src-min-noconflict/mode-ocaml";
-import "ace-builds/src-min-noconflict/snippets/html";
-import "ace-builds/src-min-noconflict/ext-language_tools";
-import "ace-builds/src-min-noconflict/theme-github";
-import "./modes/archetype";
-import "./modes/michelson";
 
 import {AppStore} from "../store";
 import {ReplayContext} from "../player/sagas";
@@ -52,12 +42,13 @@ import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
 import log from 'loglevel';
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from '../stepper/actionTypes';
-import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {appSelect} from '../hooks';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
+import './ace_loader';
+import './ace_modes';
 import {
     BufferState,
     BufferStateParameters,
@@ -98,6 +89,8 @@ import {StepperStatus} from '../stepper';
 import {canReloadAnswer} from '../task/platform/platform';
 import {bufferGitSyncSagas} from './buffer_git_sync';
 import {compressDocument, uncompressDocument} from './compression';
+import {isServerSubmission} from '../submission/submission_selectors';
+import {getMessage} from '../lang/messages';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -200,7 +193,7 @@ function* createBufferFromSubmission(submissionId: number) {
     const state: AppStore = yield* appSelect();
 
     const submission = state.submission.taskSubmissions[submissionId];
-    if (!submission?.result?.sourceCode?.source) {
+    if (!isServerSubmission(submission) || !submission?.result?.sourceCode?.source) {
         return;
     }
 

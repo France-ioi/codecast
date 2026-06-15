@@ -1,12 +1,11 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {Alert, Intent} from '@blueprintjs/core';
-import {getMessage} from '../lang';
 import {useAppSelector} from '../hooks';
 import {TestsPaneListSubTask} from './TestsPaneListSubTask';
 import {TestsPaneListTest} from './TestsPaneListTest';
 import {
     isServerSubmission
-} from './submission';
+} from './submission_selectors';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {useDispatch} from 'react-redux';
 import {
@@ -21,6 +20,8 @@ import {TaskSubmission, TaskSubmissionMode, TaskSubmissionServer} from './submis
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {TestsPaneListUserTests} from './TestsPaneListUserTests';
 import {TaskTestGroupType} from '../task/task_types';
+import {getMessage} from '../lang/messages';
+import {showAlert} from '../alert';
 
 export interface SubmissionResultProps {
     submission?: TaskSubmission,
@@ -72,15 +73,16 @@ export function TestsPaneList(props: SubmissionResultProps) {
         </div>;
     }
 
+    useEffect(() => {
+        if (submission && isServerSubmission(submission) && TaskSubmissionMode.UserTest === submission.result?.mode) {
+            showAlert({
+                text: getMessage('SUBMISSION_USER_TEST_WARNING')
+            });
+        }
+    }, [submission]);
+
     return (
         <div className="submission-result">
-            <Alert
-                intent={Intent.WARNING}
-                isOpen={submission && isServerSubmission(submission) && TaskSubmissionMode.UserTest === submission.result?.mode}
-            >
-                {getMessage('SUBMISSION_USER_TEST_WARNING')}
-            </Alert>
-
             {submission && !submission.evaluated && <div>
                 {getMessage('SUBMISSION_RESULTS_EVALUATING')}
             </div>}

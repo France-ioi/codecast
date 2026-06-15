@@ -12,7 +12,8 @@ import {
     printerLibTerminalInputEnter,
     printerLibTerminalInputKey
 } from "./printer_lib";
-import {getMessage} from "../../../lang";
+
+import {getMessage} from '../../../lang/messages';
 
 export function TerminalView() {
     const taskState = useAppSelector((state: AppStore) => state.task.state?.printer);

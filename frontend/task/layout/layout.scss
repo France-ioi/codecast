@@ -179,6 +179,11 @@
       cursor: pointer;
     }
   }
+
+  &.has-modes .quickalgo-button {
+    background: white !important;
+    color: var(--secondary-color) !important;
+  }
 }
 
 .cursor-shadow {
@@ -197,4 +202,17 @@
   width: auto !important;
   height: auto !important;
   flex: none;
+}
+
+.app-spinner {
+  position: absolute;
+  background: white;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

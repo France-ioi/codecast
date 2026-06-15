@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
-import {Dialog, Intent, ProgressBar} from "@blueprintjs/core";
+import {Dialog, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
 import {RecorderControls} from "./RecorderControls";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {PlayerControls} from "./PlayerControls";
@@ -17,7 +17,6 @@ import {ActionTypes} from "../subtitles/actionTypes";
 import {SubtitlesEditor} from "../subtitles/SubtitlesEditor";
 import {LoginScreen} from "../common/LoginScreen";
 import {selectActiveView, ZOOM_LEVEL_LOW} from "./layout/layout";
-import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {SubtitlesPane} from "../subtitles/SubtitlesPane";
@@ -32,6 +31,7 @@ import {DebugDialog} from './dialog/DebugDialog';
 import {LayoutPlayerMode, LayoutView} from './layout/layout_types';
 import {useCursorPositionTracking} from './layout/cursor_tracking';
 import {CursorPosition} from './layout/CursorPosition';
+import {getMessage} from '../lang/messages';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -53,6 +53,7 @@ export function TaskApp() {
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
     const taskSuccess = useAppSelector(state => state.task.success);
     const activeView = useAppSelector(selectActiveView);
+    const taskLoaded = useAppSelector(state => state.task.loaded);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
 
     let progress = null;
@@ -138,6 +139,9 @@ export function TaskApp() {
 
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform} cursor-main-zone`} data-cursor-zone="task-app">
+            {!taskLoaded && <div className="app-spinner">
+                <Spinner size={50}/>
+            </div>}
             <div className="layout-general">
                 <div className={`task-section`}>
                     {LayoutView.Task !== activeView && <TestsPane
@@ -149,6 +153,10 @@ export function TaskApp() {
                             <span className="task-header__quick">QUICK</span>
                             <span className="task-header__algo">ALGO</span>
                         </div>
+
+                        {!!window.TASK_NEEDS_ADDITIONAL_CHECKS && <div className="task-warning-banner">
+                            <p>{getMessage('TASK_NOT_READY')}</p>
+                        </div>}
 
                         {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
 

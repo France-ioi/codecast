@@ -1,6 +1,9 @@
 import {createAction} from "@reduxjs/toolkit";
-import {Document} from '../../buffers/buffer_types';
 import {TaskAnswer} from '../task_types';
+
+export interface TaskReloadAnswerOptions {
+    idUserAnswer?: string,
+}
 
 const successErrorPayload = (success, error) => ({
     payload: {
@@ -42,7 +45,7 @@ export const taskShowViewsEvent = createAction('taskEventShowViews', (views, suc
     },
 }));
 export const taskGetViewsEvent = createAction('taskEventGetViews', successErrorPayload);
-export const taskUpdateTokenEvent = createAction('taskEventUpdateToken',(token, success, error) => ({
+export const taskUpdateTokenEvent = createAction('taskEventUpdateToken', (token, success, error) => ({
     payload: {
         token,
         success,
@@ -60,11 +63,12 @@ export const taskReloadStateEvent = createAction('taskEventReloadState', (state,
     },
 }));
 export const taskGetAnswerEvent = createAction('taskEventGetAnswer', successErrorPayload);
-export const taskReloadAnswerEvent = createAction('taskEventReloadAnswer', (answer, success, error) => ({
+export const taskReloadAnswerEvent = createAction('taskEventReloadAnswer', (answer, success, error, options: TaskReloadAnswerOptions = {}) => ({
     payload: {
         answer,
         success,
         error,
+        options,
     },
 }));
 export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer, answerToken, success, error, updateScore: boolean, showResult: boolean) => ({

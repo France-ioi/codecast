@@ -8,8 +8,8 @@ import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
-import {getMessage} from "../lang";
 import { CloudUpload, SplitColumns, MergeColumns } from "@blueprintjs/icons";
+import {getMessage} from '../lang/messages';
 
 interface TrimEditorControlsProps {
     width: number

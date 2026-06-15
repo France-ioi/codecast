@@ -13,13 +13,14 @@ import {
     faForward,
     faEject,
 } from '@fortawesome/free-solid-svg-icons';
-import {getMessage} from "../lang";
 import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
-import {selectCurrentTest, taskChangeSoundEnabled} from "../task/task_slice";
+import {taskChangeSoundEnabled} from "../task/task_slice";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 
 import {LayoutType} from '../task/layout/layout_types';
+import {getMessage} from '../lang/messages';
+import {selectCurrentTest} from '../task/task_selectors';
 
 interface StepperControlsProps {
     enabled: boolean,

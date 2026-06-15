@@ -36,7 +36,8 @@ import {evalExpr, getList, getNumber, renderArrow, renderValue} from './utils';
 import {finalizeCursors, getCursorMap} from './array_utils';
 import {enumerateHeapBlocks} from '../../c/heap';
 import {DirectiveFrame} from "../DirectiveFrame";
-import {getMessage} from "../../../lang";
+
+import {getMessage} from '../../../lang/messages';
 
 interface MemoryCell {
     previous?: any,

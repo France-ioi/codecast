@@ -3,10 +3,10 @@ import {updateCurrentTestId} from "../task/task_slice";
 import {useDispatch} from "react-redux";
 import {ActionTypes} from "../stepper/actionTypes";
 import {StepperStepMode} from "../stepper";
-import {getMessage} from "../lang";
 import {useAppSelector} from '../hooks';
 import {selectTaskTests} from './submission_selectors';
 import {TaskSubmissionResultPayload} from './submission_types';
+import {getMessage} from '../lang/messages';
 
 export interface TaskTestsSubmissionResultOverviewProps {
     results: TaskSubmissionResultPayload[],

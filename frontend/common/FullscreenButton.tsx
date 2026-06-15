@@ -4,7 +4,8 @@ import {Minimize, Fullscreen} from "@blueprintjs/icons";
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {connect} from "react-redux";
-import {getMessage} from "../lang";
+
+import {getMessage} from '../lang/messages';
 
 interface FullscreenButtonStateToProps {
     enabled: boolean,

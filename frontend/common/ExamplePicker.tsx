@@ -3,7 +3,8 @@ import {AnchorButton} from "@blueprintjs/core";
 import {WarningSign, Share} from "@blueprintjs/icons";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
-import {getMessage} from "../lang";
+
+import {getMessage} from '../lang/messages';
 
 interface ExamplePickerStateToProps {
     examplesUrl: string,

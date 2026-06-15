@@ -15,7 +15,6 @@ In the stepper state:
 import range from 'node-range';
 import {call, put, select} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
-import './ace';
 import './style.scss';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";

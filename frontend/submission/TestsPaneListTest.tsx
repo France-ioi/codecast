@@ -1,12 +1,11 @@
 import React from "react";
-import {getMessage} from '../lang';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
 import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf';
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {isServerSubmission} from './submission';
+import {isServerSubmission} from './submission_selectors';
 import {updateCurrentTestId} from '../task/task_slice';
 import {useDispatch} from 'react-redux';
 import {useAppSelector} from '../hooks';
@@ -18,6 +17,7 @@ import {submissionRemoveTest} from './submission_actions';
 import {askConfirmation} from '../alert';
 import {getTestResultMessage} from './tests';
 import {faCircleNotch} from '@fortawesome/free-solid-svg-icons/faCircleNotch';
+import {getMessage} from '../lang/messages';
 
 export interface SubmissionResultTestProps {
     index: number,

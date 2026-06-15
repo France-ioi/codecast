@@ -11,13 +11,13 @@ import {useDispatch} from "react-redux";
 import {toHtml} from "../utils/sanitize";
 import {useAppSelector} from "../hooks";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {getMessage} from '../lang';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {nl2br} from '../common/utils';
 import {TaskTestsSubmissionResultOverview} from '../submission/TaskTestsSubmissionResultOverview';
 import {taskSetBlocksUsage} from '../task/task_slice';
 import {LayoutType} from '../task/layout/layout_types';
 import {Cross} from '@blueprintjs/icons';
+import {getMessage} from '../lang/messages';
 
 export interface TralalereFooterProps {
     instructionsExpanded?: boolean,

@@ -2,7 +2,6 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import {addAutocompletion} from "./editorAutocompletion";
 import {Range, TextBufferState} from './buffer_types';
-import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
@@ -16,8 +15,7 @@ import debounce from 'lodash/debounce';
 import {useCursorPositionTracking} from '../task/layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from '../task/layout/actionTypes';
 import {ComputedSourceHighlight, SourceHighlightRange} from '../stepper';
-
-const AceRange = window.ace.acequire('ace/range').Range;
+import {getMessage} from '../lang/messages';
 
 export interface EditorProps {
     name?: string,
@@ -50,6 +48,8 @@ export interface EditorProps {
 }
 
 function toRange(selection) {
+    const AceRange = window.ace.acequire('ace/range').Range;
+
     return new AceRange(
         selection.start.row, selection.start.column,
         selection.end.row, selection.end.column
@@ -220,6 +220,8 @@ export function Editor(props: EditorProps) {
             return;
         }
 
+        const AceRange = window.ace.acequire('ace/range').Range;
+
         let cursorPosition = pos ? pos : editor.current.getCursorPosition();
         // const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
         const indentationCurrentLine = editor.current.session.doc.getLine(cursorPosition.row).search(/\S|$/);
@@ -252,6 +254,8 @@ export function Editor(props: EditorProps) {
     };
 
     const doSetSelection = (selection_) => {
+        const AceRange = window.ace.acequire('ace/range').Range;
+
         wrapModelToEditor(() => {
             if (sameSelection(selection.current, selection_)) {
                 return;
@@ -283,7 +287,7 @@ export function Editor(props: EditorProps) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
                        and scrolling is handled by individual events. */
-                    editor.current.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
+                    editor.current.scrollToLine(range.end.row, /*center*/true, /*animate*/true);
                 }
             }
         });

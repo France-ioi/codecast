@@ -4,7 +4,6 @@ import {Bundle} from "../../linker";
 import {selectAnswer} from "../../task/selectors";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {delay} from "../api";
-import {getMessage, getMessageChoices} from "../../lang";
 import {put} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
 import {taskIncreaseContextId} from "../../task/task_slice";
@@ -16,6 +15,7 @@ import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
 import {Document, BlockDocument} from '../../buffers/buffer_types';
 import {BlocklyHelper} from './blockly_helper';
+import {getMessage, getMessageChoices} from '../../lang/messages';
 import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
 import 'blockly/javascript';
@@ -402,7 +402,8 @@ export async function getBlocklyCodeFromXml(document: BlockDocument, lang: strin
     log.getLogger('blockly_runner').debug('display', context.display);
     const blocklyXmlCode = document.content.blockly;
     if (!blocklyHelper.workspace) {
-        blocklyHelper.load(language, context.display, 1, {});
+        // Load without display
+        blocklyHelper.load(language, false, 1, {});
     }
     if (0 === blocklyHelper.programs.length) {
         blocklyHelper.programs.push({});

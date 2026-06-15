@@ -5,7 +5,6 @@ import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
 import {AllowExecutionOverBlocksLimit, AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
-import {Languages} from "../lang";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
 import {platformsList} from '../stepper/platforms';
@@ -13,6 +12,7 @@ import {IoMode} from '../stepper/io';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {bufferChangePlatform} from '../buffers/buffer_actions';
 import url from 'url';
+import {Languages} from '../lang/messages';
 
 export function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {

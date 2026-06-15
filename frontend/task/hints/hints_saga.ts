@@ -14,8 +14,8 @@ import {documentToString} from '../../buffers/document';
 import {getCodeHelpHint} from './codehelp';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
-import {getMessage} from '../../lang';
 import {LibraryTestResult} from '../libs/library_test_result';
+import {getMessage} from '../../lang/messages';
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {

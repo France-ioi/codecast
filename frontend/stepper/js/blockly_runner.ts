@@ -4,12 +4,12 @@ import {StepperContext} from "../api";
 import {AnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "../analysis/analysis";
 import {fetchLatestBlocklyAnalysis} from "./analysis";
 import log from "loglevel";
-import {getMessage} from '../../lang';
 import {Codecast} from '../../app_types';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {ContextEnrichingTypes} from '../actionTypes';
 import debounce from 'lodash/debounce';
 import {adaptJsBlocks} from './js_adapter';
+import {getMessage} from '../../lang/messages';
 
 const debounceHideBlocklyDropdown = debounce(() => {
     window.Blockly?.DropDownDiv?.hideWithoutAnimation();
@@ -403,8 +403,7 @@ export default class BlocklyRunner extends AbstractRunner {
             let interpreter = this.interpreters[iInterpreter];
             let wasPaused = interpreter.paused_;
             while(!this.context.programEnded[iInterpreter]) {
-                if(!this.context.allowInfiniteLoop &&
-                    (this.context.curSteps[iInterpreter].total + this.context.curSteps[iInterpreter].microSteps >= this.maxIter
+                if((this.context.curSteps[iInterpreter].total + this.context.curSteps[iInterpreter].microSteps >= this.maxIter
                         || this.context.curSteps[iInterpreter].withoutAction + this.context.curSteps[iInterpreter].microSteps >= this.maxIterWithoutAction)) {
                     break;
                 }
@@ -451,6 +450,10 @@ export default class BlocklyRunner extends AbstractRunner {
 
             if(this.context.programEnded[iInterpreter] && !this.interpreterEnded[iInterpreter]) {
                 this.interpreterEnded[iInterpreter] = true;
+            }
+
+            if (this.executeOnResolve) {
+                this.executeOnResolve();
             }
 
             log.getLogger('blockly_runner').debug('end run sync block');

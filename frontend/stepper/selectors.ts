@@ -1,6 +1,5 @@
 import {AllowExecutionOverBlocksLimit, AppStore, AppStoreReplay} from '../store';
 import {Stepper, StepperControlsType, StepperState} from "./index";
-import {getMessage} from "../lang";
 import {CompileStatus} from "./compile";
 import * as C from '@france-ioi/persistent-c';
 import {createSelector} from '@reduxjs/toolkit';
@@ -9,6 +8,7 @@ import {LayoutType} from '../task/layout/layout_types';
 import {CodecastPlatform} from './codecast_platform';
 import {TaskSubmissionEvaluateOn} from '../submission/submission_types';
 import log from 'loglevel';
+import {getMessage} from '../lang/messages';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;

@@ -5,13 +5,13 @@ import {Carousel} from 'react-bootstrap';
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../../hooks";
 import {changeCodeHelpDetailEnabled, changeCodeHelpIssue, hintUnlocked} from "./hints_slice";
-import {getMessage} from '../../lang';
 import {TaskHint} from './TaskHint';
 import log from 'loglevel';
 import {selectAvailableHints, selectUnlockedHintIds} from './hints_selectors';
 import {askCodeHelp, CodeHelpMode} from './hint_actions';
 import {Button, Intent} from '@blueprintjs/core';
 import {Screen} from '../../common/screens';
+import {getMessage} from '../../lang/messages';
 
 export interface TaskHintProps {
     askHintClassName?: string

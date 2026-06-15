@@ -2,6 +2,7 @@ import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
 import {nodePolyfills} from 'vite-plugin-node-polyfills';
 import {viteStaticCopy} from 'vite-plugin-static-copy';
+// import circleDependency from 'vite-plugin-circular-dependency';
 import * as fs from 'fs';
 import * as path from 'path';
 import {fileURLToPath} from 'url';
@@ -22,14 +23,16 @@ const bundledFiles = fs.readFileSync('bundled_files.txt', 'utf8')
 export default defineConfig(({mode}) => {
     const isDev = mode === 'development'
     const isLib = process.env['BUILD'] === 'lib';
+    const modernBuild = process.env['MODERN'] === '1';
     const base = isLib ? './' : (isDev ? jsonConfig.mountPath : path.join(jsonConfig.mountPath, 'build/'));
     const target = ['chrome70'];
+
+    const suffix = modernBuild ? '.modern' : '';
 
     return {
         base,
         plugins: [
             react({}),
-            // Wait that https://github.com/davidmyersdev/vite-plugin-node-polyfills/pull/149 is merged to get rid of the oxc warning
             nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util', 'fs', 'vm']}),
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
             // Stub out Blueprint icon path bundles — icon paths are embedded directly in each
@@ -55,6 +58,9 @@ export class Icons {
                     return null;
                 },
             },
+            // circleDependency({
+            //     outputFilePath: "./circleDep.json",
+            // }),
         ],
         resolve: {
             alias: {
@@ -68,27 +74,32 @@ export class Icons {
         build: {
             target,
             outDir: 'build',
+            emptyOutDir: false,
             cssCodeSplit: false,
             assetsDir: '.',
-            sourcemap: false,
+            sourcemap: !isLib,
             minify: 'terser',
             assetsInlineLimit: 0, // avoid images inlining
-            rollupOptions: {
+            rolldownOptions: {
                 input: {index: path.resolve(__dirname, 'frontend/index.tsx')},
                 output: {
-                    format: 'iife',
+                    format: modernBuild ? 'esm' : 'iife',
                     name: 'Codecast',
-                    entryFileNames: '[name].js',
-                    assetFileNames: ({name}) => {
-                        if (name?.match(/\.(eot|ttf|woff2?)$/)) return 'fonts/[name][extname]'
-                        if (name?.endsWith('.css')) return 'index[extname]'
+                    entryFileNames: `[name]${suffix}.js`,
+                    chunkFileNames: `[name]${suffix}.js`,
+                    assetFileNames: ({names}) => {
+                        if (names.some(e => e.match(/\.(eot|ttf|woff2?)$/))) return 'fonts/[name][extname]'
+                        if (names.some(e => e.endsWith('.css'))) return 'index[extname]'
                         return 'images/[name][extname]'
                     },
                 },
-                onwarn(warning, warn) {
-                    if (warning.code === "EVAL") return; // ignore eval warning
-                    warn(warning); // default for other warnings
-                },
+                onLog(level, log, defaultHandler) {
+                    // ignore eval warning
+                    if (log.code === 'EVAL') {
+                        return;
+                    }
+                    defaultHandler(level, log);
+                }
             },
         },
         worker: {
@@ -108,9 +119,6 @@ export class Icons {
         },
         optimizeDeps: {
             exclude: ['@france-ioi/skulpt'],
-            esbuildOptions: {
-                target,
-            },
-        }
+        },
     }
 })
