@@ -262,9 +262,16 @@ function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof
     yield* call(success);
 }
 
-function* taskUpdateTokenEventSaga ({payload: {token, success}}: ReturnType<typeof taskUpdateTokenEvent>) {
-    yield* put(platformTokenUpdated(token));
-    yield* call(success);
+function* taskUpdateTokenEventSaga ({payload: {token, success, error}}: ReturnType<typeof taskUpdateTokenEvent>) {
+    const deferredPromise = new DeferredPromise<void>();
+    yield* put(platformTokenUpdated({token, deferredPromise: deferredPromise}));
+
+    try {
+        yield deferredPromise.promise;
+        yield* call(success);
+    } catch (e) {
+        yield* call(error, `Task token could not be updated: ${String(e)}`);
+    }
 }
 
 function* taskGetHeightEventSaga ({payload: {success}}: ReturnType<typeof taskGetHeightEvent>) {
@@ -276,7 +283,7 @@ function* taskUnloadEventSaga ({payload: {success}}: ReturnType<typeof taskUnloa
     yield* call(success);
 }
 
-function* taskGetMetaDataEventSaga ({payload: {success, error: _error}}: ReturnType<typeof taskGetMetadataEvent>) {
+function* taskGetMetaDataEventSaga ({payload: {success}}: ReturnType<typeof taskGetMetadataEvent>) {
     const metadata = yield* appSelect(selectTaskMetadata);
 
     yield* call(success, metadata);
