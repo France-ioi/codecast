@@ -6,6 +6,7 @@ import {getStandardScratchBlocks} from './standard_scratch_blocks';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {QuickAlgoLibrary} from '../../task/libs/quickalgo_library';
 import * as Blockly from 'blockly/core';
+import {BlocklyOptions} from 'blockly/core';
 
 let blocklySets = {
     allDefault: {
@@ -193,15 +194,20 @@ export class BlocklyHelper {
 
         if (display) {
             // this.loadHtml(nbTestCases);
-            let xml = this.getToolboxXml();
-            let wsConfig: any = {
-                toolbox: "<xml>" + xml + "</xml>",
+            let {xmlString, themeCategoryStyles} = this.getToolboxXml();
+            let wsConfig: BlocklyOptions = {
+                toolbox: "<xml>" + xmlString + "</xml>",
                 comments: true,
                 sounds: false,
                 trashcan: true,
                 media: this.mediaUrl,
                 scrollbars: true,
-                zoom: {startScale: 1}
+                zoom: {startScale: 1},
+                theme: Blockly.Theme.defineTheme('custom_theme', {
+                    name: 'custom_theme',
+                    base: Blockly.Themes.Classic,
+                    blockStyles: themeCategoryStyles,
+                }),
             };
 
             if (typeof options.scrollbars != 'undefined') {
@@ -237,11 +243,11 @@ export class BlocklyHelper {
             // window.Blockly.removeEvents();
 
             // Inject Blockly
-            this.workspace = window.Blockly.inject(this.divId, wsConfig);
+            this.workspace = Blockly.inject(this.divId, wsConfig);
 
             let toolboxNode = window.jQuery('#toolboxXml');
             if (toolboxNode.length != 0) {
-                toolboxNode.html(xml);
+                toolboxNode.html(xmlString);
             }
 
             // Restore clipboard if allowed
@@ -1077,7 +1083,6 @@ export class BlocklyHelper {
                     code = genName + "." + generator.code;
                 }
                 this.createSimpleGenerator(label, code, generator.type, generator.nbParams);
-                // TODO :: merge createSimpleBlock with completeBlock*
                 this.createSimpleBlock(label, generator.label, generator.type, generator.nbParams);
             }
         }
@@ -1115,9 +1120,9 @@ export class BlocklyHelper {
 
 
     getDefaultColours() {
-        //TODO Blockly: Blockly.utils.colour.setHsvSaturation
-        // window.Blockly.HSV_SATURATION = 0.65;
-        // window.Blockly.HSV_VALUE = 0.80;
+        Blockly.utils.colour.setHsvSaturation(0.65);
+        Blockly.utils.colour.setHsvValue(0.80);
+
         let colours = {
             categories: {
                 actuator: 212,
@@ -1140,18 +1145,18 @@ export class BlocklyHelper {
             blocks: {}
         };
 
-        // if (typeof this.mainContext.provideBlocklyColours == "function") {
-        //     let providedColours = this.mainContext.provideBlocklyColours();
-        //
-        //     for (let group in providedColours) {
-        //         if (!(group in colours)) {
-        //             colours[group] = {};
-        //         }
-        //         for (let name in providedColours[group]) {
-        //             colours[group][name] = providedColours[group][name];
-        //         }
-        //     }
-        // }
+        if (typeof this.mainContext.provideBlocklyColours == "function") {
+            let providedColours = this.mainContext.provideBlocklyColours();
+
+            for (let group in providedColours) {
+                if (!(group in colours)) {
+                    colours[group] = {};
+                }
+                for (let name in providedColours[group]) {
+                    colours[group][name] = providedColours[group][name];
+                }
+            }
+        }
 
         return colours;
     }
@@ -1214,15 +1219,6 @@ export class BlocklyHelper {
             }
             this.addBlocksAllowed([blockName]);
         }
-
-        // by the way, just change the defaul colours of the blockly blocks:
-        if (!this.scratchMode) {
-            let defCat = ["logic", "loops", "math", "texts", "lists", "colour"];
-            for (let iCat in defCat) {
-                // TODO Blockly: colors
-                // window.Blockly.Blocks[defCat[iCat]].HUE = colours.categories[defCat[iCat]];
-            }
-        }
     }
 
     getToolboxXml() {
@@ -1230,6 +1226,7 @@ export class BlocklyHelper {
 
         let categoriesInfos = {};
         let colours = this.getDefaultColours();
+        const themeCategoryStyles = {};
 
         // Reset the flyoutOptions for the variables and the procedures
         // window.Blockly.Variables.resetFlyoutOptions();
@@ -1271,11 +1268,12 @@ export class BlocklyHelper {
             }
             this.addBlocksAllowed([block.name]);
 
-            // by the way, just change the defaul colours of the blockly blocks:
+            // by the way, just change the default colours of the blockly blocks:
             if (!this.scratchMode) {
                 let defCat = ["logic", "loops", "math", "texts", "lists", "colour"];
                 for (let iCat in defCat) {
-                    // window.Blockly.Blocks[defCat[iCat]].HUE = colours.categories[defCat[iCat]];
+                    const singularCategory = defCat[iCat].endsWith('s') ? defCat[iCat].slice(0, -1) : defCat[iCat];
+                    themeCategoryStyles[singularCategory + '_blocks'] = {colourPrimary: colours.categories[defCat[iCat]]};
                 }
             }
         }
@@ -1591,7 +1589,12 @@ export class BlocklyHelper {
             }); // taken from blockly/demo/code
         })(this.strings);
 
-        return xmlString;
+        console.log('toolbox', xmlString);
+
+        return {
+            xmlString,
+            themeCategoryStyles,
+        };
     }
 
     blocksToScratch(blockList) {
