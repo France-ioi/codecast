@@ -45,7 +45,7 @@ export const taskShowViewsEvent = createAction('taskEventShowViews', (views, suc
     },
 }));
 export const taskGetViewsEvent = createAction('taskEventGetViews', successErrorPayload);
-export const taskUpdateTokenEvent = createAction('taskEventUpdateToken',(token, success, error) => ({
+export const taskUpdateTokenEvent = createAction('taskEventUpdateToken', (token, success, error) => ({
     payload: {
         token,
         success,

@@ -1,5 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {TaskAnswer} from '../task_types';
+import {DeferredPromise} from '../../utils/app';
 
 export enum TaskLevelName {
     Basic = 'basic',
@@ -66,9 +67,9 @@ export const platformSlice = createSlice({
         platformTaskRandomSeedUpdated(state: PlatformState, action: PayloadAction<string>) {
             state.taskRandomSeed = action.payload;
         },
-        platformTokenUpdated(state: PlatformState, action: PayloadAction<string>) {
+        platformTokenUpdated(state: PlatformState, action: PayloadAction<{token: string, deferredPromise?: DeferredPromise<void>}>) {
             if (action.payload) {
-                state.taskToken = action.payload;
+                state.taskToken = action.payload.token;
             }
         },
         platformSetTaskLevels(state: PlatformState, action: PayloadAction<{[key: string]: TaskLevel}>) {
