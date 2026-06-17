@@ -8,7 +8,6 @@ import {Codecast} from '../../app_types';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {ContextEnrichingTypes} from '../actionTypes';
 import debounce from 'lodash/debounce';
-import {adaptJsBlocks} from './js_adapter';
 import {getMessage} from '../../lang/messages';
 
 const debounceHideBlocklyDropdown = debounce(() => {
@@ -71,8 +70,6 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context = context;
         this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;
         this.delayFactory = new window.DelayFactory();
-        // TODO Blockly: write code generators
-        adaptJsBlocks(window.Blockly);
     }
 
     public static hasBlocks(): boolean {
@@ -124,8 +121,8 @@ export default class BlocklyRunner extends AbstractRunner {
             } else if(varName) {
                 varName = varName.toString();
                 // Get the original variable name
-                for(let dbIdx in window.Blockly.JavaScript.variableDB_.db_) {
-                    if(window.Blockly.JavaScript.variableDB_.db_[dbIdx] == varName) {
+                for(let dbIdx in Blockly.JavaScript.variableDB_.db_) {
+                    if(Blockly.JavaScript.variableDB_.db_[dbIdx] == varName) {
                         varName = dbIdx.substring(0, dbIdx.length - 9);
                         // Get the variable name with the right case
                         for(let i=0; i<this.context.blocklyHelper.workspace.variableList.length; i++) {
@@ -310,9 +307,9 @@ export default class BlocklyRunner extends AbstractRunner {
         }
 
         // TODO Blockly: remove this if not useful
-        // if(window.Blockly.JavaScript.externalFunctions) {
-        //     for(let name in window.Blockly.JavaScript.externalFunctions) {
-        //         interpreter.setProperty(scope, name, interpreter.createNativeFunction(makeNative(window.Blockly.JavaScript.externalFunctions[name])));
+        // if(Blockly.JavaScript.externalFunctions) {
+        //     for(let name in Blockly.JavaScript.externalFunctions) {
+        //         interpreter.setProperty(scope, name, interpreter.createNativeFunction(makeNative(Blockly.JavaScript.externalFunctions[name])));
         //     }
         // }
 
@@ -373,7 +370,7 @@ export default class BlocklyRunner extends AbstractRunner {
         }
 
         // if(this.scratchMode) {
-        //     window.Blockly.DropDownDiv.hide();
+        //     Blockly.DropDownDiv.hide();
         //     this.context.blocklyHelper.highlightBlock(null);
         // }
 
@@ -475,8 +472,8 @@ export default class BlocklyRunner extends AbstractRunner {
             if (message.substring(0, 20) == "Unknown identifier: ") {
                 let varName = message.substring(20);
                 // Get original variable name if possible
-                for(let dbIdx in window.Blockly.JavaScript.variableDB_.db_) {
-                    if(window.Blockly.JavaScript.variableDB_.db_[dbIdx] == varName) {
+                for(let dbIdx in Blockly.JavaScript.variableDB_.db_) {
+                    if(Blockly.JavaScript.variableDB_.db_[dbIdx] == varName) {
                         varName = dbIdx.substring(0, dbIdx.length - 9);
                         break;
                     }

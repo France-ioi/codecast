@@ -103,7 +103,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             } else {
                 const block = workspace.getBlockById(blockId);
                 if (block) {
-                    window.Blockly.addClass_(block.svgGroup_, className);
+                    Blockly.addClass_(block.svgGroup_, className);
                 }
             }
 
@@ -129,7 +129,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                 } else {
                     const block = workspace.getBlockById(blockId);
                     if (block) {
-                        window.Blockly.removeClass_(block.svgGroup_, className);
+                        Blockly.removeClass_(block.svgGroup_, className);
                     }
                 }
             }
@@ -321,15 +321,15 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         return;
 
-        window.Blockly.selected = null;
+        Blockly.selected = null;
 
         clearHighlights('blocklySelected');
         const workspace = context?.blocklyHelper?.workspace;
         if (selection && workspace) {
             const block = workspace.getBlockById(selection);
             if (block) {
-                window.Blockly.addClass_(block.svgGroup_, 'blocklySelected');
-                window.Blockly.selected = block;
+                Blockly.addClass_(block.svgGroup_, 'blocklySelected');
+                Blockly.selected = block;
             }
         }
     }, [props.state?.selection]);

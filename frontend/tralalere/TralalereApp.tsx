@@ -137,7 +137,8 @@ export function TralalereApp() {
         // Set timeout to give time to Blockly editor to load before
         setTimeout(() => {
             if (window.Blockly) {
-                window.Blockly.Procedures.flyoutOptions.inlineArgs = true;
+                // TODO Blockly: migrate
+                // Blockly.Procedures.flyoutOptions.inlineArgs = true;
             }
             const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
             const flyout = document.getElementsByClassName('blocklyFlyout');

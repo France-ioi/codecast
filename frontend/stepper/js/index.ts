@@ -68,8 +68,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
         Blockly.Msg[key] = languageTranslations.Msg[key];
     }
 
-    // TODO Blockly: write code generators
-    // window.Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
+    javascriptGenerator.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
     javascriptGenerator.addReservedWords('highlightBlock');
 
     if (!window.quickAlgoInterface) {
@@ -101,7 +100,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     // a stepper.exit
     // TODO Blockly: check if it's still necessary
     // if ('main' === state.environment) {
-    //     window.Blockly.Events.fireNow_ = () => {
+    //     Blockly.Events.fireNow_ = () => {
     //         originalFireNow();
     //         context.blocklyHelper.reloading = false;
     //     };
@@ -110,7 +109,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     if (groupByCategory && 'tralalere' === options.app) {
         overrideBlocklyFlyoutForCategories(isMobile);
     } else if (originalSetBackgroundPathVertical_) {
-        window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
+        Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
     }
 
     yield* put(taskIncreaseContextId());
@@ -126,7 +125,7 @@ export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore) 
     }
 
     if (!originalFireNow) {
-        originalFireNow = window.Blockly.Events.fireNow_;
+        originalFireNow = Blockly.Events.fireNow_;
     }
 
     const availableBlocks = getContextBlocksDataSelector({state, context});
@@ -145,12 +144,12 @@ export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     // 1. Control width and height of Blockly flyout
     // 2. Add border radiuses at top-left and bottom-left
     if (!originalSetBackgroundPathVertical_) {
-        originalSetBackgroundPathVertical_ = window.Blockly.Flyout.prototype.setBackgroundPathVertical_;
+        originalSetBackgroundPathVertical_ = Blockly.Flyout.prototype.setBackgroundPathVertical_;
     }
 
-    window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
+    Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
         const toolboxWidth = this.targetWorkspace_ && this.targetWorkspace_.toolbox_ ? this.targetWorkspace_.toolbox_.getWidth() : 0;
-        let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
+        let atRight = this.toolboxPosition_ == Blockly.TOOLBOX_AT_RIGHT;
         let computedHeight = isMobile ? window.innerHeight - 120 : Math.min(window.innerHeight - 90, Math.max(400, height));
         let computedWidth = isMobile ? window.innerWidth - toolboxWidth - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
         log.getLogger('blockly_runner').debug('background draw', {isMobile, toolboxWidth, width, computedWidth, windowWidth: window.innerWidth, workspace: this.targetWorkspace_});
@@ -318,7 +317,7 @@ export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
         // When a block is being moved in Scratch, the block is duplicated
         // We don't want to count this block twice, so we don't count the block that
         // has the same id as this insertion marker
-        if (window.Blockly.insertionMarker_ && block.id === window.Blockly.insertionMarker_.id) {
+        if (Blockly.insertionMarker_ && block.id === Blockly.insertionMarker_.id) {
             continue;
         }
         blocksUsed += getBlockCount(block, context);
@@ -334,7 +333,7 @@ const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, x
     const language = state.options.language.split('-')[0];
     blocklyHelper.load(language, false, 1, {});
 
-    window.Blockly.Xml.domToWorkspace(xml, blocklyHelper.workspace);
+    Blockly.Xml.domToWorkspace(xml, blocklyHelper.workspace);
 
     return blocklyHelper.workspace.getAllBlocks();
 };
