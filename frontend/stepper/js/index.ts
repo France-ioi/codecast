@@ -135,6 +135,12 @@ export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore) 
     blocklyHelper.groupByCategory = selectGroupByCategory(state);
     blocklyHelper.setAvailableBlocks(availableBlocks);
     blocklyHelper.setIncludeBlocks(state.task.contextIncludeBlocks);
+    if (context.infos.definitions) {
+        blocklyHelper.addDefinitions(context.infos.definitions);
+    }
+    if (context.infos.simpleGenerators) {
+        blocklyHelper.addSimpleGenerators(context.infos.simpleGenerators);
+    }
 
     return blocklyHelper;
 }

@@ -95,8 +95,8 @@ export class BlocklyHelper {
     public programs: any[];
     private language: string;
     public languages: string[];
-    private definitions: any;
-    private simpleGenerators: any;
+    private definitions: Partial<Record<'javascript'|'python', {label: string, code: string}[]>>;
+    private simpleGenerators: {[generatorName: string]: {label: string, code: string, category: string, type: number, nbParams: number}[]};
     private codeId: number;
     public workspace: Blockly.Workspace;
     private options: any;
@@ -379,6 +379,16 @@ export class BlocklyHelper {
 
     setIncludeBlocks(includeBlocks) {
         this.includeBlocks = JSON.parse(JSON.stringify(includeBlocks));
+    }
+
+    addDefinitions(definitions: Record<'javascript'|'python', {label: string, code: string}[]>) {
+        for (let language in definitions) {
+            this.definitions[language] = definitions[language];
+        }
+    }
+
+    addSimpleGenerators(generators: {[generatorName: string]: {label: string, code: string, category: string, type: number, nbParams: number}[]}) {
+        this.simpleGenerators = generators;
     }
 
     setAvailableBlocks(availableBlocks: Block[]) {
@@ -1036,7 +1046,8 @@ export class BlocklyHelper {
         javascriptGenerator.forBlock[label] = function (block) {
             for (let iDef = 0; iDef < jsDefinitions.length; iDef++) {
                 let def = jsDefinitions[iDef];
-                Blockly.Javascript.definitions_[def.label] = def.code;
+                // @ts-ignore
+                javascriptGenerator.definitions_[def.label] = def.code;
             }
             let params = "";
             for (let iParam = 0; iParam < nbParams; iParam++) {
@@ -1056,7 +1067,8 @@ export class BlocklyHelper {
         pythonGenerator.forBlock[label] = function (block) {
             for (let iDef = 0; iDef < pyDefinitions.length; iDef++) {
                 let def = pyDefinitions[iDef];
-                Blockly.Python.definitions_[def.label] = def.code;
+                // @ts-ignore
+                pythonGenerator.definitions_[def.label] = def.code;
             }
             let params = "";
             for (let iParam = 0; iParam < nbParams; iParam++) {
