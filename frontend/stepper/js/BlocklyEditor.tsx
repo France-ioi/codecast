@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from "react";
-import {useAppSelector, useDebounce} from "../../hooks";
+import {useAppSelector} from "../../hooks";
 import {BlockBufferHandler, documentToString} from "../../buffers/document";
 import log from 'loglevel';
 import {stepperDisplayError} from '../actionTypes';
@@ -13,6 +13,7 @@ import {selectGroupByCategory} from './index';
 import {selectActiveView} from '../../task/layout/layout';
 import {getMessage} from '../../lang/messages';
 import * as Blockly from 'blockly/core';
+import {BlockSvg} from 'blockly/core';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -96,15 +97,10 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                 clearHighlights(className);
             }
 
-            if (context.blocklyHelper?.scratchMode) {
-                if (blockId) {
-                    workspace.glowBlock(blockId, true);
-                }
-            } else {
-                const block = workspace.getBlockById(blockId);
-                if (block) {
-                    Blockly.addClass_(block.svgGroup_, className);
-                }
+
+            const block = workspace.getBlockById(blockId) as BlockSvg;
+            if (block) {
+                block.addClass(className);
             }
 
             if (null !== blockId) {
@@ -122,15 +118,9 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         if (highlightedBlocks.current && className in highlightedBlocks.current) {
             const workspace = context?.blocklyHelper?.workspace;
             for (let blockId of highlightedBlocks.current[className]) {
-                if (context.blocklyHelper?.scratchMode) {
-                    try {
-                        workspace.glowBlock(blockId, false);
-                    } catch(e) {}
-                } else {
-                    const block = workspace.getBlockById(blockId);
-                    if (block) {
-                        Blockly.removeClass_(block.svgGroup_, className);
-                    }
+                const block = workspace.getBlockById(blockId) as BlockSvg;
+                if (block) {
+                    block.removeClass(className);
                 }
             }
 
@@ -149,20 +139,21 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const onBlocklyEvent = (event) => {
         log.getLogger('editor').debug('blockly event', event);
 
-        let isBlockEvent = [
+        if (Blockly.Events.SELECTED === event.type)     {
+            if (event.newElementId !== selectedBlockId.current) {
+                log.getLogger('editor').debug('is selected');
+                selectedBlockId.current = event.newElementId;
+                props.onSelect(event.newElementId);
+            }
+            return;
+        }
+
+        const isBlockEvent = [
             Blockly.Events.BLOCK_DRAG,
             Blockly.Events.BLOCK_MOVE,
             Blockly.Events.BLOCK_CREATE,
             Blockly.Events.BLOCK_CHANGE,
         ].includes(event.type);
-        if ('selected' === event.element) {
-            if (event.newValue !== selectedBlockId.current) {
-                log.getLogger('editor').debug('is selected');
-                selectedBlockId.current = event.newValue;
-                props.onSelect(event.newValue);
-            }
-            return;
-        }
 
         if (isBlockEvent) {
             const blocklyHelper = context.blocklyHelper;
@@ -281,7 +272,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         reset(newDocument);
     };
 
-    const onLoadDocument = useDebounce(updateDocumentConditionnally, 100);
+    // const onLoadDocument = useDebounce(updateDocumentConditionnally, 100);
 
     useEffect(() => {
         log.getLogger('editor').debug('[blockly.editor] document has changed, check differences', {
@@ -317,19 +308,14 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             return;
         }
 
-        // TODO Blockly: Change Blockly selected block
-
-        return;
-
-        Blockly.selected = null;
+        const workspace = context?.blocklyHelper?.workspace;
 
         clearHighlights('blocklySelected');
-        const workspace = context?.blocklyHelper?.workspace;
+
         if (selection && workspace) {
-            const block = workspace.getBlockById(selection);
+            const block = workspace.getBlockById(selection) as BlockSvg;
             if (block) {
-                Blockly.addClass_(block.svgGroup_, 'blocklySelected');
-                Blockly.selected = block;
+                block.select();
             }
         }
     }, [props.state?.selection]);
