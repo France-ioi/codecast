@@ -70,8 +70,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             context.blocklyHelper.loadPrograms();
             context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
             if (0 === context.blocklyHelper.programs[0].blocklyJS.trim().length) {
-                // TODO Blockly: re-enable this warning
-                // throw new Error("The reloaded answer is empty");
+                throw new Error("The reloaded answer is empty");
             }
         } catch (e) {
             console.error(e);

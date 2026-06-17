@@ -306,12 +306,12 @@ export default class BlocklyRunner extends AbstractRunner {
             };
         }
 
-        // TODO Blockly: remove this if not useful
-        // if(Blockly.JavaScript.externalFunctions) {
-        //     for(let name in Blockly.JavaScript.externalFunctions) {
-        //         interpreter.setProperty(scope, name, interpreter.createNativeFunction(makeNative(Blockly.JavaScript.externalFunctions[name])));
-        //     }
-        // }
+        // TODO Blockly: update "Blockly.JavaScript.externalFunctions" to "window.FioiBlockly?.externalJavaScriptFunctions" in FioiBlockly
+        if (window.FioiBlockly?.externalJavaScriptFunctions) {
+            for(let name in window.FioiBlockly.externalJavaScriptFunctions) {
+                interpreter.setProperty(scope, name, interpreter.createNativeFunction(makeNative(window.FioiBlockly.externalJavaScriptFunctions[name])));
+            }
+        }
 
         interpreter.setProperty(scope, "program_end", interpreter.createAsyncFunction(createAsync((callback) => {
             this.program_end(callback);
