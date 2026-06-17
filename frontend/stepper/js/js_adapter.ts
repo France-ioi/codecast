@@ -1,6 +1,4 @@
 import { javascriptGenerator, Order as JavascriptOrder } from 'blockly/javascript';
-import * as Blockly from 'blockly/core';
-import {pythonGenerator} from 'blockly/python';
 
 export function adaptJsBlocks() {
     javascriptGenerator.forBlock['input_num'] = function () {
@@ -24,13 +22,7 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
         return [code, JavascriptOrder.ATOMIC];
     };
 
-    // TODO Blockly : remove this
-    pythonGenerator.forBlock['input_num'] = function(block) {
-        var code = 'int(input())';
-        return [code, 0];
-    };
-
-    javascriptGenerator.forBlock['input_num_next'] = function (block) {
+    javascriptGenerator.forBlock['input_num_next'] = function () {
         javascriptGenerator.provideFunction_(
             'readStdin',
             `
@@ -65,7 +57,7 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
         return [code, JavascriptOrder.ATOMIC];
     };
 
-    javascriptGenerator.forBlock['input_char'] = function (block) {
+    javascriptGenerator.forBlock['input_char'] = function () {
         javascriptGenerator.provideFunction_(
             'readStdin',
             `
@@ -95,7 +87,7 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
         return [code, JavascriptOrder.ATOMIC];
     };
 
-    javascriptGenerator.forBlock['input_word'] = function (block) {
+    javascriptGenerator.forBlock['input_word'] = function () {
         javascriptGenerator.provideFunction_(
             'readStdin',
             `
@@ -130,7 +122,7 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
         return [code, JavascriptOrder.ATOMIC];
     };
 
-    javascriptGenerator.forBlock['input_line'] = function (block) {
+    javascriptGenerator.forBlock['input_line'] = function () {
         javascriptGenerator.provideFunction_(
             'readStdin',
             `
@@ -150,7 +142,7 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
         return [code, JavascriptOrder.ATOMIC];
     };
 
-    javascriptGenerator.forBlock['input_num_list'] = function (block) {
+    javascriptGenerator.forBlock['input_num_list'] = function () {
         javascriptGenerator.provideFunction_(
             'readStdin',
             `
