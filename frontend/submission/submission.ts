@@ -30,7 +30,7 @@ import {
     SubmissionTestErrorCode,
 } from './submission_types';
 import {
-    callPlatformLog,
+    callPlatformLog, callPlatformShowView,
     callPlatformValidate, submissionCancel,
     submissionCreateTest,
     submissionExecuteMyTests,
@@ -87,6 +87,10 @@ export default function (bundle: Bundle) {
             }
 
             yield* call([platformApi, platformApi.log], details);
+        });
+
+        yield* takeEvery(callPlatformShowView, function* ({payload: {view}}) {
+            yield* call([platformApi, platformApi.showView], view);
         });
 
         yield* takeEvery(updateCurrentTestId, function* ({payload}) {

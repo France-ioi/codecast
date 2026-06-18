@@ -1,7 +1,8 @@
 import {PlatformTaskParams} from './platform_slice';
 import {buffers, eventChannel} from 'redux-saga';
 import {Action} from 'redux';
-import {platformValidateEvent} from './actionTypes';
+import {platformValidateEvent, taskShowViewsEvent} from './actionTypes';
+import {LayoutView} from '../layout/layout_types';
 
 export function makePlatformHelperChannel() {
     return eventChannel<{platformHelper: any} | Action>(function (emit) {
@@ -21,6 +22,9 @@ function makePlatformHelper(emit) {
     return {
         validate: function (mode) {
             emit(platformValidateEvent(mode));
+        },
+        showViews: function (views) {
+            emit(taskShowViewsEvent(views, () => {}, () => {}));
         },
     }
 }
@@ -65,6 +69,12 @@ export default function (platform) {
         platform.subscribe(helper);
     }
 
+    function showView(view: LayoutView) {
+        return new Promise(function (resolve, reject) {
+            platform.showView(view, resolve, reject);
+        });
+    }
+
     return {
         initWithTask,
         getTaskParams,
@@ -73,5 +83,6 @@ export default function (platform) {
         log,
         updateDisplay,
         subscribe,
+        showView,
     };
 }
