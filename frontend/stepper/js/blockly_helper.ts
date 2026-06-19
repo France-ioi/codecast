@@ -10,6 +10,9 @@ import {BlocklyOptions} from 'blockly/core';
 import {JavascriptGenerator, javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript';
 import {PythonGenerator, pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import {adaptJsBlocks} from './js_adapter';
+import {registerFieldAngle} from '@blockly/field-angle';
+
+registerFieldAngle();
 
 const codeGenerators: Record<string, JavascriptGenerator | PythonGenerator> = {
     javascript: javascriptGenerator,
@@ -98,7 +101,7 @@ export class BlocklyHelper {
     private definitions: Partial<Record<'javascript'|'python', {label: string, code: string}[]>>;
     private simpleGenerators: {[generatorName: string]: {label: string, code: string, category: string, type: number, nbParams: number}[]};
     private codeId: number;
-    public workspace: Blockly.Workspace;
+    public workspace: Blockly.WorkspaceSvg;
     private options: any;
     private initialScale: number;
     private divId: string;
@@ -478,13 +481,13 @@ export class BlocklyHelper {
     }
 
     loadPrograms() {
-        if (this.workspace != null) {
+        if (this.workspace !== null) {
             let xml = Blockly.utils.xml.textToDom(this.programs[this.codeId].blockly);
 
             // No undo after reload: disable all events and clear workspace while reloading
             Blockly.Events.disable();
             this.workspace.clear();
-            // this.cleanBlockAttributes(xml, this.getOrigin());
+            this.cleanBlockAttributes(xml, this.getOrigin());
 
             try {
                 Blockly.Xml.domToWorkspace(xml, this.workspace);
@@ -528,50 +531,6 @@ export class BlocklyHelper {
             }
         }
         this.prevWidth = panelWidth;
-    }
-
-    highlightBlock(id, keep) {
-        if (!id) {
-            keep = false;
-        }
-
-        if (!keep) {
-            for (let i = 0; i < this.highlightedBlocks.length; i++) {
-                let bid = this.highlightedBlocks[i];
-                if (this.scratchMode) {
-                    try {
-                        this.workspace.glowBlock(bid, false);
-                    } catch (e) {
-                    }
-                } else {
-                    let block = this.workspace.getBlockById(bid);
-                    if (block) {
-                        block.removeSelect();
-                    }
-                }
-            }
-            this.highlightedBlocks = [];
-        }
-
-        if (this.scratchMode) {
-            if (id) {
-                this.workspace.glowBlock(id, true);
-            }
-        } else {
-            this.workspace.traceOn(true);
-            if (keep) {
-                let block = this.workspace.getBlockById(id);
-                if (block) {
-                    block.addSelect();
-                }
-            } else {
-                this.workspace.highlightBlock(id);
-            }
-        }
-
-        if (id) {
-            this.highlightedBlocks.push(id);
-        }
     }
 
     addBlocksAllowed(blocks) {
@@ -1262,12 +1221,11 @@ export class BlocklyHelper {
     }
 
     getToolboxXml() {
-        // TODO Blockly: define toolbox
-
         let categoriesInfos = {};
         let colours = this.getDefaultColours();
 
         // Reset the flyoutOptions for the variables and the procedures
+        // TODO Blockly: toolbox to re-enable
         // Blockly.Variables.resetFlyoutOptions();
         // Blockly.Procedures.resetFlyoutOptions();
 
@@ -1527,7 +1485,7 @@ export class BlocklyHelper {
             }
 
             function getBlockIdx(blockXml) {
-                let blockType = Blockly.Xml.textToDom(blockXml, "text/xml").getAttribute('type');
+                let blockType = Blockly.utils.xml.textToDom(blockXml).getAttribute('type');
                 let blockIdx = blocksOrder.indexOf(blockType);
                 return blockIdx == -1 ? 10000 : blockIdx;
             }
@@ -1686,7 +1644,7 @@ export class BlocklyHelper {
 
             // Clean up IDs which contain now forbidden characters
             if (blockId && (blockId.indexOf('%') != -1 || blockId.indexOf('$') != -1 || blockId.indexOf('^') != -1)) {
-                block.setAttribute('id', Blockly.genUid());
+                block.setAttribute('id', Blockly.utils.idGenerator.getNextUniqueId());
             }
 
             // Get minimum x and y

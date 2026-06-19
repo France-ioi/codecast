@@ -1554,6 +1554,11 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.28.5"
 
+"@blockly/field-angle@^6.0.9":
+  version "6.0.9"
+  resolved "https://registry.yarnpkg.com/@blockly/field-angle/-/field-angle-6.0.9.tgz#c29ac371a49e34b42bcb94d6fba63950a76c011f"
+  integrity sha512-7cjOoOG7Ol8k2VIWuLkaDSnN5PGcG56PwzHbqrv0dWMWUVHZbyC4tPo8hWL+5I3X6ebvF5GU1VkX6pmwXyg9OQ==
+
 "@blueprintjs/colors@^5.1.12", "@blueprintjs/colors@^5.1.13":
   version "5.1.13"
   resolved "https://registry.yarnpkg.com/@blueprintjs/colors/-/colors-5.1.13.tgz#556b5a96183c1a83ce0376b0733bbc1e062209dc"

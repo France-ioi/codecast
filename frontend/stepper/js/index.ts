@@ -382,7 +382,7 @@ export const blocklyFindLimited = (blocks, limitedUses, context) => {
     return limitations;
 }
 
-export async function getBlocklyCodeFromXml(document: BlockDocument, lang: string, state: AppStore) {
+export async function getBlocklyCodeFromXml(document: BlockDocument, lang: 'javascript'|'python', state: AppStore) {
     const language = state.options.language.split('-')[0];
     const context = quickAlgoLibraries.getContext(null, state.environment);
 
@@ -430,7 +430,7 @@ export default function(bundle: Bundle) {
                 const document = answer.document as BlockDocument;
                 const context = quickAlgoLibraries.getContext(null, state.environment);
 
-                const xmlCode = await getBlocklyCodeFromXml(document, 'javascript', state);
+                const xmlCode = await getBlocklyCodeFromXml(document, 'javascript' as const, state);
 
                 let fullCode = xmlCode
                     + "highlightBlock(undefined);\n"

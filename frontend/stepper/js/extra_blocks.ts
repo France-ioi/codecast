@@ -1,8 +1,19 @@
 import {javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript';
 import {pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import * as Blockly from 'blockly/core';
+import {FieldAngle} from '@blockly/field-angle';
 
-export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMode ) {
+interface BlocklyColours {
+    categories: {[key: string]: number};
+    blocks: {[key: string]: number};
+}
+
+export function addExtraBlocks(
+    strings: {[key: string]: string},
+    defaultColors: BlocklyColours,
+    showIfMutator: boolean,
+    scratchMode: boolean,
+) {
     Blockly.Blocks['controls_untilWhile'] = Blockly.Blocks['controls_whileUntil'];
     javascriptGenerator.forBlock['controls_untilWhile'] = javascriptGenerator.forBlock['controls_whileUntil'];
     pythonGenerator.forBlock['controls_untilWhile'] = pythonGenerator.forBlock['controls_whileUntil'];
@@ -11,8 +22,8 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         init: function () {
             this.setOutput(true, 'Number');
             this.appendDummyInput()
-                .appendField(new Blockly.FieldAngle(90), "ANGLE");
-            this.setColour(Blockly.Blocks.math.HUE);
+                .appendField(new FieldAngle(90), "ANGLE");
+            this.setColour(defaultColors.categories['math']);
         }
     };
     javascriptGenerator.forBlock['math_angle'] = function (block) {
@@ -28,24 +39,23 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
          * @this Blockly.Block
          */
         init: function () {
-            var OPERATORS =
-                [
-                    [Blockly.Msg.MATH_SINGLE_OP_ABSOLUTE, 'ABS'],
-                    ['-', 'NEG']
-                ];
-            this.setHelpUrl(Blockly.Msg.MATH_SINGLE_HELPURL);
-            this.setColour(Blockly.Blocks.math.HUE);
+            const OPERATORS: Blockly.MenuOption[] = [
+                [Blockly.Msg['MATH_SINGLE_OP_ABSOLUTE'], 'ABS'],
+                ['-', 'NEG']
+            ];
+            this.setHelpUrl(Blockly.Msg['MATH_SINGLE_HELPURL']);
+            this.setColour(defaultColors.categories['math']);
             this.setOutput(true, 'Number');
             this.appendValueInput('NUM')
                 .setCheck('Number')
                 .appendField(new Blockly.FieldDropdown(OPERATORS), 'OP');
             // Assign 'this' to a variable for use in the tooltip closure below.
-            var thisBlock = this;
+            const thisBlock = this;
             this.setTooltip(function () {
-                var mode = thisBlock.getFieldValue('OP');
-                var TOOLTIPS = {
-                    'ABS': Blockly.Msg.MATH_SINGLE_TOOLTIP_ABS,
-                    'NEG': Blockly.Msg.MATH_SINGLE_TOOLTIP_NEG
+                const mode = thisBlock.getFieldValue('OP');
+                const TOOLTIPS = {
+                    'ABS': Blockly.Msg['MATH_SINGLE_TOOLTIP_ABS'],
+                    'NEG': Blockly.Msg['MATH_SINGLE_TOOLTIP_NEG']
                 };
                 return TOOLTIPS[mode];
             });
@@ -62,12 +72,7 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
          * @this Blockly.Block
          */
         init: function () {
-            var OPERATORS =
-                [
-                    ['min', 'MIN'],
-                    ['max', 'MAX']
-                ];
-            this.setColour(Blockly.Blocks.math.HUE);
+            this.setColour(defaultColors.categories['math']);
             this.setInputsInline(true);
             this.setOutput(true, 'Number');
             this.appendDummyInput('OP').appendField(new Blockly.FieldDropdown([["min", "MIN"], ["max", "MAX"], ["", ""]]), "OP");
@@ -76,12 +81,12 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
             this.appendDummyInput().appendField(" et ");
             this.appendValueInput('B').setCheck('Number');
             // Assign 'this' to a variable for use in the tooltip closure below.
-            var thisBlock = this;
+            const thisBlock = this;
             this.setTooltip(function () {
-                var mode = thisBlock.getFieldValue('OP');
-                var TOOLTIPS = {
-                    'MIN': strings.smallestOfTwoNumbers,
-                    'MAX': strings.greatestOfTwoNumbers
+                const mode = thisBlock.getFieldValue('OP');
+                const TOOLTIPS = {
+                    'MIN': strings['smallestOfTwoNumbers'],
+                    'MAX': strings['greatestOfTwoNumbers']
                 };
                 return TOOLTIPS[mode];
             });
@@ -90,28 +95,30 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
 
     javascriptGenerator.forBlock['math_extra_double'] = function (block) {
         // Math operators with double operand.
-        var operator = block.getFieldValue('OP');
-        var arg1 = javascriptGenerator.valueToCode(block, 'A', JavascriptOrder.NONE) || '0';
-        var arg2 = javascriptGenerator.valueToCode(block, 'B', JavascriptOrder.NONE) || '0';
+        const operator = block.getFieldValue('OP');
+        const arg1 = javascriptGenerator.valueToCode(block, 'A', JavascriptOrder.NONE) || '0';
+        const arg2 = javascriptGenerator.valueToCode(block, 'B', JavascriptOrder.NONE) || '0';
+        let code = '';
         if (operator == 'MIN') {
-            var code = "Math.min(" + arg1 + ", " + arg2 + ")";
+            code = "Math.min(" + arg1 + ", " + arg2 + ")";
         }
         if (operator == 'MAX') {
-            var code = "Math.max(" + arg1 + ", " + arg2 + ")";
+            code = "Math.max(" + arg1 + ", " + arg2 + ")";
         }
         return [code, JavascriptOrder.FUNCTION_CALL];
     };
 
     pythonGenerator.forBlock['math_extra_double'] = function (block) {
         // Math operators with double operand.
-        var operator = block.getFieldValue('OP');
-        var arg1 = pythonGenerator.valueToCode(block, 'A', PythonOrder.NONE) || '0';
-        var arg2 = pythonGenerator.valueToCode(block, 'B', PythonOrder.NONE) || '0';
+        const operator = block.getFieldValue('OP');
+        const arg1 = pythonGenerator.valueToCode(block, 'A', PythonOrder.NONE) || '0';
+        const arg2 = pythonGenerator.valueToCode(block, 'B', PythonOrder.NONE) || '0';
+        let code = '';
         if (operator == 'MIN') {
-            var code = "Math.min(" + arg1 + ", " + arg2 + ")";
+            code = "Math.min(" + arg1 + ", " + arg2 + ")";
         }
         if (operator == 'MAX') {
-            var code = "Math.max(" + arg1 + ", " + arg2 + ")";
+            code = "Math.max(" + arg1 + ", " + arg2 + ")";
         }
         return [code, PythonOrder.FUNCTION_CALL];
     };
@@ -119,10 +126,10 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
     Blockly.Blocks['controls_loop'] = {
         init: function () {
             this.appendDummyInput()
-                .appendField(strings.loopRepeat);
+                .appendField(strings['loopRepeat']);
             this.appendStatementInput("inner_blocks")
                 .setCheck(null)
-                .appendField(strings.loopDo);
+                .appendField(strings['loopDo']);
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
             this.setColour(defaultColors.categories["loops"])
@@ -131,9 +138,8 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         }
     }
     javascriptGenerator.forBlock['controls_loop'] = function (block) {
-        var statements = javascriptGenerator.statementToCode(block, 'inner_blocks');
-        var code = 'while(true){\n' + statements + '}\n';
-        return code;
+        const statements = javascriptGenerator.statementToCode(block, 'inner_blocks');
+        return 'while(true){\n' + statements + '}\n';
     };
 
 
@@ -141,7 +147,7 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         init: function () {
             this.appendStatementInput("inner_blocks")
                 .setCheck(null)
-                .appendField(strings.infiniteLoop);
+                .appendField(strings['infiniteLoop']);
             this.setPreviousStatement(true, null);
             this.setNextStatement(false, null);
             this.setColour(defaultColors.categories["loops"])
@@ -150,13 +156,12 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         }
     }
     javascriptGenerator.forBlock['controls_infiniteloop'] = function (block) {
-        var statements = javascriptGenerator.statementToCode(block, 'inner_blocks');
-        var code = 'while(true){\n' + statements + '}\n';
-        return code;
+        const statements = javascriptGenerator.statementToCode(block, 'inner_blocks');
+        return 'while(true){\n' + statements + '}\n';
     };
     pythonGenerator.forBlock['controls_infiniteloop'] = function (block) {
         // Do while/until loop.
-        var branch = pythonGenerator.statementToCode(block, 'inner_blocks');
+        let branch = pythonGenerator.statementToCode(block, 'inner_blocks');
         branch = pythonGenerator.addLoopTrap(branch, block) ||
             pythonGenerator.PASS;
 
@@ -168,7 +173,7 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
             init: function () {
                 this.jsonInit({
                     "id": "event_whenflagclicked",
-                    "message0": strings.startingBlockName,
+                    "message0": strings['startingBlockName'],
                     // former Scratch-like display
                     /*"message0": that.strings.flagClicked,
                     "args0": [
@@ -209,13 +214,12 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         };
 
         javascriptGenerator.forBlock['control_forever'] = function (block) {
-            var statements = javascriptGenerator.statementToCode(block, 'SUBSTACK');
-            var code = 'while(true){\n' + statements + '}\n';
-            return code;
+            const statements = javascriptGenerator.statementToCode(block, 'SUBSTACK');
+            return 'while(true){\n' + statements + '}\n';
         };
         pythonGenerator.forBlock['control_forever'] = function (block) {
             // Do while/until loop.
-            var branch = pythonGenerator.statementToCode(block, 'SUBSTACK');
+            let branch = pythonGenerator.statementToCode(block, 'SUBSTACK');
             branch = pythonGenerator.addLoopTrap(branch, block) ||
                 pythonGenerator.PASS;
 
@@ -224,8 +228,8 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
 
     } else {
         if (!showIfMutator) {
-            var old = Blockly.Blocks.controls_if.init;
-            Blockly.Blocks.controls_if.init = function () {
+            const old = Blockly.Blocks['controls_if'].init;
+            Blockly.Blocks['controls_if'].init = function () {
                 old.call(this);
                 this.setMutator(undefined)
             };
@@ -234,13 +238,13 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         Blockly.Blocks['robot_start'] = {
             init: function () {
                 this.appendDummyInput()
-                    .appendField(strings.startingBlockName);
+                    .appendField(strings['startingBlockName']);
                 this.setNextStatement(true);
                 this.setColour(210);
                 this.setTooltip('');
-                this.deletable_ = false;
-                this.editable_ = false;
-                this.movable_ = false;
+                this.setDeletable(false);
+                this.setEditable(false);
+                this.setMovable(false);
                 //    this.setHelpUrl('http://www.example.com/');
             }
         };
@@ -258,19 +262,19 @@ export function addExtraBlocks(strings, defaultColors, showIfMutator, scratchMod
         };
     }
 
-    javascriptGenerator.forBlock['robot_start'] = function (block) {
+    javascriptGenerator.forBlock['robot_start'] = function () {
         return "";
     };
 
-    pythonGenerator.forBlock['robot_start'] = function (block) {
+    pythonGenerator.forBlock['robot_start'] = function () {
         return "";
     };
 
-    javascriptGenerator.forBlock['placeholder_statement'] = function (block) {
+    javascriptGenerator.forBlock['placeholder_statement'] = function () {
         return "";
     };
 
-    pythonGenerator.forBlock['placeholder_statement'] = function (block) {
+    pythonGenerator.forBlock['placeholder_statement'] = function () {
         return "pass";
     }
 }
