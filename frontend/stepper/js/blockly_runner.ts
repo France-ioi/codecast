@@ -28,7 +28,6 @@ export default class BlocklyRunner extends AbstractRunner {
 
     private hasActions = false;
     private nbActions = 0;
-    private scratchMode = false;
     private delayFactory
     private resetDone = false;
     private oneStepDone = false;
@@ -68,7 +67,6 @@ export default class BlocklyRunner extends AbstractRunner {
     constructor(context) {
         super(context);
         this.context = context;
-        this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;
         this.delayFactory = new window.DelayFactory();
     }
 
@@ -368,11 +366,6 @@ export default class BlocklyRunner extends AbstractRunner {
                 this.isRunningInterpreter[iInterpreter] = false;
             }
         }
-
-        // if(this.scratchMode) {
-        //     Blockly.DropDownDiv.hide();
-        //     this.context.blocklyHelper.highlightBlock(null);
-        // }
 
         this.nbActions = 0;
         this._stepInProgress = false;

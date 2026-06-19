@@ -3,7 +3,6 @@ import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {selectAnswer} from "../../task/selectors";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
-import {delay} from "../api";
 import {put} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
 import {taskIncreaseContextId} from "../../task/task_slice";
@@ -13,13 +12,15 @@ import {hasBlockPlatform} from '../platforms';
 import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
-import {Document, BlockDocument} from '../../buffers/buffer_types';
+import {BlockDocument, Document} from '../../buffers/buffer_types';
 import {BlocklyHelper} from './blockly_helper';
 import {getMessage, getMessageChoices} from '../../lang/messages';
 import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
 import 'blockly/javascript';
 import {javascriptGenerator} from 'blockly/javascript';
+import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
+import {CodecastPlatform} from '../codecast_platform';
 
 // TODO Blockly: don't expose Blockly to all window
 window.Blockly = Blockly;
@@ -116,7 +117,8 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
 }
 
 export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore) {
-    const blocklyHelper = new BlocklyHelper(context.infos.maxInstructions, context);
+    const platform = selectActiveBufferPlatform(state)
+    const blocklyHelper = new BlocklyHelper(context.infos.maxInstructions, context, platform === CodecastPlatform.Scratch);
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
 
     if (context.infos.multithread) {

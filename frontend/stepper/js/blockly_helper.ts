@@ -101,7 +101,7 @@ export class BlocklyHelper {
     private definitions: Partial<Record<'javascript'|'python', {label: string, code: string}[]>>;
     private simpleGenerators: {[generatorName: string]: {label: string, code: string, category: string, type: number, nbParams: number}[]};
     private codeId: number;
-    public workspace: Blockly.WorkspaceSvg;
+    public workspace: Blockly.Workspace|Blockly.WorkspaceSvg;
     private options: any;
     private initialScale: number;
     private divId: string;
@@ -130,9 +130,9 @@ export class BlocklyHelper {
     public reloading: boolean;
     public fake: boolean;
 
-    constructor(maxBlocks, subTask) {
+    constructor(maxBlocks: number, subTask: QuickAlgoLibrary, scratchMode: boolean) {
         this.subTask = subTask;
-        this.scratchMode = (typeof Blockly.Blocks['control_if'] !== 'undefined');
+        this.scratchMode = scratchMode;
         this.maxBlocks = maxBlocks;
         this.programs = [];
         this.language = (typeof Blockly.Blocks['control_if'] !== 'undefined') ? 'scratch' : 'blockly';
@@ -206,7 +206,7 @@ export class BlocklyHelper {
 
         this.options = options;
 
-        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
+        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator);
         // TODO Blockly: write code generators
         this.createSimpleGeneratorsAndBlocks();
 
@@ -237,6 +237,7 @@ export class BlocklyHelper {
                 media: this.mediaUrl,
                 scrollbars: true,
                 zoom: {startScale: 1},
+                renderer: this.scratchMode ? 'zelos' : 'thrasos',
                 theme: Blockly.Theme.defineTheme('custom_theme', {
                     name: 'custom_theme',
                     base: Blockly.Themes.Classic,
@@ -369,15 +370,6 @@ export class BlocklyHelper {
         } else if (event.element != 'category' && event.element != 'selected') {
             Blockly.svgResize(this.workspace);
         }
-
-        // Refresh the toolbox for new procedures (same with variables
-        // but it's already handled correctly there)
-        if (this.scratchMode && this.groupByCategory && this.workspace.toolbox_
-            && (eventType === Blockly.Events.Change || this.dragJustTerminated)
-        ) {
-            this.dragJustTerminated = false;
-            this.workspace.toolbox_.refreshSelection();
-        }
     }
 
     setIncludeBlocks(includeBlocks) {
@@ -400,11 +392,7 @@ export class BlocklyHelper {
     }
 
     getEmptyContent() {
-        if (this.scratchMode) {
-            return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
-        } else {
-            return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
-        }
+        return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
     }
 
     getDefaultContent() {
@@ -434,9 +422,9 @@ export class BlocklyHelper {
     getOrigin() {
         // Get x/y origin
         if (this.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
-            return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
+            return {x: 105, y: 2};
         }
-        return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
+        return {x: 20, y: 2};
     }
 
     setCodeId(newCodeId: number) {
@@ -767,30 +755,32 @@ export class BlocklyHelper {
             !(block.noConnectors)) {
             if (block.yieldsValue) {
                 block.blocklyJson.output = null;
-                if (this.scratchMode) {
-                    if (block.yieldsValue == 'int') {
-                        block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_ROUND;
-                    } else {
-                        block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_HEXAGONAL;
-                    }
-
-                    if (typeof block.blocklyJson.colour == "undefined") {
-                        block.blocklyJson.colour = Blockly.Colours.sensing.primary;
-                        block.blocklyJson.colourSecondary = Blockly.Colours.sensing.secondary;
-                        block.blocklyJson.colourTertiary = Blockly.Colours.sensing.tertiary;
-                    }
-                }
+                // TODO Scratch
+                // if (this.scratchMode) {
+                //     if (block.yieldsValue == 'int') {
+                //         block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_ROUND;
+                //     } else {
+                //         block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_HEXAGONAL;
+                //     }
+                //
+                //     if (typeof block.blocklyJson.colour == "undefined") {
+                //         block.blocklyJson.colour = Blockly.Colours.sensing.primary;
+                //         block.blocklyJson.colourSecondary = Blockly.Colours.sensing.secondary;
+                //         block.blocklyJson.colourTertiary = Blockly.Colours.sensing.tertiary;
+                //     }
+                // }
             } else {
                 block.blocklyJson.previousStatement = null;
                 block.blocklyJson.nextStatement = null;
 
-                if (this.scratchMode) {
-                    if (typeof block.blocklyJson.colour == "undefined") {
-                        block.blocklyJson.colour = Blockly.Colours.motion.primary;
-                        block.blocklyJson.colourSecondary = Blockly.Colours.motion.secondary;
-                        block.blocklyJson.colourTertiary = Blockly.Colours.motion.tertiary;
-                    }
-                }
+                // TODO Scratch
+                // if (this.scratchMode) {
+                //     if (typeof block.blocklyJson.colour == "undefined") {
+                //         block.blocklyJson.colour = Blockly.Colours.motion.primary;
+                //         block.blocklyJson.colourSecondary = Blockly.Colours.motion.secondary;
+                //         block.blocklyJson.colourTertiary = Blockly.Colours.motion.tertiary;
+                //     }
+                // }
             }
         }
 
@@ -846,11 +836,12 @@ export class BlocklyHelper {
 
         // TODO: Load default colours + custom styles
         if (typeof block.blocklyJson.colour == "undefined") {
-            if (this.scratchMode) {
-                block.blocklyJson.colour = Blockly.Colours.motion.primary;
-                block.blocklyJson.colourSecondary = Blockly.Colours.motion.secondary;
-                block.blocklyJson.colourTertiary = Blockly.Colours.motion.tertiary;
-            } else {
+            // TODO Scratch
+            // if (this.scratchMode) {
+            //     block.blocklyJson.colour = Blockly.Colours.motion.primary;
+            //     block.blocklyJson.colourSecondary = Blockly.Colours.motion.secondary;
+            //     block.blocklyJson.colourTertiary = Blockly.Colours.motion.tertiary;
+            // } else {
                 let colours = this.getDefaultColours();
                 block.blocklyJson.colour = 210; // default: blue
                 if ("blocks" in colours && block.name in colours.blocks) {
@@ -862,7 +853,7 @@ export class BlocklyHelper {
                         block.blocklyJson.colour = colours.categories["_default"];
                     }
                 }
-            }
+            // }
         }
     }
 
@@ -1161,9 +1152,10 @@ export class BlocklyHelper {
     }
 
     getStdBlocks() {
-        return this.scratchMode
-            ? getStandardScratchBlocks(this.placeholderBlocks, this.strings)
-            : getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
+        // TODO Scratch
+        // return this.scratchMode
+        //     ? getStandardScratchBlocks(this.placeholderBlocks, this.strings)
+        return getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
     }
 
     getBlockXmlInfo(generatorStruct, blockName) {
@@ -1569,6 +1561,9 @@ export class BlocklyHelper {
     }
 
     blocksToScratch(blockList) {
+        // TODO Scratch
+        return blockList;
+
         let scratchBlocks = [];
         for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
             let blockName = blockList[iBlock];
@@ -1584,13 +1579,7 @@ export class BlocklyHelper {
     }
 
     fixScratch() {
-        // Store the maxBlocks information somewhere, as Scratch ignores it
-        Blockly.Workspace.prototype.maxBlocks = () => {
-            return this.maxBlocks;
-        };
-
         // Translate requested Blocks from Blockly to Scratch blocks
-        // TODO :: full translation
         this.includeBlocks.standardBlocks.singleBlocks = this.blocksToScratch(this.includeBlocks.standardBlocks.singleBlocks || []);
     }
 

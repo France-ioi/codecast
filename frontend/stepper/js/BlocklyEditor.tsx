@@ -303,7 +303,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     useEffect(() => {
         const selection = props.state?.selection;
         log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, selectedBlockId.current);
-        if (selection === selectedBlockId.current || context.blocklyHelper?.scratchMode) {
+        if (selection === selectedBlockId.current) {
             return;
         }
 
