@@ -71,6 +71,14 @@ function disableContinuousToolbox() {
     Blockly.registry.register(continuousRegType.FLYOUT_INFLATER, 'block', defaultBlockFlyoutInflater, true);
 }
 
+// Override it so addNextBlocks always defaults to true,
+// regardless of whether the caller (duplicate, copy, etc.) asked for it
+// so that when the user copies block, it copies the block and the next blocks
+const originalToCopyData = Blockly.BlockSvg.prototype.toCopyData;
+Blockly.BlockSvg.prototype.toCopyData = function() {
+    return originalToCopyData.call(this, true);
+};
+
 const codeGenerators: Record<string, JavascriptGenerator | PythonGenerator> = {
     javascript: javascriptGenerator,
     python: pythonGenerator,
@@ -191,7 +199,7 @@ export class BlocklyHelper {
     private definitions: Partial<Record<'javascript'|'python', {label: string, code: string}[]>>;
     private simpleGenerators: {[generatorName: string]: {label: string, code: string, category: string, type: number, nbParams: number}[]};
     private codeId: number;
-    public workspace: Blockly.Workspace|Blockly.WorkspaceSvg;
+    public workspace: Blockly.WorkspaceSvg;
     private options: any;
     private initialScale: number;
     private divId: string;
@@ -394,12 +402,11 @@ export class BlocklyHelper {
             // Restore clipboard if allowed
             if (blocklyClipboardSaved) {
                 if (this.checkBlocksAreAllowed(blocklyClipboardSaved, false)) {
-                    Blockly.clipboardXml_ = blocklyClipboardSaved;
+                    Blockly.clipboard.setLastCopiedData(blocklyClipboardSaved);
                 } else {
-                    // Set to false to indicate that blocks were disallowed
-                    Blockly.clipboardXml_ = false;
+                    Blockly.clipboard.setLastCopiedData(null);
                 }
-                Blockly.clipboardSource_ = this.workspace;
+                Blockly.clipboard.setLastCopiedWorkspace(this.workspace);
             }
 
             window.jQuery(".blocklyToolboxDiv").css("background-color", "rgba(168, 168, 168, 0.5)");
@@ -407,7 +414,7 @@ export class BlocklyHelper {
             this.onChange();
         } else {
             let tmpOptions = new Blockly.Options({});
-            this.workspace = new Blockly.Workspace(tmpOptions);
+            this.workspace = new Blockly.Workspace(tmpOptions) as Blockly.WorkspaceSvg;
         }
 
         this.programs = [];
@@ -441,8 +448,8 @@ export class BlocklyHelper {
         }
 
         // Save clipboard
-        if (this.display && Blockly.clipboardXml_) {
-            blocklyClipboardSaved = Blockly.clipboardXml_;
+        if (this.display && Blockly.clipboard.getLastCopiedData()) {
+            blocklyClipboardSaved = Blockly.clipboard.getLastCopiedData();
         }
 
         let ws = this.workspace;
@@ -458,13 +465,12 @@ export class BlocklyHelper {
     }
 
     onChange(event = null) {
-        let eventType = event ? event.constructor : null;
-
-        let isBlockEvent = event ? (
-            eventType === Blockly.Events.Create ||
-            eventType === Blockly.Events.Delete ||
-            eventType === Blockly.Events.Move ||
-            eventType === Blockly.Events.Change) : true;
+        const isBlockEvent = null === event ? true : [
+            Blockly.Events.BLOCK_DRAG,
+            Blockly.Events.BLOCK_MOVE,
+            Blockly.Events.BLOCK_CREATE,
+            Blockly.Events.BLOCK_CHANGE,
+        ].includes(event?.type);
 
         if (isBlockEvent) {
             if (this.subTask) {
@@ -473,8 +479,8 @@ export class BlocklyHelper {
             if (this.mainContext.onChange) {
                 this.mainContext.onChange();
             }
-        } else if (event.element != 'category' && event.element != 'selected') {
-            Blockly.svgResize(this.workspace);
+        } else if (event.element != 'category' && event.element != 'selected' && this.display) {
+            Blockly.svgResize(this.workspace as Blockly.WorkspaceSvg);
         }
     }
 
@@ -1675,30 +1681,37 @@ export class BlocklyHelper {
         this.includeBlocks.standardBlocks.singleBlocks = this.blocksToScratch(this.includeBlocks.standardBlocks.singleBlocks || []);
     }
 
-    checkBlocksAreAllowed(xml, silent) {
+    checkBlocksAreAllowed(copyData, silent) {
         if (this.includeBlocks && this.includeBlocks.standardBlocks && this.includeBlocks.standardBlocks.includeAll) {
             return true;
         }
         let allowed = this.getBlocksAllowed();
-        let blockList = xml.getElementsByTagName('block');
         let notAllowed = [];
         let that = this;
 
-        function checkBlock(block) {
-            let blockName = block.getAttribute('type');
-            blockName = that.normalizeType(blockName);
+        function checkBlockState(blockState) {
+            if (!blockState) {
+                return;
+            }
+            let blockName = that.normalizeType(blockState.type);
             if (!window.arrayContains(allowed, blockName)) {
                 notAllowed.push(blockName);
             }
+            if (blockState.inputs) {
+                for (let inputName in blockState.inputs) {
+                    let input = blockState.inputs[inputName];
+                    checkBlockState(input.block);
+                    checkBlockState(input.shadow);
+                }
+            }
+            if (blockState.next) {
+                checkBlockState(blockState.next.block);
+                checkBlockState(blockState.next.shadow);
+            }
         }
 
-        for (let i = 0; i < blockList.length; i++) {
-            checkBlock(blockList[i]);
-        }
-        if (xml.localName == 'block') {
-            // Also check the top element
-            checkBlock(xml);
-        }
+        checkBlockState(copyData ? copyData.blockState : null);
+
         if (!silent && notAllowed.length > 0) {
             console.error('Error: tried to load programs with unallowed blocks ' + notAllowed.join(', '));
         }
