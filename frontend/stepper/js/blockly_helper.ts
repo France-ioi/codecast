@@ -27,7 +27,7 @@ function getCodeGeneratorForLanguage(language: string) {
     return codeGenerators[language];
 }
 
-let blocklySets = {
+const blocklySets = {
     allDefault: {
         wholeCategories: ["input", "logic", "loops", "math", "texts", "lists", "dicts", "tables", "variables", "functions"]
     },
@@ -39,7 +39,7 @@ let blocklySets = {
 
 
 // Blockly to Scratch translations
-let blocklyToScratch = {
+const blocklyToScratch = {
     singleBlocks: {
         'controls_if': ['control_if'],
         'controls_if_else': ['control_if_else'],
@@ -73,7 +73,7 @@ let blocklyToScratch = {
 };
 
 // Allowed blocks that make another block allowed as well
-let blocklyAllowedSiblings = {
+const blocklyAllowedSiblings = {
     'controls_repeat_ext_noShadow': ['controls_repeat_ext'],
     'controls_whileUntil': ['controls_untilWhile'],
     'controls_untilWhile': ['controls_whileUntil'],
@@ -83,6 +83,38 @@ let blocklyAllowedSiblings = {
 
 let blocklyClipboardSaved;
 let blocklyUserScale;
+
+const blocklyCategoriesColors = {
+    actuator: 212,
+    sensors: 95,
+    internet: 200,
+    display: 300,
+    input: 50,
+    inputs: 50,
+    lists: 353,
+    logic: 298,
+    math: 176,
+    loops: 200,
+    texts: 312,
+    dicts: 52,
+    tables: 212,
+    variables: 30,
+    procedures: 180,
+    _default: 65,
+};
+
+const scratchCategoriesColors = {
+    actions: '#4C97FF',
+    sensors: '#5CB1D6',
+    control: '#FFAB19',
+    lists: 30,
+    operator: '#59C059',
+    tables: 30,
+    texts: 160,
+    variables: 30,
+    procedures: 180,
+    _default: 65,
+}
 
 function addInSet(l, val) {
     // Add val to list l if not already present
@@ -219,13 +251,14 @@ export class BlocklyHelper {
             const xmlString = this.getToolboxXml();
 
             const themeCategoryStyles = {};
-            if (!this.scratchMode) {
-                let colours = this.getDefaultColours();
-                let defCat = ["logic", "loops", "math", "texts", "lists", "colour"];
-                for (let iCat in defCat) {
-                    const singularCategory = defCat[iCat].endsWith('s') ? defCat[iCat].slice(0, -1) : defCat[iCat];
-                    themeCategoryStyles[singularCategory + '_blocks'] = {colourPrimary: colours.categories[defCat[iCat]]};
-                }
+            const colours = this.getDefaultColours();
+            for (let category in colours.categories) {
+                const singularCategory = category.endsWith('s') ? category.slice(0, -1) : category;
+                themeCategoryStyles[singularCategory + '_blocks'] = {
+                    colourPrimary: colours.categories[category],
+                    // colourSecondary: colours.categories[defCat[iCat]],
+                    // colourTertiary: colours.categories[defCat[iCat]],
+                };
             }
 
             console.log({themeCategoryStyles})
@@ -242,6 +275,9 @@ export class BlocklyHelper {
                     name: 'custom_theme',
                     base: Blockly.Themes.Classic,
                     blockStyles: themeCategoryStyles,
+                    fontStyle: {
+                        weight: this.scratchMode ? 'normal' : undefined,
+                    },
                 }),
             };
 
@@ -753,34 +789,29 @@ export class BlocklyHelper {
             typeof block.blocklyJson.previousStatement == "undefined" &&
             typeof block.blocklyJson.nextStatement == "undefined" &&
             !(block.noConnectors)) {
+            let colours = this.getDefaultColours();
+
             if (block.yieldsValue) {
                 block.blocklyJson.output = null;
-                // TODO Scratch
-                // if (this.scratchMode) {
-                //     if (block.yieldsValue == 'int') {
-                //         block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_ROUND;
-                //     } else {
-                //         block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_HEXAGONAL;
-                //     }
-                //
-                //     if (typeof block.blocklyJson.colour == "undefined") {
-                //         block.blocklyJson.colour = Blockly.Colours.sensing.primary;
-                //         block.blocklyJson.colourSecondary = Blockly.Colours.sensing.secondary;
-                //         block.blocklyJson.colourTertiary = Blockly.Colours.sensing.tertiary;
-                //     }
-                // }
+                if (this.scratchMode) {
+                    // TODO Scratch
+                    if (block.yieldsValue == 'int') {
+                        block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_ROUND;
+                    } else {
+                        block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_HEXAGONAL;
+                    }
+
+                    if (typeof block.blocklyJson.colour == "undefined") {
+                        block.blocklyJson.colour =  colours.categories['sensors'];
+                    }
+                }
             } else {
                 block.blocklyJson.previousStatement = null;
                 block.blocklyJson.nextStatement = null;
 
-                // TODO Scratch
-                // if (this.scratchMode) {
-                //     if (typeof block.blocklyJson.colour == "undefined") {
-                //         block.blocklyJson.colour = Blockly.Colours.motion.primary;
-                //         block.blocklyJson.colourSecondary = Blockly.Colours.motion.secondary;
-                //         block.blocklyJson.colourTertiary = Blockly.Colours.motion.tertiary;
-                //     }
-                // }
+                if (this.scratchMode && typeof block.blocklyJson.colour == "undefined") {
+                    block.blocklyJson.colour =  colours.categories['actions'];
+                }
             }
         }
 
@@ -832,28 +863,20 @@ export class BlocklyHelper {
         }
         if (typeof block.blocklyJson.helpUrl == "undefined") {
             block.blocklyJson.helpUrl = "";
-        } // TODO: Or maybe not?
+        }
 
-        // TODO: Load default colours + custom styles
         if (typeof block.blocklyJson.colour == "undefined") {
-            // TODO Scratch
-            // if (this.scratchMode) {
-            //     block.blocklyJson.colour = Blockly.Colours.motion.primary;
-            //     block.blocklyJson.colourSecondary = Blockly.Colours.motion.secondary;
-            //     block.blocklyJson.colourTertiary = Blockly.Colours.motion.tertiary;
-            // } else {
-                let colours = this.getDefaultColours();
-                block.blocklyJson.colour = 210; // default: blue
-                if ("blocks" in colours && block.name in colours.blocks) {
-                    block.blocklyJson.colour = colours.blocks[block.name];
-                } else if ("categories" in colours) {
-                    if (categoryName in colours.categories) {
-                        block.blocklyJson.colour = colours.categories[categoryName];
-                    } else if ("_default" in colours.categories) {
-                        block.blocklyJson.colour = colours.categories["_default"];
-                    }
+            let colours = this.getDefaultColours();
+            block.blocklyJson.colour = 210; // default: blue
+            if ("blocks" in colours && block.name in colours.blocks) {
+                block.blocklyJson.colour = colours.blocks[block.name];
+            } else if ("categories" in colours) {
+                if (categoryName in colours.categories) {
+                    block.blocklyJson.colour = colours.categories[categoryName];
+                } else if ("_default" in colours.categories) {
+                    block.blocklyJson.colour = colours.categories["_default"];
                 }
-            // }
+            }
         }
     }
 
@@ -1114,24 +1137,10 @@ export class BlocklyHelper {
         Blockly.utils.colour.setHsvValue(0.80);
 
         let colours = {
-            categories: {
-                actuator: 212,
-                sensors: 95,
-                internet: 200,
-                display: 300,
-                input: 50,
-                inputs: 50,
-                lists: 353,
-                logic: 298,
-                math: 176,
-                loops: 200,
-                texts: 312,
-                dicts: 52,
-                tables: 212,
-                variables: 30,
-                procedures: 180,
-                _default: 65
-            },
+            categories: (this.scratchMode ? {
+                ...blocklyCategoriesColors,
+                ...scratchCategoriesColors,
+            } : blocklyCategoriesColors),
             blocks: {}
         };
 
@@ -1152,10 +1161,12 @@ export class BlocklyHelper {
     }
 
     getStdBlocks() {
+        return this.scratchMode
+            ? getStandardScratchBlocks(this.placeholderBlocks, this.strings)
+            : getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
+
         // TODO Scratch
-        // return this.scratchMode
-        //     ? getStandardScratchBlocks(this.placeholderBlocks, this.strings)
-        return getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
+        // return getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
     }
 
     getBlockXmlInfo(generatorStruct, blockName) {
@@ -1208,6 +1219,16 @@ export class BlocklyHelper {
             if (categoriesInfos[categoryName].blocksXml.indexOf(blockXml) == -1) {
                 categoriesInfos[categoryName].blocksXml.push(blockXml);
             }
+
+            if (!Blockly.Blocks[blockName].oldInit) {
+                Blockly.Blocks[blockName].oldInit = Blockly.Blocks[blockName].init;
+            }
+            const oldInit = Blockly.Blocks[blockName].oldInit;
+            Blockly.Blocks[blockName].init = function() {
+                oldInit.call(this);
+                this.setStyle(`${categoryName}_blocks`);
+            };
+
             this.addBlocksAllowed([blockName]);
         }
     }
@@ -1352,7 +1373,8 @@ export class BlocklyHelper {
                 let blockNames = [];
                 for (let iBlock = 0; iBlock < blocks.length; iBlock++) {
                     if (!(blocks[iBlock].excludedByDefault) && !window.arrayContains(stdInclude.excludedBlocks, blocks[iBlock].name)) {
-                        blockNames.push(blocks[iBlock].name);
+                        const blockName = blocks[iBlock].name;
+                        blockNames.push(blockName);
                         categoriesInfos[categoryName].blocksXml.push(blocks[iBlock].blocklyXml);
                     }
                 }

@@ -3,9 +3,11 @@ import {pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import * as Blockly from 'blockly/core';
 import {FieldAngle} from '@blockly/field-angle';
 
+type HexColor = `#${string}`;
+
 interface BlocklyColours {
-    categories: {[key: string]: number};
-    blocks: {[key: string]: number};
+    categories: {[key: string]: number|HexColor};
+    blocks: {[key: string]: number|HexColor};
 }
 
 export function addExtraBlocks(
