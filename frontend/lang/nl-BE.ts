@@ -129,7 +129,6 @@ export default {
     CLOSED_CAPTIONS_SHOW_PANE: 'Alle ondertitels weergeven',
     CLOSED_CAPTIONS_SHOW_BAND: 'De ondertitelbanner weergeven',
     PLATFORM_SETTING: 'Taal:',
-    PLATFORM_RELOAD: 'Kan de taal {platform} niet weergeven in de huidige modus, gelieve de pagina te herladen om de interface bij te werken.',
     PROGRAM_MISSING_LIB: 'U moet de regel {line} in uw programma zetten.',
     PROGRAM_MISSING_LIB_FAMILIAR: 'Je moet de regel {line} in je programma zetten.',
     USER_SELECT_LOGIN_METHOD: 'Kies een verbindingsmethode :',

@@ -10,7 +10,6 @@ import {Screen} from "../common/screens";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
-import {getJsLibLoaded} from "./libs/import_modules";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faDownload} from '@fortawesome/free-solid-svg-icons/faDownload';
 import {faUpload} from '@fortawesome/free-solid-svg-icons/faUpload';
@@ -116,8 +115,6 @@ export function MenuTask() {
         dispatch(bufferReload());
     };
 
-    const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();
-
     return (
         <div ref={wrapperRef} className={`menu-container ${menuOpen ? 'is-open' : ''} position-${menuPosition ?? 'right'}`}>
             {screen !== Screen.DocumentationSmall
@@ -168,8 +165,8 @@ export function MenuTask() {
                 </div>}
             </div>
             <SettingsDialog
-                open={settingsOpen || forceSettingsOpen}
-                closable={!forceSettingsOpen}
+                open={settingsOpen}
+                closable
                 onClose={() => setSettingsOpen(false)}
             />
             <EditRecordingDialog

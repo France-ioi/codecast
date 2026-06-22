@@ -144,7 +144,6 @@ export default {
     CLOSED_CAPTIONS_SHOW_PANE: "Afficher tous les sous-titres",
     CLOSED_CAPTIONS_SHOW_BAND: "Afficher le bandeau de sous-titres",
     PLATFORM_SETTING: "Langage :",
-    PLATFORM_RELOAD: "Impossible d'afficher le langage {platform} dans le mode actuel, veuillez recharger la page pour mettre l'interface à jour.",
     PROGRAM_MISSING_LIB: "Vous devez mettre la ligne {line} dans votre programme.",
     PROGRAM_MISSING_LIB_FAMILIAR: "Tu dois mettre la ligne {line} dans ton programme.",
 

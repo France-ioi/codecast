@@ -11,8 +11,65 @@ import {JavascriptGenerator, javascriptGenerator, Order as JavascriptOrder} from
 import {PythonGenerator, pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import {adaptJsBlocks} from './js_adapter';
 import {registerFieldAngle} from '@blockly/field-angle';
+import {
+    ContinuousToolbox,
+    ContinuousFlyout,
+    ContinuousMetrics,
+    ContinuousCategory,
+    RecyclableBlockFlyoutInflater,
+} from '@blockly/continuous-toolbox';
+import {BlocklyColours, HexColor} from './blockly_types';
 
 registerFieldAngle();
+
+// `registerContinuousToolbox()` globally overrides two Blockly defaults (the
+// toolbox category and the "block" flyout inflater) in addition to registering
+// the named ContinuousToolbox/Flyout/Metrics entries. Capture Blockly's defaults
+// now, before the plugin can override them, so we can restore them when switching
+// back to a non-Scratch (regular Blockly) workspace.
+const continuousRegType = Blockly.registry.Type;
+const continuousCategoryName = Blockly.ToolboxCategory.registrationName;
+const defaultToolboxCategory = Blockly.registry.getClass(continuousRegType.TOOLBOX_ITEM, continuousCategoryName);
+const defaultBlockFlyoutInflater = Blockly.registry.getClass(continuousRegType.FLYOUT_INFLATER, 'block');
+
+let continuousToolboxRegistered = false;
+
+function enableContinuousToolbox() {
+    if (!continuousToolboxRegistered) {
+        continuousToolboxRegistered = true;
+
+        Blockly.registry.register(
+            Blockly.registry.Type.METRICS_MANAGER,
+            'ContinuousMetrics',
+            ContinuousMetrics,
+            true,
+        );
+
+        Blockly.registry.register(
+            Blockly.registry.Type.FLYOUTS_VERTICAL_TOOLBOX,
+            'ContinuousFlyout',
+            ContinuousFlyout,
+            true,
+        );
+
+        Blockly.registry.register(
+            Blockly.registry.Type.TOOLBOX,
+            'ContinuousToolbox',
+            ContinuousToolbox,
+            true,
+        );
+        return;
+    }
+    Blockly.registry.register(continuousRegType.TOOLBOX_ITEM, continuousCategoryName, ContinuousCategory, true);
+    Blockly.registry.register(continuousRegType.FLYOUT_INFLATER, 'block', RecyclableBlockFlyoutInflater, true);
+}
+
+// Restore the global defaults the plugin clobbered, so a regular Blockly toolbox
+// renders normally again. Must run before re-injecting the workspace.
+function disableContinuousToolbox() {
+    Blockly.registry.register(continuousRegType.TOOLBOX_ITEM, continuousCategoryName, defaultToolboxCategory, true);
+    Blockly.registry.register(continuousRegType.FLYOUT_INFLATER, 'block', defaultBlockFlyoutInflater, true);
+}
 
 const codeGenerators: Record<string, JavascriptGenerator | PythonGenerator> = {
     javascript: javascriptGenerator,
@@ -84,7 +141,7 @@ const blocklyAllowedSiblings = {
 let blocklyClipboardSaved;
 let blocklyUserScale;
 
-const blocklyCategoriesColors = {
+const blocklyCategoriesColors: Record<string, number|HexColor> = {
     actuator: 212,
     sensors: 95,
     internet: 200,
@@ -103,12 +160,13 @@ const blocklyCategoriesColors = {
     _default: 65,
 };
 
-const scratchCategoriesColors = {
+const scratchCategoriesColors: Record<string, number|HexColor> = {
     actions: '#4C97FF',
     sensors: '#5CB1D6',
     control: '#FFAB19',
     lists: 30,
     operator: '#59C059',
+    event: '#ffbf00',
     tables: 30,
     texts: 160,
     variables: 30,
@@ -238,7 +296,7 @@ export class BlocklyHelper {
 
         this.options = options;
 
-        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator);
+        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
         // TODO Blockly: write code generators
         this.createSimpleGeneratorsAndBlocks();
 
@@ -253,17 +311,29 @@ export class BlocklyHelper {
             const themeCategoryStyles = {};
             const colours = this.getDefaultColours();
             for (let category in colours.categories) {
-                const singularCategory = category.endsWith('s') ? category.slice(0, -1) : category;
-                themeCategoryStyles[singularCategory + '_blocks'] = {
+                themeCategoryStyles[category + '_blocks'] = {
                     colourPrimary: colours.categories[category],
-                    // colourSecondary: colours.categories[defCat[iCat]],
-                    // colourTertiary: colours.categories[defCat[iCat]],
                 };
             }
 
-            console.log({themeCategoryStyles})
+            console.log({themeCategoryStyles, scratch: this.scratchMode})
+
+            // The continuous toolbox is a Scratch-only feature. Toggle the global
+            // registry overrides before injecting so a regular Blockly workspace
+            // gets the normal toolbox/flyout back when switching out of Scratch.
+            if (this.scratchMode) {
+                enableContinuousToolbox();
+            } else {
+                disableContinuousToolbox();
+            }
+
             let wsConfig: BlocklyOptions = {
                 toolbox: "<xml>" + xmlString + "</xml>",
+                plugins: this.scratchMode && this.groupByCategory ? {
+                    toolbox: ContinuousToolbox,
+                    flyoutsVerticalToolbox: ContinuousFlyout,
+                    metricsManager: ContinuousMetrics,
+                } : {},
                 comments: true,
                 sounds: false,
                 trashcan: true,
@@ -1132,7 +1202,7 @@ export class BlocklyHelper {
     }
 
 
-    getDefaultColours() {
+    getDefaultColours(): BlocklyColours {
         Blockly.utils.colour.setHsvSaturation(0.65);
         Blockly.utils.colour.setHsvValue(0.80);
 
@@ -1551,7 +1621,7 @@ export class BlocklyHelper {
                 if (typeof (colour) == "undefined") {
                     colour = colours.categories[categoryName]
                     if (typeof (colour) == "undefined") {
-                        colour = colours.categories._default;
+                        colour = colours.categories['_default'];
                     }
                 }
                 xmlString += "<category "

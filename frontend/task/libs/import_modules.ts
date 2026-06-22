@@ -406,10 +406,6 @@ export function loadMathJax() {
     mathJaxConfigured = true;
 }
 
-export function getJsLibLoaded() {
-    return jsLibLoaded;
-}
-
 function getScript(modSrc, modId, modClass, callback, reject) {
     let script = document.createElement('script');
     script.setAttribute('type', 'text/javascript');

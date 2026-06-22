@@ -14,6 +14,7 @@ import {selectActiveView} from '../../task/layout/layout';
 import {getMessage} from '../../lang/messages';
 import * as Blockly from 'blockly/core';
 import {BlockSvg} from 'blockly/core';
+import {CodecastPlatform} from '../codecast_platform';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -40,6 +41,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const highlightedBlocks = useRef<{[className: string]: string[]}>({});
     const selectedBlockId = useRef<string>(null);
     const loaded = useRef(false);
+    const continuousToolbox = CodecastPlatform.Scratch === props.state?.platform && groupByCategory;
     const dispatch = useDispatch();
 
     log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlights: props.highlights});
@@ -327,7 +329,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     }, [props.state?.actions?.resize]);
 
     return (
-        <div className={`blockly-editor ${groupByCategory ? 'group-by-category' : ''}`}>
+        <div className={`blockly-editor ${groupByCategory ? 'group-by-category' : ''} ${continuousToolbox ? 'blockly-continuous-toolbox' : ''}`}>
             <div id='blocklyContainer'>
                 <div id='blocklyDiv' className='language_blockly'/>
                 <textarea id='program' className='language_javascript' style={{width: '100%', height: '100%', display: 'none'}}/>

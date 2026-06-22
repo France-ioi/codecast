@@ -2,18 +2,13 @@ import {javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript'
 import {pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import * as Blockly from 'blockly/core';
 import {FieldAngle} from '@blockly/field-angle';
-
-type HexColor = `#${string}`;
-
-interface BlocklyColours {
-    categories: {[key: string]: number|HexColor};
-    blocks: {[key: string]: number|HexColor};
-}
+import {BlocklyColours} from './blockly_types';
 
 export function addExtraBlocks(
     strings: {[key: string]: string},
     defaultColors: BlocklyColours,
     showIfMutator: boolean,
+    scratchMode: boolean,
 ) {
     Blockly.Blocks['controls_untilWhile'] = Blockly.Blocks['controls_whileUntil'];
     javascriptGenerator.forBlock['controls_untilWhile'] = javascriptGenerator.forBlock['controls_whileUntil'];
@@ -179,31 +174,58 @@ export function addExtraBlocks(
         };
     }
 
-    Blockly.Blocks['robot_start'] = {
-        init: function () {
-            this.appendDummyInput()
-                .appendField(strings['startingBlockName']);
-            this.setNextStatement(true);
-            this.setColour(210);
-            this.setTooltip('');
-            this.setDeletable(false);
-            this.setEditable(false);
-            this.setMovable(false);
-            //    this.setHelpUrl('http://www.example.com/');
-        }
-    };
+    if (scratchMode) {
+        Blockly.Blocks['robot_start'] = {
+            init: function () {
+                this.jsonInit({
+                    "message0": strings['startingBlockName'],
+                    "inputsInline": true,
+                    "nextStatement": null,
+                    "colour": defaultColors.categories['event'],
+                });
+                this.hat = 'cap';
+            }
+        };
 
-    Blockly.Blocks['placeholder_statement'] = {
-        init: function () {
-            this.appendDummyInput()
-                .appendField("                    ");
-            this.setPreviousStatement(true);
-            this.setNextStatement(true);
-            this.setColour(210);
-            this.setTooltip('');
-            //    this.setHelpUrl('http://www.example.com/');
-        }
-    };
+        Blockly.Blocks['placeholder_statement'] = {
+            init: function () {
+                this.jsonInit({
+                    "message0": "",
+                    "inputsInline": true,
+                    "previousStatement": null,
+                    "nextStatement": null,
+                    "colour": "#BDCCDB",
+                });
+                this.appendDummyInput().appendField("                    ");
+            }
+        };
+    } else {
+        Blockly.Blocks['robot_start'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField(strings['startingBlockName']);
+                this.setNextStatement(true);
+                this.setColour(210);
+                this.setTooltip('');
+                this.setDeletable(false);
+                this.setEditable(false);
+                this.setMovable(false);
+                //    this.setHelpUrl('http://www.example.com/');
+            }
+        };
+
+        Blockly.Blocks['placeholder_statement'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("                    ");
+                this.setPreviousStatement(true);
+                this.setNextStatement(true);
+                this.setColour(210);
+                this.setTooltip('');
+                //    this.setHelpUrl('http://www.example.com/');
+            }
+        };
+    }
 
     javascriptGenerator.forBlock['robot_start'] = function () {
         return "";

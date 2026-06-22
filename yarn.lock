@@ -1554,6 +1554,11 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.28.5"
 
+"@blockly/continuous-toolbox@^7.0.9":
+  version "7.0.9"
+  resolved "https://registry.yarnpkg.com/@blockly/continuous-toolbox/-/continuous-toolbox-7.0.9.tgz#81d7008536f5e70af70b30ce8af127a5ce4e7f75"
+  integrity sha512-luFNC9GX4GAEqTrag07jV3DrY2WEeYfyBJnP932/xb27hs6oVaAw1bJPzI/NtyBxdU3LOkQZ826fEVbCVoXzAQ==
+
 "@blockly/field-angle@^6.0.9":
   version "6.0.9"
   resolved "https://registry.yarnpkg.com/@blockly/field-angle/-/field-angle-6.0.9.tgz#c29ac371a49e34b42bcb94d6fba63950a76c011f"
