@@ -58,8 +58,8 @@ function enableContinuousToolbox() {
             ContinuousToolbox,
             true,
         );
-        return;
     }
+
     Blockly.registry.register(continuousRegType.TOOLBOX_ITEM, continuousCategoryName, ContinuousCategory, true);
     Blockly.registry.register(continuousRegType.FLYOUT_INFLATER, 'block', RecyclableBlockFlyoutInflater, true);
 }
@@ -314,11 +314,16 @@ export class BlocklyHelper {
 
             const themeCategoryStyles = {};
             const colours = this.getDefaultColours();
-            const blocklyCategoryMapping = {variables: 'variable'};
+            const blocklyCategoryMapping = {variables: 'variable', loops: 'loop', texts: 'text', procedures: 'procedure'};
             for (let category in colours.categories) {
-                themeCategoryStyles[(blocklyCategoryMapping[category] ?? category) + '_blocks'] = {
+                themeCategoryStyles[category + '_blocks'] = {
                     colourPrimary: colours.categories[category],
                 };
+                if (blocklyCategoryMapping[category]) {
+                    themeCategoryStyles[blocklyCategoryMapping[category] + '_blocks'] = {
+                        colourPrimary: colours.categories[category],
+                    };
+                }
             }
 
             console.log({themeCategoryStyles, scratch: this.scratchMode})
@@ -805,11 +810,10 @@ export class BlocklyHelper {
         return codeString;
     }
 
-    completeBlockHandler(block, objectName, context) {
+    completeBlockHandler(block: Block, objectName: string, context: QuickAlgoLibrary): void {
         if (typeof block.handler == "undefined") {
             block.handler = context[objectName][block.name];
         }
-
 
         if (typeof block.handler == "undefined") {
             block.handler = (function (oName, bName) {
@@ -820,7 +824,7 @@ export class BlocklyHelper {
         }
     }
 
-    completeBlockJson(block, objectName, categoryName, context) {
+    completeBlockJson(block: Block, objectName: string, categoryName: string, context: QuickAlgoLibrary): void {
         // Needs context object solely for the language strings. Maybe change that …
 
         if (typeof block.blocklyJson == "undefined") {
@@ -837,20 +841,16 @@ export class BlocklyHelper {
             typeof block.blocklyJson.previousStatement == "undefined" &&
             typeof block.blocklyJson.nextStatement == "undefined" &&
             !(block.noConnectors)) {
-            let colours = this.getDefaultColours();
 
             if (block.yieldsValue) {
                 block.blocklyJson.output = null;
                 if (this.scratchMode) {
-                    // TODO Scratch
-                    if (block.yieldsValue == 'int') {
-                        block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_ROUND;
-                    } else {
-                        block.blocklyJson.outputShape = Blockly.OUTPUT_SHAPE_HEXAGONAL;
+                    if ('bool' === block.yieldsValue) {
+                        block.blocklyJson.output = 'Boolean';
                     }
 
                     if (typeof block.blocklyJson.colour == "undefined") {
-                        block.blocklyJson.colour =  colours.categories['sensors'];
+                        block.blocklyJson.colour = scratchCategoriesColors['sensors'];
                     }
                 }
             } else {
@@ -858,7 +858,7 @@ export class BlocklyHelper {
                 block.blocklyJson.nextStatement = null;
 
                 if (this.scratchMode && typeof block.blocklyJson.colour == "undefined") {
-                    block.blocklyJson.colour =  colours.categories['actions'];
+                    block.blocklyJson.colour = scratchCategoriesColors['actions'];
                 }
             }
         }
@@ -928,7 +928,7 @@ export class BlocklyHelper {
         }
     }
 
-    completeBlockXml(block) {
+    completeBlockXml(block: Block) {
         if (typeof block.blocklyXml == "undefined" || block.blocklyXml == "") {
             block.blocklyXml = "<block type='" + block.name + "'></block>";
         }
@@ -939,7 +939,7 @@ export class BlocklyHelper {
         }
     }
 
-    completeCodeGenerators(blockInfo) {
+    completeCodeGenerators(blockInfo: Block) {
         if (typeof blockInfo.codeGenerators == "undefined") {
             blockInfo.codeGenerators = {};
         }
@@ -1029,15 +1029,16 @@ export class BlocklyHelper {
         }
     }
 
-    applyCodeGenerators(block) {
+    applyCodeGenerators(block: Block) {
         for (let language in block.codeGenerators) {
             const generator = getCodeGeneratorForLanguage(language);
 
+            // @ts-ignore
             generator.forBlock[block.name] = block.codeGenerators[language];
         }
     }
 
-    createBlock(block) {
+    createBlock(block: Block) {
         if (typeof block.fullBlock != "undefined") {
             Blockly.Blocks[block.name] = block.fullBlock;
         } else if (typeof block.blocklyInit == "undefined") {
@@ -1045,11 +1046,16 @@ export class BlocklyHelper {
             Blockly.Blocks[block.name] = {
                 init: function () {
                     this.jsonInit(blocklyjson);
-                }
+                },
             };
         } else if (typeof block.blocklyInit == "function") {
             Blockly.Blocks[block.name] = {
-                init: block.blocklyInit()
+                init: function () {
+                    block.blocklyInit().call(this);
+                    if (!this.previousStatement) {
+                        this.hat = 'cap';
+                    }
+                },
             };
         } else {
             console.error(block.name + ".blocklyInit is defined but not a function");
@@ -1149,7 +1155,7 @@ export class BlocklyHelper {
         }
     }
 
-    applyBlockOptions(block) {
+    applyBlockOptions(block: Block) {
         if (typeof block.countAs != 'undefined') {
             this.blockCounts[block.name] = block.countAs;
         }
