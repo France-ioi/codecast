@@ -1215,7 +1215,7 @@ export class BlocklyHelper {
 
     getStdBlocks() {
         return this.scratchMode
-            ? getStandardScratchBlocks(this.placeholderBlocks, this.strings)
+            ? getStandardScratchBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator)
             : getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
     }
 
@@ -1362,7 +1362,7 @@ export class BlocklyHelper {
         // Merge all lists into stdInclude
         if (taskStdInclude.includeAll) {
             if (this.scratchMode) {
-                stdInclude.wholeCategories = ["control", "input", "lists", "operator", "tables", "texts", "variables", "functions"];
+                stdInclude.wholeCategories = ["control", "input", "lists", "operator", "math", "tables", "texts", "variables", "functions"];
             } else {
                 stdInclude.wholeCategories = ["input", "logic", "loops", "math", "texts", "lists", "dicts", "tables", "variables", "functions"];
             }
@@ -1425,10 +1425,10 @@ export class BlocklyHelper {
                     if (!(blocks[iBlock].excludedByDefault) && !window.arrayContains(stdInclude.excludedBlocks, blocks[iBlock].name)) {
                         const blockName = blocks[iBlock].name;
                         blockNames.push(blockName);
-                        categoriesInfos[categoryName].blocksXml.push(blocks[iBlock].blocklyXml);
                     }
                 }
-                this.addBlocksAllowed(blockNames);
+
+                this.addBlocksAndCategories(blockNames, stdBlocks, categoriesInfos);
             }
         }
 
