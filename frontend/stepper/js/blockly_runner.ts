@@ -312,7 +312,7 @@ export default class BlocklyRunner extends AbstractRunner {
             };
         }
 
-        // TODO Blockly: update "Blockly.JavaScript.externalFunctions" to "window.FioiBlockly?.externalJavaScriptFunctions" in FioiBlockly
+        // TODO Blockly: re-enable FioiBlockly and check this
         if (window.FioiBlockly?.externalJavaScriptFunctions) {
             for(let name in window.FioiBlockly.externalJavaScriptFunctions) {
                 interpreter.setProperty(scope, name, interpreter.createNativeFunction(makeNative(window.FioiBlockly.externalJavaScriptFunctions[name])));

@@ -3,7 +3,7 @@ function getPlaceholderBlock(placeholderBlocks: boolean, name: string): string {
 }
 
 export function getStandardScratchBlocks(placeholderBlocks: boolean, showIfMutator: boolean = false) {
-    // TODO Scratch: re-enable lists, dicts, texts blocks when FioiBlockly is migrated
+    // TODO Blockly: re-enable lists, dicts, texts blocks when FioiBlockly is migrated
 
     return {
         control: [

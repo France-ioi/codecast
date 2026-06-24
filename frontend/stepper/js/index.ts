@@ -22,7 +22,7 @@ import {javascriptGenerator} from 'blockly/javascript';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {CodecastPlatform} from '../codecast_platform';
 
-// TODO Blockly: don't expose Blockly to all window. It should not be necessary anymore after the migration
+// TODO Blockly: don't expose Blockly to all window. Check after FioiBlockly has been migrated
 window.Blockly = Blockly;
 
 export function selectGroupByCategory(state: AppStore) {

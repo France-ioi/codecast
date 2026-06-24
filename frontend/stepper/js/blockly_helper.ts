@@ -164,7 +164,7 @@ const blocklyCategoriesColors: Record<string, number|HexColor> = {
     dicts: 52,
     tables: 212,
     variables: 330,
-    procedures: 180,
+    functions: 290,
     _default: 65,
 };
 
@@ -176,10 +176,8 @@ const scratchCategoriesColors: Record<string, number|HexColor> = {
     operator: '#59C059',
     event: '#ffbf00',
     tables: '#ff8c1a',
-    texts: 160,
     variables: '#ff8c1a',
-    procedures: 180,
-    _default: 65,
+    functions: '#ff6680',
 }
 
 function addInSet(l, val) {
@@ -314,13 +312,13 @@ export class BlocklyHelper {
 
             const themeCategoryStyles = {};
             const colours = this.getDefaultColours();
-            const blocklyCategoryMapping = {variables: 'variable', loops: 'loop', texts: 'text', procedures: 'procedure'};
+            const categoryToBlocklyMapping = {variables: 'variable', loops: 'loop', texts: 'text', functions: 'procedure'};
             for (let category in colours.categories) {
                 themeCategoryStyles[category + '_blocks'] = {
                     colourPrimary: colours.categories[category],
                 };
-                if (blocklyCategoryMapping[category]) {
-                    themeCategoryStyles[blocklyCategoryMapping[category] + '_blocks'] = {
+                if (categoryToBlocklyMapping[category]) {
+                    themeCategoryStyles[categoryToBlocklyMapping[category] + '_blocks'] = {
                         colourPrimary: colours.categories[category],
                     };
                 }
@@ -1049,10 +1047,11 @@ export class BlocklyHelper {
                 },
             };
         } else if (typeof block.blocklyInit == "function") {
+            const scratchMode = this.scratchMode;
             Blockly.Blocks[block.name] = {
                 init: function () {
                     block.blocklyInit().call(this);
-                    if (!this.previousStatement) {
+                    if (!this.previousStatement && scratchMode) {
                         this.hat = 'cap';
                     }
                 },
@@ -1205,9 +1204,18 @@ export class BlocklyHelper {
                     colours[group] = {};
                 }
                 for (let name in providedColours[group]) {
-                    colours[group][name] = providedColours[group][name];
+                    // Make it backward-compatible: new category name is "functions"
+                    colours[group]['procedures' === name ? 'functions' : name] = providedColours[group][name];
                 }
             }
+        }
+
+        // Contexts cannot override "main" Scratch color categories
+        if (this.scratchMode) {
+            colours.categories = {
+                ...colours.categories,
+                ...scratchCategoriesColors,
+            };
         }
 
         return colours;
@@ -1496,6 +1504,17 @@ export class BlocklyHelper {
         // }
         this.addBlocksAndCategories(singleBlocks, stdBlocks, categoriesInfos);
 
+        // TODO Blockly: remove this temporary code when FioiBlockly will be enabled
+        categoriesInfos['functions'] = {
+            blocksXml: `<block type='procedures_defnoreturn'></block>
+<block type='procedures_callnoreturn'></block>
+<block type='procedures_defreturn'></block>
+<block type='procedures_callreturn'></block>
+<block type='procedures_ifreturn'></block>
+`,
+        };
+
+
         // Handle variable blocks, which are normally automatically added with
         // the VARIABLES category but can be customized here
         // Blockly.Variables.flyoutOptions.anyButton = !!this.groupByCategory;
@@ -1524,6 +1543,12 @@ export class BlocklyHelper {
             //     blocksXml: blocksXml,
             //     colour: 330
             // }
+
+            // TODO Blockly: remove this temporary code when FioiBlockly will be enabled
+            this.addBlocksAllowed(['variables_get', 'variables_set']);
+            categoriesInfos["variables"] = {
+                blocksXml: `<block type='variables_get'></block><block type='variables_set'></block>`,
+            };
         }
 
         // if (Blockly.Variables.flyoutOptions.includedBlocks['get']) {
