@@ -64,7 +64,6 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
 
         log.getLogger('editor').debug('imported content', context.blocklyHelper.programs[0].blockly);
-        // context.blocklyHelper.reloading = true;
 
         // Check that all blocks exist and program is valid. Otherwise, reload default answer and cancel
         try {
@@ -158,8 +157,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         if (isBlockEvent) {
             const blocklyHelper = context.blocklyHelper;
-            log.getLogger('editor').debug('on editor change', loaded.current, blocklyHelper.reloading, blocklyHelper.languages);
-            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded.current && !blocklyHelper.reloading) {
+            log.getLogger('editor').debug('on editor change', loaded.current, blocklyHelper.languages);
+            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded.current) {
                 blocklyHelper.savePrograms();
                 const answer = {...blocklyHelper.programs[0]};
                 if (answer.blockly !== previousValue.current) {

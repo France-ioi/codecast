@@ -203,7 +203,6 @@ export class BlocklyHelper {
     private options: any;
     private initialScale: number;
     private divId: string;
-    private trashInToolbox: boolean;
     public startingBlock: boolean;
     private startingExampleIds: any[];
     private mediaUrl: string;
@@ -220,9 +219,8 @@ export class BlocklyHelper {
     private strings: any;
     public groupByCategory: boolean;
     private allBlocksAllowed: any;
-    private limitedPointers: any;
+    public limitedPointers: any;
     public blockCounts: any;
-    private dragJustTerminated: boolean;
     private prevWidth: number;
     private availableBlocksInfo: Record<string, Record<string, Record<string, Block>>> = {};
     public reloading: boolean;
@@ -242,7 +240,6 @@ export class BlocklyHelper {
         this.options = {};
         this.initialScale = 1;
         this.divId = 'blocklyDiv';
-        this.trashInToolbox = false;
         this.startingBlock = true;
         this.startingExampleIds = [];
         this.mediaUrl = (
@@ -380,9 +377,6 @@ export class BlocklyHelper {
             if (wsConfig.zoom.controls && blocklyUserScale) {
                 wsConfig.zoom.startScale *= blocklyUserScale;
             }
-            if (this.trashInToolbox) {
-                Blockly.Trashcan.prototype.MARGIN_SIDE_ = window.jQuery('#blocklyDiv').width() - 110;
-            }
             if (options.disable !== undefined) {
                 wsConfig.disable = options.disable;
             }
@@ -431,11 +425,6 @@ export class BlocklyHelper {
             // }
             this.savePrograms();
         }
-
-        let that = this;
-        Blockly.BlockSvg.terminateDragCallback = function () {
-            that.dragJustTerminated = true;
-        };
     }
 
     unloadLevel() {
@@ -624,9 +613,6 @@ export class BlocklyHelper {
         }
         if (force || panelWidth != this.prevWidth) {
             if (this.languages[this.codeId] == "blockly") {
-                if (this.trashInToolbox) {
-                    Blockly.Trashcan.prototype.MARGIN_SIDE_ = panelWidth - 90;
-                }
                 Blockly.svgResize(this.workspace);
             }
         }
@@ -676,24 +662,7 @@ export class BlocklyHelper {
         };
         for (let i = 0; i < this.mainContext.infos.limitedUses.length; i++) {
             let curLimit = this.mainContext.infos.limitedUses[i];
-            let blocks;
-            if (this.scratchMode) {
-                // Convert block list to Scratch
-                blocks = [];
-                for (let j = 0; j < curLimit.blocks.length; j++) {
-                    let curBlock = curLimit.blocks[j];
-                    let convBlockList = blocklyToScratch.singleBlocks[curBlock];
-                    if (convBlockList) {
-                        for (let k = 0; k < convBlockList.length; k++) {
-                            addInSet(blocks, this.normalizeType(convBlockList[k]));
-                        }
-                    } else {
-                        addInSet(blocks, this.normalizeType(curBlock));
-                    }
-                }
-            } else {
-                blocks = curLimit.blocks;
-            }
+            let blocks = curLimit.blocks;
 
             for (let j = 0; j < blocks.length; j++) {
                 let block = blocks[j];
@@ -744,11 +713,14 @@ export class BlocklyHelper {
         return false;
     }
 
-    getRemainingCapacity(workspace) {
+    getRemainingCapacity(workspace: Blockly.WorkspaceSvg) {
         // Get the number of blocks allowed
         if (!this.maxBlocks) {
             return Infinity;
         }
+
+        // TODO Blockly: check FioiBlockly because it overrides this method to add a parameter
+        // @ts-ignore
         let remaining = workspace.remainingCapacity(this.maxBlocks + 1);
         let allBlocks = workspace.getAllBlocks();
         if (this.maxBlocks && remaining == Infinity) {
@@ -764,7 +736,7 @@ export class BlocklyHelper {
         return remaining;
     }
 
-    isEmpty(workspace) {
+    isEmpty(workspace: Blockly.WorkspaceSvg) {
         // Check if workspace is empty
         if (!workspace) {
             workspace = this.workspace;

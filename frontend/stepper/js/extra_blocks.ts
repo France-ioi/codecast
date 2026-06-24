@@ -45,7 +45,6 @@ export function addExtraBlocks(
             this.appendValueInput('NUM')
                 .setCheck('Number')
                 .appendField(new Blockly.FieldDropdown(OPERATORS), 'OP');
-            // Assign 'this' to a variable for use in the tooltip closure below.
             const thisBlock = this;
             this.setTooltip(function () {
                 const mode = thisBlock.getFieldValue('OP');

@@ -13,7 +13,8 @@ import {javascriptGenerator} from 'blockly/javascript';
 import * as Blockly from 'blockly/core';
 
 const debounceHideBlocklyDropdown = debounce(() => {
-    window.Blockly?.DropDownDiv?.hideWithoutAnimation();
+    // TODO Blockly: use when FioiBlockly will be migrated
+    // Blockly?.DropDownDiv?.hideWithoutAnimation();
 }, 500);
 
 export default class BlocklyRunner extends AbstractRunner {

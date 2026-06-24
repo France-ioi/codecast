@@ -22,12 +22,8 @@ import {javascriptGenerator} from 'blockly/javascript';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {CodecastPlatform} from '../codecast_platform';
 
-// TODO Blockly: don't expose Blockly to all window
+// TODO Blockly: don't expose Blockly to all window. It should not be necessary anymore after the migration
 window.Blockly = Blockly;
-console.log({Blockly})
-
-let originalFireNow;
-let originalSetBackgroundPathVertical_;
 
 export function selectGroupByCategory(state: AppStore) {
     const isMobile = LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type;
@@ -95,24 +91,6 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
     context.blocklyHelper = createBlocklyHelper(context, state);
     context.onChange = () => {};
 
-    // There is a setTimeout delay in Blockly lib between blockly program loading and Blockly firing events.
-    // We overload this function to catch the Blockly firing event instant so that we know when the program
-    // is successfully reloaded and that the events won't trigger an editor content update which would trigger
-    // a stepper.exit
-    // TODO Blockly: check if it's still necessary
-    // if ('main' === state.environment) {
-    //     Blockly.Events.fireNow_ = () => {
-    //         originalFireNow();
-    //         context.blocklyHelper.reloading = false;
-    //     };
-    // }
-
-    if (groupByCategory && 'tralalere' === options.app) {
-        overrideBlocklyFlyoutForCategories(isMobile);
-    } else if (originalSetBackgroundPathVertical_) {
-        Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
-    }
-
     yield* put(taskIncreaseContextId());
 }
 
@@ -124,10 +102,6 @@ export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore) 
     if (context.infos.multithread) {
         // Make generation of all blocks
         blocklyHelper.startingBlock = false;
-    }
-
-    if (!originalFireNow) {
-        originalFireNow = Blockly.Events.fireNow_;
     }
 
     const availableBlocks = getContextBlocksDataSelector({state, context});
@@ -147,54 +121,6 @@ export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore) 
     return blocklyHelper;
 }
 
-export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
-    // Override function from Blockly for two reasons:
-    // 1. Control width and height of Blockly flyout
-    // 2. Add border radiuses at top-left and bottom-left
-    if (!originalSetBackgroundPathVertical_) {
-        originalSetBackgroundPathVertical_ = Blockly.Flyout.prototype.setBackgroundPathVertical_;
-    }
-
-    Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
-        const toolboxWidth = this.targetWorkspace_ && this.targetWorkspace_.toolbox_ ? this.targetWorkspace_.toolbox_.getWidth() : 0;
-        let atRight = this.toolboxPosition_ == Blockly.TOOLBOX_AT_RIGHT;
-        let computedHeight = isMobile ? window.innerHeight - 120 : Math.min(window.innerHeight - 90, Math.max(400, height));
-        let computedWidth = isMobile ? window.innerWidth - toolboxWidth - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
-        log.getLogger('blockly_runner').debug('background draw', {isMobile, toolboxWidth, width, computedWidth, windowWidth: window.innerWidth, workspace: this.targetWorkspace_});
-        // Decide whether to start on the left or right.
-        let path = ['M ' + (atRight ? this.width_ - this.CORNER_RADIUS : this.CORNER_RADIUS) + ',0'];
-        // Top.
-        path.push('h', String(computedWidth - this.CORNER_RADIUS));
-        // Rounded corner top-right
-        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
-            atRight ? "0" : "1",
-            atRight ? -this.CORNER_RADIUS : this.CORNER_RADIUS,
-            this.CORNER_RADIUS);
-        // Side closest to workspace.
-        path.push('v', String(Math.max(0, computedHeight - this.CORNER_RADIUS * 2)));
-        // Rounded corner bottom-right
-        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
-            atRight ? "0" : "1",
-            atRight ? this.CORNER_RADIUS : -this.CORNER_RADIUS,
-            this.CORNER_RADIUS);
-        // Bottom.
-        path.push('h', String(-(computedWidth - this.CORNER_RADIUS)));
-        // Rounded corner bottom-left
-        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
-            atRight ? "0" : "1",
-            atRight ? this.CORNER_RADIUS : -this.CORNER_RADIUS,
-            String(-this.CORNER_RADIUS));
-        path.push('v', String(-Math.max(0, computedHeight - this.CORNER_RADIUS * 2)));
-        // Rounded corner top-left
-        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
-            atRight ? "0" : "1",
-            atRight ? -this.CORNER_RADIUS : this.CORNER_RADIUS,
-            String(-this.CORNER_RADIUS));
-        path.push('z');
-        this.svgBackground_.setAttribute('d', path.join(' '));
-    };
-};
-
 export const checkBlocklyCode = function (answer: Document, context: QuickAlgoLibrary, state: AppStore, disabledValidations: string[] = []) {
     log.getLogger('blockly_runner').debug('check blockly code', answer, context.strings.code);
 
@@ -203,7 +129,7 @@ export const checkBlocklyCode = function (answer: Document, context: QuickAlgoLi
         return;
     }
 
-    let blocks;
+    let blocks: Blockly.BlockSvg[];
     try {
         // This method can fail if Blockly is not loaded in the DOM. In this case it's ok we don't make the check
         blocks = getBlocksFromXml(state, context, blockly);
@@ -236,7 +162,7 @@ export const checkBlocklyCode = function (answer: Document, context: QuickAlgoLi
     }
 }
 
-const getBlockCount = function (block, context: QuickAlgoLibrary) {
+const getBlockCount = function (block: Blockly.BlockSvg, context: QuickAlgoLibrary) {
     // How many "blocks" a specific block counts towards the total
 
     // Block counts extra
@@ -247,36 +173,6 @@ const getBlockCount = function (block, context: QuickAlgoLibrary) {
     if (block.type == 'robot_start') {
         // Program start block
         return 0;
-    }
-
-    if (context.blocklyHelper?.scratchMode) {
-        // Don't count insertion markers (shadows when moving a block)
-        if (block.isInsertionMarker_) {
-            return 0;
-        }
-        // Don't count placeholders
-        if (block.type.substring(0, 12) == 'placeholder_') {
-            return 0;
-        }
-        // Counting is tricky because some blocks in Scratch don't count in Blockly
-        if (block.parentBlock_) {
-            // There's a parent (container) block
-            if ((block.type == 'math_number' && block.parentBlock_.type == 'control_repeat') ||
-                (block.type == 'data_variablemenu' &&
-                    (block.parentBlock_.type == 'data_variable' ||
-                        block.parentBlock_.type == 'data_setvariableto' ||
-                        block.parentBlock_.type == 'data_changevariableby'))) {
-                return 0;
-            }
-        } else {
-            if (block.type == 'data_variablemenu') {
-                return 0;
-            }
-        }
-        if (block.type == 'data_itemoflist' || block.type == 'data_replaceitemoflist') {
-            // Count one extra for these ones
-            return 2;
-        }
     }
 
     return 1;
@@ -295,7 +191,7 @@ export const getBlocklyBlocksUsage = function (answer: Document, context: QuickA
 
     log.getLogger('blockly_runner').debug('blocks usage', answer);
 
-    let blocks;
+    let blocks: Blockly.BlockSvg[];
     try {
         // This method can fail if Blockly is not loaded in the DOM. In this case it's ok we don't make the check
         blocks = getBlocksFromXml(state, context, blockly);
@@ -318,23 +214,17 @@ export const getBlocklyBlocksUsage = function (answer: Document, context: QuickA
     };
 };
 
-export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
+export function blocklyCount(blocks: Blockly.BlockSvg[], context: QuickAlgoLibrary): number {
     let blocksUsed = 0;
     for (let i = 0; i < blocks.length; i++) {
         let block = blocks[i];
-        // When a block is being moved in Scratch, the block is duplicated
-        // We don't want to count this block twice, so we don't count the block that
-        // has the same id as this insertion marker
-        if (Blockly.insertionMarker_ && block.id === Blockly.insertionMarker_.id) {
-            continue;
-        }
         blocksUsed += getBlockCount(block, context);
     }
 
     return blocksUsed;
 }
 
-const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, xmlText: string) {
+const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, xmlText: string): Blockly.BlockSvg[] {
     const xml = Blockly.utils.xml.textToDom(xmlText);
 
     const blocklyHelper = createBlocklyHelper(context, state);
@@ -346,7 +236,7 @@ const getBlocksFromXml = function (state: AppStore, context: QuickAlgoLibrary, x
     return blocklyHelper.workspace.getAllBlocks();
 };
 
-export const blocklyFindLimited = (blocks, limitedUses, context) => {
+export const blocklyFindLimited = (blocks: Blockly.BlockSvg[], limitedUses, context: QuickAlgoLibrary) => {
     if (!blocks || !limitedUses) {
         return [];
     }
@@ -397,7 +287,6 @@ export async function getBlocklyCodeFromXml(document: BlockDocument, lang: 'java
         // channel.put(stepperExecutionError(diagnostics));
     };
 
-
     const blocklyHelper = context.blocklyHelper;
     log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);
     log.getLogger('blockly_runner').debug('display', context.display);
@@ -412,14 +301,7 @@ export async function getBlocklyCodeFromXml(document: BlockDocument, lang: 'java
     blocklyHelper.programs[0].blockly = blocklyXmlCode;
     log.getLogger('blockly_runner').debug('xml code', blocklyXmlCode);
 
-    // TODO Blockly: check if it's still necessary
-    // blocklyHelper.reloading = true;
     blocklyHelper.loadPrograms();
-    // Wait that program is loaded (Blockly fires some event including an onChange event
-    // if ('main' === state.environment) {
-    //     await delay(0);
-    // }
-    // blocklyHelper.reloading = false;
 
     return blocklyHelper.getCode(lang, null, true, true);
 }
