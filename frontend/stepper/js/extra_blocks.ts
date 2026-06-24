@@ -164,8 +164,6 @@ export function addExtraBlocks(
         return 'while True:\n' + branch;
     };
 
-    // TODO Scratch: check colors for these blocks
-
     if (!showIfMutator) {
         const old = Blockly.Blocks['controls_if'].init;
         Blockly.Blocks['controls_if'].init = function () {
@@ -210,7 +208,6 @@ export function addExtraBlocks(
                 this.setDeletable(false);
                 this.setEditable(false);
                 this.setMovable(false);
-                //    this.setHelpUrl('http://www.example.com/');
             }
         };
 
@@ -222,7 +219,6 @@ export function addExtraBlocks(
                 this.setNextStatement(true);
                 this.setColour(210);
                 this.setTooltip('');
-                //    this.setHelpUrl('http://www.example.com/');
             }
         };
     }

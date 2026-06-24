@@ -9,6 +9,8 @@ import {Block, BlockType} from '../../task/blocks/block_types';
 import {ContextEnrichingTypes} from '../actionTypes';
 import debounce from 'lodash/debounce';
 import {getMessage} from '../../lang/messages';
+import {javascriptGenerator} from 'blockly/javascript';
+import * as Blockly from 'blockly/core';
 
 const debounceHideBlocklyDropdown = debounce(() => {
     window.Blockly?.DropDownDiv?.hideWithoutAnimation();
@@ -96,6 +98,25 @@ export default class BlocklyRunner extends AbstractRunner {
         }
     };
 
+    // Map a generated (safe) variable name back to its original, correctly-cased
+    // name as defined in the workspace. The JavaScript generator's name database
+    // (nameDB_) is discarded once code generation finishes, so we rebuild an
+    // equivalent Blockly.Names from the workspace to reproduce the same mapping.
+    private getOriginalVariableName(generatedName: string): string {
+        const workspace = this.context.blocklyHelper.workspace;
+        const names = new Blockly.Names((javascriptGenerator as any).RESERVED_WORDS_);
+        names.setVariableMap(workspace.getVariableMap());
+        names.populateVariables(workspace);
+
+        for (const variable of workspace.getAllVariables()) {
+            if (names.getName(variable.getId(), Blockly.Names.NameType.VARIABLE) === generatedName) {
+                return variable.getName();
+            }
+        }
+
+        return generatedName;
+    };
+
     reportBlockValue(id, value, varName) {
         // Show a popup displaying the value of a block in step-by-step mode
         if (this.context.display && this.stepMode) {
@@ -117,22 +138,8 @@ export default class BlocklyRunner extends AbstractRunner {
             if(varName == '@@LOOP_ITERATION@@') {
                 displayStr = this.context.strings.loopIteration + ' ' + displayStr;
             } else if(varName) {
-                varName = varName.toString();
-                // Get the original variable name
-                for(let dbIdx in Blockly.JavaScript.variableDB_.db_) {
-                    if(Blockly.JavaScript.variableDB_.db_[dbIdx] == varName) {
-                        varName = dbIdx.substring(0, dbIdx.length - 9);
-                        // Get the variable name with the right case
-                        for(let i=0; i<this.context.blocklyHelper.workspace.variableList.length; i++) {
-                            let varNameCase = this.context.blocklyHelper.workspace.variableList[i];
-                            if(varName.toLowerCase() == varNameCase.toLowerCase()) {
-                                varName = varNameCase;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                }
+                // Get the original variable name, with the right case
+                varName = this.getOriginalVariableName(varName.toString());
                 this.localVariables = {
                     ...this.localVariables,
                     [varName]: value,
@@ -463,14 +470,8 @@ export default class BlocklyRunner extends AbstractRunner {
 
             // Translate "Unknown identifier" message
             if (message.substring(0, 20) == "Unknown identifier: ") {
-                let varName = message.substring(20);
                 // Get original variable name if possible
-                for(let dbIdx in Blockly.JavaScript.variableDB_.db_) {
-                    if(Blockly.JavaScript.variableDB_.db_[dbIdx] == varName) {
-                        varName = dbIdx.substring(0, dbIdx.length - 9);
-                        break;
-                    }
-                }
+                const varName = this.getOriginalVariableName(message.substring(20));
                 message = this.context.blocklyHelper.strings.uninitializedlet + ' ' + varName;
             } else if (message.match(/^(.+) is not defined$/)) {
                 const variableName = message.substring(0, message.indexOf('is not defined')).trim();

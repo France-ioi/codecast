@@ -163,7 +163,7 @@ const blocklyCategoriesColors: Record<string, number|HexColor> = {
     texts: 312,
     dicts: 52,
     tables: 212,
-    variables: 30,
+    variables: 330,
     procedures: 180,
     _default: 65,
 };
@@ -172,12 +172,12 @@ const scratchCategoriesColors: Record<string, number|HexColor> = {
     actions: '#4C97FF',
     sensors: '#5CB1D6',
     control: '#FFAB19',
-    lists: 30,
+    lists: '#ff8c1a',
     operator: '#59C059',
     event: '#ffbf00',
-    tables: 30,
+    tables: '#ff8c1a',
     texts: 160,
-    variables: 30,
+    variables: '#ff8c1a',
     procedures: 180,
     _default: 65,
 }
@@ -305,7 +305,6 @@ export class BlocklyHelper {
         this.options = options;
 
         addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
-        // TODO Blockly: write code generators
         this.createSimpleGeneratorsAndBlocks();
 
         adaptJsBlocks();
@@ -318,8 +317,9 @@ export class BlocklyHelper {
 
             const themeCategoryStyles = {};
             const colours = this.getDefaultColours();
+            const blocklyCategoryMapping = {variables: 'variable'};
             for (let category in colours.categories) {
-                themeCategoryStyles[category + '_blocks'] = {
+                themeCategoryStyles[(blocklyCategoryMapping[category] ?? category) + '_blocks'] = {
                     colourPrimary: colours.categories[category],
                 };
             }
@@ -1199,7 +1199,6 @@ export class BlocklyHelper {
             this.completeBlockHandler(blockInfo, generatorName, this.mainContext);
             this.completeBlockJson(blockInfo, generatorName, category, this.mainContext); /* category.category is category name */
             this.completeBlockXml(blockInfo);
-            // TODO Blockly: write code geneators
             this.completeCodeGenerators(blockInfo);
             this.applyCodeGenerators(blockInfo);
             this.createBlock(blockInfo);
@@ -1240,9 +1239,6 @@ export class BlocklyHelper {
         return this.scratchMode
             ? getStandardScratchBlocks(this.placeholderBlocks, this.strings)
             : getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
-
-        // TODO Scratch
-        // return getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
     }
 
     getBlockXmlInfo(generatorStruct, blockName) {
