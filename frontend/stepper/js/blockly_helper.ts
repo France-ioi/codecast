@@ -447,13 +447,13 @@ export class BlocklyHelper {
         }
     }
 
-    onChange(event = null) {
+    onChange(event: Blockly.Events.Abstract = null) {
         const isBlockEvent = null === event ? true : [
             Blockly.Events.BLOCK_DRAG,
             Blockly.Events.BLOCK_MOVE,
             Blockly.Events.BLOCK_CREATE,
             Blockly.Events.BLOCK_CHANGE,
-        ].includes(event?.type);
+        ].includes(event?.type as any);
 
         if (isBlockEvent) {
             if (this.subTask) {
@@ -462,8 +462,9 @@ export class BlocklyHelper {
             if (this.mainContext.onChange) {
                 this.mainContext.onChange();
             }
-        } else if (event.element != 'category' && event.element != 'selected' && this.display) {
-            Blockly.svgResize(this.workspace as Blockly.WorkspaceSvg);
+        // TODO Blockly: see if it's still useful? If enabled, it created strange offset when a block is created
+        // } else if (event.element != 'category' && event.element != 'selected' && this.display) {
+            // Blockly.svgResize(this.workspace as Blockly.WorkspaceSvg);
         }
     }
 
