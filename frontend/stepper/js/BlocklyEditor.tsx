@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from "react";
-import {useAppSelector, useDebounce} from "../../hooks";
+import {useAppSelector} from "../../hooks";
 import {BlockBufferHandler, documentToString} from "../../buffers/document";
 import log from 'loglevel';
 import {stepperDisplayError} from '../actionTypes';
@@ -12,6 +12,10 @@ import {callPlatformLog} from '../../submission/submission_actions';
 import {selectGroupByCategory} from './index';
 import {selectActiveView} from '../../task/layout/layout';
 import {getMessage} from '../../lang/messages';
+import * as Blockly from 'blockly/core';
+import {BlockSvg} from 'blockly/core';
+import {CodecastPlatform} from '../codecast_platform';
+import {BlocklyProgram} from './blockly_helper';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -38,6 +42,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const highlightedBlocks = useRef<{[className: string]: string[]}>({});
     const selectedBlockId = useRef<string>(null);
     const loaded = useRef(false);
+    const continuousToolbox = CodecastPlatform.Scratch === props.state?.platform && groupByCategory;
     const dispatch = useDispatch();
 
     log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlights: props.highlights});
@@ -49,25 +54,24 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         log.getLogger('editor').debug('[blockly.editor] reset', document);
 
+        let program: BlocklyProgram;
         if (!document || null === document.content) {
             let defaultBlockly = context.blocklyHelper.getDefaultContent();
             log.getLogger('editor').debug('get default', defaultBlockly);
-            context.blocklyHelper.programs = [{javascript:"", blockly: defaultBlockly, blocklyJS: ""}];
-            context.blocklyHelper.languages[0] = "blockly";
+            program = {javascript: "", blockly: defaultBlockly, blocklyJS: "", blocklyPython: ""};
         } else {
-            context.blocklyHelper.programs[0].blockly = document.content.blockly;
-            context.blocklyHelper.languages[0] = "blockly";
+            program = {javascript: "", blocklyJS: "", blocklyPython: "", ...document.content};
         }
+        context.blocklyHelper.languages[0] = "blockly";
 
-        log.getLogger('editor').debug('imported content', context.blocklyHelper.programs[0].blockly);
-        context.blocklyHelper.reloading = true;
+        log.getLogger('editor').debug('imported content', program.blockly);
 
         // Check that all blocks exist and program is valid. Otherwise, reload default answer and cancel
         try {
-            previousValue.current = context.blocklyHelper.programs[0].blockly;
-            context.blocklyHelper.loadPrograms();
-            context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
-            if (0 === context.blocklyHelper.programs[0].blocklyJS.trim().length) {
+            previousValue.current = program.blockly;
+            context.blocklyHelper.loadProgram(program);
+            program.blocklyJS = context.blocklyHelper.getCode("javascript");
+            if (0 === program.blocklyJS.trim().length) {
                 throw new Error("The reloaded answer is empty");
             }
         } catch (e) {
@@ -94,15 +98,10 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                 clearHighlights(className);
             }
 
-            if (context.blocklyHelper?.scratchMode) {
-                if (blockId) {
-                    workspace.glowBlock(blockId, true);
-                }
-            } else {
-                const block = workspace.getBlockById(blockId);
-                if (block) {
-                    window.Blockly.addClass_(block.svgGroup_, className);
-                }
+
+            const block = workspace.getBlockById(blockId) as BlockSvg;
+            if (block) {
+                block.addClass(className);
             }
 
             if (null !== blockId) {
@@ -120,15 +119,9 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         if (highlightedBlocks.current && className in highlightedBlocks.current) {
             const workspace = context?.blocklyHelper?.workspace;
             for (let blockId of highlightedBlocks.current[className]) {
-                if (context.blocklyHelper?.scratchMode) {
-                    try {
-                        workspace.glowBlock(blockId, false);
-                    } catch(e) {}
-                } else {
-                    const block = workspace.getBlockById(blockId);
-                    if (block) {
-                        window.Blockly.removeClass_(block.svgGroup_, className);
-                    }
+                const block = workspace.getBlockById(blockId) as BlockSvg;
+                if (block) {
+                    block.removeClass(className);
                 }
             }
 
@@ -146,48 +139,38 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const onBlocklyEvent = (event) => {
         log.getLogger('editor').debug('blockly event', event);
-        const eventType = event ? event.constructor : null;
 
-        let isBlockEvent = event ? (
-            eventType === window.Blockly.Events.Create ||
-            eventType === window.Blockly.Events.Delete ||
-            eventType === window.Blockly.Events.Move ||
-            eventType === window.Blockly.Events.Change) : true;
-
-        if ('selected' === event.element) {
-            if (event.newValue !== selectedBlockId.current) {
+        if (Blockly.Events.SELECTED === event.type)     {
+            if (event.newElementId !== selectedBlockId.current) {
                 log.getLogger('editor').debug('is selected');
-                selectedBlockId.current = event.newValue;
-                props.onSelect(event.newValue);
+                selectedBlockId.current = event.newElementId;
+                props.onSelect(event.newElementId);
             }
             return;
         }
 
+        const isBlockEvent = [
+            Blockly.Events.BLOCK_DRAG,
+            Blockly.Events.BLOCK_MOVE,
+            Blockly.Events.BLOCK_CREATE,
+            Blockly.Events.BLOCK_CHANGE,
+        ].includes(event.type);
+
         if (isBlockEvent) {
             const blocklyHelper = context.blocklyHelper;
-            log.getLogger('editor').debug('on editor change');
-            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded.current && !blocklyHelper.reloading) {
-                blocklyHelper.savePrograms();
-                const answer = {...blocklyHelper.programs[0]};
+            log.getLogger('editor').debug('on editor change', loaded.current, blocklyHelper.languages);
+            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded.current) {
+                const answer = blocklyHelper.saveProgram();
                 if (answer.blockly !== previousValue.current) {
                     const document = BlockBufferHandler.documentFromObject(answer);
                     previousValue.current = answer.blockly;
                     log.getLogger('editor').debug('new value', answer);
                     props.onEditPlain(document);
 
-                    if (eventType !== window.Blockly.Events.Create && (eventType === window.Blockly.Events.Change || event.oldCoordinate)) {
-                        const details = `block_update;${eventType.prototype.type};${documentToString(document)}`;
+                    if (event.type !== Blockly.Events.BLOCK_CREATE && (event.type === Blockly.Events.BLOCK_CHANGE || event.oldCoordinate)) {
+                        const details = `block_update;${event.type};${documentToString(document)}`;
                         dispatch(callPlatformLog(['activity', details], 'blocks'));
                     }
-
-                    // log.getLogger('editor').debug('timeout before removing highlight');
-                    // if (resetDisplayTimeout.current) {
-                    //     clearTimeout(resetDisplayTimeout.current);
-                    //     resetDisplayTimeout.current = null;
-                    // }
-                    // resetDisplayTimeout.current = setTimeout(() => {
-                    //     blocklyHelper.onChangeResetDisplayFct();
-                    // }, 2000);
                 }
             }
         }
@@ -280,7 +263,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         reset(newDocument);
     };
 
-    const onLoadDocument = useDebounce(updateDocumentConditionnally, 100);
+    // const onLoadDocument = useDebounce(updateDocumentConditionnally, 100);
 
     useEffect(() => {
         log.getLogger('editor').debug('[blockly.editor] document has changed, check differences', {
@@ -312,19 +295,18 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     useEffect(() => {
         const selection = props.state?.selection;
         log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, selectedBlockId.current);
-        if (selection === selectedBlockId.current || context.blocklyHelper?.scratchMode) {
+        if (selection === selectedBlockId.current) {
             return;
         }
 
-        window.Blockly.selected = null;
+        const workspace = context?.blocklyHelper?.workspace;
 
         clearHighlights('blocklySelected');
-        const workspace = context?.blocklyHelper?.workspace;
+
         if (selection && workspace) {
-            const block = workspace.getBlockById(selection);
+            const block = workspace.getBlockById(selection) as BlockSvg;
             if (block) {
-                window.Blockly.addClass_(block.svgGroup_, 'blocklySelected');
-                window.Blockly.selected = block;
+                block.select();
             }
         }
     }, [props.state?.selection]);
@@ -337,7 +319,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     }, [props.state?.actions?.resize]);
 
     return (
-        <div className={`blockly-editor ${groupByCategory ? 'group-by-category' : ''}`}>
+        <div className={`blockly-editor ${groupByCategory ? 'group-by-category' : ''} ${continuousToolbox ? 'blockly-continuous-toolbox' : ''}`}>
             <div id='blocklyContainer'>
                 <div id='blocklyDiv' className='language_blockly'/>
                 <textarea id='program' className='language_javascript' style={{width: '100%', height: '100%', display: 'none'}}/>

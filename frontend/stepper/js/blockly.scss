@@ -11,6 +11,10 @@
     height: 100%;
 }
 
+.blocklyToolbox {
+  z-index: 15;
+}
+
 .blocklyDropDownDiv {
     position: fixed;
     left: 0;
@@ -75,4 +79,38 @@
     text-align: center;
     font-family: "Helvetica Neue", Helvetica, sans-serif;
     font-size: .8em;
+}
+
+.blocklyFlyoutScrollbar {
+  z-index: 20;
+}
+
+.blockly-continuous-toolbox {
+  .categoryBubble {
+    margin: 0 auto 0.125rem;
+    border-radius: 100%;
+    border: 1px solid;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  .blocklyToolboxCategory {
+    height: initial;
+    padding: 3px 0;
+  }
+  .blocklyTreeRowContentContainer {
+    display: flex;
+    flex-direction: column;
+  }
+  .blocklyToolboxCategoryLabel {
+    margin: auto;
+  }
+  .blocklyToolboxCategoryLabel {
+    text-align: center;
+    font-size: 0.7em !important;
+    //color: rgb(87, 94, 117) !important;
+  }
+  .blocklyFlyoutLabelText {
+    font-weight: bold !important;
+    font-size: 1.05em !important;
+  }
 }
