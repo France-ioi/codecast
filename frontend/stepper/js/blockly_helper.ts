@@ -384,10 +384,6 @@ export class BlocklyHelper {
                 wsConfig.disable = options.disable;
             }
 
-            // Clean events if the previous unload wasn't done properly
-            // TODO Blockly: events
-            // Blockly.removeEvents();
-
             // Inject Blockly
             this.workspace = Blockly.inject(this.divId, wsConfig);
 
@@ -419,13 +415,6 @@ export class BlocklyHelper {
             this.programs[iCode] = {blockly: null, blocklyJS: "", blocklyPython: "", javascript: ""};
             this.languages[iCode] = "blockly";
             this.setCodeId(iCode);
-            // TODO Blockly: 2-way sync
-            // if (this.startingBlock || options.startingExample) {
-            //     let xml = this.getDefaultContent();
-            //     Blockly.Events.recordUndo = false;
-            //     Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(xml), this.workspace);
-            //     Blockly.Events.recordUndo = true;
-            // }
             this.savePrograms();
         }
     }
@@ -552,8 +541,7 @@ export class BlocklyHelper {
         if (this.workspace != null) {
             let xml = Blockly.Xml.workspaceToDom(this.workspace);
 
-            // TODO Blockly: 2-way sync
-            // this.cleanBlockAttributes(xml);
+            this.cleanBlockAttributes(xml);
 
             // The additional variable contain all additional things that we can save, for example quickpi sensors,
             // subject title when edition is enabled...
@@ -1295,8 +1283,9 @@ export class BlocklyHelper {
         let categoriesInfos = {};
         let colours = this.getDefaultColours();
 
+        // TODO Blockly: re-enable variables and procedures code when FioiBlockly will be migrated
+
         // Reset the flyoutOptions for the variables and the procedures
-        // TODO Blockly: toolbox to re-enable
         // Blockly.Variables.resetFlyoutOptions();
         // Blockly.Procedures.resetFlyoutOptions();
 
