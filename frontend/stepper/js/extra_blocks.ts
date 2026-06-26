@@ -238,7 +238,7 @@ export function addExtraBlocks(
         return "pass";
     }
 
-    // TODO Blockly: remove this
+    // TODO Blockly: remove this when FioiBlockly will be migrated
     javascriptGenerator.forBlock['variables_set'] = function(block) {
         // Variable setter.
         var argument0 = javascriptGenerator.valueToCode(block, 'VALUE',
