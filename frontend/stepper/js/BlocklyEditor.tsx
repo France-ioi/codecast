@@ -168,18 +168,9 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                     props.onEditPlain(document);
 
                     if (event.type !== Blockly.Events.BLOCK_CREATE && (event.type === Blockly.Events.BLOCK_CHANGE || event.oldCoordinate)) {
-                        const details = `block_update;${event.type.prototype.type};${documentToString(document)}`;
+                        const details = `block_update;${event.type};${documentToString(document)}`;
                         dispatch(callPlatformLog(['activity', details], 'blocks'));
                     }
-
-                    // log.getLogger('editor').debug('timeout before removing highlight');
-                    // if (resetDisplayTimeout.current) {
-                    //     clearTimeout(resetDisplayTimeout.current);
-                    //     resetDisplayTimeout.current = null;
-                    // }
-                    // resetDisplayTimeout.current = setTimeout(() => {
-                    //     blocklyHelper.onChangeResetDisplayFct();
-                    // }, 2000);
                 }
             }
         }
