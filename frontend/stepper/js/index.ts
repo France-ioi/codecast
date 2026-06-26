@@ -180,9 +180,9 @@ const getBlockCount = function (block: Blockly.BlockSvg, context: QuickAlgoLibra
 
 export const getBlocklyBlocksUsage = function (answer: Document, context: QuickAlgoLibrary, state: AppStore) {
     // We cannot evaluate blocks as long as the answer has not been loaded into Blockly
-    // Thus we wait that context.blocklyHelper.programs is filled (by BlocklyEditor)
+    // Thus we wait that the Blockly workspace has been created (by BlocklyEditor)
     const blockly = (answer as unknown as BlockDocument)?.content?.blockly;
-    if (!blockly || !context.blocklyHelper?.programs?.length) {
+    if (!blockly || !context.blocklyHelper?.workspace) {
         return {
             blocksCurrent: 0,
             limitations: [],
@@ -295,13 +295,9 @@ export async function getBlocklyCodeFromXml(document: BlockDocument, lang: 'java
         // Load without display
         blocklyHelper.load(language, false, 1, {});
     }
-    if (0 === blocklyHelper.programs.length) {
-        blocklyHelper.programs.push({});
-    }
-    blocklyHelper.programs[0].blockly = blocklyXmlCode;
     log.getLogger('blockly_runner').debug('xml code', blocklyXmlCode);
 
-    blocklyHelper.loadPrograms();
+    blocklyHelper.loadProgram({blockly: blocklyXmlCode, blocklyJS: "", blocklyPython: "", javascript: ""});
 
     return blocklyHelper.getCode(lang, null, true, true);
 }

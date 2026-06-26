@@ -15,6 +15,7 @@ import {getMessage} from '../../lang/messages';
 import * as Blockly from 'blockly/core';
 import {BlockSvg} from 'blockly/core';
 import {CodecastPlatform} from '../codecast_platform';
+import {BlocklyProgram} from './blockly_helper';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -53,24 +54,24 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         log.getLogger('editor').debug('[blockly.editor] reset', document);
 
+        let program: BlocklyProgram;
         if (!document || null === document.content) {
             let defaultBlockly = context.blocklyHelper.getDefaultContent();
             log.getLogger('editor').debug('get default', defaultBlockly);
-            context.blocklyHelper.programs = [{javascript:"", blockly: defaultBlockly, blocklyJS: ""}];
-            context.blocklyHelper.languages[0] = "blockly";
+            program = {javascript: "", blockly: defaultBlockly, blocklyJS: "", blocklyPython: ""};
         } else {
-            context.blocklyHelper.programs[0].blockly = document.content.blockly;
-            context.blocklyHelper.languages[0] = "blockly";
+            program = {javascript: "", blocklyJS: "", blocklyPython: "", ...document.content};
         }
+        context.blocklyHelper.languages[0] = "blockly";
 
-        log.getLogger('editor').debug('imported content', context.blocklyHelper.programs[0].blockly);
+        log.getLogger('editor').debug('imported content', program.blockly);
 
         // Check that all blocks exist and program is valid. Otherwise, reload default answer and cancel
         try {
-            previousValue.current = context.blocklyHelper.programs[0].blockly;
-            context.blocklyHelper.loadPrograms();
-            context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
-            if (0 === context.blocklyHelper.programs[0].blocklyJS.trim().length) {
+            previousValue.current = program.blockly;
+            context.blocklyHelper.loadProgram(program);
+            program.blocklyJS = context.blocklyHelper.getCode("javascript");
+            if (0 === program.blocklyJS.trim().length) {
                 throw new Error("The reloaded answer is empty");
             }
         } catch (e) {
@@ -159,8 +160,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             const blocklyHelper = context.blocklyHelper;
             log.getLogger('editor').debug('on editor change', loaded.current, blocklyHelper.languages);
             if (blocklyHelper.languages && blocklyHelper.languages.length && loaded.current) {
-                blocklyHelper.savePrograms();
-                const answer = {...blocklyHelper.programs[0]};
+                const answer = blocklyHelper.saveProgram();
                 if (answer.blockly !== previousValue.current) {
                     const document = BlockBufferHandler.documentFromObject(answer);
                     previousValue.current = answer.blockly;

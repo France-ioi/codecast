@@ -187,11 +187,17 @@ function addInSet(l, val) {
     }
 }
 
+export interface BlocklyProgram {
+    blockly: string;
+    blocklyJS: string;
+    blocklyPython: string;
+    javascript: string;
+}
+
 export class BlocklyHelper {
     private subTask: any;
     public scratchMode: boolean;
     private maxBlocks: number;
-    public programs: any[];
     private language: string;
     public languages: string[];
     private definitions: Partial<Record<'javascript'|'python', {label: string, code: string}[]>>;
@@ -221,14 +227,12 @@ export class BlocklyHelper {
     public blockCounts: any;
     private prevWidth: number;
     private availableBlocksInfo: Record<string, Record<string, Record<string, Block>>> = {};
-    public reloading: boolean;
     public fake: boolean;
 
     constructor(maxBlocks: number, subTask: QuickAlgoLibrary, scratchMode: boolean) {
         this.subTask = subTask;
         this.scratchMode = scratchMode;
         this.maxBlocks = maxBlocks;
-        this.programs = [];
         this.language = (typeof Blockly.Blocks['control_if'] !== 'undefined') ? 'scratch' : 'blockly';
         this.languages = [];
         this.definitions = {};
@@ -410,12 +414,10 @@ export class BlocklyHelper {
             this.workspace = new Blockly.Workspace(tmpOptions) as Blockly.WorkspaceSvg;
         }
 
-        this.programs = [];
+        this.languages = [];
         for (let iCode = this.mainContext.nbCodes - 1; iCode >= 0; iCode--) {
-            this.programs[iCode] = {blockly: null, blocklyJS: "", blocklyPython: "", javascript: ""};
             this.languages[iCode] = "blockly";
             this.setCodeId(iCode);
-            this.savePrograms();
         }
     }
 
@@ -524,10 +526,11 @@ export class BlocklyHelper {
         this.codeId = newCodeId;
     }
 
-    savePrograms() {
+    // Build and return the program corresponding to the current workspace.
+    saveProgram(): BlocklyProgram {
         if (this.unloaded) {
-            console.error('savePrograms called after unload');
-            return;
+            console.error('saveProgram called after unload');
+            return null;
         }
 
         // Save zoom
@@ -537,7 +540,13 @@ export class BlocklyHelper {
 
         this.checkRobotStart();
 
-        this.programs[this.codeId].javascript = window.jQuery("#program").val();
+        const program: BlocklyProgram = {
+            blockly: null,
+            blocklyJS: "",
+            blocklyPython: "",
+            javascript: window.jQuery("#program").val() as string,
+        };
+
         if (this.workspace != null) {
             let xml = Blockly.Xml.workspaceToDom(this.workspace);
 
@@ -554,15 +563,18 @@ export class BlocklyHelper {
             additionalNode.innerText = JSON.stringify(additional);
             xml.appendChild(additionalNode);
 
-            this.programs[this.codeId].blockly = Blockly.Xml.domToText(xml);
-            this.programs[this.codeId].blocklyJS = this.getCode("javascript");
-            this.programs[this.codeId].blocklyPython = this.getCode("python");
+            program.blockly = Blockly.Xml.domToText(xml);
+            program.blocklyJS = this.getCode("javascript");
+            program.blocklyPython = this.getCode("python");
         }
+
+        return program;
     }
 
-    loadPrograms() {
+    // Load the given program into the current workspace.
+    loadProgram(program: BlocklyProgram) {
         if (this.workspace !== null) {
-            let xml = Blockly.utils.xml.textToDom(this.programs[this.codeId].blockly);
+            let xml = Blockly.utils.xml.textToDom(program.blockly);
 
             // No undo after reload: disable all events and clear workspace while reloading
             Blockly.Events.disable();
@@ -577,7 +589,6 @@ export class BlocklyHelper {
                     Blockly.Events.enable();
                 }, 0);
             }
-            // Blockly.Xml.domToWorkspace(xml, this.workspace);
 
             let additionalXML = xml.getElementsByTagName("additional");
             if (additionalXML.length > 0) {
@@ -591,7 +602,7 @@ export class BlocklyHelper {
                 }
             }
         }
-        window.jQuery("#program").val(this.programs[this.codeId].javascript);
+        window.jQuery("#program").val(program.javascript);
     }
 
     // Used by some Quickalgo libraries
