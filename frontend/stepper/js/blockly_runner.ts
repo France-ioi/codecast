@@ -148,7 +148,8 @@ export default class BlocklyRunner extends AbstractRunner {
                 displayStr = varName + ' = ' + displayStr;
             }
 
-            this.context.blocklyHelper.workspace.reportValue(id, displayStr);
+            // TODO Blockly: re-enable when FioiBlockly is migrated
+            // this.context.blocklyHelper.workspace.reportValue(id, displayStr);
             debounceHideBlocklyDropdown();
         }
         return value;
