@@ -139,7 +139,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     allowClientExecution?: boolean,
     codeHelpAdditionalContext?: string,
     showIfMutator?: boolean,
-    aiProtection: AIProtectionOptions,
+    aiProtection?: AIProtectionOptions,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
