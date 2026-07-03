@@ -81,6 +81,7 @@ export default {
             logFocus: false,
             logCopy: false,
             logPaste: false,
+            logDevTools: true,
         },
     },
     data: {

@@ -95,6 +95,7 @@ export interface AIProtectionOptions {
     logFocus?: boolean,
     logCopy?: boolean,
     logPaste?: boolean,
+    logDevTools?: boolean,
 }
 
 export interface QuickalgoTaskGridInfosNotLevelDependent {

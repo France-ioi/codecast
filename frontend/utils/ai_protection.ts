@@ -162,8 +162,43 @@ export function useAiProtection(): AiProtectionStatus {
 
         window.addEventListener('keypress', handleUserKeyPress);
 
+        let lastTriggered = false;
+        function detectDevTools() {
+            const start = performance.now();
+            debugger;
+            const end = performance.now();
+            if (end - start > 200) {
+                if (!lastTriggered) {
+                    logAiProtection('devtools_open');
+                }
+                lastTriggered = true;
+            }
+        }
+
+        let detectDevToolsInterval: NodeJS.Timeout;
+        if (aiProtectionOptions.logDevTools) {
+            detectDevToolsInterval = setInterval(detectDevTools, 1000);
+        }
+
+        // Detect the usual devtools shortcuts: F12, Ctrl+Shift+I/J/C (Windows/Linux) and
+        // Cmd+Opt+I/J/C (Mac). This can't actually block devtools, but it flags the attempt.
+        const handleDevToolsShortcut = (e: KeyboardEvent) => {
+            const key = e.key.toUpperCase();
+            const isDevToolsShortcut = e.key === 'F12'
+                || ((e.ctrlKey || e.metaKey) && e.shiftKey && (key === 'I' || key === 'J' || key === 'C'))
+                || (e.metaKey && e.altKey && (key === 'I' || key === 'J' || key === 'C'));
+            if (isDevToolsShortcut) {
+                logAiProtection('devtools_open');
+            }
+        };
+
+        if (aiProtectionOptions.logDevTools) {
+            document.addEventListener('keydown', handleDevToolsShortcut);
+        }
+
         return () => {
             clearInterval(interval);
+            clearInterval(detectDevToolsInterval);
 
             if (aiProtectionOptions.disableRightClickMenu) {
                 document.removeEventListener('contextmenu', handleContextMenu);
@@ -175,6 +210,10 @@ export function useAiProtection(): AiProtectionStatus {
             }
 
             window.removeEventListener("keydown", handleUserKeyPress);
+
+            if (aiProtectionOptions.logDevTools) {
+                document.removeEventListener('keydown', handleDevToolsShortcut);
+            }
         };
     }, [aiProtectionOptions, fullScreenActive, hasFocus]);
 
