@@ -72,6 +72,16 @@ export default {
         },
         forceNextTaskAfter: 2,
         defaultLevel: 'easy',
+        aiProtection: {
+            forceFullScreen: true,
+            forceFocus: true,
+            disableExternalCopyPaste: false,
+            disableRightClickMenu: false,
+            logFullScreen: false,
+            logFocus: false,
+            logCopy: false,
+            logPaste: false,
+        },
     },
     data: {
         easy: [

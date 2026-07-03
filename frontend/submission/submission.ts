@@ -82,7 +82,7 @@ export default function (bundle: Bundle) {
             const levelGridInfos = state.task.levelGridInfos;
             const taskParams = state.platform.taskParams;
 
-            if (!(('blocks' !== tag && taskParams?.options?.log) || taskParams?.options?.logBlocks || levelGridInfos?.logOption) || 'main' !== state.environment) {
+            if (!(('blocks' !== tag && taskParams?.options?.log) || 'force' === tag || taskParams?.options?.logBlocks || levelGridInfos?.logOption) || 'main' !== state.environment || !platformApi) {
                 return;
             }
 

@@ -16,6 +16,8 @@ import {useCursorPositionTracking} from '../task/layout/cursor_tracking';
 import {CursorPoint, CursorPosition} from '../task/layout/actionTypes';
 import {ComputedSourceHighlight, SourceHighlightRange} from '../stepper';
 import {getMessage} from '../lang/messages';
+import {callPlatformLog} from '../submission/submission_actions';
+import {AI_PROTECTION_CLIPBOARD_KEY} from '../utils/ai_protection';
 
 export interface EditorProps {
     name?: string,
@@ -73,6 +75,14 @@ function sameSelection(s1, s2) {
     return samePosition(s1.start, s2.start) && samePosition(s1.end, s2.end);
 }
 
+function readStoredClipboard(): string {
+    try {
+        return localStorage.getItem(AI_PROTECTION_CLIPBOARD_KEY) ?? '';
+    } catch (e) {
+        return '';
+    }
+}
+
 export function Editor(props: EditorProps) {
     const [willUpdateSelection, setWillUpdateSelection] = useState(false);
 
@@ -89,6 +99,7 @@ export function Editor(props: EditorProps) {
     const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector({state, context}) : null);
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const contextStrings = useAppSelector(state => state.task.contextStrings);
+    const aiProtectionOptions = useAppSelector(state => state.task.currentTask?.gridInfos?.aiProtection ?? {});
 
     const refEditor = useRef(null);
     const batchEdits = useRef([]);
@@ -398,6 +409,50 @@ export function Editor(props: EditorProps) {
         editor.current = editorObject;
         initEditor();
     }, []);
+
+    useEffect(() => {
+        if (!editor.current) {
+            return undefined;
+        }
+
+        // Ace intercepts paste on its own hidden textarea and inserts the text programmatically,
+        // so a DOM 'paste' listener with preventDefault() can't stop it. Instead we hook Ace's
+        // own 'paste' event, whose `e.text` we can mutate before Ace inserts it.
+        const handlePaste = (e: {text: string}) => {
+            if (aiProtectionOptions.logPaste) {
+                dispatch(callPlatformLog(['ai_protection', 'paste_code', e.text], 'force'));
+            }
+            if (aiProtectionOptions.disableExternalCopyPaste) {
+                // Ignore the OS clipboard and insert our internal clipboard instead.
+                e.text = readStoredClipboard();
+            }
+        };
+
+        editor.current.on('paste', handlePaste);
+
+        // When external paste is disabled, the OS clipboard must be ignored entirely and
+        // we always insert our internal clipboard. Ace only fires its 'paste' event when the
+        // OS clipboard is non-empty (see TextInput.onPaste: `if (data) host.onPaste(...)`), so
+        // an empty OS clipboard would insert nothing. Bind the paste shortcut directly and
+        // route it through editor.onPaste() so it works regardless of the OS clipboard state.
+        // Intercepting the keybinding also prevents the native paste, avoiding a double insert.
+        let pasteCommand;
+        if (aiProtectionOptions.disableExternalCopyPaste) {
+            pasteCommand = {
+                name: 'aiProtectionPaste',
+                bindKey: {win: 'Ctrl-V', mac: 'Command-V'},
+                exec: (ed) => ed.onPaste(readStoredClipboard()),
+            };
+            editor.current.commands.addCommand(pasteCommand);
+        }
+
+        return () => {
+            editor.current.off('paste', handlePaste);
+            if (pasteCommand) {
+                editor.current.commands.removeCommand(pasteCommand);
+            }
+        };
+    }, [aiProtectionOptions]);
 
     useEffect(() => {
         if (editor.current) {

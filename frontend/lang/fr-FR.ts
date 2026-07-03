@@ -387,4 +387,8 @@ export default {
     GIT_FILE: "Fichier",
     GIT_USERNAME: "Nom d'utilisateur Git",
     GIT_COMMIT_MESSAGE: "Message indiquant les changements",
+    AI_PROTECTION_NO_FOCUS: "Pour résoudre cette tâche, cette fenêtre doit être active.",
+    AI_PROTECTION_NO_FOCUS_BUTTON: "Activer la fenêtre",
+    AI_PROTECTION_FULL_SCREEN: "Pour résoudre cette tâche, vous devez être en plein écran.",
+    AI_PROTECTION_FULL_SCREEN_BUTTON: "Activer le plein écran",
 };

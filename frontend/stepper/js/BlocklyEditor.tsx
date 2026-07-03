@@ -255,8 +255,6 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     }
 
     useEffect(() => {
-        console.log('change active view', activeView);
-
         onLoad();
 
         return () => {

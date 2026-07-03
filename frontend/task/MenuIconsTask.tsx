@@ -19,7 +19,7 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
     const showFullScreen = useAppSelector(state => state.options.showFullScreen);
     const showMenu = useAppSelector(state => state.options.showMenu);
     const showHints = useAppSelector(state => selectAvailableHints(state).length > 0 || state.options.codeHelp?.enabled);
-    const fullScreenActive = useAppSelector(state => state.fullscreen.active);
+    const fullScreenActive = useAppSelector(state => state.fullscreen.editorFullScreen);
     const screen = useAppSelector(state => state.screen);
 
     const dispatch = useDispatch();
