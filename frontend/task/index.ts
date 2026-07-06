@@ -318,7 +318,7 @@ function* taskLoadSaga(app: App, action) {
     // ]));
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
-    if (!isServerTask(currentTask) && 'main' === app.environment) {
+    if ('main' === app.environment) {
         yield* fork(subscribePlatformHelper);
     }
 

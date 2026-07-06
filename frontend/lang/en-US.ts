@@ -204,6 +204,8 @@ export default {
     TASK_LEVEL_SUCCESS_NEXT_LABEL: "We suggest you try the version {version}.",
     TASK_LEVEL_SUCCESS_FINISHED: "You have fully resolved this question.",
     TASK_LEVEL_SUCCESS_TRY_NEXT_TASK: "We suggest you try the next task. If you still have time, come back later and try the next version of this task.",
+    TASK_LEVEL_SUCCESS_SHOW_SOLUTION_INCITATIVE: "We recommend that you read the solution carefully, even if you did not have any difficulty with the exercise. You will often find advice there that may prove very useful to you later on.",
+    TASK_LEVEL_SUCCESS_SHOW_SOLUTION: "Read the correction",
     TASK_LEVEL_LOCKED_TITLE: "Version locked",
     TASK_LEVEL_LOCKED_MESSAGE: "This version is currently locked, and the previous version must be resolved before being able to display this version.",
     TASK_LEVEL_LOCKED_MESSAGE_DEV: "This version is normally locked, and the previous version must be resolved before being able to display this version. As you opened this task locally, you can however display this version for testing purposes.",

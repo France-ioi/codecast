@@ -3,11 +3,13 @@ import React from "react";
 import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
 import {taskLevelsList} from "../platform/platform_slice";
-import {callPlatformValidate} from '../../submission/submission_actions';
+import {callPlatformShowView, callPlatformValidate} from '../../submission/submission_actions';
 import {taskChangeLevel} from '../task_actions';
 import {getNextLevelIndex} from '../platform/platform';
 import {SmallTick} from '@blueprintjs/icons';
 import {getMessage} from '../../lang/messages';
+import {getTaskSolution} from '../instructions/instructions';
+import {LayoutView} from '../layout/layout_types';
 
 export interface TaskSuccessDialogProps {
     onClose: () => void,
@@ -21,6 +23,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const forceNextTaskAfter = currentTask?.gridInfos?.forceNextTaskAfter;
     const dispatch = useDispatch();
+    const hasSolution = !!useAppSelector(getTaskSolution);
 
     let currentLevelFinished = false;
     let nextLevel = null;
@@ -56,7 +59,12 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
         } else {
             dispatch(callPlatformValidate(nextAction));
         }
-    }
+    };
+
+    const showSolution = () => {
+        dispatch(callPlatformShowView(LayoutView.Solution));
+        props.onClose();
+    };
 
     return (
         <Dialog isOpen={true} className="simple-dialog" onClose={props.onClose}>
@@ -64,6 +72,10 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
 
             {intermediateMessage}
             {!currentLevelFinished && <p>{getMessage('TASK_LEVEL_SUCCESS_FINISHED')}</p>}
+
+            {!hasNextLevel && hasSolution && <p>
+                {getMessage('TASK_LEVEL_SUCCESS_SHOW_SOLUTION_INCITATIVE')}
+            </p>}
 
             <div className="simple-dialog-buttons">
                 {currentLevelFinished
@@ -89,10 +101,16 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
                             </button>
                         </>
                     )
-                    : <button className="simple-dialog-button" onClick={props.onClose}>
-                        <Icon icon={<SmallTick/>} size={24}/>
-                        <span>{getMessage('OK')}</span>
-                    </button>
+                    : (hasSolution ?
+                        <button className="simple-dialog-button" onClick={showSolution}>
+                            <span>{getMessage('TASK_LEVEL_SUCCESS_SHOW_SOLUTION')}</span>
+                        </button>
+                        :
+                        <button className="simple-dialog-button" onClick={props.onClose}>
+                            <Icon icon={<SmallTick/>} size={24}/>
+                            <span>{getMessage('OK')}</span>
+                        </button>
+                    )
                 }
             </div>
         </Dialog>
