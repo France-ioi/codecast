@@ -125,6 +125,20 @@ export function ControlsAndErrors() {
         dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.HintsNew}});
     };
 
+    useEffect(() => {
+        const onKeyPress = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && hasError && null === cancellableSubmission && errorClosable) {
+                onClearError();
+            }
+        };
+
+        document.addEventListener('keydown', onKeyPress);
+
+        return () => {
+            document.removeEventListener('keydown', onKeyPress);
+        };
+    }, [onClearError, hasError, cancellableSubmission, errorClosable]);
+
     return (
         <div className="controls-and-errors cursor-main-zone" data-cursor-zone="controls-and-errors">
             {(showStepper || hasModes) && <div className={`mode-selector ${hasModes ? 'has-modes' : ''}`}>

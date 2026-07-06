@@ -1,4 +1,4 @@
-import React, {ReactElement, useState} from "react";
+import React, {ReactElement, useEffect, useState} from "react";
 import {Button, Intent, Slider} from "@blueprintjs/core";
 import {ActionTypes} from "../actionTypes";
 import {useDispatch} from "react-redux";
@@ -163,6 +163,26 @@ export function StepperControls(props: StepperControlsProps) {
     };
     const onChangeSpeed = (speed) => dispatch({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
 
+    // Whether the 'run' button is currently clickable, mirroring the disabled/hidden
+    // logic applied to it in `_button` (case 'run') and the `!canInterrupt` render guard.
+    const runControlMod = stepperControlsState.controls ? stepperControlsState.controls['run'] : undefined;
+    const isRunHidden = '_' === runControlMod || false === runControlMod;
+    const isRunDisabled = !props.enabled || !stepperControlsState.canStep || '-' === runControlMod || 'disabled' === runControlMod;
+    const isRunEnabled = !canInterrupt && !isRunHidden && !isRunDisabled;
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if ((event.ctrlKey || event.metaKey) && 'Enter' === event.key && isRunEnabled) {
+                event.preventDefault();
+                onStepRun();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isRunEnabled, controlsType]);
+
     if (!showStepper) {
         return null;
     }
@@ -205,7 +225,7 @@ export function StepperControls(props: StepperControlsProps) {
                             onChange={onChangeSpeed}
                             min={0}
                             max={stepperMaxSpeed}
-                            stepSize={1}
+                            stepSize={10}
                             labelStepSize={stepperMaxSpeed}
                             labelRenderer={formatTime}
                         />

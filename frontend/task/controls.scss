@@ -107,7 +107,6 @@
       background: var(--primary-color);
       border-radius: 50px;
       width: 30px;
-      outline: none;
       transform: translate(-7px, 0);
       top: -2px;
       box-shadow: 0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.2);
@@ -224,7 +223,6 @@
       &:before {
         background: var(--primary-color);
       }
-      outline: none !important;
     }
   }
   .biswitch-option {
