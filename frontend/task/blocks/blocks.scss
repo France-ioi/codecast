@@ -126,6 +126,12 @@
     align-items: center;
     cursor: pointer;
     padding: 10px 20px;
+    width: 100%;
+
+    &:focus {
+      outline-offset: -6px;
+      outline-color: white;
+    }
 
     .block-category-name {
       flex: auto;

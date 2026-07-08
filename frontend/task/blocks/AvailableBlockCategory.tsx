@@ -26,12 +26,12 @@ export function AvailableBlockCategory(props: AvailableBlockCategoryProps) {
 
     return (
         <div className="block-category">
-            <div className="block-category-header" onClick={() => setOpen(!open)}>
+            <button className="block-category-header" onClick={() => setOpen(!open)}>
                 <div className="block-category-name">{categoryName}</div>
                 <div className="block-category-caret">
                     <FontAwesomeIcon icon={open ? faCaretUp : faCaretDown}/>
                 </div>
-            </div>
+            </button>
             <Collapse in={open}>
                 <div>
                     {blocks.map((block, index) =>
