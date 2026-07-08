@@ -71,7 +71,7 @@ export const taskReloadAnswerEvent = createAction('taskEventReloadAnswer', (answ
         options,
     },
 }));
-export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer, answerToken, success, error, updateScore: boolean, showResult: boolean) => ({
+export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer, answerToken, success, error, updateScore?: boolean, showResult?: boolean, useCache?: boolean) => ({
     payload: {
         answer,
         answerToken,
@@ -79,6 +79,7 @@ export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer
         error,
         updateScore,
         showResult,
+        useCache,
     },
 }));
 export const taskGetResourcesPost = createAction('taskEventGetResourcesPost', (resources, callback) => ({

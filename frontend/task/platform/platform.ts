@@ -488,7 +488,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     }
 }
 
-export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, success, error, updateScore, showResult}}: ReturnType<typeof taskGradeAnswerEvent>) {
+export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, success, error, updateScore, showResult, useCache}}: ReturnType<typeof taskGradeAnswerEvent>) {
     const state = yield* appSelect();
     if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state) && !updateScore) {
         yield* call(success, Number(answer) / recordingProgressSteps, '');
@@ -523,7 +523,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, succe
                 log.getLogger('tests').debug('info answer', level);
 
                 // Score is between 0 and 1
-                const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {level, answer: answerObject[level], answerToken});
+                const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {level, answer: answerObject[level], answerToken, useCache});
 
                 versionsScore[level] = score;
                 if (level === currentLevel) {
@@ -554,7 +554,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, succe
             const answerObject = JSON.parse(answer);
 
             // Score is between 0 and 1
-            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer: answerObject, answerToken});
+            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer: answerObject, answerToken, useCache});
             const scoreWithPlatformParameters = minScore + (maxScore - minScore) * score;
 
             if (showResult) {
@@ -620,7 +620,7 @@ function* platformValidateEventSaga({payload: {mode}}: ReturnType<typeof platfor
         const answer = stringify(yield* getTaskAnswerAggregated());
 
         // Grade with updateScore = true and showResult = true
-        yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, () => {}, () => {}, true, true));
+        yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, () => {}, () => {}, true, true, true));
     }
 }
 
@@ -629,6 +629,7 @@ export interface PlatformTaskGradingParameters {
     answer?: TaskAnswer,
     answerToken?: string,
     scope?: SubmissionExecutionScope,
+    useCache?: boolean,
 }
 
 export interface PlatformTaskGradingResult {
