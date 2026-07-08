@@ -26,7 +26,7 @@ export function AvailableBlock(props: AvailableBlockProps) {
         }),
     }), [block])
 
-    const dragRef = useRef<HTMLDivElement>(null);
+    const dragRef = useRef<HTMLButtonElement>(null);
     drag(dragRef);
 
     useEffect(() => {
@@ -44,12 +44,12 @@ export function AvailableBlock(props: AvailableBlockProps) {
     }, [activeBufferName, block]);
 
     return (
-        <div className="task-available-block" ref={dragRef} onClick={insertBlock}>
+        <button className="task-available-block" ref={dragRef} onClick={insertBlock}>
             <div className="task-available-block-name">
                 {block.caption}
             </div>
 
             {block.description && <div className="task-available-block-description" dangerouslySetInnerHTML={toHtml(block.description)}/>}
-        </div>
+        </button>
     )
 }

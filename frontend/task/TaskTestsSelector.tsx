@@ -103,7 +103,7 @@ export function TaskTestsSelector() {
                 </span>
             </div>}
             {Object.entries(tooManyTests ? (null !== currentTestId && taskTestsByIndex[currentTestId] ? {[currentTestId]: taskTestsByIndex[currentTestId]} : {}) : taskTestsByIndex).map(([index, testData]) =>
-                <div
+                <button
                     key={index}
                     className={`tests-selector-tab${!tooManyTests ? ' is-selectable' : ''}${currentTestId === Number(index) ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
                     onClick={!tooManyTests ? () => selectTest(Number(index)) : () => {}}>
@@ -128,7 +128,7 @@ export function TaskTestsSelector() {
                             {Number(index) + 1}/{taskTests.length}
                         </span>}
                     </span>
-                </div>
+                </button>
             )}
             {tooManyTests && <React.Fragment>
                 <div

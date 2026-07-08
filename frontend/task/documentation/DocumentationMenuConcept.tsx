@@ -19,17 +19,17 @@ export function DocumentationMenuConcept(props: DocumentationMenuConceptProps) {
 
     return (
         <React.Fragment key={concept.id}>
-            {selectedConceptId === concept.id ? <div className={`documentation-tab-left is-active`}>
+            {selectedConceptId === concept.id ? <button className={`documentation-tab-left is-active`}>
                 <div className="documentation-tab-title">
                     <Dot/>
                     <span>{concept.name}</span>
                 </div>
-            </div> : <a className={`documentation-tab-left`} onClick={() => selectConcept(concept)}>
+            </button> : <button className={`documentation-tab-left`} onClick={() => selectConcept(concept)}>
                 <div className="documentation-tab-title">
                     <Dot/>
                     <span>{concept.name}</span>
                 </div>
-            </a>}
+            </button>}
         </React.Fragment>
     )
 }

@@ -66,9 +66,11 @@ export function MenuTask() {
 
     useEffect(() => {
         document.addEventListener('mousedown', handleClickOutside, true);
+        document.addEventListener('keydown', handleKeyDown, true);
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside, true);
+            document.removeEventListener('keydown', handleKeyDown, true);
         }
     })
 
@@ -79,6 +81,13 @@ export function MenuTask() {
             && !event.target.closest('.bp6-portal')
             && menuOpen
         ) {
+            setMenuOpen(false);
+        }
+    }
+
+    const handleKeyDown = (event) => {
+        // Let an open modal handle the Escape key itself; only close the menu when no modal is open
+        if ('Escape' === event.key && menuOpen && !document.querySelector('.bp6-overlay-open')) {
             setMenuOpen(false);
         }
     }
@@ -129,43 +138,43 @@ export function MenuTask() {
                         toggleDocumentation={toggleDocumentation}
                     />
                 </div>}
-            <div className={`task-menu`}>
-                {!hideSettings && <div className="menu-item" onClick={() => setSettingsOpen(!settingsOpen)}>
+            <div className={`task-menu`} inert={!menuOpen}>
+                {!hideSettings && <button className="menu-item" onClick={() => setSettingsOpen(!settingsOpen)}>
                     <Cog/>
                     <span>{getMessage('MENU_SETTINGS')}</span>
-                </div>}
-                {!playerEnabled && canRecord && <div className="menu-item" onClick={toggleRecording}>
+                </button>}
+                {!playerEnabled && canRecord && <button className="menu-item" onClick={toggleRecording}>
                     <Record color="#ff001f"/>
                     <span>{getMessage('MENU_RECORDER')}</span>
-                </div>}
-                {editorEnabled && <div className="menu-item" onClick={toggleEditRecording}>
+                </button>}
+                {editorEnabled && <button className="menu-item" onClick={toggleEditRecording}>
                     <Edit/>
                     <span>{getMessage('MENU_EDIT_RECORDING')}</span>
-                </div>}
-                {displayAbout && <div className="menu-item" onClick={() => setAboutOpen(!aboutOpen)}>
+                </button>}
+                {displayAbout && <button className="menu-item" onClick={() => setAboutOpen(!aboutOpen)}>
                     <Help/>
                     <span>{getMessage('MENU_ABOUT')}</span>
-                </div>}
+                </button>}
                 {!(controls && 'reload' in controls && (false === controls['reload'] || '_' === controls['reload'])) &&
                     <React.Fragment>
-                        <div className="menu-item" onClick={downloadAnswer}>
+                        <button className="menu-item" onClick={downloadAnswer}>
                             <FontAwesomeIcon icon={faDownload}/>
                             <span>{getMessage('MENU_DOWNLOAD')}</span>
-                        </div>
-                        <div className="menu-item" onClick={reloadAnswer}>
+                        </button>
+                        <button className="menu-item" onClick={reloadAnswer}>
                             <FontAwesomeIcon icon={faUpload}/>
                             <span>{getMessage('MENU_RELOAD')}</span>
-                        </div>
+                        </button>
                     </React.Fragment>
                 }
-                {canLocalWork && <div className="menu-item" onClick={() => setLocalWorkOpen(!localWorkOpen)}>
+                {canLocalWork && <button className="menu-item" onClick={() => setLocalWorkOpen(!localWorkOpen)}>
                     <Console />
                     <span>{getMessage('MENU_LOCAL')}</span>
-                </div>}
-                {canWorkWithGit && <div className="menu-item" onClick={() => setWorkWithGitOpen(!workWithGitOpen)}>
+                </button>}
+                {canWorkWithGit && <button className="menu-item" onClick={() => setWorkWithGitOpen(!workWithGitOpen)}>
                     <GitBranch />
                     <span>{getMessage('MENU_SYNC_GIT')}</span>
-                </div>}
+                </button>}
             </div>
             <SettingsDialog
                 open={settingsOpen || forceSettingsOpen}

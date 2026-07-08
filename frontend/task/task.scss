@@ -328,6 +328,12 @@ html:not([active-view="task"]):not([active-view="solution"]) {
         align-items: center;
         cursor: pointer;
         text-align: center;
+        width: 100%;
+
+        &:focus {
+          outline-offset: -10px;
+          outline-color: white;
+        }
 
         svg {
           width: 32px;
@@ -759,6 +765,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   flex-direction: column;
   position: relative;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -769,6 +776,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   height: 100%;
   position: relative;
   min-height: 0;
+  min-width: 0;
 }
 
 .error-message {

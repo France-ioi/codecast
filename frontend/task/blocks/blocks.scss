@@ -105,6 +105,10 @@
       word-wrap: normal;
     }
   }
+  &:focus {
+    outline-offset: -6px;
+    outline-color: white;
+  }
 }
 
 .block-category {
