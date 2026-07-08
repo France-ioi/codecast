@@ -208,12 +208,12 @@ class TaskSubmissionExecutor {
         });
     }
 
-    *executeWithCaching(answerParameters: any[], execute: () => Generator<any, any, any>) {
+    *executeWithCaching(answerParameters: any[], execute: () => Generator<any>, useCache: boolean = false) {
         const serialized = answerParameters.map(e => JSON.stringify(e)).join('§');
         let h1 = murmurhash3_32_gc(serialized, 0);
         const cacheKey = h1 + murmurhash3_32_gc(h1 + serialized, 0); // Extend to 64-bit hash
 
-        if (!(cacheKey in executionsCache)) {
+        if (!(cacheKey in executionsCache) || !useCache) {
             log.getLogger('tests').debug('Executions cache MISS', answerParameters, cacheKey);
             executionsCache[cacheKey] = yield* execute();
         } else {
@@ -240,13 +240,13 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {answer, answerToken, scope} = parameters;
+        let {answer, answerToken, scope, useCache} = parameters;
 
         const answerParameters = [answer, scope];
 
         const self = this;
 
-        return yield* this.executeWithCaching(answerParameters, function* () {
+        const evaluateAnswer = function* () {
             const state = yield* appSelect();
             const platform = answer.platform;
             const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
@@ -312,7 +312,9 @@ class TaskSubmissionExecutor {
                     error: message,
                 }
             }
-        });
+        };
+
+        return yield* this.executeWithCaching(answerParameters, evaluateAnswer, useCache);
     }
 
     *gradeAnswerLongPolling(submissionIndex: number, serverSubmission: TaskSubmissionServer, submissionId: string, deferredResult: DeferredPromise<TaskSubmissionServerResult>) {
