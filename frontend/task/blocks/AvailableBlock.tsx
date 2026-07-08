@@ -39,8 +39,16 @@ export function AvailableBlock(props: AvailableBlockProps) {
 
     const dispatch = useDispatch();
 
-    const insertBlock = useCallback(() => {
+    const insertBlock = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         dispatch(bufferInsertBlock({buffer: activeBufferName, block}));
+
+        // Take back focus from the editor if the block snippet does not contain variables
+        const isKeyboard = e.detail === 0;
+        if (!block?.snippet?.includes('${') && isKeyboard) {
+            setTimeout(() => {
+                dragRef.current?.focus();
+            });
+        }
     }, [activeBufferName, block]);
 
     return (
@@ -51,5 +59,5 @@ export function AvailableBlock(props: AvailableBlockProps) {
 
             {block.description && <div className="task-available-block-description" dangerouslySetInnerHTML={toHtml(block.description)}/>}
         </button>
-    )
+    );
 }
