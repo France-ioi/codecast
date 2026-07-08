@@ -112,16 +112,16 @@ export function selectTaskMetadata() {
     };
 }
 
-export function selectTaskTokenPayload(state: AppStore): TaskTokenPayload|null {
-    const token = state.platform.taskToken;
-    if (!token) {
-        return null;
-    }
+export const selectTaskTokenPayload = createSelector(
+    [(state: AppStore) => state.platform.taskToken],
+    (token): TaskTokenPayload|null => {
+        if (!token) {
+            return null;
+        }
 
-    const payload = jwt.decode(token);
-
-    return payload as TaskTokenPayload;
-}
+        return jwt.decode(token) as TaskTokenPayload;
+    },
+);
 
 function sendErrorLog() {
     // Send errors to the platform
