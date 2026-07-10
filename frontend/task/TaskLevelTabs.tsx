@@ -59,6 +59,7 @@ export function TaskLevelTabs() {
                     >
                         <button onClick={() => changeVersion(levelData.level)}>
                             <span>{getMessage('TASK_LEVEL')}</span>
+                            <span className="visually-hidden">{getMessage('TASK_LEVEL_VERSION').format({count: levelScoringData[levelData.level].stars})}</span>
                             <Stars
                                 starsCount={levelScoringData[levelData.level].stars}
                                 rating={false !== taskParamsFullFeedback ? levelData.score : null}

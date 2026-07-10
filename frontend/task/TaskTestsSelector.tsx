@@ -110,6 +110,7 @@ export function TaskTestsSelector() {
                     {getTestThumbnail(Number(index)) && <div className="test-thumbnail">
                         <img
                             src={getTestThumbnail(Number(index))}
+                            alt=""
                         />
                     </div>}
                     <span className={`test-title ${tooManyTests ? 'too-many-tests' : ''}`}>

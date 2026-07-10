@@ -247,6 +247,7 @@ export function StepperControls(props: StepperControlsProps) {
                             stepSize={10}
                             labelStepSize={stepperMaxSpeed}
                             labelRenderer={formatTime}
+                            handleHtmlProps={{'aria-label': getMessage('CONTROL_SPEED')}}
                         />
                         <FontAwesomeIcon icon={faRunning} className="extremity extremity-right"/>
                     </div>

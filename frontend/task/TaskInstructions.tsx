@@ -155,7 +155,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     }
 
     return (
-        <div className={`task-mission ${props.expanded ? 'is-expanded' : ''} cursor-main-zone`} data-cursor-self-handling="" style={{fontSize: `${zoomLevel}rem`}} data-cursor-zone="instructions">
+        <div tabIndex={-1} className={`task-mission ${props.expanded ? 'is-expanded' : ''} cursor-main-zone`} data-cursor-self-handling="" style={{fontSize: `${zoomLevel}rem`}} data-cursor-zone="instructions">
             {props.missionRightSlot}
 
             {instructionsTabs ?

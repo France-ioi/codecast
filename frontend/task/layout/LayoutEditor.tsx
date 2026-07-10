@@ -91,9 +91,10 @@ export function LayoutEditor(props: LayoutEditorProps) {
             {null !== activeBufferName && <div className="layout-editor-section">
                 {currentTask && displayBlocks && !readOnly && <AvailableBlocks collapsed={blocksCollapsed}/>}
                 <div className="task-layout-editor-container">
-                    {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
-                        <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
-                    </div>}
+                    {currentTask && displayBlocks && <button className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
+                        <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft} aria-hidden="true"/>
+                        <span className="visually-hidden">{getMessage(blocksCollapsed ? 'TASK_BLOCKS_EXPAND' : 'TASK_BLOCKS_COLLAPSE')}</span>
+                    </button>}
                     <BufferEditor
                         platform={platform}
                         bufferName={activeBufferName}

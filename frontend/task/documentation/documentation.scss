@@ -193,11 +193,7 @@
     top: 8px;
     width: 24px;
     height: 24px;
-    opacity: 0.3;
     cursor: pointer;
-  }
-  .documentation-close:hover {
-    opacity: 1;
   }
   .documentation-close:before, .documentation-close:after {
     position: absolute;
@@ -207,6 +203,12 @@
     width: 2px;
     top: 0;
     background-color: #333;
+    opacity: 0.3;
+  }
+  .documentation-close:hover {
+    .documentation-close:before, .documentation-close:after {
+      opacity: 1;
+    }
   }
   .documentation-close:before {
     transform: rotate(45deg);

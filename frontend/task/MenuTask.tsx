@@ -134,6 +134,7 @@ export function MenuTask() {
                 && (!isMobile || LayoutMobileMode.Editor === layoutMobileMode)
                 && <div className="menu-icons">
                     <MenuIconsTask
+                        menuOpen={menuOpen}
                         toggleMenu={() => setMenuOpen(!menuOpen)}
                         toggleDocumentation={toggleDocumentation}
                     />

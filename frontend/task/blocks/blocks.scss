@@ -75,6 +75,10 @@
   width: 42px;
   height: 48px;
   border-bottom-right-radius: var(--default-border-radius) !important;
+  &:focus {
+    outline-offset: -6px;
+    outline-color: white;
+  }
 }
 
 .task-layout-editor-container {

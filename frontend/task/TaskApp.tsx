@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
 import {Dialog, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
@@ -55,6 +55,7 @@ export function TaskApp() {
     const activeView = useAppSelector(selectActiveView);
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
+    const layoutRef = useRef<HTMLDivElement>(null);
 
     let progress = null;
     let progressMessage = null;
@@ -142,14 +143,14 @@ export function TaskApp() {
             {!taskLoaded && <div className="app-spinner">
                 <Spinner size={50}/>
             </div>}
-            <div className="layout-general">
+            <div className="layout-general" ref={layoutRef}>
                 <div className={`task-section`}>
                     {LayoutView.Task !== activeView && <TestsPane
                         open={submissionsPaneOpen}
                     />}
 
                     <div className="task-section-container">
-                        <div className="task-header">
+                        <div className="task-header" role="banner">
                             <span className="task-header__quick">QUICK</span>
                             <span className="task-header__algo">ALGO</span>
                         </div>
@@ -160,7 +161,7 @@ export function TaskApp() {
 
                         {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
 
-                        <div className="task-body">
+                        <div className="task-body" role="main">
                             <LayoutLoader/>
                             {displayEditor &&
                                 <div key="subtitles" className="subtitles-pane-container">
@@ -182,7 +183,7 @@ export function TaskApp() {
                 </div>
 
                 {recordingEnabled &&
-                    <div className="layout-footer">
+                    <div className="layout-footer" role="region">
                         <RecorderControls/>
                     </div>
                 }
@@ -190,7 +191,7 @@ export function TaskApp() {
                 {/*<CursorPosition offset={{x: 20, y: 20}}/>*/}
 
                 {playerEnabled && isPlayerReady &&
-                    <div className="layout-footer">
+                    <div className="layout-footer" role="region">
                         <PlayerControls/>
                         {LayoutPlayerMode.Replay === layoutPlayerMode &&
                             <React.Fragment>
@@ -202,7 +203,7 @@ export function TaskApp() {
                 }
 
                 {displayEditor &&
-                    <div className="layout-footer editor-footer">
+                    <div className="layout-footer editor-footer" role="region" aria-label={getMessage('TASK_EDITOR')}>
                         <EditorInterface/>
                     </div>
                 }
