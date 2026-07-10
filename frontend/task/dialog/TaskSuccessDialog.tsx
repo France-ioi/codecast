@@ -5,7 +5,7 @@ import {useDispatch} from "react-redux";
 import {taskLevelsList} from "../platform/platform_slice";
 import {callPlatformShowView, callPlatformValidate} from '../../submission/submission_actions';
 import {taskChangeLevel} from '../task_actions';
-import {getNextLevelIndex} from '../platform/platform';
+import {getNextLevelIndex, selectTaskTokenPayload} from '../platform/platform';
 import {SmallTick} from '@blueprintjs/icons';
 import {getMessage} from '../../lang/messages';
 import {getTaskSolution} from '../instructions/instructions';
@@ -24,6 +24,11 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const forceNextTaskAfter = currentTask?.gridInfos?.forceNextTaskAfter;
     const dispatch = useDispatch();
     const hasSolution = !!useAppSelector(getTaskSolution);
+    const taskTokenPayload = useAppSelector(selectTaskTokenPayload);
+
+    if (false === taskTokenPayload?.bSubmissionPossible) {
+        return null;
+    }
 
     let currentLevelFinished = false;
     let nextLevel = null;
