@@ -114,7 +114,7 @@ import {
     bufferResetDocument, buffersInitialState
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
-import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
+import {selectSourceBuffers} from '../buffers/buffer_selectors';
 import {callPlatformLog, callPlatformValidate, submissionCancel} from '../submission/submission_actions';
 import {
     createSourceBufferFromBufferParameters,

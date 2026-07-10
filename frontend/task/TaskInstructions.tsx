@@ -1,4 +1,4 @@
-import React, {ReactElement, useEffect, useRef, useState} from "react";
+import React, {ReactElement, useContext, useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {Button} from '@blueprintjs/core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -17,6 +17,8 @@ import {CursorPoint, CursorPosition} from './layout/actionTypes';
 import {quickAlgoLibraries} from './libs/quick_algo_libraries_model';
 import {simulationInstance} from './instructions/animation';
 import {getMessage} from '../lang/messages';
+import {AiProtectionContext, AiProtectionStatus} from '../utils/ai_protection';
+import {callPlatformLog} from '../submission/submission_actions';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -39,6 +41,9 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const instructionsJQuery = useAppSelector(state => getFormattedInstructionsForLevelSelector({state, context}));
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const aiProtectionStatus = useContext(AiProtectionContext);
+    const instructionsRef = useRef<HTMLDivElement>(null);
+    const aiProtectionOptions = useAppSelector(state => state.task.currentTask?.gridInfos?.aiProtection ?? {});
 
     const toggleTaskInstructions = () => {
         if (documentationOpen) {
@@ -96,6 +101,27 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         });
     }, [contextId, platform]);
 
+    useEffect(() => {
+        const instructionsElement = instructionsRef.current;
+        if (!instructionsElement) {
+            return undefined;
+        }
+
+        const handleCopy = (e: ClipboardEvent) => {
+            if (aiProtectionOptions.logCopy) {
+                const selection = (window.getSelection ? window.getSelection() : document.getSelection())?.toString() ?? '';
+                dispatch(callPlatformLog(['ai_protection', 'copy_instructions', selection], 'force'));
+            }
+        };
+
+        instructionsElement.addEventListener('copy', handleCopy);
+
+        return () => {
+            instructionsElement.removeEventListener('copy', handleCopy);
+        };
+    }, [instructionsHtml, instructionsTabs, aiProtectionStatus, isBackend]);
+
+
     useCursorPositionTracking('instructions', (absPoint: CursorPoint): Pick<CursorPosition, 'textOffset'|'element'> => {
         let range, offset, textNode: HTMLElement;
 
@@ -150,12 +176,16 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         };
     });
 
+    if (AiProtectionStatus.Ok !== aiProtectionStatus) {
+        return null;
+    }
+
     if (!instructionsHtml && !isBackend) {
         return null;
     }
 
     return (
-        <div className={`task-mission ${props.expanded ? 'is-expanded' : ''} cursor-main-zone`} data-cursor-self-handling="" style={{fontSize: `${zoomLevel}rem`}} data-cursor-zone="instructions">
+        <div className={`task-mission ${props.expanded ? 'is-expanded' : ''} cursor-main-zone`} data-cursor-self-handling="" style={{fontSize: `${zoomLevel}rem`}} data-cursor-zone="instructions" ref={instructionsRef}>
             {props.missionRightSlot}
 
             {instructionsTabs ?

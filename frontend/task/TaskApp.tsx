@@ -7,6 +7,7 @@ import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {PlayerControls} from "./PlayerControls";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {LayoutLoader} from "./layout/LayoutLoader";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {useAppSelector} from "../hooks";
@@ -32,9 +33,10 @@ import {LayoutPlayerMode, LayoutView} from './layout/layout_types';
 import {useCursorPositionTracking} from './layout/cursor_tracking';
 import {CursorPosition} from './layout/CursorPosition';
 import {getMessage} from '../lang/messages';
+import {AiProtectionContext, AiProtectionStatus, useAiProtection} from '../utils/ai_protection';
 
 export function TaskApp() {
-    const fullScreenActive = useAppSelector(state => state.fullscreen.active);
+    const editorFullScreen = useAppSelector(state => state.fullscreen.editorFullScreen);
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const playerEnabled = !!useAppSelector(state => state.options.audioUrl);
     const playerProgress = useAppSelector(state => state.player.progress);
@@ -55,6 +57,7 @@ export function TaskApp() {
     const activeView = useAppSelector(selectActiveView);
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
+    const aiProtectionStatus = useAiProtection();
 
     let progress = null;
     let progressMessage = null;
@@ -137,94 +140,114 @@ export function TaskApp() {
         }
     }
 
+    const enableFullScreen = () => {
+        dispatch({type: CommonActionTypes.FullscreenEnter});
+    };
+
     return (
-        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform} cursor-main-zone`} data-cursor-zone="task-app">
-            {!taskLoaded && <div className="app-spinner">
-                <Spinner size={50}/>
-            </div>}
-            <div className="layout-general">
-                <div className={`task-section`}>
-                    {LayoutView.Task !== activeView && <TestsPane
-                        open={submissionsPaneOpen}
-                    />}
-
-                    <div className="task-section-container">
-                        <div className="task-header">
-                            <span className="task-header__quick">QUICK</span>
-                            <span className="task-header__algo">ALGO</span>
-                        </div>
-
-                        {!!window.TASK_NEEDS_ADDITIONAL_CHECKS && <div className="task-warning-banner">
-                            <p>{getMessage('TASK_NOT_READY')}</p>
-                        </div>}
-
-                        {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
-
-                        <div className="task-body">
-                            <LayoutLoader/>
-                            {displayEditor &&
-                                <div key="subtitles" className="subtitles-pane-container">
-                                    <SubtitlesEditor
-                                        light={true}
-                                    />
-                                    <SubtitlesEditorPane/>
-                                </div>
-                            }
-                            {!displayEditor && displaySubtitlesPane &&
-                                <div key="subtitles-view" className="subtitles-pane-container">
-                                    <SubtitlesPane/>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <ContextVisualizationImages/>
-                </div>
-
-                {recordingEnabled &&
-                    <div className="layout-footer">
-                        <RecorderControls/>
-                    </div>
-                }
-
-                {/*<CursorPosition offset={{x: 20, y: 20}}/>*/}
-
-                {playerEnabled && isPlayerReady &&
-                    <div className="layout-footer">
-                        <PlayerControls/>
-                        {LayoutPlayerMode.Replay === layoutPlayerMode &&
-                            <React.Fragment>
-                                <CursorPosition/>
-                                <SubtitlesBand/>
-                            </React.Fragment>
-                        }
-                    </div>
-                }
-
-                {displayEditor &&
-                    <div className="layout-footer editor-footer">
-                        <EditorInterface/>
-                    </div>
-                }
-            </div>
-
-            <Dialog isOpen={!!progressMessage} title={progressMessage ? progressMessage : 'Info'} isCloseButtonShown={false}>
-                <div style={{margin: '20px 20px 20px 20px'}}>
-                    <ProgressBar value={progress} intent={Intent.SUCCESS}/>
-                </div>
-
-                {displayAbout && <div style={{margin: '20px 20px 0 20px'}}>
-                    <TaskAbout/>
+        <AiProtectionContext value={aiProtectionStatus}>
+            <Container key={language} fluid className={`task ${editorFullScreen ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform} cursor-main-zone`} data-cursor-zone="task-app">
+                {!taskLoaded && <div className="app-spinner">
+                    <Spinner size={50}/>
                 </div>}
-            </Dialog>
+                {AiProtectionStatus.Ok !== aiProtectionStatus && <div className="ai-protection">
+                    {AiProtectionStatus.NoFocus === aiProtectionStatus && <>
+                        <p>{getMessage('AI_PROTECTION_NO_FOCUS')}</p>
+                        <div>
+                            <button className="quickalgo-button ai-protection-button">{getMessage('AI_PROTECTION_NO_FOCUS_BUTTON')}</button>
+                        </div>
+                    </>}
+                    {AiProtectionStatus.NoFullScreen === aiProtectionStatus && <>
+                        <p>{getMessage('AI_PROTECTION_FULL_SCREEN')}</p>
+                        <div>
+                            <button className="quickalgo-button ai-protection-button" onClick={enableFullScreen}>{getMessage('AI_PROTECTION_FULL_SCREEN_BUTTON')}</button>
+                        </div>
+                    </>}
+                </div>}
+                <div className="layout-general">
+                    <div className={`task-section`}>
+                        {LayoutView.Task !== activeView && <TestsPane
+                            open={submissionsPaneOpen}
+                        />}
 
-            <TaskHintsDialog/>
+                        <div className="task-section-container">
+                            <div className="task-header">
+                                <span className="task-header__quick">QUICK</span>
+                                <span className="task-header__algo">ALGO</span>
+                            </div>
 
-            {taskSuccess && <TaskSuccessDialog onClose={closeTaskSuccess}/>}
+                            {!!window.TASK_NEEDS_ADDITIONAL_CHECKS && <div className="task-warning-banner">
+                                <p>{getMessage('TASK_NOT_READY')}</p>
+                            </div>}
 
-            <PromptModalDialog/>
+                            {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
 
-            <DebugDialog/>
-        </Container>
+                            <div className="task-body">
+                                <LayoutLoader/>
+                                {displayEditor &&
+                                    <div key="subtitles" className="subtitles-pane-container">
+                                        <SubtitlesEditor
+                                            light={true}
+                                        />
+                                        <SubtitlesEditorPane/>
+                                    </div>
+                                }
+                                {!displayEditor && displaySubtitlesPane &&
+                                    <div key="subtitles-view" className="subtitles-pane-container">
+                                        <SubtitlesPane/>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <ContextVisualizationImages/>
+                    </div>
+
+                    {recordingEnabled &&
+                        <div className="layout-footer">
+                            <RecorderControls/>
+                        </div>
+                    }
+
+                    {/*<CursorPosition offset={{x: 20, y: 20}}/>*/}
+
+                    {playerEnabled && isPlayerReady &&
+                        <div className="layout-footer">
+                            <PlayerControls/>
+                            {LayoutPlayerMode.Replay === layoutPlayerMode &&
+                                <React.Fragment>
+                                    <CursorPosition/>
+                                    <SubtitlesBand/>
+                                </React.Fragment>
+                            }
+                        </div>
+                    }
+
+                    {displayEditor &&
+                        <div className="layout-footer editor-footer">
+                            <EditorInterface/>
+                        </div>
+                    }
+                </div>
+
+                <Dialog isOpen={!!progressMessage} title={progressMessage ? progressMessage : 'Info'} isCloseButtonShown={false}>
+                    <div style={{margin: '20px 20px 20px 20px'}}>
+                        <ProgressBar value={progress} intent={Intent.SUCCESS}/>
+                    </div>
+
+                    {displayAbout && <div style={{margin: '20px 20px 0 20px'}}>
+                        <TaskAbout/>
+                    </div>}
+                </Dialog>
+
+                <TaskHintsDialog/>
+
+                {taskSuccess && <TaskSuccessDialog onClose={closeTaskSuccess}/>}
+
+                <PromptModalDialog/>
+
+                <DebugDialog/>
+            </Container>
+        </AiProtectionContext>
     );
 }

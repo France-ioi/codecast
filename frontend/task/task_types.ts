@@ -86,6 +86,18 @@ export interface QuickalgoTaskIncludeBlocksAllLevels {
     pythonAdditionalFunctions?: string[],
 }
 
+export interface AIProtectionOptions {
+    forceFullScreen?: boolean,
+    forceFocus?: boolean,
+    disableExternalCopyPaste?: boolean,
+    disableRightClickMenu?: boolean,
+    logFullScreen?: boolean,
+    logFocus?: boolean,
+    logCopy?: boolean,
+    logPaste?: boolean,
+    logDevTools?: boolean,
+}
+
 export interface QuickalgoTaskGridInfosNotLevelDependent {
     context?: string,
     contextType?: string,
@@ -128,6 +140,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     allowClientExecution?: boolean,
     codeHelpAdditionalContext?: string,
     showIfMutator?: boolean,
+    aiProtection?: AIProtectionOptions,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {

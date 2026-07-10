@@ -9,7 +9,8 @@ import {App} from '../app_types';
 
 export const initialStateFullscreen = {
     active: false,
-    enabled: false
+    enabled: false,
+    editorFullScreen: false,
 };
 
 export default function(bundle: Bundle) {
@@ -18,6 +19,11 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defineAction(ActionTypes.FullscreenEnter);
+    bundle.addReducer(ActionTypes.FullscreenEnter, (state: AppStore, action) => {
+        if (action?.payload?.editorFullScreen) {
+            state.fullscreen.editorFullScreen = true;
+        }
+    });
 
     bundle.defineAction(ActionTypes.FullscreenEnterSucceeded);
     bundle.addReducer(ActionTypes.FullscreenEnterSucceeded, (state: AppStore) => {
@@ -34,6 +40,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.FullscreenLeaveSucceeded);
     bundle.addReducer(ActionTypes.FullscreenLeaveSucceeded, (state: AppStore) => {
         state.fullscreen.active = false;
+        state.fullscreen.editorFullScreen = false;
     });
 
     bundle.defineAction(ActionTypes.FullscreenEnabled);

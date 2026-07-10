@@ -375,4 +375,8 @@ export default {
     GIT_FILE: "File",
     GIT_USERNAME: "Git username",
     GIT_COMMIT_MESSAGE: "Git commit message",
+    AI_PROTECTION_NO_FOCUS: "To complete this task, this window must be active.",
+    AI_PROTECTION_NO_FOCUS_BUTTON: "Activate the window",
+    AI_PROTECTION_FULL_SCREEN: "To complete this task, you must be in full-screen mode.",
+    AI_PROTECTION_FULL_SCREEN_BUTTON: "Enter full-screen mode",
 };

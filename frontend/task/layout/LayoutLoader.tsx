@@ -12,7 +12,7 @@ import {selectCurrentTest} from '../task_selectors';
 
 const selectLayoutLoaderProps = createSelector(
     [
-        (state: AppStore) => state.fullscreen.active,
+        (state: AppStore) => state.fullscreen.editorFullScreen,
         (state: AppStore) => state.stepper.currentStepperState,
         (state: AppStore) => state.stepper?.status,
         (state: AppStore) => state.task.resetDone,
