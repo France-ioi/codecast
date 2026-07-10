@@ -41,13 +41,12 @@ export function TaskLevelTabs() {
     };
 
     return (
-        <nav className="level-tabs cursor-main-zone" data-cursor-zone="task-levels">
+        <nav className="level-tabs cursor-main-zone" data-cursor-zone="task-levels" role="tablist">
             {Object.values(levels).map((levelData, index) =>
                 <div
                     key={levelData.level}
                     className={`level-tab ${currentLevel && levelData.level === currentLevel ? 'current' : ''}`}
                     role="tab"
-                    tabIndex={-1}
                 >
                     {index > 0 && <a
                         className="prev-link"
@@ -55,17 +54,19 @@ export function TaskLevelTabs() {
                     >
                         <FontAwesomeIcon icon={faChevronLeft}/>
                     </a>}
-                    <a
+                    <div
                         className="level-tab-link"
-                        onClick={() => changeVersion(levelData.level)}
                     >
-                        <span>{getMessage('TASK_LEVEL')}</span>
-                        <Stars
-                            starsCount={levelScoringData[levelData.level].stars}
-                            rating={false !== taskParamsFullFeedback ? levelData.score : null}
-                            disabled={levelData.locked}
-                        />
-                    </a>
+                        <button onClick={() => changeVersion(levelData.level)}>
+                            <span>{getMessage('TASK_LEVEL')}</span>
+                            <span className="visually-hidden">{getMessage('TASK_LEVEL_VERSION').format({count: levelScoringData[levelData.level].stars})}</span>
+                            <Stars
+                                starsCount={levelScoringData[levelData.level].stars}
+                                rating={false !== taskParamsFullFeedback ? levelData.score : null}
+                                disabled={levelData.locked}
+                            />
+                        </button>
+                    </div>
                     {index < Object.values(levels).length - 1 && <a
                         className="next-link"
                         onClick={() => changeVersion(Object.keys(levels)[index + 1] as TaskLevelName)}

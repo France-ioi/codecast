@@ -135,7 +135,7 @@ export function ContextVisualization() {
                 <div id="taskContent">
                     <div id="taskIntro"/>
                     <div id="testSelector">
-                        <div id="grid"/>
+                        <div id="grid" aria-hidden="true"/>
                     </div>
                 </div>}
         </div>;

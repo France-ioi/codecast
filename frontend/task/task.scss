@@ -328,6 +328,12 @@ html:not([active-view="task"]):not([active-view="solution"]) {
         align-items: center;
         cursor: pointer;
         text-align: center;
+        width: 100%;
+
+        &:focus {
+          outline-offset: -10px;
+          outline-color: white;
+        }
 
         svg {
           width: 32px;
@@ -526,7 +532,6 @@ html:not([active-view="task"]):not([active-view="solution"]) {
         background: var(--primary-color);
         border-radius: 50px;
         width: 30px;
-        outline: none;
         transform: translate(-7px, 0);
         top: -2px;
         &:after {
@@ -553,7 +558,6 @@ html:not([active-view="task"]):not([active-view="solution"]) {
       background-color: var(--primary-color);
       background-image: none;
       color: #fff;
-      outline: none;
       box-shadow: none !important;
       .bp6-icon {
         color: #fff;
@@ -566,6 +570,7 @@ html:not([active-view="task"]):not([active-view="solution"]) {
   color: #7c7c7c;
   max-width: 1200px;
   width: 100%;
+  outline: none;
 
   pre {
     display: block;
@@ -761,6 +766,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   flex-direction: column;
   position: relative;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -771,6 +777,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   height: 100%;
   position: relative;
   min-height: 0;
+  min-width: 0;
 }
 
 .error-message {
@@ -959,7 +966,6 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   background-color: var(--primary-color) !important;
   background-image: none !important;
   color: #fff !important;
-  outline: none;
   border-radius: 50px;
   box-shadow: none !important;
   cursor: pointer;

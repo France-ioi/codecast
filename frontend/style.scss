@@ -1,6 +1,7 @@
 @use "sass:math";
 @use "sass:meta";
 @use './variables' as *;
+@use './reset';
 @use './player/style' as player;
 @use './editor/style' as editor;
 @use './task/task';
@@ -804,5 +805,5 @@ button.btn-cc {
 }
 
 :focus {
-  outline: none !important;
+  outline-color: black;
 }

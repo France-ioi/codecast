@@ -163,13 +163,13 @@ export function Documentation(props: DocumentationProps) {
                     <DocumentationLanguageSelector/>
                 </div>}
                 {!props.standalone && <div className="documentation-new-window">
-                    <a onClick={openDocumentationInNewWindow}>
+                    <button onClick={openDocumentationInNewWindow}>
                         <FontAwesomeIcon icon={faExternalLinkAlt}/>
-                    </a>
+                    </button>
                 </div>}
                 {(!props.standalone || Screen.DocumentationBig === screen) && <div className="documentation-close-container">
-                    <div className="documentation-close" onClick={closeDocumentation}>
-                    </div>
+                    <button className="documentation-close" onClick={closeDocumentation}>
+                    </button>
                 </div>}
             </div>}
             <div className="documentation-language-dropdown">
@@ -182,7 +182,7 @@ export function Documentation(props: DocumentationProps) {
             </div>
             <div className="documentation-category-dropdown">
                 <div className="documentation-tabs-menu">
-                    <a onClick={openDocumentationBig} className="hidden-mobile">
+                    <a href='#' onClick={openDocumentationBig} className="hidden-mobile">
                         <Icon icon={<Properties/>}/>
                     </a>
                     <span className="visible-mobile">
@@ -203,33 +203,33 @@ export function Documentation(props: DocumentationProps) {
             </div>
             <div className="documentation-tabs">
                 <div className="documentation-tabs-menu">
-                    <a onClick={openDocumentationBig}>
+                    <a href='#' onClick={openDocumentationBig}>
                         <Icon icon={<Properties/>}/>
                     </a>
                 </div>
                 {displayedConcepts.map(concept =>
                     <React.Fragment key={concept.id}>
-                        {selectedConceptId === concept.id ? <div className={`documentation-tab is-active`}>
+                        {selectedConceptId === concept.id ? <button className={`documentation-tab is-active`}>
                             <div className="documentation-tab-title">{concept.name}</div>
-                        </div> : <a className={`documentation-tab`} onClick={() => selectConcept(concept)}>
+                        </button> : <button className={`documentation-tab`} onClick={() => selectConcept(concept)}>
                             <div className="documentation-tab-title">{concept.name}</div>
-                        </a>}
+                        </button>}
                     </React.Fragment>
                 )}
-                <div
+                <button
                     className={`documentation-tabs-arrow ${conceptIndex <= 0 ? 'is-disabled' : ''}`}
                     onClick={() => incrementConcept(-1)}>
                     <span>
                         <FontAwesomeIcon icon={faChevronLeft}/>
                     </span>
-                </div>
-                <div
+                </button>
+                <button
                     className={`documentation-tabs-arrow ${conceptIndex >= conceptsWithoutCategory.length - 1 ? 'is-disabled' : ''}`}
                     onClick={() => incrementConcept(1)}>
                     <span>
                         <FontAwesomeIcon icon={faChevronRight}/>
                     </span>
-                </div>
+                </button>
                 <div className="documentation-tabs-end"/>
             </div>
             <div className="documentation-body">

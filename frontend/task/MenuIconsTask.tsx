@@ -8,8 +8,10 @@ import {useDispatch} from "react-redux";
 import {Screen} from '../common/screens';
 import {selectAvailableHints} from './hints/hints_selectors';
 import {selectShowDocumentation} from './documentation/doc';
+import {getMessage} from '../lang/messages';
 
 interface MenuIconsTaskProps {
+    menuOpen?: boolean,
     toggleMenu: () => void,
     toggleDocumentation: () => void,
 }
@@ -42,13 +44,13 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
                 <FullscreenButton />
             </div>}
             {showDocumentation && <div className="menu-task-element is-blue">
-                <Button onClick={toggleDocumentation} icon={<Help/>}/>
+                <Button onClick={toggleDocumentation} icon={<Help/>} title={getMessage('MENU_DOCUMENTATION')}/>
             </div>}
             {showHints && <div className="menu-task-element is-blue">
-                <Button onClick={toggleHints} icon={<Lightbulb/>}/>
+                <Button onClick={toggleHints} icon={<Lightbulb/>} title={getMessage('MENU_HINTS')}/>
             </div>}
             {showMenu && <div className="menu-task-element">
-                <Button onClick={props.toggleMenu} icon={<Menu/>}/>
+                <Button onClick={props.toggleMenu} icon={<Menu/>} title={getMessage(props.menuOpen ? 'MENU_CLOSE' : 'MENU_OPEN')}/>
             </div>}
         </div>
     );

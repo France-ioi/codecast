@@ -107,6 +107,10 @@ export default {
     MENU_RELOAD: "Neu laden",
     MENU_LOCAL: "Lokal arbeiten",
     MENU_SYNC_GIT: "Mit Git synchronisieren",
+    MENU_OPEN: "Menü öffnen",
+    MENU_CLOSE: "Menü schließen",
+    MENU_DOCUMENTATION: "Dokumentation",
+    MENU_HINTS: "Hinweise",
     EXAMPLES_LABEL: "Beispiele: ",
     EXAMPLES_BUTTON_TITLE: "Liste anzeigen",
     EXAMPLES_MESSAGE: "Beim Laden eines Beispiels werden alle laufenden Aktionen abgebrochen.",
@@ -218,6 +222,8 @@ export default {
     TASK_CLIENT_TESTS_SUCCESS_YES: "Lösung auswerten",
     TASK_BLOCKS_TITLE: "Verfügbare Bausteine",
     TASK_BLOCKS_SUBTITLE: "Zum Einfügen anklicken",
+    TASK_BLOCKS_COLLAPSE: "Bausteine einklappen",
+    TASK_BLOCKS_EXPAND: "Bausteine ausklappen",
     TASK_BLOCKS_LIMIT_EXPANDED: "Noch {current}/{limit} Baustein übrig|Noch {current}/{limit} Bausteine übrig",
     TASK_BLOCKS_LIMIT_BLOCK: "{remaining} Baustein „{name}“|{remaining} Bausteine „{name}“",
     TASK_BLOCKS_REMAINING_BLOCKS: "{remaining} Baustein|{remaining} Bausteine",
@@ -268,6 +274,8 @@ export default {
     TESTS_RESULT_OVERVIEW_SUCCESS: "{testName}: erfolgreich",
     TESTS_RESULT_OVERVIEW_FAILURE: "{testName}: Fehler",
     TESTS_RESULT_OVERVIEW_VIEW: "anzeigen",
+
+    TASK_ERROR_CLOSE: "Fehler schließen",
 
     CODE_CONSTRAINTS_FORBIDDEN_KEYWORD: "Das Schlüsselwort {keyword} ist hier nicht erlaubt.",
     CODE_CONSTRAINTS_MAX_INSTRUCTIONS_PYTHON: "Du verwendest zu viele Python-Anweisungen.",

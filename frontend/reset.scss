@@ -1,0 +1,30 @@
+// Reset button style
+button {
+  /* Reset box model */
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+
+  /* Reset appearance (removes native OS styling) */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Reset background */
+  background: none;
+  background-color: transparent;
+
+  /* Reset typography (buttons don't inherit font by default) */
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  line-height: normal;
+
+  /* Reset interaction */
+  cursor: pointer;
+  outline: none;
+
+  /* Remove weird focus glow in some browsers */
+  -webkit-tap-highlight-color: transparent;
+}
