@@ -360,8 +360,6 @@ function* taskLoadSaga(app: App, action) {
                 defaultLevel = state.options.defaultLevel;
             } else if (currentTask.gridInfos?.defaultLevel && currentTask.gridInfos?.defaultLevel in levels) {
                 defaultLevel = currentTask.gridInfos.defaultLevel;
-            } else if ('easy' in levels) {
-                defaultLevel = 'easy';
             } else {
                 for (let level of taskLevelsList) {
                     if (level in levels) {
