@@ -296,7 +296,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             lang = node.attribs['class'].substring(node.attribs['class'].indexOf('language-') + 'language-'.length).split(' ')[0];
         }
 
-        const sourceMode = platformsList[context.platform].aceSourceMode;
+        const sourceMode = platformsList[lang ?? context.platform].aceSourceMode;
 
         let children = null;
         if (VOID_ELEMENTS.indexOf(node.tagName) === -1) {
@@ -309,7 +309,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             </div>}
             {!!code.trim() ?
                 <Editor
-                    content={code.trim()}
+                    content={code}
                     readOnly
                     mode={sourceMode}
                     width="100%"
