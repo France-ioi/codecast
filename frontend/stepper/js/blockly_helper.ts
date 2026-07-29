@@ -1,8 +1,7 @@
 // Code extracted from https://github.com/France-ioi/bebras-modules/blob/master/pemFioi/quickAlgo/blockly_interface.js
 
 import {addExtraBlocks} from './extra_blocks';
-import {getStandardBlocklyBlocks} from './standard_blockly_blocks';
-import {getStandardScratchBlocks} from './standard_scratch_blocks';
+import {getStandardBlocks} from './standard_blocks';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {QuickAlgoLibrary} from '../../task/libs/quickalgo_library';
 import * as Blockly from 'blockly/core';
@@ -22,6 +21,8 @@ import {BlocklyColours, HexColor} from './blockly_types';
 import {addTableBlocks} from './blocks/tables';
 import {addMathBlocks} from './blocks/math';
 import {addTextBlocks} from './blocks/text';
+import {addDictBlocks} from './blocks/dicts';
+import {addListBlocks} from './blocks/lists';
 
 registerFieldAngle();
 
@@ -105,34 +106,12 @@ const blocklySets = {
     }
 };
 
+const transcribedBlocks = {
+    'lists_create_with_empty': ['lists_create_empty'],
+};
 
 // Blockly to Scratch translations
 const blocklyToScratch = {
-    singleBlocks: {
-        'controls_if': ['control_if'],
-        'controls_if_else': ['control_if_else'],
-        'controls_infiniteloop': ['control_forever'],
-        'controls_repeat': ['control_repeat'],
-        'controls_repeat_ext': ['control_repeat'],
-        'controls_whileUntil': ['control_repeat_until'],
-        'controls_untilWhile': ['control_repeat_until'],
-        'lists_repeat': ['data_listrepeat'],
-        'lists_create_with_empty': [], // Scratch logic is not to initialize
-        'lists_getIndex': ['data_itemoflist'],
-        'lists_setIndex': ['data_replaceitemoflist'],
-        'logic_negate': ['operator_not'],
-        'logic_boolean': [],
-        'logic_compare': ['operator_equals', 'operator_gt', 'operator_gte', 'operator_lt', 'operator_lte', 'operator_not'],
-        'logic_operation': ['operator_and', 'operator_or'],
-        'text': [],
-        'text_append': [],
-        'text_join': ['operator_join'],
-        'math_arithmetic': ['operator_add', 'operator_subtract', 'operator_multiply', 'operator_divide', 'operator_dividefloor'],
-        'math_change': ['data_changevariableby'],
-        'math_number': ['math_number'],
-        'variables_get': ['data_variable'],
-        'variables_set': ['data_setvariableto']
-    },
     wholeCategories: {
         'loops': 'control',
         'logic': 'operator',
@@ -283,12 +262,7 @@ export class BlocklyHelper {
     load(locale, display, nbTestCases, options) {
         this.unloaded = false;
 
-        // TODO Blockly: re-enable FioiBlockly
-        // window.FioiBlockly.loadLanguage(locale);
-
-        if (this.scratchMode) {
-            this.fixScratch();
-        }
+        this.includeBlocks.standardBlocks.singleBlocks = this.transcribeBlocks(this.includeBlocks.standardBlocks.singleBlocks || []);
 
         if (options == undefined) options = {};
         if (options.divId) this.divId = options.divId;
@@ -311,6 +285,8 @@ export class BlocklyHelper {
         addTableBlocks(defaultColors);
         addMathBlocks(defaultColors);
         addTextBlocks(defaultColors);
+        addDictBlocks(defaultColors);
+        addListBlocks(defaultColors);
         this.createSimpleGeneratorsAndBlocks();
 
         adaptJsBlocks();
@@ -643,7 +619,7 @@ export class BlocklyHelper {
     }
 
     getBlocksAllowed() {
-        return this.scratchMode ? this.blocksToScratch(this.allBlocksAllowed) : this.allBlocksAllowed;
+        return this.transcribeBlocks(this.allBlocksAllowed);
     }
 
     checkConstraints(workspace) {
@@ -1229,9 +1205,7 @@ export class BlocklyHelper {
     }
 
     getStdBlocks() {
-        return this.scratchMode
-            ? getStandardScratchBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator)
-            : getStandardBlocklyBlocks(this.placeholderBlocks, !!this.mainContext?.showIfMutator);
+        return getStandardBlocks(this.scratchMode, this.placeholderBlocks, !!this.mainContext?.showIfMutator);
     }
 
     getBlockXmlInfo(generatorStruct, blockName) {
@@ -1283,6 +1257,10 @@ export class BlocklyHelper {
             let blockXml = blockXmlInfo.xml;
             if (categoriesInfos[categoryName].blocksXml.indexOf(blockXml) == -1) {
                 categoriesInfos[categoryName].blocksXml.push(blockXml);
+            }
+
+            if (!(blockName in Blockly.Blocks)) {
+                throw new Error(`Block not found: ${blockName}`);
             }
 
             if (!Blockly.Blocks[blockName].oldInit) {
@@ -1366,9 +1344,7 @@ export class BlocklyHelper {
         // It is normally executed during load, but for
         let taskStdInclude = (this.includeBlocks && this.includeBlocks.standardBlocks) || {};
         let tsiSingleBlocks = taskStdInclude.singleBlocks || [];
-        if (this.scratchMode) {
-            tsiSingleBlocks = this.blocksToScratch(tsiSingleBlocks);
-        }
+        tsiSingleBlocks = this.transcribeBlocks(tsiSingleBlocks);
         let stdInclude = {
             wholeCategories: [],
             singleBlocks: [],
@@ -1577,9 +1553,7 @@ export class BlocklyHelper {
         let orderedCategories = [];
         if (this.includeBlocks.blocksOrder) {
             let blocksOrder = this.includeBlocks.blocksOrder;
-            if (this.scratchMode) {
-                blocksOrder = this.blocksToScratch(blocksOrder);
-            }
+            blocksOrder = this.transcribeBlocks(blocksOrder);
 
             function getBlockIdx(blockXml) {
                 let blockType = Blockly.utils.xml.textToDom(blockXml).getAttribute('type');
@@ -1665,27 +1639,19 @@ export class BlocklyHelper {
         return xmlString;
     }
 
-    blocksToScratch(blockList) {
-        // TODO Scratch
-        return blockList;
-
-        let scratchBlocks = [];
-        for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
-            let blockName = blockList[iBlock];
-            if (blocklyToScratch.singleBlocks[blockName]) {
-                for (let b = 0; b < blocklyToScratch.singleBlocks[blockName].length; b++) {
-                    scratchBlocks.push(blocklyToScratch.singleBlocks[blockName][b]);
+    transcribeBlocks(blockList: string[]) {
+        const finalTranscribedBlocks = [];
+        for (let blockName of blockList) {
+            if (transcribedBlocks[blockName]) {
+                for (let transcribedBlock of transcribedBlocks[blockName]) {
+                    finalTranscribedBlocks.push(transcribedBlock);
                 }
             } else {
-                scratchBlocks.push(blockName);
+                finalTranscribedBlocks.push(blockName);
             }
         }
-        return scratchBlocks;
-    }
 
-    fixScratch() {
-        // Translate requested Blocks from Blockly to Scratch blocks
-        this.includeBlocks.standardBlocks.singleBlocks = this.blocksToScratch(this.includeBlocks.standardBlocks.singleBlocks || []);
+        return finalTranscribedBlocks;
     }
 
     checkBlocksAreAllowed(copyData, silent) {
