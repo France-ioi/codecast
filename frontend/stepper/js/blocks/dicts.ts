@@ -6,6 +6,9 @@ import {pythonGenerator, Order as PythonOrder} from 'blockly/python';
 const QUOTE_OPEN_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAKCAYAAACALL/6AAAA0UlEQVQY023QP0oDURSF8e8MImhlUIiCjWKhrUUK3YCIVkq6bMAF2LkCa8ENWLoNS1sLEQKprMQ/GBDks3kDM+Oc8nfPfTxuANQTYBeYAvdJLL4FnAFfwF2ST9Rz27kp5YH/kwrYp50LdaXHAU4rYNYzWAdeenx7AbgF5sAhcARsAkkyVQ+ACbAKjIGqta4+l78udXxc/LiJG+qvet0pV+q7+tHE+iJzdbGz8FhmOzVcqj/qq7rcKI7Ut1Leq70C1oCrJMMk343HB8ADMEzyVOMff72l48gwfqkAAAAASUVORK5CYII=';
 const QUOTE_CLOSED_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAKCAYAAACALL/6AAAAvklEQVQY022PoapCQRRF97lBVDRYhBcEQcP1BwS/QLAqr7xitZn0HzRr8Rts+htmQdCqSbQIwmMZPMIw3lVmZu0zG44UAFSBLdBVBDAFZqFo8eYKtANfBC7AE5h8ZNOHd1FrDnh4VgmDO3ADkujDHPgHfkLZ84bfaLjg/hD6RFLq9z6wBDr+rvuZB1bAEDABY76pA2mGHyWSjvqmIemc4WsCLKOp4nssIj8wD8qS/iSVJK3N7OTeJPV9n72ZbV7iDuSc2BaQBQAAAABJRU5ErkJggg==';
 
+/** A mutator item block, which remembers the value it was connected to. */
+type ItemBlock = Blockly.Block & {valueConnection_?: Blockly.Connection};
+
 /**
  * Create an image of an open or closed quote.
  */
@@ -249,14 +252,14 @@ export function addDictBlocks(defaultColors: BlocklyColours) {
          * Reconfigure this block based on the mutator dialog's components.
          */
         compose: function(containerBlock: Blockly.Block) {
-            let itemBlock = containerBlock.getInputTargetBlock('STACK');
+            let itemBlock = containerBlock.getInputTargetBlock('STACK') as ItemBlock;
             // Count number of inputs.
             const connections = [];
             let i = 0;
             while (itemBlock) {
                 connections[i] = itemBlock.valueConnection_;
                 itemBlock = itemBlock.nextConnection &&
-                    itemBlock.nextConnection.targetBlock();
+                    itemBlock.nextConnection.targetBlock() as ItemBlock;
                 i++;
             }
             this.itemCount_ = i;
@@ -272,14 +275,14 @@ export function addDictBlocks(defaultColors: BlocklyColours) {
          * Store pointers to any connected child blocks.
          */
         saveConnections: function(containerBlock: Blockly.Block) {
-            let itemBlock = containerBlock.getInputTargetBlock('STACK');
+            let itemBlock = containerBlock.getInputTargetBlock('STACK') as ItemBlock;
             let i = 0;
             while (itemBlock) {
                 const valueInput = this.getInput('VALUE' + i);
                 itemBlock.valueConnection_ = valueInput && valueInput.connection.targetConnection;
                 i++;
                 itemBlock = itemBlock.nextConnection &&
-                    itemBlock.nextConnection.targetBlock();
+                    itemBlock.nextConnection.targetBlock() as ItemBlock;
             }
         }
     };

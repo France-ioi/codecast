@@ -4,9 +4,8 @@ import {pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import {addGeneratorDefinition} from './utils';
 import {javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript';
 
-// The JavaScript generators of these blocks live in `js_adapter.ts`: they read
-// from the interpreter's `input()` rather than from a `readline()` global, so
-// they can't be shared with the original FioiBlockly implementation.
+// The JavaScript generators read from the interpreter's `input()` rather than
+// from the `readline()` global the original FioiBlockly implementation used.
 
 export function addInputBlocks(defaultColors: BlocklyColours) {
     Blockly.Blocks['input_num'] = {

@@ -45,6 +45,8 @@
     "@taquito/michel-codec": "^17.0.0",
     "@tyriar/fibonacci-heap": "^2.0.9",
     "ace-builds": "^1.4.14",
+    "acorn": "^8.15.0",
+    "acorn-walk": "^8.3.4",
     "adt": "^0.7.2",
     "ansi-to-html": "^0.7.2",
     "async": "^3.2.4",

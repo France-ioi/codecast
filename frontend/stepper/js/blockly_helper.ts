@@ -21,8 +21,9 @@ import {addTableBlocks} from './blocks/tables';
 import {addMathBlocks} from './blocks/math';
 import {addTextBlocks} from './blocks/text';
 import {addDictBlocks} from './blocks/dicts';
-import {addListBlocks} from './blocks/lists';
+import {addListBlocks, setMaxListSize} from './blocks/lists';
 import {addInputBlocks} from './blocks/inputs';
+import {addLogicBlocks} from './blocks/logic';
 
 registerFieldAngle();
 
@@ -272,10 +273,7 @@ export class BlocklyHelper {
             this.strings.startingBlockName = options.startingBlockName;
         }
 
-        // TODO Blockly: re-enable FioiBlockly
-        // if (options.maxListSize) {
-        //     window.FioiBlockly.maxListSize = options.maxListSize;
-        // }
+        setMaxListSize(options.maxListSize);
         this.placeholderBlocks = options.placeholderBlocks;
 
         this.options = options;
@@ -288,6 +286,7 @@ export class BlocklyHelper {
         addTextBlocks(defaultColors);
         addDictBlocks(defaultColors);
         addListBlocks(defaultColors);
+        addLogicBlocks(defaultColors);
         this.createSimpleGeneratorsAndBlocks();
 
         this.display = display;

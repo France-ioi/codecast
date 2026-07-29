@@ -4,6 +4,9 @@ import {javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript'
 import {pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import {addGeneratorDefinition} from './utils';
 
+/** A `lists_setIndex` block, which rebuilds its 'AT' input on the fly. */
+type SetIndexBlock = Blockly.Block & {updateAt_: (isAt: boolean) => void};
+
 const DEFAULT_MAX_LIST_SIZE = 100;
 
 let maxListSize = DEFAULT_MAX_LIST_SIZE;
@@ -274,7 +277,7 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}(value, n) {
                 const newAt = ('FROM_START' === value) || ('FROM_END' === value);
                 // The 'isAt' variable is available due to this function being a closure.
                 if (newAt !== isAt) {
-                    const block = this.getSourceBlock();
+                    const block = this.getSourceBlock() as SetIndexBlock;
                     block.updateAt_(newAt);
                     // This menu has been destroyed and replaced.  Update the replacement.
                     block.setFieldValue(value, 'WHERE');
