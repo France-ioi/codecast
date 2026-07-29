@@ -646,133 +646,133 @@ export function getStandardBlocklyBlocks(placeholderBlocks: boolean, showIfMutat
         //         blocklyXml: "<block type='lists_append'><field name='VAR'>{listVariable}</field></block>"
         //     }
         // ],
-        // tables: [
-        //     {
-        //         name: "tables_2d_init",
-        //         blocklyXml: "<block type='tables_2d_init'>" +
-        //             "  <value name='LINES'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>2</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='COLS'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>2</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='ITEM'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>0</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "tables_2d_set",
-        //         blocklyXml: "<block type='tables_2d_set'>" +
-        //             "  <value name='LINE'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>1</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='COL'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>1</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='ITEM'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>0</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "tables_2d_get",
-        //         blocklyXml: "<block type='tables_2d_get'>" +
-        //             "  <value name='LINE'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>1</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='COL'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>1</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "tables_3d_init",
-        //         blocklyXml: "<block type='tables_3d_init'>" +
-        //             "  <value name='LAYERS'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>2</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='LINES'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>2</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='COLS'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>2</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='ITEM'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>0</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "tables_3d_set",
-        //         blocklyXml: "<block type='tables_3d_set'>" +
-        //             "  <value name='LAYER'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>2</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='LINE'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>1</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='COL'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>1</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='ITEM'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>0</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "tables_3d_get",
-        //         blocklyXml: "<block type='tables_3d_get'>" +
-        //             "  <value name='LAYER'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>2</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='LINE'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>1</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "  <value name='COL'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>1</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     }
-        // ],
+        tables: [
+            {
+                name: "tables_2d_init",
+                blocklyXml: "<block type='tables_2d_init'>" +
+                    "  <value name='LINES'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>2</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='COLS'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>2</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='ITEM'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>0</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "tables_2d_set",
+                blocklyXml: "<block type='tables_2d_set'>" +
+                    "  <value name='LINE'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='COL'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='ITEM'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>0</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "tables_2d_get",
+                blocklyXml: "<block type='tables_2d_get'>" +
+                    "  <value name='LINE'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='COL'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "tables_3d_init",
+                blocklyXml: "<block type='tables_3d_init'>" +
+                    "  <value name='LAYERS'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>2</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='LINES'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>2</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='COLS'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>2</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='ITEM'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>0</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "tables_3d_set",
+                blocklyXml: "<block type='tables_3d_set'>" +
+                    "  <value name='LAYER'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>2</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='LINE'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='COL'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='ITEM'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>0</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "tables_3d_get",
+                blocklyXml: "<block type='tables_3d_get'>" +
+                    "  <value name='LAYER'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>2</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='LINE'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='COL'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            }
+        ],
         // Note :: this category is not enabled unless explicitly specified
         colour: [
             {

@@ -19,6 +19,7 @@ import {
     RecyclableBlockFlyoutInflater,
 } from '@blockly/continuous-toolbox';
 import {BlocklyColours, HexColor} from './blockly_types';
+import {addTableBlocks} from './blocks/tables';
 
 registerFieldAngle();
 
@@ -303,7 +304,9 @@ export class BlocklyHelper {
 
         this.options = options;
 
-        addExtraBlocks(this.strings, this.getDefaultColours(), !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
+        const defaultColors = this.getDefaultColours();
+        addExtraBlocks(this.strings, defaultColors, !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
+        addTableBlocks(defaultColors);
         this.createSimpleGeneratorsAndBlocks();
 
         adaptJsBlocks();
@@ -315,7 +318,7 @@ export class BlocklyHelper {
             const xmlString = this.getToolboxXml();
 
             const themeCategoryStyles = {};
-            const colours = this.getDefaultColours();
+            const colours = defaultColors;
             const categoryToBlocklyMapping = {variables: 'variable', loops: 'loop', texts: 'text', functions: 'procedure'};
             for (let category in colours.categories) {
                 themeCategoryStyles[category + '_blocks'] = {

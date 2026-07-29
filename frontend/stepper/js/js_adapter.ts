@@ -2,48 +2,44 @@ import { javascriptGenerator, Order as JavascriptOrder } from 'blockly/javascrip
 
 export function adaptJsBlocks() {
     javascriptGenerator.forBlock['input_num'] = function () {
-        javascriptGenerator.provideFunction_(
+        const readStdinName = javascriptGenerator.provideFunction_(
             'readStdin',
             `
+var stdinBuffer = '';
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
-  var stdinBuffer = '';
-  function readStdin() {
-      if (stdinBuffer == '')
-          return input();
-      if (typeof stdinBuffer === 'undefined')
-          stdinBuffer = '';
-      return stdinBuffer;
-  };
+  if (stdinBuffer == '')
+      return input();
+  if (typeof stdinBuffer === 'undefined')
+      stdinBuffer = '';
+  return stdinBuffer;
 }
         `);
 
-        const code = 'parseInt(readStdin())';
+        const code = `parseInt(${readStdinName}())`;
 
         return [code, JavascriptOrder.ATOMIC];
     };
 
     javascriptGenerator.forBlock['input_num_next'] = function () {
-        javascriptGenerator.provideFunction_(
+        const readStdinName = javascriptGenerator.provideFunction_(
             'readStdin',
             `
+var stdinBuffer = '';
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
-  var stdinBuffer = '';
-  function readStdin() {
-      if (stdinBuffer == '')
-          return input();
-      if (typeof stdinBuffer === 'undefined')
-          stdinBuffer = '';
-      return stdinBuffer;
-  };
+  if (stdinBuffer == '')
+      return input();
+  if (typeof stdinBuffer === 'undefined')
+      stdinBuffer = '';
+  return stdinBuffer;
 }
         `);
 
-        javascriptGenerator.provideFunction_(
+        const inputWordName = javascriptGenerator.provideFunction_(
             'input_word',
             `
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
   while (!stdinBuffer || stdinBuffer.trim() == '')
-      stdinBuffer = readStdin();
+      stdinBuffer = ${readStdinName}();
   if (typeof stdinBuffer === 'undefined')
       stdinBuffer = '';
   var re = /\\S+\\s*/;
@@ -53,62 +49,60 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
 }
         `);
 
-        var code = 'parseInt(input_word())';
+        const code = `parseInt(${inputWordName}())`;
+
         return [code, JavascriptOrder.ATOMIC];
     };
 
     javascriptGenerator.forBlock['input_char'] = function () {
-        javascriptGenerator.provideFunction_(
+        const readStdinName = javascriptGenerator.provideFunction_(
             'readStdin',
             `
+var stdinBuffer = '';
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
-  var stdinBuffer = '';
-  function readStdin() {
-      if (stdinBuffer == '')
-          return input();
-      if (typeof stdinBuffer === 'undefined')
-          stdinBuffer = '';
-      return stdinBuffer;
-  };
+  if (stdinBuffer == '')
+      return input();
+  if (typeof stdinBuffer === 'undefined')
+      stdinBuffer = '';
+  return stdinBuffer;
 }
         `);
 
-        javascriptGenerator.provideFunction_(
+        const inputCharName = javascriptGenerator.provideFunction_(
             'input_char',
             `
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
-  var buf = readStdin();
+  var buf = ${readStdinName}();
   stdinBuffer = buf.substr(1);
   return buf.substr(0, 1);
 }
         `);
 
-        var code = 'input_char()';
+        const code = `${inputCharName}()`;
+
         return [code, JavascriptOrder.ATOMIC];
     };
 
     javascriptGenerator.forBlock['input_word'] = function () {
-        javascriptGenerator.provideFunction_(
+        const readStdinName = javascriptGenerator.provideFunction_(
             'readStdin',
             `
+var stdinBuffer = '';
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
-  var stdinBuffer = '';
-  function readStdin() {
-      if (stdinBuffer == '')
-          return input();
-      if (typeof stdinBuffer === 'undefined')
-          stdinBuffer = '';
-      return stdinBuffer;
-  };
+  if (stdinBuffer == '')
+      return input();
+  if (typeof stdinBuffer === 'undefined')
+      stdinBuffer = '';
+  return stdinBuffer;
 }
         `);
 
-        javascriptGenerator.provideFunction_(
+        const inputWordName = javascriptGenerator.provideFunction_(
             'input_word',
             `
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
   while (!stdinBuffer || stdinBuffer.trim() == '')
-      stdinBuffer = readStdin();
+      stdinBuffer = ${readStdinName}();
   if (typeof stdinBuffer === 'undefined')
       stdinBuffer = '';
   var re = /\\S+\\s*/;
@@ -118,51 +112,49 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
 }
         `);
 
-        var code = 'input_word()';
+        const code = `${inputWordName}()`;
+
         return [code, JavascriptOrder.ATOMIC];
     };
 
     javascriptGenerator.forBlock['input_line'] = function () {
-        javascriptGenerator.provideFunction_(
+        const readStdinName = javascriptGenerator.provideFunction_(
             'readStdin',
             `
+var stdinBuffer = '';
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
-  var stdinBuffer = '';
-  function readStdin() {
-      if (stdinBuffer == '')
-          return input();
-      if (typeof stdinBuffer === 'undefined')
-          stdinBuffer = '';
-      return stdinBuffer;
-  };
+  if (stdinBuffer == '')
+      return input();
+  if (typeof stdinBuffer === 'undefined')
+      stdinBuffer = '';
+  return stdinBuffer;
 }
         `);
 
-        var code = 'readStdin()';
+        const code = `${readStdinName}()`;
+
         return [code, JavascriptOrder.ATOMIC];
     };
 
     javascriptGenerator.forBlock['input_num_list'] = function () {
-        javascriptGenerator.provideFunction_(
+        const readStdinName = javascriptGenerator.provideFunction_(
             'readStdin',
             `
+var stdinBuffer = '';
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
-  var stdinBuffer = '';
-  function readStdin() {
-      if (stdinBuffer == '')
-          return input();
-      if (typeof stdinBuffer === 'undefined')
-          stdinBuffer = '';
-      return stdinBuffer;
-  };
+  if (stdinBuffer == '')
+      return input();
+  if (typeof stdinBuffer === 'undefined')
+      stdinBuffer = '';
+  return stdinBuffer;
 }
         `);
 
-        javascriptGenerator.provideFunction_(
+        const inputNumListName = javascriptGenerator.provideFunction_(
             'input_num_list',
             `
 function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
-  var parts = readStdin().split(/\\s+/);
+  var parts = ${readStdinName}().split(/\\s+/);
   for(var i=0; i<parts.length; i++) {
       parts[i] = parseInt(parts[i]);
   }
@@ -170,7 +162,8 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
 }
         `);
 
-        var code = 'input_num_list()';
+        const code = `${inputNumListName}()`;
+
         return [code, JavascriptOrder.ATOMIC];
     };
 
