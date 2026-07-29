@@ -379,181 +379,181 @@ export function getStandardBlocklyBlocks(placeholderBlocks: boolean, showIfMutat
                 excludedByDefault: true
             }
         ],
-        // texts: [
-        //     {
-        //         name: "text",
-        //         blocklyXml: "<block type='text'></block>"
-        //     },
-        //     {
-        //         name: "text_eval",
-        //         blocklyXml: "<block type='text_eval'></block>"
-        //     },
-        //     {
-        //         name: "text_print",
-        //         blocklyXml: "<block type='text_print'>" +
-        //             "  <value name='TEXT'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'>abc</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_print_noend",
-        //         blocklyXml: "<block type='text_print_noend'>" +
-        //             "  <value name='TEXT'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'>abc</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_join",
-        //         blocklyXml: "<block type='text_join'></block>"
-        //     },
-        //     {
-        //         name: "text_append",
-        //         blocklyXml: "<block type='text_append'></block>"
-        //     },
-        //     {
-        //         name: "text_length",
-        //         blocklyXml: "<block type='text_length'>" +
-        //             "  <value name='VALUE'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'>abc</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_length_noShadow",
-        //         blocklyXml: "<block type='text_length'></block>",
-        //         excludedByDefault: true
-        //     },
-        //     {
-        //         name: "text_isEmpty",
-        //         blocklyXml: "<block type='text_isEmpty'>" +
-        //             "  <value name='VALUE'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'></field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_isEmpty_noShadow",
-        //         blocklyXml: "<block type='text_isEmpty'></block>",
-        //         excludedByDefault: true
-        //     },
-        //     {
-        //         name: "text_indexOf",
-        //         blocklyXml: "<block type='text_indexOf'>" +
-        //             "  <value name='VALUE'>" +
-        //             "    <block type='variables_get'>" +
-        //             "      <field name='VAR'>{textVariable}</field>" +
-        //             "    </block>" +
-        //             "  </value>" +
-        //             "  <value name='FIND'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'>abc</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_indexOf_noShadow",
-        //         blocklyXml: "<block type='text_indexOf'></block>",
-        //         excludedByDefault: true
-        //     },
-        //     {
-        //         name: "text_charAt",
-        //         blocklyXml: "<block type='text_charAt'>" +
-        //             "  <value name='VALUE'>" +
-        //             "    <block type='variables_get'>" +
-        //             "      <field name='VAR'>{textVariable}</field>" +
-        //             "    </block>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_charAt_noShadow",
-        //         blocklyXml: "<block type='text_charAt'></block>",
-        //         excludedByDefault: true
-        //
-        //     },
-        //     {
-        //         name: "text_getSubstring",
-        //         blocklyXml: "<block type='text_getSubstring'>" +
-        //             "  <value name='STRING'>" +
-        //             "    <block type='variables_get'>" +
-        //             "      <field name='VAR'>{textVariable}</field>" +
-        //             "    </block>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_getSubstring_noShadow",
-        //         blocklyXml: "<block type='text_getSubstring'></block>",
-        //         excludedByDefault: true
-        //     },
-        //     {
-        //         name: "text_changeCase",
-        //         blocklyXml: "<block type='text_changeCase'>" +
-        //             "  <value name='TEXT'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'>abc</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_changeCase_noShadow",
-        //         blocklyXml: "<block type='text_changeCase'></block>",
-        //         excludedByDefault: true
-        //     },
-        //     {
-        //         name: "text_trim",
-        //         blocklyXml: "<block type='text_trim'>" +
-        //             "  <value name='TEXT'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'>abc</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "text_trim_noShadow",
-        //         blocklyXml: "<block type='text_trim'></block>",
-        //         excludedByDefault: true
-        //     },
-        //     {
-        //         name: "text_print_noShadow",
-        //         blocklyXml: "<block type='text_print'></block>",
-        //         excludedByDefault: true
-        //     },
-        //     {
-        //         name: "text_prompt_ext",
-        //         blocklyXml: "<block type='text_prompt_ext'>" +
-        //             "  <value name='TEXT'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'>abc</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>",
-        //         excludedByDefault: true
-        //     },
-        //     {
-        //         name: "text_prompt_ext_noShadow",
-        //         blocklyXml: "<block type='text_prompt_ext'></block>",
-        //         excludedByDefault: true
-        //     },
-        //
-        //     {
-        //         name: "text_str",
-        //         blocklyXml: "<block type='text_str'></block>"
-        //     }
-        // ],
+        texts: [
+            {
+                name: "text",
+                blocklyXml: "<block type='text'></block>"
+            },
+            {
+                name: "text_eval",
+                blocklyXml: "<block type='text_eval'></block>"
+            },
+            {
+                name: "text_print",
+                blocklyXml: "<block type='text_print'>" +
+                    "  <value name='TEXT'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'>abc</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_print_noend",
+                blocklyXml: "<block type='text_print_noend'>" +
+                    "  <value name='TEXT'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'>abc</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_join",
+                blocklyXml: "<block type='text_join'></block>"
+            },
+            {
+                name: "text_append",
+                blocklyXml: "<block type='text_append'></block>"
+            },
+            {
+                name: "text_length",
+                blocklyXml: "<block type='text_length'>" +
+                    "  <value name='VALUE'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'>abc</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_length_noShadow",
+                blocklyXml: "<block type='text_length'></block>",
+                excludedByDefault: true
+            },
+            {
+                name: "text_isEmpty",
+                blocklyXml: "<block type='text_isEmpty'>" +
+                    "  <value name='VALUE'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'></field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_isEmpty_noShadow",
+                blocklyXml: "<block type='text_isEmpty'></block>",
+                excludedByDefault: true
+            },
+            {
+                name: "text_indexOf",
+                blocklyXml: "<block type='text_indexOf'>" +
+                    "  <value name='VALUE'>" +
+                    "    <block type='variables_get'>" +
+                    "      <field name='VAR'>{textVariable}</field>" +
+                    "    </block>" +
+                    "  </value>" +
+                    "  <value name='FIND'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'>abc</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_indexOf_noShadow",
+                blocklyXml: "<block type='text_indexOf'></block>",
+                excludedByDefault: true
+            },
+            {
+                name: "text_charAt",
+                blocklyXml: "<block type='text_charAt'>" +
+                    "  <value name='VALUE'>" +
+                    "    <block type='variables_get'>" +
+                    "      <field name='VAR'>{textVariable}</field>" +
+                    "    </block>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_charAt_noShadow",
+                blocklyXml: "<block type='text_charAt'></block>",
+                excludedByDefault: true
+
+            },
+            {
+                name: "text_getSubstring",
+                blocklyXml: "<block type='text_getSubstring'>" +
+                    "  <value name='STRING'>" +
+                    "    <block type='variables_get'>" +
+                    "      <field name='VAR'>{textVariable}</field>" +
+                    "    </block>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_getSubstring_noShadow",
+                blocklyXml: "<block type='text_getSubstring'></block>",
+                excludedByDefault: true
+            },
+            {
+                name: "text_changeCase",
+                blocklyXml: "<block type='text_changeCase'>" +
+                    "  <value name='TEXT'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'>abc</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_changeCase_noShadow",
+                blocklyXml: "<block type='text_changeCase'></block>",
+                excludedByDefault: true
+            },
+            {
+                name: "text_trim",
+                blocklyXml: "<block type='text_trim'>" +
+                    "  <value name='TEXT'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'>abc</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "text_trim_noShadow",
+                blocklyXml: "<block type='text_trim'></block>",
+                excludedByDefault: true
+            },
+            {
+                name: "text_print_noShadow",
+                blocklyXml: "<block type='text_print'></block>",
+                excludedByDefault: true
+            },
+            {
+                name: "text_prompt_ext",
+                blocklyXml: "<block type='text_prompt_ext'>" +
+                    "  <value name='TEXT'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'>abc</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>",
+                excludedByDefault: true
+            },
+            {
+                name: "text_prompt_ext_noShadow",
+                blocklyXml: "<block type='text_prompt_ext'></block>",
+                excludedByDefault: true
+            },
+
+            {
+                name: "text_str",
+                blocklyXml: "<block type='text_str'></block>"
+            }
+        ],
         // lists: [
         //     {
         //         name: "lists_create_with_empty",

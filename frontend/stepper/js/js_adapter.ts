@@ -166,12 +166,4 @@ function ${javascriptGenerator.FUNCTION_NAME_PLACEHOLDER_}() {
 
         return [code, JavascriptOrder.ATOMIC];
     };
-
-
-    javascriptGenerator.forBlock['text_print'] = function (block) {
-        return "print(" + (javascriptGenerator.valueToCode(block, "TEXT", JavascriptOrder.NONE) || "''") + ");\n";
-    };
-    javascriptGenerator.forBlock['text_print_noend'] = function (block) {
-        return "print(" + (javascriptGenerator.valueToCode(block, "TEXT", JavascriptOrder.NONE) || "''") + ", '');\n";
-    };
 }

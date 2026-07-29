@@ -20,6 +20,8 @@ import {
 } from '@blockly/continuous-toolbox';
 import {BlocklyColours, HexColor} from './blockly_types';
 import {addTableBlocks} from './blocks/tables';
+import {addMathBlocks} from './blocks/math';
+import {addTextBlocks} from './blocks/text';
 
 registerFieldAngle();
 
@@ -307,6 +309,8 @@ export class BlocklyHelper {
         const defaultColors = this.getDefaultColours();
         addExtraBlocks(this.strings, defaultColors, !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
         addTableBlocks(defaultColors);
+        addMathBlocks(defaultColors);
+        addTextBlocks(defaultColors);
         this.createSimpleGeneratorsAndBlocks();
 
         adaptJsBlocks();
