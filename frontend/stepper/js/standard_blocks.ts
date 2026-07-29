@@ -4,32 +4,32 @@ function getPlaceholderBlock(placeholderBlocks: boolean, name: string): string {
 
 export function getStandardBlocks(scratchMode: boolean, placeholderBlocks: boolean, showIfMutator: boolean = false) {
     return {
-        // input: [
-        //     {
-        //         name: "input_num",
-        //         blocklyXml: "<block type='input_num'></block>"
-        //     },
-        //     {
-        //         name: "input_num_list",
-        //         blocklyXml: "<block type='input_num_list'></block>"
-        //     },
-        //     {
-        //         name: "input_line",
-        //         blocklyXml: "<block type='input_line'></block>"
-        //     },
-        //     {
-        //         name: "input_num_next",
-        //         blocklyXml: "<block type='input_num_next'></block>"
-        //     },
-        //     {
-        //         name: "input_char",
-        //         blocklyXml: "<block type='input_char'></block>"
-        //     },
-        //     {
-        //         name: "input_word",
-        //         blocklyXml: "<block type='input_word'></block>"
-        //     }
-        // ],
+        input: [
+            {
+                name: "input_num",
+                blocklyXml: "<block type='input_num'></block>"
+            },
+            {
+                name: "input_num_list",
+                blocklyXml: "<block type='input_num_list'></block>"
+            },
+            {
+                name: "input_line",
+                blocklyXml: "<block type='input_line'></block>"
+            },
+            {
+                name: "input_num_next",
+                blocklyXml: "<block type='input_num_next'></block>"
+            },
+            {
+                name: "input_char",
+                blocklyXml: "<block type='input_char'></block>"
+            },
+            {
+                name: "input_word",
+                blocklyXml: "<block type='input_word'></block>"
+            }
+        ],
         ...(scratchMode ? {
             control: [
                 {

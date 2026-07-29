@@ -8,7 +8,6 @@ import * as Blockly from 'blockly/core';
 import {BlocklyOptions} from 'blockly/core';
 import {JavascriptGenerator, javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript';
 import {PythonGenerator, pythonGenerator, Order as PythonOrder} from 'blockly/python';
-import {adaptJsBlocks} from './js_adapter';
 import {registerFieldAngle} from '@blockly/field-angle';
 import {
     ContinuousToolbox,
@@ -23,6 +22,7 @@ import {addMathBlocks} from './blocks/math';
 import {addTextBlocks} from './blocks/text';
 import {addDictBlocks} from './blocks/dicts';
 import {addListBlocks} from './blocks/lists';
+import {addInputBlocks} from './blocks/inputs';
 
 registerFieldAngle();
 
@@ -282,14 +282,13 @@ export class BlocklyHelper {
 
         const defaultColors = this.getDefaultColours();
         addExtraBlocks(this.strings, defaultColors, !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
+        addInputBlocks(defaultColors);
         addTableBlocks(defaultColors);
         addMathBlocks(defaultColors);
         addTextBlocks(defaultColors);
         addDictBlocks(defaultColors);
         addListBlocks(defaultColors);
         this.createSimpleGeneratorsAndBlocks();
-
-        adaptJsBlocks();
 
         this.display = display;
 
