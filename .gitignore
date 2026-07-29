@@ -12,3 +12,4 @@ sysroot/usr/include/quickpi.h
 localhost.pem
 localhost-key.pem
 .claude/
+.mcp.json

@@ -55,14 +55,23 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
 
     const availableLanguages = import.meta.glob('../../lang/blockly_*.ts', {
         eager: true,
-        import: 'default',
     });
     const path = `../../lang/blockly_${language}.ts`;
     const languageTranslations: any = availableLanguages[path];
-    const isMobile = yield* appSelect(state => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
 
-    for (const key in languageTranslations.Msg) {
-        Blockly.Msg[key] = languageTranslations.Msg[key];
+    for (const key in languageTranslations.Blockly.Msg) {
+        Blockly.Msg[key] = languageTranslations.Blockly.Msg[key];
+    }
+    for (const key in languageTranslations.FioiBlockly.Msg) {
+        Blockly.Msg[key] = languageTranslations.FioiBlockly.Msg[key];
+    }
+
+    const fioiBlocklyDefaultLang = 'fr';
+    const fioiBlocklyDefaultLangTranslations: any = availableLanguages[`../../lang/blockly_${fioiBlocklyDefaultLang}.ts`];
+    for (const key in fioiBlocklyDefaultLangTranslations.FioiBlockly.Msg) {
+        if(typeof Blockly.Msg[key] == 'undefined') {
+            Blockly.Msg[key] = fioiBlocklyDefaultLangTranslations.FioiBlockly.Msg[key];
+        }
     }
 
     javascriptGenerator.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
