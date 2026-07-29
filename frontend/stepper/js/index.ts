@@ -19,8 +19,33 @@ import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
 import 'blockly/javascript';
 import {javascriptGenerator} from 'blockly/javascript';
+import * as BlocklyMsgDe from 'blockly/msg/de';
+import * as BlocklyMsgEn from 'blockly/msg/en';
+import * as BlocklyMsgFr from 'blockly/msg/fr';
+import * as BlocklyMsgNl from 'blockly/msg/nl';
+import FioiBlocklyDe from '../../lang/blockly_de';
+import FioiBlocklyEn from '../../lang/blockly_en';
+import FioiBlocklyFr from '../../lang/blockly_fr';
+import FioiBlocklyNl from '../../lang/blockly_nl';
 import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {CodecastPlatform} from '../codecast_platform';
+
+const blocklyLocales: {[language: string]: any} = {
+    de: BlocklyMsgDe,
+    en: BlocklyMsgEn,
+    fr: BlocklyMsgFr,
+    nl: BlocklyMsgNl,
+};
+
+const fioiBlocklyLocales: {[language: string]: any} = {
+    de: FioiBlocklyDe,
+    en: FioiBlocklyEn,
+    fr: FioiBlocklyFr,
+    nl: FioiBlocklyNl,
+};
+
+const blocklyDefaultLang = 'en';
+const fioiBlocklyDefaultLang = 'fr';
 
 // TODO Blockly: don't expose Blockly to all window. Check after FioiBlockly has been migrated
 window.Blockly = Blockly;
@@ -53,24 +78,17 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
 
     const language = options.language.split('-')[0];
 
-    const availableLanguages = import.meta.glob('../../lang/blockly_*.ts', {
-        eager: true,
-    });
-    const path = `../../lang/blockly_${language}.ts`;
-    const languageTranslations: any = availableLanguages[path];
+    Blockly.setLocale(blocklyLocales[language] ?? blocklyLocales[blocklyDefaultLang]);
 
-    for (const key in languageTranslations.Blockly.Msg) {
-        Blockly.Msg[key] = languageTranslations.Blockly.Msg[key];
-    }
-    for (const key in languageTranslations.FioiBlockly.Msg) {
-        Blockly.Msg[key] = languageTranslations.FioiBlockly.Msg[key];
+    const fioiBlocklyTranslations = fioiBlocklyLocales[language] ?? fioiBlocklyLocales[fioiBlocklyDefaultLang];
+    for (const key in fioiBlocklyTranslations.Msg) {
+        Blockly.Msg[key] = fioiBlocklyTranslations.Msg[key];
     }
 
-    const fioiBlocklyDefaultLang = 'fr';
-    const fioiBlocklyDefaultLangTranslations: any = availableLanguages[`../../lang/blockly_${fioiBlocklyDefaultLang}.ts`];
-    for (const key in fioiBlocklyDefaultLangTranslations.FioiBlockly.Msg) {
-        if(typeof Blockly.Msg[key] == 'undefined') {
-            Blockly.Msg[key] = fioiBlocklyDefaultLangTranslations.FioiBlockly.Msg[key];
+    const fioiBlocklyDefaultLangTranslations = fioiBlocklyLocales[fioiBlocklyDefaultLang];
+    for (const key in fioiBlocklyDefaultLangTranslations.Msg) {
+        if (typeof Blockly.Msg[key] == 'undefined') {
+            Blockly.Msg[key] = fioiBlocklyDefaultLangTranslations.Msg[key];
         }
     }
 
