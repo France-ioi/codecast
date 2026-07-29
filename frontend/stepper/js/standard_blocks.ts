@@ -2,123 +2,8 @@ function getPlaceholderBlock(placeholderBlocks: boolean, name: string): string {
     return placeholderBlocks ? "<statement name='" + name + "'><shadow type='placeholder_statement'></shadow></statement>" : '';
 }
 
-export function getStandardScratchBlocks(placeholderBlocks: boolean, showIfMutator: boolean = false) {
-    // TODO Blockly: re-enable lists, dicts, texts blocks when FioiBlockly is migrated
-
+export function getStandardBlocks(scratchMode: boolean, placeholderBlocks: boolean, showIfMutator: boolean = false) {
     return {
-        control: [
-            {
-                name: "controls_if",
-                blocklyXml: "<block type='controls_if'>" +
-                    getPlaceholderBlock(placeholderBlocks, 'DO0') +
-                    "</block>"
-            },
-            {
-                name: "controls_if_else",
-                blocklyXml: "<block type='controls_if'><mutation else='1'></mutation>" +
-                    getPlaceholderBlock(placeholderBlocks, 'DO0') +
-                    getPlaceholderBlock(placeholderBlocks, 'ELSE') +
-                    "</block>",
-                excludedByDefault: showIfMutator,
-            },
-            {
-                name: "controls_loop",
-                blocklyXml: "<block type='controls_loop'></block>",
-                excludedByDefault: true
-            },
-            {
-                name: "controls_repeat",
-                blocklyXml: "<block type='controls_repeat'>" +
-                    getPlaceholderBlock(placeholderBlocks, 'DO') +
-                    "</block>",
-                excludedByDefault: true
-            },
-            {
-                name: "controls_repeat_ext",
-                blocklyXml: "<block type='controls_repeat_ext'>" +
-                    "  <value name='TIMES'>" +
-                    "    <shadow type='math_number'>" +
-                    "      <field name='NUM'>10</field>" +
-                    "    </shadow>" +
-                    "  </value>" +
-                    getPlaceholderBlock(placeholderBlocks, 'DO') +
-                    "</block>"
-            },
-            {
-                name: "controls_repeat_ext_noShadow",
-                blocklyXml: "<block type='controls_repeat_ext'></block>",
-                excludedByDefault: true
-            },
-            {
-                name: "controls_whileUntil",
-                blocklyXml: "<block type='controls_whileUntil'></block>"
-            },
-            {
-                name: "controls_untilWhile",
-                blocklyXml: "<block type='controls_whileUntil'><field name='MODE'>UNTIL</field></block>",
-                excludedByDefault: true
-            },
-            {
-                name: "controls_for",
-                blocklyXml: "<block type='controls_for'>" +
-                    "  <value name='FROM'>" +
-                    "    <shadow type='math_number'>" +
-                    "      <field name='NUM'>1</field>" +
-                    "    </shadow>" +
-                    "  </value>" +
-                    "  <value name='TO'>" +
-                    "    <shadow type='math_number'>" +
-                    "      <field name='NUM'>10</field>" +
-                    "     </shadow>" +
-                    "  </value>" +
-                    "  <value name='BY'>" +
-                    "    <shadow type='math_number'>" +
-                    "      <field name='NUM'>1</field>" +
-                    "    </shadow>" +
-                    "  </value>" +
-                    "</block>"
-            },
-            {
-                name: "controls_for_noShadow",
-                blocklyXml: "<block type='controls_for'></block>",
-                excludedByDefault: true
-            },
-            {
-                name: "controls_for_fillShadow",
-                blocklyXml: "<block type='controls_for'>" +
-                    "  <value name='FROM'>" +
-                    "    <block type='math_number'>" +
-                    "      <field name='NUM'>1</field>" +
-                    "    </block>" +
-                    "  </value>" +
-                    "  <value name='TO'>" +
-                    "    <block type='math_number'>" +
-                    "      <field name='NUM'>10</field>" +
-                    "     </block>" +
-                    "  </value>" +
-                    "  <value name='BY'>" +
-                    "    <block type='math_number'>" +
-                    "      <field name='NUM'>1</field>" +
-                    "    </block>" +
-                    "  </value>" +
-                    "</block>",
-                excludedByDefault: true
-            },
-            {
-                name: "controls_forEach",
-                blocklyXml: "<block type='controls_forEach'></block>",
-                excludedByDefault: true
-            },
-            {
-                name: "controls_flow_statements",
-                blocklyXml: "<block type='controls_flow_statements'></block>"
-            },
-            {
-                name: "controls_infiniteloop",
-                blocklyXml: "<block type='controls_infiniteloop'></block>",
-                excludedByDefault: true
-            },
-        ],
         // input: [
         //     {
         //         name: "input_num",
@@ -145,34 +30,291 @@ export function getStandardScratchBlocks(placeholderBlocks: boolean, showIfMutat
         //         blocklyXml: "<block type='input_word'></block>"
         //     }
         // ],
-        operator: [
-            {
-                name: "logic_compare",
-                blocklyXml: "<block type='logic_compare'></block>"
-            },
-            {
-                name: "logic_operation",
-                blocklyXml: "<block type='logic_operation' inline='false'></block>"
-            },
-            {
-                name: "logic_negate",
-                blocklyXml: "<block type='logic_negate'></block>"
-            },
-            {
-                name: "logic_boolean",
-                blocklyXml: "<block type='logic_boolean'></block>"
-            },
-            {
-                name: "logic_null",
-                blocklyXml: "<block type='logic_null'></block>",
-                excludedByDefault: true
-            },
-            {
-                name: "logic_ternary",
-                blocklyXml: "<block type='logic_ternary'></block>",
-                excludedByDefault: true
-            },
-        ],
+        ...(scratchMode ? {
+            control: [
+                {
+                    name: "controls_if",
+                    blocklyXml: "<block type='controls_if'>" +
+                        getPlaceholderBlock(placeholderBlocks, 'DO0') +
+                        "</block>"
+                },
+                {
+                    name: "controls_if_else",
+                    blocklyXml: "<block type='controls_if'><mutation else='1'></mutation>" +
+                        getPlaceholderBlock(placeholderBlocks, 'DO0') +
+                        getPlaceholderBlock(placeholderBlocks, 'ELSE') +
+                        "</block>",
+                    excludedByDefault: showIfMutator,
+                },
+                {
+                    name: "controls_loop",
+                    blocklyXml: "<block type='controls_loop'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_repeat",
+                    blocklyXml: "<block type='controls_repeat'>" +
+                        getPlaceholderBlock(placeholderBlocks, 'DO') +
+                        "</block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_repeat_ext",
+                    blocklyXml: "<block type='controls_repeat_ext'>" +
+                        "  <value name='TIMES'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>10</field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        getPlaceholderBlock(placeholderBlocks, 'DO') +
+                        "</block>"
+                },
+                {
+                    name: "controls_repeat_ext_noShadow",
+                    blocklyXml: "<block type='controls_repeat_ext'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_whileUntil",
+                    blocklyXml: "<block type='controls_whileUntil'></block>"
+                },
+                {
+                    name: "controls_untilWhile",
+                    blocklyXml: "<block type='controls_whileUntil'><field name='MODE'>UNTIL</field></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_for",
+                    blocklyXml: "<block type='controls_for'>" +
+                        "  <value name='FROM'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>1</field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        "  <value name='TO'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>10</field>" +
+                        "     </shadow>" +
+                        "  </value>" +
+                        "  <value name='BY'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>1</field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        "</block>"
+                },
+                {
+                    name: "controls_for_noShadow",
+                    blocklyXml: "<block type='controls_for'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_for_fillShadow",
+                    blocklyXml: "<block type='controls_for'>" +
+                        "  <value name='FROM'>" +
+                        "    <block type='math_number'>" +
+                        "      <field name='NUM'>1</field>" +
+                        "    </block>" +
+                        "  </value>" +
+                        "  <value name='TO'>" +
+                        "    <block type='math_number'>" +
+                        "      <field name='NUM'>10</field>" +
+                        "     </block>" +
+                        "  </value>" +
+                        "  <value name='BY'>" +
+                        "    <block type='math_number'>" +
+                        "      <field name='NUM'>1</field>" +
+                        "    </block>" +
+                        "  </value>" +
+                        "</block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_forEach",
+                    blocklyXml: "<block type='controls_forEach'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_flow_statements",
+                    blocklyXml: "<block type='controls_flow_statements'></block>"
+                },
+                {
+                    name: "controls_infiniteloop",
+                    blocklyXml: "<block type='controls_infiniteloop'></block>",
+                    excludedByDefault: true
+                },
+            ],
+            operator: [
+                {
+                    name: "logic_compare",
+                    blocklyXml: "<block type='logic_compare'></block>"
+                },
+                {
+                    name: "logic_operation",
+                    blocklyXml: "<block type='logic_operation' inline='false'></block>"
+                },
+                {
+                    name: "logic_negate",
+                    blocklyXml: "<block type='logic_negate'></block>"
+                },
+                {
+                    name: "logic_boolean",
+                    blocklyXml: "<block type='logic_boolean'></block>"
+                },
+                {
+                    name: "logic_null",
+                    blocklyXml: "<block type='logic_null'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "logic_ternary",
+                    blocklyXml: "<block type='logic_ternary'></block>",
+                    excludedByDefault: true
+                },
+            ],
+        } : {
+            logic: [
+                {
+                    name: "controls_if",
+                    blocklyXml: "<block type='controls_if'>" +
+                        getPlaceholderBlock(placeholderBlocks, 'DO0') +
+                        "</block>"
+                },
+                {
+                    name: "controls_if_else",
+                    blocklyXml: "<block type='controls_if'><mutation else='1'></mutation>" +
+                        getPlaceholderBlock(placeholderBlocks, 'DO0') +
+                        getPlaceholderBlock(placeholderBlocks, 'ELSE') +
+                        "</block>",
+                    excludedByDefault: showIfMutator,
+                },
+                {
+                    name: "logic_compare",
+                    blocklyXml: "<block type='logic_compare'></block>"
+                },
+                {
+                    name: "logic_operation",
+                    blocklyXml: "<block type='logic_operation' inline='false'></block>"
+                },
+                {
+                    name: "logic_negate",
+                    blocklyXml: "<block type='logic_negate'></block>"
+                },
+                {
+                    name: "logic_boolean",
+                    blocklyXml: "<block type='logic_boolean'></block>"
+                },
+                {
+                    name: "logic_null",
+                    blocklyXml: "<block type='logic_null'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "logic_ternary",
+                    blocklyXml: "<block type='logic_ternary'></block>",
+                    excludedByDefault: true
+                }
+            ],
+            loops: [
+                {
+                    name: "controls_loop",
+                    blocklyXml: "<block type='controls_loop'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_repeat",
+                    blocklyXml: "<block type='controls_repeat'>" +
+                        getPlaceholderBlock(placeholderBlocks, 'DO') +
+                        "</block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_repeat_ext",
+                    blocklyXml: "<block type='controls_repeat_ext'>" +
+                        "  <value name='TIMES'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>10</field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        getPlaceholderBlock(placeholderBlocks, 'DO') +
+                        "</block>"
+                },
+                {
+                    name: "controls_repeat_ext_noShadow",
+                    blocklyXml: "<block type='controls_repeat_ext'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_whileUntil",
+                    blocklyXml: "<block type='controls_whileUntil'></block>"
+                },
+                {
+                    name: "controls_untilWhile",
+                    blocklyXml: "<block type='controls_whileUntil'><field name='MODE'>UNTIL</field></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_for",
+                    blocklyXml: "<block type='controls_for'>" +
+                        "  <value name='FROM'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>1</field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        "  <value name='TO'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>10</field>" +
+                        "     </shadow>" +
+                        "  </value>" +
+                        "  <value name='BY'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>1</field>" +
+                        "    </shadow>" +
+                        "  </value>" +
+                        "</block>"
+                },
+                {
+                    name: "controls_for_noShadow",
+                    blocklyXml: "<block type='controls_for'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_for_fillShadow",
+                    blocklyXml: "<block type='controls_for'>" +
+                        "  <value name='FROM'>" +
+                        "    <block type='math_number'>" +
+                        "      <field name='NUM'>1</field>" +
+                        "    </block>" +
+                        "  </value>" +
+                        "  <value name='TO'>" +
+                        "    <block type='math_number'>" +
+                        "      <field name='NUM'>10</field>" +
+                        "     </block>" +
+                        "  </value>" +
+                        "  <value name='BY'>" +
+                        "    <block type='math_number'>" +
+                        "      <field name='NUM'>1</field>" +
+                        "    </block>" +
+                        "  </value>" +
+                        "</block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_forEach",
+                    blocklyXml: "<block type='controls_forEach'></block>",
+                    excludedByDefault: true
+                },
+                {
+                    name: "controls_flow_statements",
+                    blocklyXml: "<block type='controls_flow_statements'></block>"
+                },
+                {
+                    name: "controls_infiniteloop",
+                    blocklyXml: "<block type='controls_infiniteloop'></block>",
+                    excludedByDefault: true
+                },
+            ],
+        }),
         math: [
             {
                 name: "math_number",
@@ -554,98 +696,98 @@ export function getStandardScratchBlocks(placeholderBlocks: boolean, showIfMutat
                 blocklyXml: "<block type='text_str'></block>"
             }
         ],
-        // lists: [
-        //     {
-        //         name: "lists_create_with_empty",
-        //         blocklyXml: "<block type='lists_create_with'>" +
-        //             "  <mutation items='0'></mutation>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "lists_create_with",
-        //         blocklyXml: "<block type='lists_create_with'></block>"
-        //     },
-        //     {
-        //         name: "lists_repeat",
-        //         blocklyXml: "<block type='lists_repeat'>" +
-        //             "  <value name='NUM'>" +
-        //             "    <shadow type='math_number'>" +
-        //             "      <field name='NUM'>5</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "lists_length",
-        //         blocklyXml: "<block type='lists_length'></block>"
-        //     },
-        //     {
-        //         name: "lists_isEmpty",
-        //         blocklyXml: "<block type='lists_isEmpty'></block>"
-        //     },
-        //     {
-        //         name: "lists_indexOf",
-        //         blocklyXml: "<block type='lists_indexOf'>" +
-        //             "  <value name='VALUE'>" +
-        //             "    <block type='variables_get'>" +
-        //             "      <field name='VAR'>{listVariable}</field>" +
-        //             "    </block>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "lists_getIndex",
-        //         blocklyXml: "<block type='lists_getIndex'>" +
-        //             "  <value name='VALUE'>" +
-        //             "    <block type='variables_get'>" +
-        //             "      <field name='VAR'>{listVariable}</field>" +
-        //             "    </block>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "lists_setIndex",
-        //         blocklyXml: "<block type='lists_setIndex'>" +
-        //             "  <value name='LIST'>" +
-        //             "    <block type='variables_get'>" +
-        //             "      <field name='VAR'>{listVariable}</field>" +
-        //             "    </block>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "lists_getSublist",
-        //         blocklyXml: "<block type='lists_getSublist'>" +
-        //             "  <value name='LIST'>" +
-        //             "    <block type='variables_get'>" +
-        //             "      <field name='VAR'>{listVariable}</field>" +
-        //             "    </block>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "lists_sort_place",
-        //         blocklyXml: "<block type='lists_sort_place'><field name='VAR'>{listVariable}</field></block>"
-        //     },
-        //     {
-        //         name: "lists_sort",
-        //         blocklyXml: "<block type='lists_sort'></block>"
-        //     },
-        //     {
-        //         name: "lists_split",
-        //         blocklyXml: "<block type='lists_split'>" +
-        //             "  <value name='DELIM'>" +
-        //             "    <shadow type='text'>" +
-        //             "      <field name='TEXT'>,</field>" +
-        //             "    </shadow>" +
-        //             "  </value>" +
-        //             "</block>"
-        //     },
-        //     {
-        //         name: "lists_append",
-        //         blocklyXml: "<block type='lists_append'><field name='VAR'>{listVariable}</field></block>"
-        //     }
-        // ],
+        lists: [
+            {
+                name: "lists_create_empty",
+                blocklyXml: "<block type='lists_create_with'>" +
+                    "  <mutation items='0'></mutation>" +
+                    "</block>"
+            },
+            {
+                name: "lists_create_with",
+                blocklyXml: "<block type='lists_create_with'></block>"
+            },
+            {
+                name: "lists_repeat",
+                blocklyXml: "<block type='lists_repeat'>" +
+                    "  <value name='NUM'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>5</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "lists_length",
+                blocklyXml: "<block type='lists_length'></block>"
+            },
+            {
+                name: "lists_isEmpty",
+                blocklyXml: "<block type='lists_isEmpty'></block>"
+            },
+            {
+                name: "lists_indexOf",
+                blocklyXml: "<block type='lists_indexOf'>" +
+                    "  <value name='VALUE'>" +
+                    "    <block type='variables_get'>" +
+                    "      <field name='VAR'>{listVariable}</field>" +
+                    "    </block>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "lists_getIndex",
+                blocklyXml: "<block type='lists_getIndex'>" +
+                    "  <value name='VALUE'>" +
+                    "    <block type='variables_get'>" +
+                    "      <field name='VAR'>{listVariable}</field>" +
+                    "    </block>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "lists_setIndex",
+                blocklyXml: "<block type='lists_setIndex'>" +
+                    "  <value name='LIST'>" +
+                    "    <block type='variables_get'>" +
+                    "      <field name='VAR'>{listVariable}</field>" +
+                    "    </block>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "lists_getSublist",
+                blocklyXml: "<block type='lists_getSublist'>" +
+                    "  <value name='LIST'>" +
+                    "    <block type='variables_get'>" +
+                    "      <field name='VAR'>{listVariable}</field>" +
+                    "    </block>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "lists_sort_place",
+                blocklyXml: "<block type='lists_sort_place'><field name='VAR'>{listVariable}</field></block>"
+            },
+            {
+                name: "lists_sort",
+                blocklyXml: "<block type='lists_sort'></block>"
+            },
+            {
+                name: "lists_split",
+                blocklyXml: "<block type='lists_split'>" +
+                    "  <value name='DELIM'>" +
+                    "    <shadow type='text'>" +
+                    "      <field name='TEXT'>,</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>"
+            },
+            {
+                name: "lists_append",
+                blocklyXml: "<block type='lists_append'><field name='VAR'>{listVariable}</field></block>"
+            }
+        ],
         tables: [
             {
                 name: "tables_2d_init",
@@ -834,24 +976,24 @@ export function getStandardScratchBlocks(placeholderBlocks: boolean, showIfMutat
                 excludedByDefault: true
             }
         ],
-        // dicts: [
-        //     {
-        //         name: "dicts_create_with",
-        //         blocklyXml: "<block type='dicts_create_with'></block>"
-        //     },
-        //     {
-        //         name: "dict_get_literal",
-        //         blocklyXml: "<block type='dict_get_literal'></block>"
-        //     },
-        //     {
-        //         name: "dict_set_literal",
-        //         blocklyXml: "<block type='dict_set_literal'></block>"
-        //     },
-        //     {
-        //         name: "dict_keys",
-        //         blocklyXml: "<block type='dict_keys'></block>"
-        //     }
-        // ],
+        dicts: [
+            {
+                name: "dicts_create_with",
+                blocklyXml: "<block type='dicts_create_with'></block>"
+            },
+            {
+                name: "dict_get_literal",
+                blocklyXml: "<block type='dict_get_literal'></block>"
+            },
+            {
+                name: "dict_set_literal",
+                blocklyXml: "<block type='dict_set_literal'></block>"
+            },
+            {
+                name: "dict_keys",
+                blocklyXml: "<block type='dict_keys'></block>"
+            }
+        ],
         variables: [],
         functions: []
     };
