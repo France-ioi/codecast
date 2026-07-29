@@ -26,7 +26,7 @@ export function AvailableBlock(props: AvailableBlockProps) {
         }),
     }), [block])
 
-    const dragRef = useRef<HTMLDivElement>(null);
+    const dragRef = useRef<HTMLButtonElement>(null);
     drag(dragRef);
 
     useEffect(() => {
@@ -39,17 +39,25 @@ export function AvailableBlock(props: AvailableBlockProps) {
 
     const dispatch = useDispatch();
 
-    const insertBlock = useCallback(() => {
+    const insertBlock = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         dispatch(bufferInsertBlock({buffer: activeBufferName, block}));
+
+        // Take back focus from the editor if the block snippet does not contain variables
+        const isKeyboard = e.detail === 0;
+        if (!block?.snippet?.includes('${') && isKeyboard) {
+            setTimeout(() => {
+                dragRef.current?.focus();
+            });
+        }
     }, [activeBufferName, block]);
 
     return (
-        <div className="task-available-block" ref={dragRef} onClick={insertBlock}>
+        <button className="task-available-block" ref={dragRef} onClick={insertBlock}>
             <div className="task-available-block-name">
                 {block.caption}
             </div>
 
             {block.description && <div className="task-available-block-description" dangerouslySetInnerHTML={toHtml(block.description)}/>}
-        </div>
-    )
+        </button>
+    );
 }

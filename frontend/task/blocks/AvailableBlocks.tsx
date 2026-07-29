@@ -46,7 +46,7 @@ export function AvailableBlocks(props: AvailableBlocksProps) {
     };
 
     return (
-        <div className={`task-available-blocks-container ${isDragging ? 'is-dragging' : ''} ${props.collapsed ? 'is-collapsed' : ''}`} id="available-blocks">
+        <div className={`task-available-blocks-container ${isDragging ? 'is-dragging' : ''} ${props.collapsed ? 'is-collapsed' : ''}`} id="available-blocks" inert={props.collapsed}>
             <div className="task-available-blocks-header">
                 <h2 className="title">{getMessage('TASK_BLOCKS_TITLE')}</h2>
                 <p className="subtitle">{getMessage('TASK_BLOCKS_SUBTITLE')}</p>

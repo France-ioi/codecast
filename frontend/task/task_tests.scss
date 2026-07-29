@@ -50,6 +50,10 @@
     font-weight: bold;
     line-height: 36px;
 
+    &:focus {
+      outline-offset: -8px;
+    }
+
     &.is-selectable {
       cursor: pointer;
     }

@@ -75,6 +75,10 @@
   width: 42px;
   height: 48px;
   border-bottom-right-radius: var(--default-border-radius) !important;
+  &:focus {
+    outline-offset: -6px;
+    outline-color: white;
+  }
 }
 
 .task-layout-editor-container {
@@ -105,6 +109,10 @@
       word-wrap: normal;
     }
   }
+  &:focus {
+    outline-offset: -6px;
+    outline-color: white;
+  }
 }
 
 .block-category {
@@ -122,6 +130,12 @@
     align-items: center;
     cursor: pointer;
     padding: 10px 20px;
+    width: 100%;
+
+    &:focus {
+      outline-offset: -6px;
+      outline-color: white;
+    }
 
     .block-category-name {
       flex: auto;

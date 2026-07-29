@@ -1,4 +1,4 @@
-import React, {ReactElement, useState} from "react";
+import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {Button, Intent, Slider} from "@blueprintjs/core";
 import {ActionTypes} from "../actionTypes";
 import {useDispatch} from "react-redux";
@@ -35,6 +35,11 @@ export function StepperControls(props: StepperControlsProps) {
     const {showControls, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt, showStepper, layoutType} = stepperControlsState;
     const dispatch = useDispatch();
     const speedDisabled = stepperControlsState.controls && 'speed' in stepperControlsState.controls && (false === stepperControlsState.controls['speed'] || '_' === stepperControlsState.controls['speed']);
+
+    // The button that was last activated by the user. While the stepper runs, that button
+    // gets disabled and the browser drops keyboard focus from it; we restore focus once it
+    // becomes enabled again so the user can keep pressing Enter to run further steps.
+    const lastActivatedButtonRef = useRef<HTMLButtonElement | null>(null);
 
     const _button = (key: string, onClick: any, title: string, icon: React.JSX.Element, text?: string, classNames?: string): ReactElement => {
         const {controls} = stepperControlsState;
@@ -110,7 +115,10 @@ export function StepperControls(props: StepperControlsProps) {
             <div className="control-button-container" style={style}>
                 <Button
                     className={classNames}
-                    onClick={onClick}
+                    onClick={(event) => {
+                        lastActivatedButtonRef.current = event.currentTarget;
+                        onClick(event);
+                    }}
                     disabled={!props.enabled || disabled}
                     intent={intent}
                     title={title}
@@ -163,6 +171,37 @@ export function StepperControls(props: StepperControlsProps) {
     };
     const onChangeSpeed = (speed) => dispatch({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
 
+    // Whether the 'run' button is currently clickable, mirroring the disabled/hidden
+    // logic applied to it in `_button` (case 'run') and the `!canInterrupt` render guard.
+    const runControlMod = stepperControlsState.controls ? stepperControlsState.controls['run'] : undefined;
+    const isRunHidden = '_' === runControlMod || false === runControlMod;
+    const isRunDisabled = !props.enabled || !stepperControlsState.canStep || '-' === runControlMod || 'disabled' === runControlMod;
+    const isRunEnabled = !canInterrupt && !isRunHidden && !isRunDisabled;
+
+    // Once the stepper stops running, the previously activated button is enabled again:
+    // give it back keyboard focus so pressing Enter runs the next step.
+    useEffect(() => {
+        if (!stepperControlsState.isRunning) {
+            const button = lastActivatedButtonRef.current;
+            if (button && document.contains(button) && !button.disabled) {
+                button.focus();
+            }
+        }
+    }, [stepperControlsState.isRunning]);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if ((event.ctrlKey || event.metaKey) && 'Enter' === event.key && isRunEnabled) {
+                event.preventDefault();
+                onStepRun();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isRunEnabled, controlsType]);
+
     if (!showStepper) {
         return null;
     }
@@ -205,9 +244,10 @@ export function StepperControls(props: StepperControlsProps) {
                             onChange={onChangeSpeed}
                             min={0}
                             max={stepperMaxSpeed}
-                            stepSize={1}
+                            stepSize={10}
                             labelStepSize={stepperMaxSpeed}
                             labelRenderer={formatTime}
+                            handleHtmlProps={{'aria-label': getMessage('CONTROL_SPEED')}}
                         />
                         <FontAwesomeIcon icon={faRunning} className="extremity extremity-right"/>
                     </div>

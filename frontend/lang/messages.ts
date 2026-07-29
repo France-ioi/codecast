@@ -1,6 +1,7 @@
 import enUS from './en-US';
 import frFR from './fr-FR';
 import nlBE from './nl-BE';
+import deDE from './de-DE';
 import IntlMessageFormat from 'intl-messageformat';
 import {AppStore} from '../store';
 import {current, isDraft} from 'immer';
@@ -10,6 +11,7 @@ export const Languages = {
     'en-US': enUS,
     'fr-FR': frFR,
     'nl-BE': nlBE,
+    'de-DE': deDE,
 };
 export const Message = {
     toString: function () {

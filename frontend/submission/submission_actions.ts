@@ -1,4 +1,5 @@
 import {createAction} from '@reduxjs/toolkit';
+import {LayoutView} from '../task/layout/layout_types';
 
 export const callPlatformValidate = createAction('submission/callPlatformValidate', (action?: string) => ({
     payload: {
@@ -9,6 +10,11 @@ export const callPlatformLog = createAction('submission/callPlatformLog', (detai
     payload: {
         details,
         tag,
+    },
+}));
+export const callPlatformShowView = createAction('submission/callPlatformShowView', (view: LayoutView) => ({
+    payload: {
+        view,
     },
 }));
 export const submissionExecuteMyTests = createAction('submission/executeMyTests');

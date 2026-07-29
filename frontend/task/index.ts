@@ -318,7 +318,7 @@ function* taskLoadSaga(app: App, action) {
     // ]));
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
-    if (!isServerTask(currentTask) && 'main' === app.environment) {
+    if ('main' === app.environment) {
         yield* fork(subscribePlatformHelper);
     }
 
@@ -360,8 +360,6 @@ function* taskLoadSaga(app: App, action) {
                 defaultLevel = state.options.defaultLevel;
             } else if (currentTask.gridInfos?.defaultLevel && currentTask.gridInfos?.defaultLevel in levels) {
                 defaultLevel = currentTask.gridInfos.defaultLevel;
-            } else if ('easy' in levels) {
-                defaultLevel = 'easy';
             } else {
                 for (let level of taskLevelsList) {
                     if (level in levels) {

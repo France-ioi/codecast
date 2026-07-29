@@ -17,7 +17,6 @@ $color-active: color.adjust($color-hover, $alpha: -0.5);
   background: $color-background;
   border: 2px solid $color-theme;
   border-radius: 100%;
-  outline: none;
 
   &[disabled] {
     opacity: 0.5;

@@ -188,13 +188,8 @@ class TaskSubmissionExecutor {
             taskVariant,
             JSON.stringify(tests[testId].data),
         ];
-        const serialized = taskParameters.join('§');
-        let h1 = murmurhash3_32_gc(serialized, 0);
-        const cacheKey = h1 + murmurhash3_32_gc(h1 + serialized, 0); // Extend to 64-bit hash
 
-        if (!(cacheKey in executionsCache)) {
-            log.getLogger('tests').debug('Executions cache MISS', taskParameters, cacheKey);
-
+        return yield* this.executeWithCaching(taskParameters, function* () {
             const deferredPromise = new DeferredPromise<TaskSubmissionResultPayload>();
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, task, level, testId, tests, answer, resolve: deferredPromise.resolve}});
 
@@ -204,16 +199,30 @@ class TaskSubmissionExecutor {
             });
 
             if (outcome.result) {
-                executionsCache[cacheKey] = outcome.result;
+                return outcome.result;
             } else if (outcome.error) {
-                executionsCache[cacheKey] = outcome.error.payload.testResult;
+                return outcome.error.payload.testResult;
             }
+
+            throw new Error('Background execution returned no result');
+        });
+    }
+
+    *executeWithCaching(answerParameters: any[], execute: () => Generator<any>, useCache: boolean = false) {
+        const serialized = answerParameters.map(e => JSON.stringify(e)).join('§');
+        let h1 = murmurhash3_32_gc(serialized, 0);
+        const cacheKey = h1 + murmurhash3_32_gc(h1 + serialized, 0); // Extend to 64-bit hash
+
+        if (!(cacheKey in executionsCache) || !useCache) {
+            log.getLogger('tests').debug('Executions cache MISS', answerParameters, cacheKey);
+            executionsCache[cacheKey] = yield* execute();
         } else {
-            log.getLogger('tests').debug('Executions cache HIT', {level, testId, taskVariant}, cacheKey);
+            log.getLogger('tests').debug('Executions cache HIT', answerParameters, cacheKey);
         }
 
         return executionsCache[cacheKey];
     }
+
 
     *cancelBackgroundExecution() {
         const backgroundStore = Codecast.environments['background'].store;
@@ -231,69 +240,81 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {answer, answerToken, scope} = parameters;
-        const state = yield* appSelect();
-        const platform = answer.platform;
-        const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
+        let {answer, answerToken, scope, useCache} = parameters;
 
-        const serverSubmission: TaskSubmissionServer = {
-            evaluated: false,
-            date: new Date().toISOString(),
-            platform,
-            type: TaskSubmissionEvaluateOn.Server,
-            scope: scope ?? SubmissionExecutionScope.Submit,
-            userTests,
-        };
-        yield* put(submissionAddNewTaskSubmission(serverSubmission));
+        const answerParameters = [answer, scope];
 
-        const submissionIndex = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
-        const activeBufferName = state.buffers.activeBufferName;
-        yield* put(bufferAssociateToSubmission({buffer: activeBufferName, submissionIndex}));
+        const self = this;
 
-        const submissionsPaneEnabled = yield* appSelect(selectSubmissionsPaneEnabled);
-        if (submissionsPaneEnabled) {
-            yield* put(submissionChangePaneOpen(true));
-        }
+        const evaluateAnswer = function* () {
+            const state = yield* appSelect();
+            const platform = answer.platform;
+            const userTests = SubmissionExecutionScope.MyTests === scope ? getTaskLevelTests(state).filter(test => TaskTestGroupType.User === test.groupType) : [];
 
-        yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
-
-        try {
-            const submissionData = yield* makeServerSubmission(answer, answerToken, platform, userTests);
-            if (!submissionData.success) {
-                yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
-
-                return {score: 0};
-            }
-
-            const submissionId = submissionData.submissionId;
-            const deferredResult = new DeferredPromise<TaskSubmissionServerResult>();
-            submissionExecutionTasks[submissionIndex] = yield* fork([this, this.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId, deferredResult);
-
-            const submissionResult = yield* call(() => deferredResult.promise);
-
-            yield* call([this, this.handleSubmissionResult], submissionResult, submissionIndex, serverSubmission);
-
-            return {
-                score: submissionResult.score / 100,
-                message: submissionResult.errorMessage,
-                scoreToken: submissionResult.scoreToken,
+            const serverSubmission: TaskSubmissionServer = {
+                evaluated: false,
+                date: new Date().toISOString(),
+                platform,
+                type: TaskSubmissionEvaluateOn.Server,
+                scope: scope ?? SubmissionExecutionScope.Submit,
+                userTests,
             };
-        } catch (ex: any) {
-            yield* put(submissionUpdateTaskSubmission({
-                id: submissionIndex,
-                submission: {...serverSubmission, crashed: true}
-            }));
+            yield* put(submissionAddNewTaskSubmission(serverSubmission));
 
-            console.error(ex);
+            const submissionIndex = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
+            const activeBufferName = state.buffers.activeBufferName;
+            yield* put(bufferAssociateToSubmission({buffer: activeBufferName, submissionIndex}));
 
-            const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK').s
-                : getMessage('SUBMISSION_RESULTS_CRASHED_UNKNOWN').s;
-            yield* put(platformAnswerGraded({error: message}));
-
-            return {
-                error: message,
+            const submissionsPaneEnabled = yield* appSelect(selectSubmissionsPaneEnabled);
+            if (submissionsPaneEnabled) {
+                yield* put(submissionChangePaneOpen(true));
             }
-        }
+
+            yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
+
+            try {
+                const submissionData = yield* makeServerSubmission(answer, answerToken, platform, userTests);
+                if (!submissionData.success) {
+                    yield* put(submissionUpdateTaskSubmission({
+                        id: submissionIndex,
+                        submission: {...serverSubmission, crashed: true}
+                    }));
+
+                    return {score: 0};
+                }
+
+                const submissionId = submissionData.submissionId;
+                const deferredResult = new DeferredPromise<TaskSubmissionServerResult>();
+                submissionExecutionTasks[submissionIndex] = yield* fork([self, self.gradeAnswerLongPolling], submissionIndex, serverSubmission, submissionId, deferredResult);
+
+                const submissionResult = yield* call(() => deferredResult.promise);
+
+                yield* call([self, self.handleSubmissionResult], submissionResult, submissionIndex, serverSubmission);
+
+                return {
+                    score: submissionResult.score / 100,
+                    message: submissionResult.errorMessage,
+                    scoreToken: submissionResult.scoreToken,
+                };
+            } catch (ex: any) {
+                yield* put(submissionUpdateTaskSubmission({
+                    id: submissionIndex,
+                    submission: {...serverSubmission, crashed: true}
+                }));
+
+                console.error(ex);
+
+                const message = ex.message === 'Network request failed' ? getMessage('SUBMISSION_RESULTS_CRASHED_NETWORK').s
+                    : getMessage('SUBMISSION_RESULTS_CRASHED_UNKNOWN').s;
+                yield* put(platformAnswerGraded({error: message}));
+
+                return {
+                    error: message,
+                }
+            }
+        };
+
+        return yield* this.executeWithCaching(answerParameters, evaluateAnswer, useCache);
     }
 
     *gradeAnswerLongPolling(submissionIndex: number, serverSubmission: TaskSubmissionServer, submissionId: string, deferredResult: DeferredPromise<TaskSubmissionServerResult>) {

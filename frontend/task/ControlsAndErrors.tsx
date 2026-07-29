@@ -125,9 +125,23 @@ export function ControlsAndErrors() {
         dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.HintsNew}});
     };
 
+    useEffect(() => {
+        const onKeyPress = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && hasError && null === cancellableSubmission && errorClosable) {
+                onClearError();
+            }
+        };
+
+        document.addEventListener('keydown', onKeyPress);
+
+        return () => {
+            document.removeEventListener('keydown', onKeyPress);
+        };
+    }, [onClearError, hasError, cancellableSubmission, errorClosable]);
+
     return (
         <div className="controls-and-errors cursor-main-zone" data-cursor-zone="controls-and-errors">
-            {(showStepper || hasModes) && <div className={`mode-selector ${hasModes ? 'has-modes' : ''}`}>
+            {(showStepper || hasModes) && <div className={`mode-selector ${hasModes ? 'has-modes' : ''}`} inert={hasError && null === cancellableSubmission}>
                 {hasModes &&
                     <React.Fragment>
                         {currentTask && !showViews && <div
@@ -229,32 +243,35 @@ export function ControlsAndErrors() {
                 </div>}
             </div>}
 
-            {hasError && null === cancellableSubmission && <div className={`error-message ${errorClosable ? 'is-closable' : ''}`} onClick={onClearError}>
-                {errorClosable && <button type="button" className="close-button" onClick={onClearError}>
-                    <Cross/>
-                </button>}
-                <button type="button" className="maximize-button hidden-mobile" onClick={onMaximizeError}>
-                    <Maximize/>
-                </button>
-                <div className="error-message-wrapper">
-                    <Icon icon={<Notifications className="bell-icon"/>}/>
-                    <div className="message">
-                        {error}
+            <div aria-live="assertive">
+                {hasError && null === cancellableSubmission && <div className={`error-message ${errorClosable ? 'is-closable' : ''}`} onClick={onClearError}>
+                    {errorClosable && <button type="button" className="close-button" onClick={onClearError}>
+                        <Cross/>
+                        <span className="visually-hidden">{getMessage('TASK_ERROR_CLOSE')}</span>
+                    </button>}
+                    <button type="button" className="maximize-button hidden-mobile" onClick={onMaximizeError}>
+                        <Maximize/>
+                    </button>
+                    <div className="error-message-wrapper">
+                        <Icon icon={<Notifications className="bell-icon"/>}/>
+                        <div className="message">
+                            {error}
+                        </div>
+                        {codeHelpEnabled && <div className="codehelp-help">
+                            <Button
+                                className="quickalgo-button is-medium"
+                                onClick={(e) => {
+                                    openTaskHints();
+                                    e.stopPropagation();
+                                }}
+                            >
+                                <Lightbulb/>
+                                <span>{getMessage('HINTS_CODE_HELP_ERROR_BUTTON')}</span>
+                            </Button>
+                        </div>}
                     </div>
-                    {codeHelpEnabled && <div className="codehelp-help">
-                        <Button
-                            className="quickalgo-button is-medium"
-                            onClick={(e) => {
-                                openTaskHints();
-                                e.stopPropagation();
-                            }}
-                        >
-                            <Lightbulb/>
-                            <span>{getMessage('HINTS_CODE_HELP_ERROR_BUTTON')}</span>
-                        </Button>
-                    </div>}
-                </div>
-            </div>}
+                </div>}
+            </div>
 
             {null !== cancellableSubmission && <div className={`error-message submission-pending`}>
                 <div className="error-message-wrapper">

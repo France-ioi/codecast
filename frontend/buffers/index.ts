@@ -178,7 +178,7 @@ export function* createSourceBufferFromDocument(document: Document, platform?: C
 export function* createSourceBufferFromBufferParameters(parameters: BufferStateParameters, creationParameters: BufferCreationParameters = {}) {
     const newBufferName = yield* call(getNewBufferName);
     yield* put(bufferInit({buffer: newBufferName, ...parameters}));
-    yield* put(bufferResetDocument({buffer: newBufferName, document: parameters.document}));
+    yield* put(bufferResetDocument({buffer: newBufferName, document: parameters.document, goToEnd: true}));
 
     if (!creationParameters.noSwitch) {
         yield* put(bufferChangeActiveBufferName(newBufferName));
