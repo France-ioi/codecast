@@ -24,6 +24,7 @@ import {addDictBlocks} from './blocks/dicts';
 import {addListBlocks, setMaxListSize} from './blocks/lists';
 import {addInputBlocks} from './blocks/inputs';
 import {addLogicBlocks} from './blocks/logic';
+import {addProcedureBlocks, setProceduresDisableArgs} from './blocks/procedures';
 
 registerFieldAngle();
 
@@ -287,6 +288,7 @@ export class BlocklyHelper {
         addDictBlocks(defaultColors);
         addListBlocks(defaultColors);
         addLogicBlocks(defaultColors);
+        addProcedureBlocks(defaultColors);
         this.createSimpleGeneratorsAndBlocks();
 
         this.display = display;
@@ -1422,7 +1424,9 @@ export class BlocklyHelper {
             }
         }
 
-        // let proceduresOptions = this.includeBlocks.procedures;
+        const proceduresOptions = this.includeBlocks.procedures;
+        setProceduresDisableArgs(proceduresOptions && proceduresOptions.disableArgs);
+        // TODO Blockly: re-enable when the FioiBlockly procedures flyout will be migrated
         // if (typeof proceduresOptions !== 'undefined') {
         //     if (proceduresOptions.noret) {
         //         Blockly.Procedures.flyoutOptions.includedBlocks['noret'] = true;
@@ -1436,7 +1440,6 @@ export class BlocklyHelper {
         //     if (proceduresOptions.noifret) {
         //         Blockly.Procedures.flyoutOptions.includedBlocks['noifret'] = true;
         //     }
-        //     Blockly.Procedures.flyoutOptions.disableArgs = !!proceduresOptions.disableArgs;
         // }
         //
         let singleBlocks = stdInclude.singleBlocks;
@@ -1493,6 +1496,7 @@ export class BlocklyHelper {
 <block type='procedures_defreturn'></block>
 <block type='procedures_callreturn'></block>
 <block type='procedures_ifreturn'></block>
+<block type='procedures_return'></block>
 `,
         };
 

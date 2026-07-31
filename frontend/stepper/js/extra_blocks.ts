@@ -238,10 +238,9 @@ export function addExtraBlocks(
         return "pass";
     }
 
-    // TODO Blockly: remove this when FioiBlockly will be migrated
     javascriptGenerator.forBlock['variables_set'] = function(block) {
         // Variable setter.
-        var argument0 = javascriptGenerator.valueToCode(block, 'VALUE',
+        const argument0 = javascriptGenerator.valueToCode(block, 'VALUE',
             JavascriptOrder.ASSIGNMENT) || '0';
 
         const varName = javascriptGenerator.nameDB_.getName(
@@ -249,14 +248,11 @@ export function addExtraBlocks(
             Blockly.Names.NameType.VARIABLE
         );
 
-        // var varName = javascriptGenerator.variableDB_.getName(
-        //     block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
-        var assignCode = varName + ' = ' + argument0 + ';\n';
+        const assignCode = varName + ' = ' + argument0 + ';\n';
 
         // Report value if available
-        var reportCode = "reportBlockValue('" + block.id + "', "+varName+", '"+varName+"');\n";
+        const reportCode = "reportBlockValue('" + block.id + "', "+varName+", '"+varName+"');\n";
 
         return assignCode + reportCode;
     };
-
 }
