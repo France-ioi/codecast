@@ -23,6 +23,244 @@ const blocklyToScratch = {
     }
 };
 
+const CREATE_VARIABLE_CALLBACK_KEY = 'CREATE_VARIABLE';
+
+const VARIABLE_BLOCK_NAMES = {
+    get: 'variables_get',
+    set: 'variables_set',
+    incr: 'math_change',
+};
+
+interface VariablesFlyoutOptions {
+    /** Allow to create any variable */
+    any: boolean;
+    /** Add the button to add variables (needs any=true) */
+    anyButton: boolean;
+    /** List of fixed variables (will create blocks for each of them) */
+    fixed: string[];
+    /** Blocks to add to the list */
+    includedBlocks: {get: boolean, set: boolean, incr: boolean};
+    /** Generate set/incr blocks only for the first (non-fixed) variable */
+    shortList: boolean;
+}
+
+let variablesFlyoutOptions: VariablesFlyoutOptions;
+
+function resetVariablesFlyoutOptions() {
+    variablesFlyoutOptions = {
+        any: false,
+        anyButton: true,
+        fixed: [],
+        includedBlocks: {get: true, set: true, incr: true},
+        shortList: true,
+    };
+}
+
+resetVariablesFlyoutOptions();
+
+function createVariableFieldDom(variableName: string) {
+    const field = Blockly.utils.xml.createElement('field');
+    field.setAttribute('name', 'VAR');
+    field.appendChild(Blockly.utils.xml.createTextNode(variableName));
+
+    return field;
+}
+
+/**
+ * Whether the name is usable as-is as a variable name, i.e. Blockly wouldn't
+ * have to mangle it to generate code. Mirrors the private `Names.safeName`.
+ */
+function isSafeVariableName(name: string) {
+    if (!name) {
+        return false;
+    }
+
+    let safeName = encodeURI(name.replace(/ /g, '_')).replace(/[^\w]/g, '_');
+    if ('0123456789'.includes(safeName[0])) {
+        safeName = 'my_' + safeName;
+    }
+
+    return safeName === name;
+}
+
+/**
+ * Construct the blocks required by the flyout for the variable category.
+ */
+function variablesFlyoutCategory(workspace?: Blockly.Workspace): Element[] {
+    const xmlList: Element[] = [];
+    const options = variablesFlyoutOptions;
+
+    let fullVariableList: string[] = [];
+    if (options.any) {
+        if (workspace) {
+            fullVariableList = workspace.getVariableMap().getAllVariables().map(variable => variable.getName());
+        } else if (-1 < options.fixed.indexOf('newvar')) {
+            let newVarIdx = 0;
+            while (-1 < options.fixed.indexOf('newvar' + newVarIdx)) {
+                newVarIdx++;
+            }
+            fullVariableList = ['newvar' + newVarIdx];
+        } else {
+            fullVariableList = ['newvar'];
+        }
+
+        for (let i = 0; i < options.fixed.length; i++) {
+            const idx = fullVariableList.indexOf(options.fixed[i]);
+            if (-1 < idx) {
+                fullVariableList.splice(idx, 1);
+            }
+        }
+        fullVariableList.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+
+        if (options.anyButton) {
+            const button = Blockly.utils.xml.createElement('button');
+            button.setAttribute('text', Blockly.Msg['NEW_VARIABLE']);
+            // Blockly no longer has a default action for buttons: the key is
+            // registered by `registerVariablesFlyout`.
+            button.setAttribute('callbackKey', CREATE_VARIABLE_CALLBACK_KEY);
+            xmlList.push(button);
+        }
+    }
+
+    const variableList = options.fixed.concat(fullVariableList);
+    if (0 === variableList.length) {
+        return xmlList;
+    }
+
+    // Shared between the three block kinds below.
+    const makeBlock = function(blockType: string, i: number) {
+        const block = Blockly.utils.xml.createElement('block');
+        block.setAttribute('type', blockType);
+        if (!options.any && i < options.fixed.length) {
+            block.setAttribute('editable', 'false');
+        }
+        block.setAttribute('gap', i === variableList.length - 1 ? '24' : '8');
+
+        return block;
+    };
+
+    if (options.includedBlocks.get && Blockly.Blocks[VARIABLE_BLOCK_NAMES.get]) {
+        for (let i = 0; i < variableList.length; i++) {
+            // <block type="variables_get" gap="8">
+            //   <field name="VAR">item</field>
+            // </block>
+            const block = makeBlock(VARIABLE_BLOCK_NAMES.get, i);
+            block.appendChild(createVariableFieldDom(variableList[i]));
+            xmlList.push(block);
+        }
+    }
+
+    if (options.includedBlocks.set && Blockly.Blocks[VARIABLE_BLOCK_NAMES.set]) {
+        for (let i = 0; i < variableList.length; i++) {
+            // <block type="variables_set" gap="20">
+            //   <field name="VAR">item</field>
+            // </block>
+            if (options.shortList && i > options.fixed.length) {
+                break;
+            }
+
+            const block = makeBlock(VARIABLE_BLOCK_NAMES.set, i);
+            block.appendChild(createVariableFieldDom(variableList[i]));
+            xmlList.push(block);
+        }
+    }
+
+    if (options.includedBlocks.incr && Blockly.Blocks[VARIABLE_BLOCK_NAMES.incr]) {
+        for (let i = 0; i < variableList.length; i++) {
+            // <block type="math_change">
+            //   <value name="DELTA">
+            //     <shadow type="math_number">
+            //       <field name="NUM">1</field>
+            //     </shadow>
+            //   </value>
+            // </block>
+            if (options.shortList && i > options.fixed.length) {
+                break;
+            }
+
+            const block = makeBlock(VARIABLE_BLOCK_NAMES.incr, i);
+
+            const value = Blockly.utils.xml.createElement('value');
+            value.setAttribute('name', 'DELTA');
+            block.appendChild(value);
+
+            const shadowBlock = Blockly.utils.xml.createElement('shadow');
+            shadowBlock.setAttribute('type', 'math_number');
+            value.appendChild(shadowBlock);
+
+            const numberField = Blockly.utils.xml.createElement('field');
+            numberField.setAttribute('name', 'NUM');
+            numberField.appendChild(Blockly.utils.xml.createTextNode('1'));
+            shadowBlock.appendChild(numberField);
+
+            block.appendChild(createVariableFieldDom(variableList[i]));
+            xmlList.push(block);
+        }
+    }
+
+    return xmlList;
+}
+
+/**
+ * Prompt the user for a new variable name, re-prompting while the name isn't
+ * usable. Calls back with the new name, or null if the user picked something
+ * illegal.
+ */
+function promptVariableName(promptText: string, defaultText: string, callback: (name: string|null) => void, wasInvalid: boolean = false) {
+    const cb = function(newVar: string|null) {
+        // Merge runs of whitespace.  Strip leading and trailing whitespace.
+        if (newVar) {
+            newVar = newVar.replace(/[\s\xa0]+/g, ' ').replace(/^ | $/g, '');
+            // Check name is legal
+            if (!isSafeVariableName(newVar)) {
+                promptVariableName(promptText, newVar, callback, true);
+
+                return;
+            }
+            if (newVar === Blockly.Msg['RENAME_VARIABLE'] || newVar === Blockly.Msg['NEW_VARIABLE']) {
+                // Ok, not ALL names are legal...
+                newVar = null;
+            }
+        }
+        callback(newVar);
+    };
+
+    const fullPromptText = wasInvalid
+        ? '<i>' + Blockly.Msg['INVALID_NAME'] + '</i><br />' + promptText
+        : promptText;
+
+    if (defaultText) {
+        window.displayHelper.showPopupMessage(fullPromptText, 'input', null, cb, Blockly.Msg['UNDO'], null, defaultText);
+    } else {
+        window.displayHelper.showPopupMessage(fullPromptText, 'input', null, cb);
+    }
+}
+
+function createVariable(workspace: Blockly.Workspace) {
+    promptVariableName(Blockly.Msg['NEW_VARIABLE_TITLE'], '', function(text) {
+        if (!text) {
+            return;
+        }
+        if (workspace.getVariableMap().getVariable(text)) {
+            window.displayHelper.showPopupMessage(
+                Blockly.Msg['VARIABLE_ALREADY_EXISTS'].replace('%1', text.toLowerCase()), 'blanket');
+        } else {
+            workspace.createVariable(text);
+        }
+    });
+}
+
+/**
+ * Plug our variables flyout into a workspace. Must be called after the
+ * workspace is injected, and before its toolbox is displayed.
+ */
+export function registerVariablesFlyout(workspace: Blockly.WorkspaceSvg) {
+    workspace.registerToolboxCategoryCallback(Blockly.Variables.CATEGORY_NAME, variablesFlyoutCategory);
+    workspace.registerButtonCallback(CREATE_VARIABLE_CALLBACK_KEY, function(button) {
+        createVariable(button.getTargetWorkspace());
+    });
+}
+
 /**
  * Everything the toolbox generation needs from the Blockly helper. Passed in
  * explicitly rather than reading the helper, so this module stays independent
@@ -114,10 +352,8 @@ export function getToolboxXml(options: ToolboxOptions) {
     let categoriesInfos = {};
     let colours = options.colours;
 
-    // TODO Blockly: re-enable variables and procedures code when FioiBlockly will be migrated
-
-    // Reset the flyoutOptions for the variables and the procedures
-    // Blockly.Variables.resetFlyoutOptions();
+    resetVariablesFlyoutOptions();
+    // TODO Blockly: re-enable when the FioiBlockly procedures flyout will be migrated
     // Blockly.Procedures.resetFlyoutOptions();
 
     options.addBlocksAllowed(['robot_start', 'placeholder_statement']);
@@ -230,10 +466,12 @@ export function getToolboxXml(options: ToolboxOptions) {
                 blocksXml: []
             };
         }
-        // if (categoryName == 'variables') {
-        //     Blockly.Variables.flyoutOptions.any = true;
-        //     continue;
-        // } else if (categoryName == 'functions') {
+        if ('variables' === categoryName) {
+            variablesFlyoutOptions.any = true;
+            continue;
+        }
+        // TODO Blockly: re-enable when the FioiBlockly procedures flyout will be migrated
+        // if (categoryName == 'functions') {
         //     Blockly.Procedures.flyoutOptions.includedBlocks = {noret: true, ret: true, ifret: true, noifret: true};
         //     continue;
         // }
@@ -334,54 +572,48 @@ export function getToolboxXml(options: ToolboxOptions) {
 
     // Handle variable blocks, which are normally automatically added with
     // the VARIABLES category but can be customized here
-    // Blockly.Variables.flyoutOptions.anyButton = !!options.groupByCategory;
+    variablesFlyoutOptions.anyButton = !!options.groupByCategory;
     if (typeof options.includeBlocks.variables !== 'undefined') {
-        // Blockly.Variables.flyoutOptions.fixed = (options.includeBlocks.variables.length > 0) ? options.includeBlocks.variables : [];
-        // if (typeof options.includeBlocks.variablesOnlyBlocks !== 'undefined') {
-        //     Blockly.Variables.flyoutOptions.includedBlocks = {get: false, set: false, incr: false};
-        //     for (let iBlock = 0; iBlock < options.includeBlocks.variablesOnlyBlocks.length; iBlock++) {
-        //         Blockly.Variables.flyoutOptions.includedBlocks[options.includeBlocks.variablesOnlyBlocks[iBlock]] = true;
-        //     }
-        // }
+        variablesFlyoutOptions.fixed = (options.includeBlocks.variables.length > 0) ? options.includeBlocks.variables : [];
+        if (typeof options.includeBlocks.variablesOnlyBlocks !== 'undefined') {
+            variablesFlyoutOptions.includedBlocks = {get: false, set: false, incr: false};
+            for (let iBlock = 0; iBlock < options.includeBlocks.variablesOnlyBlocks.length; iBlock++) {
+                variablesFlyoutOptions.includedBlocks[options.includeBlocks.variablesOnlyBlocks[iBlock]] = true;
+            }
+        }
 
-        // let varAnyIdx = Blockly.Variables.flyoutOptions.fixed.indexOf('*');
-        // if (varAnyIdx > -1) {
-        //     Blockly.Variables.flyoutOptions.fixed.splice(varAnyIdx, 1);
-        //     Blockly.Variables.flyoutOptions.any = true;
-        // }
-
-        // let blocksXml = Blockly.Variables.flyoutCategory();
-        // let xmlSer = new XMLSerializer();
-        // for (let i = 0; i < blocksXml.length; i++) {
-        //     blocksXml[i] = xmlSer.serializeToString(blocksXml[i]);
-        // }
-        //
-        // categoriesInfos["variables"] = {
-        //     blocksXml: blocksXml,
-        //     colour: 330
-        // }
-
-        // TODO Blockly: remove this temporary code when FioiBlockly will be enabled
-        options.addBlocksAllowed(['variables_get', 'variables_set']);
-        categoriesInfos["variables"] = {
-            blocksXml: `<block type='variables_get'></block><block type='variables_set'></block>`,
-        };
+        let varAnyIdx = variablesFlyoutOptions.fixed.indexOf('*');
+        if (varAnyIdx > -1) {
+            variablesFlyoutOptions.fixed.splice(varAnyIdx, 1);
+            variablesFlyoutOptions.any = true;
+        }
     }
 
-    // if (Blockly.Variables.flyoutOptions.includedBlocks['get']) {
-    //     options.addBlocksAllowed(['variables_get']);
-    // }
-    // if (Blockly.Variables.flyoutOptions.includedBlocks['set']) {
-    //     options.addBlocksAllowed(['variables_set']);
-    // }
-    // if (Blockly.Variables.flyoutOptions.includedBlocks['incr']) {
-    //     options.addBlocksAllowed(['math_change']);
-    // }
+    // Unlike FioiBlockly, which always allowed the variable blocks, only do so
+    // when the category is actually shown, as the previous code here did.
+    if (variablesFlyoutOptions.any || variablesFlyoutOptions.fixed.length) {
+        // A `custom="VARIABLE"` category: Blockly fills it from the callback
+        // registered by `registerVariablesFlyout`, so it has no static blocks.
+        categoriesInfos["variables"] = {
+            blocksXml: [],
+            colour: colours.blocks['variables'],
+        };
+
+        if (variablesFlyoutOptions.includedBlocks['get']) {
+            options.addBlocksAllowed(['variables_get']);
+        }
+        if (variablesFlyoutOptions.includedBlocks['set']) {
+            options.addBlocksAllowed(['variables_set']);
+        }
+        if (variablesFlyoutOptions.includedBlocks['incr']) {
+            options.addBlocksAllowed(['math_change']);
+        }
+    }
 
     // Disable arguments in procedures if variables are not allowed
-    // if (!Blockly.Variables.flyoutOptions.any && proceduresOptions && typeof proceduresOptions.disableArgs == 'undefined') {
-    //     Blockly.Procedures.flyoutOptions.disableArgs = true;
-    // }
+    if (!variablesFlyoutOptions.any && proceduresOptions && typeof proceduresOptions.disableArgs == 'undefined') {
+        setProceduresDisableArgs(true);
+    }
 
     let orderedCategories = [];
     if (options.includeBlocks.blocksOrder) {
@@ -432,7 +664,9 @@ export function getToolboxXml(options: ToolboxOptions) {
     for (let iCategory = 0; iCategory < orderedCategories.length; iCategory++) {
         let categoryName = orderedCategories[iCategory];
         let categoryInfo = categoriesInfos[categoryName];
-        if (0 === categoryInfo.blocksXml.length) {
+        // 'variables' is a custom category: it has no static blocks, Blockly
+        // fills it from the registered callback, so never skip it as "empty".
+        if (0 === categoryInfo.blocksXml.length && 'variables' !== categoryName) {
             continue;
         }
 

@@ -24,7 +24,7 @@ import {addListBlocks, setMaxListSize} from './blocks/lists';
 import {addInputBlocks} from './blocks/inputs';
 import {addLogicBlocks} from './blocks/logic';
 import {addProcedureBlocks} from './blocks/procedures';
-import {getToolboxXml as buildToolboxXml} from './blockly_toolbox';
+import {getToolboxXml as buildToolboxXml, registerVariablesFlyout} from './blockly_toolbox';
 
 registerFieldAngle();
 
@@ -98,6 +98,53 @@ function getCodeGeneratorForLanguage(language: string) {
     return codeGenerators[language];
 }
 
+const transcribedBlocks = {
+    'lists_create_with_empty': ['lists_create_empty'],
+};
+
+// Allowed blocks that make another block allowed as well
+const blocklyAllowedSiblings = {
+    'controls_repeat_ext_noShadow': ['controls_repeat_ext'],
+    'controls_whileUntil': ['controls_untilWhile'],
+    'controls_untilWhile': ['controls_whileUntil'],
+    'controls_if_else': ['controls_if'],
+    'lists_create_with_empty': ['lists_create_with']
+};
+
+let blocklyClipboardSaved;
+let blocklyUserScale;
+
+const blocklyCategoriesColors: Record<string, number|HexColor> = {
+    actuator: 212,
+    sensors: 95,
+    internet: 200,
+    display: 300,
+    input: 50,
+    inputs: 50,
+    lists: 353,
+    logic: 298,
+    math: 176,
+    loops: 200,
+    texts: 312,
+    dicts: 52,
+    tables: 212,
+    variables: 330,
+    functions: 290,
+    _default: 65,
+};
+
+const scratchCategoriesColors: Record<string, number|HexColor> = {
+    actions: '#4C97FF',
+    sensors: '#5CB1D6',
+    control: '#FFAB19',
+    lists: '#ff8c1a',
+    operator: '#59C059',
+    event: '#ffbf00',
+    tables: '#ff8c1a',
+    variables: '#ff8c1a',
+    functions: '#ff6680',
+}
+
 // Records, while `blocksToCommentedCode` runs, which block generated which piece
 // of Python code. `sortedBlocksList` is a flat log of the traversal: [id, 1] when
 // entering a block, [id, -1] when leaving it. Null when we're not tracking.
@@ -156,60 +203,6 @@ export function adaptPythonGenerator() {
 
         return blockToCodeUnaltered(block, opt_thisOnly);
     };
-}
-
-const transcribedBlocks = {
-    'lists_create_with_empty': ['lists_create_empty'],
-};
-
-// Allowed blocks that make another block allowed as well
-const blocklyAllowedSiblings = {
-    'controls_repeat_ext_noShadow': ['controls_repeat_ext'],
-    'controls_whileUntil': ['controls_untilWhile'],
-    'controls_untilWhile': ['controls_whileUntil'],
-    'controls_if_else': ['controls_if'],
-    'lists_create_with_empty': ['lists_create_with']
-};
-
-let blocklyClipboardSaved;
-let blocklyUserScale;
-
-const blocklyCategoriesColors: Record<string, number|HexColor> = {
-    actuator: 212,
-    sensors: 95,
-    internet: 200,
-    display: 300,
-    input: 50,
-    inputs: 50,
-    lists: 353,
-    logic: 298,
-    math: 176,
-    loops: 200,
-    texts: 312,
-    dicts: 52,
-    tables: 212,
-    variables: 330,
-    functions: 290,
-    _default: 65,
-};
-
-const scratchCategoriesColors: Record<string, number|HexColor> = {
-    actions: '#4C97FF',
-    sensors: '#5CB1D6',
-    control: '#FFAB19',
-    lists: '#ff8c1a',
-    operator: '#59C059',
-    event: '#ffbf00',
-    tables: '#ff8c1a',
-    variables: '#ff8c1a',
-    functions: '#ff6680',
-}
-
-function addInSet(l, val) {
-    // Add val to list l if not already present
-    if(l.indexOf(val) == -1) {
-        l.push(val);
-    }
 }
 
 export interface BlocklyProgram {
@@ -414,6 +407,10 @@ export class BlocklyHelper {
 
             // Inject Blockly
             this.workspace = Blockly.inject(this.divId, wsConfig);
+
+            // Replaces Blockly's own VARIABLE category and its "create variable"
+            // button with ours. Must happen before the toolbox is opened.
+            registerVariablesFlyout(this.workspace);
 
             let toolboxNode = window.jQuery('#toolboxXml');
             if (toolboxNode.length != 0) {
