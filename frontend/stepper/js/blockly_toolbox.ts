@@ -203,8 +203,9 @@ function variablesFlyoutCategory(workspace?: Blockly.Workspace): Element[] {
 
 /**
  * Prompt the user for a new variable name, re-prompting while the name isn't
- * usable. Calls back with the new name, or null if the user picked something
- * illegal.
+ * usable. Calls back with the new name, or null if the user cancelled or picked
+ * something illegal. The callback always runs exactly once, so callers can use
+ * it to clean up.
  */
 function promptVariableName(promptText: string, defaultText: string, callback: (name: string|null) => void, wasInvalid: boolean = false) {
     const cb = function(newVar: string|null) {
@@ -229,23 +230,46 @@ function promptVariableName(promptText: string, defaultText: string, callback: (
         ? '<i>' + Blockly.Msg['INVALID_NAME'] + '</i><br />' + promptText
         : promptText;
 
+    // The popup only calls `agreeFunc` when it is validated, so dismissing it
+    // needs its own path to the callback.
+    const onCancel = () => callback(null);
+
     if (defaultText) {
-        window.displayHelper.showPopupMessage(fullPromptText, 'input', null, cb, Blockly.Msg['UNDO'], null, defaultText);
+        window.displayHelper.showPopupMessage(fullPromptText, 'input', null, cb, Blockly.Msg['UNDO'], null, defaultText, onCancel);
     } else {
-        window.displayHelper.showPopupMessage(fullPromptText, 'input', null, cb);
+        window.displayHelper.showPopupMessage(fullPromptText, 'input', null, cb, undefined, undefined, undefined, onCancel);
     }
 }
 
-function createVariable(workspace: Blockly.Workspace) {
+function createVariable(workspace: Blockly.WorkspaceSvg) {
+    // Our name prompt is a DOM modal, so opening it moves the focus out of the
+    // toolbox. Blockly answers that by auto-hiding the flyout
+    // (`Toolbox.onTreeBlur` -> `autoHide`), which would close the variables
+    // category while the user is still typing the name — and the new block
+    // would only show up after re-opening the category. Suspend the auto-hide
+    // until the prompt is done; Blockly then refreshes the open flyout by
+    // itself on VAR_CREATE.
+    const flyout = workspace.getToolbox()?.getFlyout();
+    const restoreAutoClose = flyout?.autoClose;
+    if (flyout) {
+        flyout.autoClose = false;
+    }
+
     promptVariableName(Blockly.Msg['NEW_VARIABLE_TITLE'], '', function(text) {
-        if (!text) {
-            return;
-        }
-        if (workspace.getVariableMap().getVariable(text)) {
-            window.displayHelper.showPopupMessage(
-                Blockly.Msg['VARIABLE_ALREADY_EXISTS'].replace('%1', text.toLowerCase()), 'blanket');
-        } else {
-            workspace.createVariable(text);
+        try {
+            if (!text) {
+                return;
+            }
+            if (workspace.getVariableMap().getVariable(text)) {
+                window.displayHelper.showPopupMessage(
+                    Blockly.Msg['VARIABLE_ALREADY_EXISTS'].replace('%1', text.toLowerCase()), 'blanket');
+            } else {
+                workspace.getVariableMap().createVariable(text);
+            }
+        } finally {
+            if (flyout) {
+                flyout.autoClose = restoreAutoClose;
+            }
         }
     });
 }
