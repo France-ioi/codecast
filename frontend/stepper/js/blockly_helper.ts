@@ -98,6 +98,66 @@ function getCodeGeneratorForLanguage(language: string) {
     return codeGenerators[language];
 }
 
+// Records, while `blocksToCommentedCode` runs, which block generated which piece
+// of Python code. `sortedBlocksList` is a flat log of the traversal: [id, 1] when
+// entering a block, [id, -1] when leaving it. Null when we're not tracking.
+let sortedBlocksList: [string, number][] = null;
+let codeOfBlock: {[blockId: string]: string} = {};
+
+// Block generators we already wrapped, so we never wrap one twice.
+type BlockCodeGenerator = PythonGenerator['forBlock'][string];
+const trackedBlockGenerators = new WeakSet<BlockCodeGenerator>();
+
+let pythonGeneratorAdapted = false;
+
+/**
+ * Makes the Python generator record the code each block produces, so that
+ * `blocksToCommentedCode` can map the generated lines back to their blocks.
+ */
+export function adaptPythonGenerator() {
+    if (pythonGeneratorAdapted) {
+        return;
+    }
+    pythonGeneratorAdapted = true;
+
+    const blockToCodeUnaltered = pythonGenerator.blockToCode.bind(pythonGenerator);
+
+    pythonGenerator.blockToCode = function(block: Blockly.Block, opt_thisOnly?: boolean) {
+        // Wrap the generator the first time we meet a block of this type: block
+        // generators are registered progressively (library blocks, simple
+        // generators, …), so we can't wrap them all upfront.
+        if (block) {
+            const func = pythonGenerator.forBlock[block.type];
+            if ('function' === typeof func && !trackedBlockGenerators.has(func)) {
+                const trackedFunc = function(this: Blockly.Block, currentBlock: Blockly.Block, generator: PythonGenerator) {
+                    if (!currentBlock || null === sortedBlocksList) {
+                        return func.call(this, currentBlock, generator);
+                    }
+
+                    sortedBlocksList.push([currentBlock.id, 1]);
+                    const code = func.call(this, currentBlock, generator);
+                    if ('string' === typeof code) {
+                        codeOfBlock[currentBlock.id] = code;
+                    } else if (code) {
+                        // Value blocks return a [code, order] tuple.
+                        codeOfBlock[currentBlock.id] = String(code[0]);
+                    } else {
+                        codeOfBlock[currentBlock.id] = '';
+                    }
+                    sortedBlocksList.push([currentBlock.id, -1]);
+
+                    return code;
+                };
+
+                trackedBlockGenerators.add(trackedFunc);
+                pythonGenerator.forBlock[block.type] = trackedFunc;
+            }
+        }
+
+        return blockToCodeUnaltered(block, opt_thisOnly);
+    };
+}
+
 const blocklySets = {
     allDefault: {
         wholeCategories: ["input", "logic", "loops", "math", "texts", "lists", "dicts", "tables", "variables", "functions"]

@@ -13,7 +13,7 @@ import {App, Codecast} from '../../app_types';
 import {quickAlgoLibraries} from '../../task/libs/quick_algo_libraries_model';
 import {LayoutType} from '../../task/layout/layout_types';
 import {BlockDocument, Document} from '../../buffers/buffer_types';
-import {BlocklyHelper} from './blockly_helper';
+import {adaptPythonGenerator, BlocklyHelper} from './blockly_helper';
 import {getMessage, getMessageChoices} from '../../lang/messages';
 import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
@@ -124,6 +124,9 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary) {
 export function createBlocklyHelper(context: QuickAlgoLibrary, state: AppStore) {
     const platform = selectActiveBufferPlatform(state)
     const blocklyHelper = new BlocklyHelper(context.infos.maxInstructions, context, platform === CodecastPlatform.Scratch);
+
+    adaptPythonGenerator();
+
     log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context, blocklyHelper);
 
     if (context.infos.multithread) {
