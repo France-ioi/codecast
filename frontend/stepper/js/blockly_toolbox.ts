@@ -381,6 +381,131 @@ export function registerVariablesFlyout(workspace: Blockly.WorkspaceSvg) {
     });
 }
 
+const PROCEDURE_BLOCK_NAMES = {
+    noret: 'procedures_defnoreturn',
+    ret: 'procedures_defreturn',
+    ifret: 'procedures_ifreturn',
+    noifret: 'procedures_return',
+};
+
+interface ProceduresFlyoutOptions {
+    /** Put the fields of the call blocks inline */
+    inlineArgs: boolean;
+    /** Blocks to add to the list */
+    includedBlocks: {noret: boolean, ret: boolean, ifret: boolean, noifret: boolean};
+}
+
+const proceduresFlyoutOptions: ProceduresFlyoutOptions = {
+    inlineArgs: false,
+    includedBlocks: {noret: false, ret: false, ifret: false, noifret: false},
+};
+
+function resetProceduresFlyoutOptions() {
+    // `inlineArgs` is deliberately kept: it is set by the app, not by the task.
+    proceduresFlyoutOptions.includedBlocks = {noret: false, ret: false, ifret: false, noifret: false};
+}
+
+/**
+ * Whether the call blocks display their arguments inline. Set by the app, and
+ * kept when a new task is loaded.
+ */
+export function setProceduresInlineArgs(inlineArgs: boolean) {
+    proceduresFlyoutOptions.inlineArgs = inlineArgs;
+}
+
+/**
+ * Construct the blocks required by the flyout for the procedures category:
+ * the definition blocks that the task includes, followed by a call block for
+ * each function the user has defined.
+ */
+function proceduresFlyoutCategory(workspace: Blockly.Workspace): Element[] {
+    const xmlList: Element[] = [];
+    const includedBlocks = proceduresFlyoutOptions.includedBlocks;
+
+    const makeBlock = function(blockType: string) {
+        const block = Blockly.utils.xml.createElement('block');
+        block.setAttribute('type', blockType);
+        block.setAttribute('gap', '16');
+        xmlList.push(block);
+
+        return block;
+    };
+
+    const appendNameField = function(block: Element, defaultName: string) {
+        const nameField = Blockly.utils.xml.createElement('field');
+        nameField.setAttribute('name', 'NAME');
+        nameField.appendChild(Blockly.utils.xml.createTextNode(defaultName));
+        block.appendChild(nameField);
+    };
+
+    if (includedBlocks.noret && Blockly.Blocks[PROCEDURE_BLOCK_NAMES.noret]) {
+        // <block type="procedures_defnoreturn" gap="16">
+        //   <field name="NAME">do something</field>
+        // </block>
+        appendNameField(makeBlock(PROCEDURE_BLOCK_NAMES.noret), Blockly.Msg['PROCEDURES_DEFNORETURN_PROCEDURE']);
+    }
+
+    if (includedBlocks.ret && Blockly.Blocks[PROCEDURE_BLOCK_NAMES.ret]) {
+        // <block type="procedures_defreturn" gap="16">
+        //   <field name="NAME">do something</field>
+        // </block>
+        appendNameField(makeBlock(PROCEDURE_BLOCK_NAMES.ret), Blockly.Msg['PROCEDURES_DEFRETURN_PROCEDURE']);
+    }
+
+    if (includedBlocks.ifret && Blockly.Blocks[PROCEDURE_BLOCK_NAMES.ifret]) {
+        // <block type="procedures_ifreturn" gap="16"></block>
+        makeBlock(PROCEDURE_BLOCK_NAMES.ifret);
+    }
+
+    if (includedBlocks.noifret && Blockly.Blocks[PROCEDURE_BLOCK_NAMES.noifret]) {
+        // <block type="procedures_return" gap="16"></block>
+        makeBlock(PROCEDURE_BLOCK_NAMES.noifret);
+    }
+
+    if (xmlList.length) {
+        // Add slightly larger gap between system blocks and user calls.
+        xmlList[xmlList.length - 1].setAttribute('gap', '24');
+    }
+
+    const populateProcedures = function(procedureList: Blockly.Procedures.ProcedureTuple[], templateName: string) {
+        for (const [name, args] of procedureList) {
+            // <block type="procedures_callnoreturn" gap="16">
+            //   <mutation name="do something">
+            //     <arg name="x"></arg>
+            //   </mutation>
+            // </block>
+            const block = makeBlock(templateName);
+            if (proceduresFlyoutOptions.inlineArgs) {
+                block.setAttribute('inline', 'true');
+            }
+
+            const mutation = Blockly.utils.xml.createElement('mutation');
+            mutation.setAttribute('name', name);
+            block.appendChild(mutation);
+
+            for (const argName of args) {
+                const arg = Blockly.utils.xml.createElement('arg');
+                arg.setAttribute('name', argName);
+                mutation.appendChild(arg);
+            }
+        }
+    };
+
+    const [noReturnProcedures, returnProcedures] = Blockly.Procedures.allProcedures(workspace);
+    populateProcedures(noReturnProcedures, 'procedures_callnoreturn');
+    populateProcedures(returnProcedures, 'procedures_callreturn');
+
+    return xmlList;
+}
+
+/**
+ * Plug our procedures flyout into a workspace. Must be called after the
+ * workspace is injected, and before its toolbox is displayed.
+ */
+export function registerProceduresFlyout(workspace: Blockly.WorkspaceSvg) {
+    workspace.registerToolboxCategoryCallback(Blockly.Procedures.CATEGORY_NAME, proceduresFlyoutCategory);
+}
+
 /**
  * Everything the toolbox generation needs from the Blockly helper. Passed in
  * explicitly rather than reading the helper, so this module stays independent
@@ -473,8 +598,7 @@ export function getToolboxXml(options: ToolboxOptions) {
     let colours = options.colours;
 
     resetVariablesFlyoutOptions();
-    // TODO Blockly: re-enable when the FioiBlockly procedures flyout will be migrated
-    // Blockly.Procedures.resetFlyoutOptions();
+    resetProceduresFlyoutOptions();
 
     options.addBlocksAllowed(['robot_start', 'placeholder_statement']);
     if (options.scratchMode) {
@@ -590,11 +714,10 @@ export function getToolboxXml(options: ToolboxOptions) {
             variablesFlyoutOptions.any = true;
             continue;
         }
-        // TODO Blockly: re-enable when the FioiBlockly procedures flyout will be migrated
-        // if (categoryName == 'functions') {
-        //     Blockly.Procedures.flyoutOptions.includedBlocks = {noret: true, ret: true, ifret: true, noifret: true};
-        //     continue;
-        // }
+        if ('functions' === categoryName) {
+            proceduresFlyoutOptions.includedBlocks = {noret: true, ret: true, ifret: true, noifret: true};
+            continue;
+        }
         let blocks = stdBlocks[categoryName];
         if (blocks) {
             if (!(blocks instanceof Array)) { // just for now, maintain backwards compatibility
@@ -615,80 +738,58 @@ export function getToolboxXml(options: ToolboxOptions) {
 
     const proceduresOptions = options.includeBlocks.procedures;
     setProceduresDisableArgs(proceduresOptions && proceduresOptions.disableArgs);
-    // TODO Blockly: re-enable when the FioiBlockly procedures flyout will be migrated
-    // if (typeof proceduresOptions !== 'undefined') {
-    //     if (proceduresOptions.noret) {
-    //         Blockly.Procedures.flyoutOptions.includedBlocks['noret'] = true;
-    //     }
-    //     if (proceduresOptions.ret) {
-    //         Blockly.Procedures.flyoutOptions.includedBlocks['ret'] = true;
-    //     }
-    //     if (proceduresOptions.ifret) {
-    //         Blockly.Procedures.flyoutOptions.includedBlocks['ifret'] = true;
-    //     }
-    //     if (proceduresOptions.noifret) {
-    //         Blockly.Procedures.flyoutOptions.includedBlocks['noifret'] = true;
-    //     }
-    // }
-    //
+    if (typeof proceduresOptions !== 'undefined') {
+        for (const blockKind of ['noret', 'ret', 'ifret', 'noifret']) {
+            if (proceduresOptions[blockKind]) {
+                proceduresFlyoutOptions.includedBlocks[blockKind] = true;
+            }
+        }
+    }
+
     let singleBlocks = stdInclude.singleBlocks;
-    // for (let iBlock = 0; iBlock < singleBlocks.length; iBlock++) {
-    //     let blockName = singleBlocks[iBlock];
-    //     if (blockName == 'procedures_defnoreturn') {
-    //         Blockly.Procedures.flyoutOptions.includedBlocks['noret'] = true;
-    //     } else if (blockName == 'procedures_defreturn') {
-    //         Blockly.Procedures.flyoutOptions.includedBlocks['ret'] = true;
-    //     } else if (blockName == 'procedures_ifreturn') {
-    //         Blockly.Procedures.flyoutOptions.includedBlocks['ifret'] = true;
-    //     } else if (blockName == 'procedures_return') {
-    //         Blockly.Procedures.flyoutOptions.includedBlocks['noifret'] = true;
-    //     } else {
-    //         continue;
-    //     }
-    //     // If we're here, a block has been found
-    //     options.addBlocksAllowed([blockName, 'procedures_callnoreturn', 'procedures_callreturn']);
-    //     singleBlocks.splice(iBlock, 1);
-    //     iBlock--;
-    // }
-    // if (Blockly.Procedures.flyoutOptions.includedBlocks['noret']
-    //     || Blockly.Procedures.flyoutOptions.includedBlocks['ret']
-    //     || Blockly.Procedures.flyoutOptions.includedBlocks['ifret']
-    //     || Blockly.Procedures.flyoutOptions.includedBlocks['noifret']) {
-    //     if (Blockly.Procedures.flyoutOptions.includedBlocks['noret']) {
-    //         options.addBlocksAllowed(['procedures_defnoreturn', 'procedures_callnoreturn']);
-    //     }
-    //     if (Blockly.Procedures.flyoutOptions.includedBlocks['ret']) {
-    //         options.addBlocksAllowed(['procedures_defreturn', 'procedures_callreturn']);
-    //     }
-    //     if (Blockly.Procedures.flyoutOptions.includedBlocks['ifret']) {
-    //         options.addBlocksAllowed(['procedures_ifreturn', 'procedures_return']);
-    //     }
-    //     if (Blockly.Procedures.flyoutOptions.includedBlocks['noifret']) {
-    //         options.addBlocksAllowed(['procedures_return']);
-    //     }
-    //     categoriesInfos['functions'] = {
-    //         blocksXml: []
-    //     };
-    //     if (options.scratchMode && !window.arrayContains(singleBlocks, 'math_number')) {
-    //         singleBlocks.push('math_number'); // TODO :: temporary
-    //     }
-    //     if (!options.groupByCategory) {
-    //         console.error('Task configuration error: groupByCategory must be activated for functions.');
-    //     }
-    // }
+    for (let iBlock = 0; iBlock < singleBlocks.length; iBlock++) {
+        const blockKind = Object.keys(PROCEDURE_BLOCK_NAMES)
+            .find(kind => PROCEDURE_BLOCK_NAMES[kind] === singleBlocks[iBlock]);
+        if (!blockKind) {
+            continue;
+        }
+
+        // The procedure blocks are all handled by the category, they can't be
+        // added to the toolbox one by one.
+        proceduresFlyoutOptions.includedBlocks[blockKind] = true;
+        options.addBlocksAllowed([singleBlocks[iBlock], 'procedures_callnoreturn', 'procedures_callreturn']);
+        singleBlocks.splice(iBlock, 1);
+        iBlock--;
+    }
+
+    const proceduresIncludedBlocks = proceduresFlyoutOptions.includedBlocks;
+    if (proceduresIncludedBlocks.noret || proceduresIncludedBlocks.ret
+        || proceduresIncludedBlocks.ifret || proceduresIncludedBlocks.noifret) {
+        if (proceduresIncludedBlocks.noret) {
+            options.addBlocksAllowed(['procedures_defnoreturn', 'procedures_callnoreturn']);
+        }
+        if (proceduresIncludedBlocks.ret) {
+            options.addBlocksAllowed(['procedures_defreturn', 'procedures_callreturn']);
+        }
+        if (proceduresIncludedBlocks.ifret) {
+            options.addBlocksAllowed(['procedures_ifreturn', 'procedures_return']);
+        }
+        if (proceduresIncludedBlocks.noifret) {
+            options.addBlocksAllowed(['procedures_return']);
+        }
+        // A `custom="PROCEDURE"` category: Blockly fills it from the callback
+        // registered by `registerProceduresFlyout`, so it has no static blocks.
+        categoriesInfos['functions'] = {
+            blocksXml: []
+        };
+        if (options.scratchMode && !window.arrayContains(singleBlocks, 'math_number')) {
+            singleBlocks.push('math_number'); // TODO :: temporary
+        }
+        if (!options.groupByCategory) {
+            console.error('Task configuration error: groupByCategory must be activated for functions.');
+        }
+    }
     addBlocksAndCategories(singleBlocks, stdBlocks, categoriesInfos, options);
-
-    // TODO Blockly: remove this temporary code when FioiBlockly will be enabled
-    categoriesInfos['functions'] = {
-        blocksXml: `<block type='procedures_defnoreturn'></block>
-<block type='procedures_callnoreturn'></block>
-<block type='procedures_defreturn'></block>
-<block type='procedures_callreturn'></block>
-<block type='procedures_ifreturn'></block>
-<block type='procedures_return'></block>
-`,
-    };
-
 
     // Handle variable blocks, which are normally automatically added with
     // the VARIABLES category but can be customized here
@@ -787,9 +888,10 @@ export function getToolboxXml(options: ToolboxOptions) {
     for (let iCategory = 0; iCategory < orderedCategories.length; iCategory++) {
         let categoryName = orderedCategories[iCategory];
         let categoryInfo = categoriesInfos[categoryName];
-        // 'variables' is a custom category: it has no static blocks, Blockly
-        // fills it from the registered callback, so never skip it as "empty".
-        if (0 === categoryInfo.blocksXml.length && 'variables' !== categoryName) {
+        // 'variables' and 'functions' are custom categories: they have no
+        // static blocks, Blockly fills them from the registered callbacks, so
+        // never skip them as "empty".
+        if (0 === categoryInfo.blocksXml.length && 'variables' !== categoryName && 'functions' !== categoryName) {
             continue;
         }
 

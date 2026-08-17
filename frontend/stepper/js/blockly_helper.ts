@@ -24,7 +24,7 @@ import {addListBlocks, setMaxListSize} from './blocks/lists';
 import {addInputBlocks} from './blocks/inputs';
 import {addLogicBlocks} from './blocks/logic';
 import {addProcedureBlocks} from './blocks/procedures';
-import {getToolboxXml as buildToolboxXml, registerVariablesFlyout} from './blockly_toolbox';
+import {getToolboxXml as buildToolboxXml, registerProceduresFlyout, registerVariablesFlyout} from './blockly_toolbox';
 import {registerFieldNumberKeypad} from './fields/field_number';
 
 registerFieldAngle();
@@ -410,9 +410,11 @@ export class BlocklyHelper {
             // Inject Blockly
             this.workspace = Blockly.inject(this.divId, wsConfig);
 
-            // Replaces Blockly's own VARIABLE category and its "create variable"
-            // button with ours. Must happen before the toolbox is opened.
+            // Replaces Blockly's own VARIABLE and PROCEDURE categories, and the
+            // "create variable" button, with ours. Must happen before the
+            // toolbox is opened.
             registerVariablesFlyout(this.workspace);
+            registerProceduresFlyout(this.workspace);
 
             let toolboxNode = window.jQuery('#toolboxXml');
             if (toolboxNode.length != 0) {
