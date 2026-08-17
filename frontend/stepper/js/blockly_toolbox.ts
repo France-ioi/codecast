@@ -819,7 +819,7 @@ export function getToolboxXml(options: ToolboxOptions) {
         // categories there is no callback to call, so generate the blocks here
         // (they can't depend on the workspace variables, which don't exist yet).
         categoriesInfos["variables"] = {
-            blocksXml: options.groupByCategory ? [] : variablesFlyoutCategory().map(element => Blockly.Xml.domToText(element)),
+            blocksXml: variablesFlyoutCategory().map(element => Blockly.Xml.domToText(element)),
             colour: colours.blocks['variables'],
         };
 

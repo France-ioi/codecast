@@ -74,6 +74,15 @@ function enableContinuousToolbox() {
     Blockly.registry.register(continuousRegType.FLYOUT_INFLATER, 'block', RecyclableBlockFlyoutInflater, true);
 }
 
+// The whole contents of the continuous flyout, all categories at once. Only the
+// plugin typings make it private: it is a plain method of the toolbox, and the
+// public way in (`refreshSelection`) is debounced, so it wouldn't be immediate.
+function getInitialFlyoutContents(toolbox: ContinuousToolbox) {
+    return (toolbox as unknown as {
+        getInitialFlyoutContents: () => Blockly.utils.toolbox.FlyoutItemInfoArray,
+    }).getInitialFlyoutContents();
+}
+
 // Restore the global defaults the plugin clobbered, so a regular Blockly toolbox
 // renders normally again. Must run before re-injecting the workspace.
 function disableContinuousToolbox() {
@@ -417,6 +426,17 @@ export class BlocklyHelper {
             // toolbox is opened.
             registerVariablesFlyout(this.workspace);
             registerProceduresFlyout(this.workspace);
+
+            // The continuous toolbox (Scratch mode) doesn't open a category at a
+            // time: it builds the contents of all of them at once, as soon as it
+            // is initialized, which `Blockly.inject` just did — with Blockly's
+            // own category callbacks, since ours weren't registered yet. Build
+            // them again so that they use ours. A regular toolbox builds a
+            // category when it is opened, so it has nothing to rebuild here.
+            const toolbox = this.workspace.getToolbox();
+            if (toolbox instanceof ContinuousToolbox) {
+                toolbox.getFlyout().show(getInitialFlyoutContents(toolbox));
+            }
 
             let toolboxNode = window.jQuery('#toolboxXml');
             if (toolboxNode.length != 0) {
