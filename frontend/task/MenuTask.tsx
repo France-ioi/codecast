@@ -64,11 +64,15 @@ export function MenuTask() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        document.addEventListener('mousedown', handleClickOutside, true);
+        // `pointerdown` and not `mousedown`: Blockly calls `preventDefault()` on
+        // the pointer events it handles, which suppresses the compatibility
+        // mouse events, so clicks on the workspace never reach a mousedown
+        // listener.
+        document.addEventListener('pointerdown', handleClickOutside, true);
         document.addEventListener('keydown', handleKeyDown, true);
 
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside, true);
+            document.removeEventListener('pointerdown', handleClickOutside, true);
             document.removeEventListener('keydown', handleKeyDown, true);
         }
     })
