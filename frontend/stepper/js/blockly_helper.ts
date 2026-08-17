@@ -26,9 +26,11 @@ import {addLogicBlocks} from './blocks/logic';
 import {addProcedureBlocks} from './blocks/procedures';
 import {getToolboxXml as buildToolboxXml, registerProceduresFlyout, registerVariablesFlyout} from './blockly_toolbox';
 import {registerFieldNumberKeypad} from './fields/field_number';
+import {registerBlockHelpContextMenuItem} from './blockly_help';
 
 registerFieldAngle();
 registerFieldNumberKeypad();
+registerBlockHelpContextMenuItem();
 
 // `registerContinuousToolbox()` globally overrides two Blockly defaults (the
 // toolbox category and the "block" flyout inflater) in addition to registering
@@ -543,9 +545,9 @@ export class BlocklyHelper {
     getOrigin() {
         // Get x/y origin
         if (this.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
-            return {x: 105, y: 2};
+            return {x: 105, y: 10};
         }
-        return {x: 20, y: 2};
+        return {x: 20, y: 10};
     }
 
     setCodeId(newCodeId: number) {
