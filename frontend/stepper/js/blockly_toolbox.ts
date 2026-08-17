@@ -616,10 +616,13 @@ export function getToolboxXml(options: ToolboxOptions) {
     // Unlike FioiBlockly, which always allowed the variable blocks, only do so
     // when the category is actually shown, as the previous code here did.
     if (variablesFlyoutOptions.any || variablesFlyoutOptions.fixed.length) {
-        // A `custom="VARIABLE"` category: Blockly fills it from the callback
-        // registered by `registerVariablesFlyout`, so it has no static blocks.
+        // When grouped by category, this is a `custom="VARIABLE"` category:
+        // Blockly fills it from the callback registered by
+        // `registerVariablesFlyout`, so it needs no static blocks. Without
+        // categories there is no callback to call, so generate the blocks here
+        // (they can't depend on the workspace variables, which don't exist yet).
         categoriesInfos["variables"] = {
-            blocksXml: [],
+            blocksXml: options.groupByCategory ? [] : variablesFlyoutCategory().map(element => Blockly.Xml.domToText(element)),
             colour: colours.blocks['variables'],
         };
 
