@@ -25,8 +25,10 @@ import {addInputBlocks} from './blocks/inputs';
 import {addLogicBlocks} from './blocks/logic';
 import {addProcedureBlocks} from './blocks/procedures';
 import {getToolboxXml as buildToolboxXml, registerVariablesFlyout} from './blockly_toolbox';
+import {registerFieldNumberKeypad} from './fields/field_number';
 
 registerFieldAngle();
+registerFieldNumberKeypad();
 
 // `registerContinuousToolbox()` globally overrides two Blockly defaults (the
 // toolbox category and the "block" flyout inflater) in addition to registering

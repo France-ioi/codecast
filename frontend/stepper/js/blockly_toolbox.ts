@@ -67,20 +67,55 @@ function createVariableFieldDom(variableName: string) {
 }
 
 /**
+ * Characters allowed in variable names by exception to Blockly's rules, so that
+ * French names keep their accents instead of being mangled into underscores.
+ */
+const ALLOWED_SPECIAL_CHARACTERS = 'àâçéèêëïîôùü';
+
+/**
+ * Port of FioiBlockly's `Blockly.Names.prototype.safeName_` override: same as
+ * Blockly's `Names.safeName`, except the characters above are kept as-is.
+ */
+function safeVariableName(name: string) {
+    if (!name) {
+        return Blockly.Msg['UNNAMED_KEY'] || 'unnamed';
+    }
+
+    let safeName = '';
+    for (let i = 0; i < name.length; i++) {
+        const character = name[i];
+        if (0 === i && '0123456789'.includes(character)) {
+            // Most languages don't allow names with leading numbers.
+            safeName = 'my_';
+        }
+        if (' ' === character) {
+            safeName += '_';
+        } else if (ALLOWED_SPECIAL_CHARACTERS.includes(character)) {
+            safeName += character;
+        } else {
+            safeName += encodeURI(character).replace(/[^\w]/g, '_');
+        }
+    }
+
+    return safeName;
+}
+
+// Make the code generators use the names the user typed, accents included.
+// `safeName` is private in the typings, but it is the method Blockly calls.
+(Blockly.Names.prototype as any).safeName = function(name: string) {
+    return safeVariableName(name);
+};
+
+/**
  * Whether the name is usable as-is as a variable name, i.e. Blockly wouldn't
- * have to mangle it to generate code. Mirrors the private `Names.safeName`.
+ * have to mangle it to generate code.
  */
 function isSafeVariableName(name: string) {
     if (!name) {
         return false;
     }
 
-    let safeName = encodeURI(name.replace(/ /g, '_')).replace(/[^\w]/g, '_');
-    if ('0123456789'.includes(safeName[0])) {
-        safeName = 'my_' + safeName;
-    }
-
-    return safeName === name;
+    return safeVariableName(name) === name;
 }
 
 /**
@@ -273,6 +308,67 @@ function createVariable(workspace: Blockly.WorkspaceSvg) {
         }
     });
 }
+
+/**
+ * Rename a variable with the same prompt as when creating one, instead of the
+ * `window.prompt` based `Blockly.Variables.renameVariable`. Keeps the checks
+ * Blockly does before renaming; `defaultName` is what the prompt starts with,
+ * so a rejected name can be offered back for editing.
+ */
+function renameVariable(workspace: Blockly.Workspace, variable: Blockly.IVariableModel<Blockly.IVariableState>, defaultName: string = variable.getName()) {
+    const promptText = Blockly.Msg['RENAME_VARIABLE_TITLE'].replace('%1', variable.getName());
+
+    promptVariableName(promptText, defaultName, function(newName) {
+        if (!newName) {
+            return;
+        }
+
+        // Blockly re-prompts with the refused name once the message is closed.
+        const retry = () => renameVariable(workspace, variable, newName);
+
+        // Same name, but held by a variable of another type.
+        const otherVariable = Blockly.Variables.nameUsedWithAnyType(newName, workspace);
+        if (otherVariable && otherVariable.getType() !== variable.getType()) {
+            window.displayHelper.showPopupMessage(
+                Blockly.Msg['VARIABLE_ALREADY_EXISTS_FOR_ANOTHER_TYPE']
+                    .replace('%1', otherVariable.getName())
+                    .replace('%2', otherVariable.getType()),
+                'blanket', null, retry);
+
+            return;
+        }
+
+        const conflictingParameter = Blockly.Variables.nameUsedWithConflictingParam(variable.getName(), newName, workspace);
+        if (conflictingParameter) {
+            window.displayHelper.showPopupMessage(
+                Blockly.Msg['VARIABLE_ALREADY_EXISTS_FOR_A_PARAMETER']
+                    .replace('%1', newName)
+                    .replace('%2', conflictingParameter),
+                'blanket', null, retry);
+
+            return;
+        }
+
+        workspace.getVariableMap().renameVariable(variable, newName);
+    });
+}
+
+// FioiBlockly overrode `FieldVariable.prototype.classValidator` to rename
+// variables through its own prompt; the modern equivalent is the handler for
+// the field dropdown items, which otherwise calls the `window.prompt` based
+// `Blockly.Variables.renameVariable`. Deleting a variable is left untouched.
+const originalOnItemSelected = (Blockly.FieldVariable.prototype as any).onItemSelected_;
+(Blockly.FieldVariable.prototype as any).onItemSelected_ = function(this: Blockly.FieldVariable, menu: Blockly.Menu, menuItem: Blockly.MenuItem) {
+    const sourceBlock = this.getSourceBlock();
+    const variable = this.getVariable();
+    if (Blockly.RENAME_VARIABLE_ID === menuItem.getValue() && variable && sourceBlock && !sourceBlock.isDeadOrDying()) {
+        renameVariable(sourceBlock.workspace, variable);
+
+        return;
+    }
+
+    originalOnItemSelected.call(this, menu, menuItem);
+};
 
 /**
  * Plug our variables flyout into a workspace. Must be called after the
