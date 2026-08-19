@@ -768,14 +768,10 @@ export class BlocklyHelper {
             return Infinity;
         }
 
-        // TODO Blockly: check FioiBlockly because it overrides this method to add a parameter
-        // @ts-ignore
-        let remaining = workspace.remainingCapacity(this.maxBlocks + 1);
         let allBlocks = workspace.getAllBlocks();
-        if (this.maxBlocks && remaining == Infinity) {
-            // Blockly won't return anything as we didn't set a limit
-            remaining = this.maxBlocks + 1 - allBlocks.length;
-        }
+        let usedBlocks = allBlocks.filter(block => !block.type.startsWith('placeholder_'));
+        let remaining = this.maxBlocks + 1 - usedBlocks.length;
+
         for (let i = 0; i < allBlocks.length; i++) {
             let block = allBlocks[i];
             if (typeof this.blockCounts[block.type] != 'undefined') {
