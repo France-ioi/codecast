@@ -30,6 +30,10 @@ import {registerFieldNumberKeypad} from './fields/field_number';
 registerFieldAngle();
 registerFieldNumberKeypad();
 
+// Force thickness to always be 15
+const scrollbarThickness = 15;
+Blockly.Scrollbar.scrollbarThickness = scrollbarThickness;
+
 // `registerContinuousToolbox()` globally overrides two Blockly defaults (the
 // toolbox category and the "block" flyout inflater) in addition to registering
 // the named ContinuousToolbox/Flyout/Metrics entries. Capture Blockly's defaults
