@@ -47,9 +47,6 @@ const fioiBlocklyLocales: {[language: string]: any} = {
 const blocklyDefaultLang = 'en';
 const fioiBlocklyDefaultLang = 'fr';
 
-// TODO Blockly: don't expose Blockly to all window. Check after FioiBlockly has been migrated
-window.Blockly = Blockly;
-
 export function selectGroupByCategory(state: AppStore) {
     const isMobile = LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type;
 
