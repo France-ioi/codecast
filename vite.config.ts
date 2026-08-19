@@ -20,6 +20,31 @@ const bundledFiles = fs.readFileSync('bundled_files.txt', 'utf8')
         return {src: fileName.trim(), dest: fileName.substring(0, fileName.lastIndexOf('/'))};
     });
 
+// bebras-modules are legacy scripts, loaded at runtime with classic <script> tags
+// (see frontend/task/libs/import_modules.ts) and copied verbatim into the production
+// build — they are never part of the module graph. The dev server transforms them
+// anyway, and vite-plugin-node-polyfills turns every file mentioning `global`,
+// `process` or `Buffer` into an ES module by adding imports for its shims, which a
+// classic <script> can't parse: "Cannot use import statement outside a module".
+//
+// Vite's transform middleware skips a request whose `Sec-Fetch-Dest` is `document`
+// (that's why opening such a file in a browser tab shows it unchanged), so claiming
+// that dest hands these files to the static middleware, which serves them as they
+// are on disk. Registering from `configureServer` without returning a function is
+// what puts this ahead of Vite's own middlewares.
+const serveBebrasModulesRaw = {
+    name: 'serve-bebras-modules-raw',
+    apply: 'serve' as const,
+    configureServer(server) {
+        server.middlewares.use((req, _res, next) => {
+            if (req.url?.includes('/bebras-modules/')) {
+                req.headers['sec-fetch-dest'] = 'document';
+            }
+            next();
+        });
+    },
+};
+
 export default defineConfig(({mode}) => {
     const isDev = mode === 'development'
     const isLib = process.env['BUILD'] === 'lib';
@@ -34,6 +59,7 @@ export default defineConfig(({mode}) => {
         plugins: [
             react({}),
             nodePolyfills({include: ['crypto', 'stream', 'buffer', 'process', 'util', 'fs', 'vm']}),
+            serveBebrasModulesRaw,
             ...(!isDev ? [viteStaticCopy({targets: bundledFiles})] : []),
             // Stub out Blueprint icon path bundles — icon paths are embedded directly in each
             // generated icon component, so the dynamic loader and static allPaths bundle are unneeded.

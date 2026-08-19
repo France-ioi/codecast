@@ -224,6 +224,8 @@ function importableModules(modulesPath) {
         'blockly-distributed': { src: modulesPath + "/pemFioi/quickpi/blocklyQuickPiDistributed_lib.js", id: "blockly-distributed" },
         'connected-boards-js': { src: modulesPath + "/pemFioi/connected-boards/index.js", id: "connected_boards_js" },
         'connected-boards-css': { type: "stylesheet", src: modulesPath + "/pemFioi/connected-boards/index.css", id: "connected_boards_css" },
+        'connected-boards2-js': { src: modulesPath + "/pemFioi/connected-boards2/index.js", id: "connected_boards2_js" },
+        'connected-boards2-css': { type: "stylesheet", src: modulesPath + "/pemFioi/connected-boards2/index.css", id: "connected_boards2_css" },
 
         'traceroute-context': { src: modulesPath + "/pemFioi/network/traceroute/context.js", id: "traceroute-context" },
         'scanip-context': { src: modulesPath + "/pemFioi/network/scanip/context.js", id: "scanip-context" },
@@ -244,6 +246,7 @@ function bundledModules() {
         {name: 'scratch-base', included: ['scratch', 'scratch_blocks_common', 'scratch_blocks', 'blockly_javascript', 'blockly_python']},
         {name: 'codecast-7.0', included: ['codecast7.0_css', 'codecast7.0_js', 'codecast7.0_loader']},
         {name: 'connected-boards', included: ['connected-boards-js', 'connected-boards-css']},
+        {name: 'connected-boards2', included: ['connected-boards2-js', 'connected-boards2-css']},
         // TODO :: bundles with mobileFirst interface
         //      {name: 'quickAlgo-all-blockly', included: ['quickAlgo_utils', 'quickAlgo_i18n', 'quickAlgo_interface', 'quickAlgo_blockly_blocks','quickAlgo_blockly_interface', 'quickAlgo_blockly_runner', 'quickAlgo_subtask', 'quickAlgo_context']},
         //      {name: 'quickAlgo-all-python', included: ['python_count', 'ace', 'ace_python', 'skulpt_quickAlgo', 'skulpt_stdlib', 'skulpt_debugger', 'quickAlgo_utils', 'quickAlgo_i18n', 'quickAlgo_interface', 'quickAlgo_python_interface', 'quickAlgo_python_runner', 'quickAlgo_subtask', 'quickAlgo_context']}

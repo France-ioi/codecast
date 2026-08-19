@@ -987,6 +987,12 @@ export class BlocklyHelper {
     completeCodeGenerators(blockInfo: Block) {
         if (typeof blockInfo.codeGenerators == "undefined") {
             blockInfo.codeGenerators = {};
+        } else {
+            // Convert codeGenerators["Python"] to codeGenerators["python"]
+            for (let [key, value] of Object.entries(blockInfo.codeGenerators)) {
+                delete blockInfo.codeGenerators[key];
+                blockInfo.codeGenerators[key.toLocaleLowerCase()] = value;
+            }
         }
 
         let that = this;
