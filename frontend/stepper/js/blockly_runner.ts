@@ -123,15 +123,6 @@ export default class BlocklyRunner extends AbstractRunner {
         if (this.context.display && this.stepMode) {
             log.getLogger('blockly_runner').debug('report block value', {id, value, varName});
 
-            // Fix for Scratch because in ext/scratch/fixes.js, we report the value as varName = varValue.
-            if ('string' === typeof value && -1 !== value.indexOf('=')) {
-                [varName, value] = value.split('=').map(e => {
-                    let trimmed = e.trim();
-
-                    return trimmed.match(/^\d+$/) ? Number(trimmed) : trimmed;
-                });
-            }
-
             let displayStr = this.valueToString(value);
             if(value && value.type == 'boolean') {
                 displayStr = value.data ? this.context.strings.valueTrue : this.context.strings.valueFalse;

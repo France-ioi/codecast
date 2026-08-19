@@ -23,6 +23,7 @@ import {addDictBlocks} from './blocks/dicts';
 import {addListBlocks, setMaxListSize} from './blocks/lists';
 import {addInputBlocks} from './blocks/inputs';
 import {addLogicBlocks} from './blocks/logic';
+import {addLoopBlocks} from './blocks/loops';
 import {addProcedureBlocks} from './blocks/procedures';
 import {getToolboxXml as buildToolboxXml, registerProceduresFlyout, registerVariablesFlyout} from './blockly_toolbox';
 import {registerFieldNumberKeypad} from './fields/field_number';
@@ -337,6 +338,7 @@ export class BlocklyHelper {
         addDictBlocks(defaultColors);
         addListBlocks(defaultColors);
         addLogicBlocks(defaultColors);
+        addLoopBlocks();
         addProcedureBlocks(defaultColors);
         this.createSimpleGeneratorsAndBlocks();
 
@@ -812,6 +814,8 @@ export class BlocklyHelper {
         if (noReportValue) {
             this.reportValues = false;
         }
+        // The loop generators are module-level, so they can't read the flag off us.
+        // setReportLoopIterations(this.reportValues);
 
         // Put other blocks than robot_start first so that they execute before the main loop
         let blockPriority = function (a) {
@@ -846,6 +850,7 @@ export class BlocklyHelper {
         codeString += comments.join("\n");
 
         this.reportValues = oldReportValues;
+        // setReportLoopIterations(this.reportValues);
 
         return codeString;
     }
@@ -1051,11 +1056,11 @@ export class BlocklyHelper {
                         let callCode = code + '(' + params + ')';
                         let reportedCode;
                         // Add reportValue to show the value in step-by-step mode
-                        if (that.mainContext.blocklyHelper.reportValues) {
-                            reportedCode = "reportBlockValue('" + block.id + "', " + callCode + ")";
-                        } else {
-                            reportedCode = callCode;
-                        }
+                        // if (that.mainContext.blocklyHelper.reportValues) {
+                        reportedCode = "reportBlockValue('" + block.id + "', " + callCode + ")";
+                        // } else {
+                        //     reportedCode = callCode;
+                        // }
 
                         if (typeof output == "undefined") {
                             return callCode + ";\n";
