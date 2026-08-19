@@ -834,6 +834,8 @@ export function getToolboxXml(options: ToolboxOptions) {
         }
     }
 
+    // TODO Blockly: in category mode in Scratch, have a consistent category order in different versions
+
     // Disable arguments in procedures if variables are not allowed
     if (!variablesFlyoutOptions.any && proceduresOptions && typeof proceduresOptions.disableArgs == 'undefined') {
         setProceduresDisableArgs(true);
