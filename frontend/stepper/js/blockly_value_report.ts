@@ -22,16 +22,36 @@ function makeBlockOwner(block: Blockly.BlockSvg): Blockly.Field {
     } as unknown as Blockly.Field;
 }
 
-/** The block's bounding box, in page coordinates — the same box Blockly computes. */
+/**
+ * The block's own bounding box, in page coordinates.
+ *
+ * Blockly's own `getScaledBboxOfBlock` measures `block.width`, which is the
+ * block's width *with* the blocks plugged into its inputs — so a block holding
+ * another one on its right would get the box centred on the pair rather than on
+ * itself. `getBoundingRectangleWithoutChildren()` measures the block alone.
+ */
 function getScaledBlockBox(block: Blockly.BlockSvg): Blockly.utils.Rect {
-    const scale = block.workspace.scale;
-    const offset = Blockly.utils.style.getPageOffset(block.getSvgRoot());
+    const workspace = block.workspace;
+    const bounds = block.getBoundingRectangleWithoutChildren();
+
+    // Workspace coordinates, so they have to go through the workspace's scale and
+    // scroll. That lands on viewport coordinates, one document scroll short of
+    // the page coordinates DropDownDiv positions in.
+    const toPageCoordinates = (x: number, y: number) => {
+        const onScreen = Blockly.utils.svgMath.wsToScreenCoordinates(workspace, new Blockly.utils.Coordinate(x, y));
+
+        return Blockly.utils.Coordinate.sum(onScreen, Blockly.utils.svgMath.getDocumentScroll());
+    };
+
+    // The two corners come back swapped in a right-to-left workspace.
+    const first = toPageCoordinates(bounds.left, bounds.top);
+    const second = toPageCoordinates(bounds.right, bounds.bottom);
 
     return new Blockly.utils.Rect(
-        offset.y,
-        offset.y + block.height * scale,
-        offset.x,
-        offset.x + block.width * scale,
+        Math.min(first.y, second.y),
+        Math.max(first.y, second.y),
+        Math.min(first.x, second.x),
+        Math.max(first.x, second.x),
     );
 }
 
@@ -41,6 +61,8 @@ function getScaledBlockBox(block: Blockly.BlockSvg): Blockly.utils.Rect {
 // that: the choice is made by comparing the below-position against the bottom of
 // the viewport, so we hand it a below-position that can never fit.
 const NEVER_FITS_BELOW = Number.MAX_SAFE_INTEGER;
+
+const VERTICAL_GAP = 8;
 
 // The owner we handed to DropDownDiv for the box currently shown, so that we
 // only ever hide our own box and never a drop-down someone else opened.
@@ -93,7 +115,7 @@ export function reportValueOnBlock(workspace: Blockly.WorkspaceSvg, blockId: str
         blockCenterX,
         NEVER_FITS_BELOW,
         blockCenterX,
-        blockBox.top,
+        blockBox.top + (Blockly.DropDownDiv.PADDING_Y - VERTICAL_GAP),
         false,
     );
 }
