@@ -511,9 +511,6 @@ export class BlocklyHelper {
             if (this.mainContext.onChange) {
                 this.mainContext.onChange();
             }
-        // TODO Blockly: see if it's still useful? If enabled, it created strange offset when a block is created
-        // } else if (event.element != 'category' && event.element != 'selected' && this.display) {
-            // Blockly.svgResize(this.workspace as Blockly.WorkspaceSvg);
         }
     }
 
