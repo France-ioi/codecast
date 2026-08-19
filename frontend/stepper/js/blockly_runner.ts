@@ -312,13 +312,6 @@ export default class BlocklyRunner extends AbstractRunner {
             };
         }
 
-        // TODO Blockly: re-enable FioiBlockly and check this
-        if (window.FioiBlockly?.externalJavaScriptFunctions) {
-            for(let name in window.FioiBlockly.externalJavaScriptFunctions) {
-                interpreter.setProperty(scope, name, interpreter.createNativeFunction(makeNative(window.FioiBlockly.externalJavaScriptFunctions[name])));
-            }
-        }
-
         interpreter.setProperty(scope, "program_end", interpreter.createAsyncFunction(createAsync((callback) => {
             this.program_end(callback);
         })));
