@@ -27,6 +27,7 @@ import {addLoopBlocks} from './blocks/loops';
 import {addProcedureBlocks} from './blocks/procedures';
 import {getToolboxXml as buildToolboxXml, registerProceduresFlyout, registerVariablesFlyout} from './blockly_toolbox';
 import {registerFieldNumberKeypad} from './fields/field_number';
+import {MaxWidthContinuousFlyout, MaxWidthVerticalFlyout} from './blockly_flyout';
 
 registerFieldAngle();
 registerFieldNumberKeypad();
@@ -375,11 +376,15 @@ export class BlocklyHelper {
 
             let wsConfig: BlocklyOptions = {
                 toolbox: "<xml>" + xmlString + "</xml>",
+                // Both flyouts are ours only to keep them within a maximum width and to
+                // tighten the gap between blocks; see blockly_flyout.ts.
                 plugins: this.scratchMode && this.groupByCategory ? {
                     toolbox: ContinuousToolbox,
-                    flyoutsVerticalToolbox: ContinuousFlyout,
+                    flyoutsVerticalToolbox: MaxWidthContinuousFlyout,
                     metricsManager: ContinuousMetrics,
-                } : {},
+                } : {
+                    flyoutsVerticalToolbox: MaxWidthVerticalFlyout,
+                },
                 comments: true,
                 sounds: false,
                 trashcan: true,
