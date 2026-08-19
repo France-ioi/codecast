@@ -11,11 +11,11 @@ import debounce from 'lodash/debounce';
 import {getMessage} from '../../lang/messages';
 import {javascriptGenerator} from 'blockly/javascript';
 import * as Blockly from 'blockly/core';
+import {hideReportedValue, reportValueOnBlock} from './blockly_value_report';
 
 const debounceHideBlocklyDropdown = debounce(() => {
-    // TODO Blockly: use when FioiBlockly will be migrated
-    // Blockly?.DropDownDiv?.hideWithoutAnimation();
-}, 500);
+    hideReportedValue();
+}, 750);
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
@@ -148,8 +148,7 @@ export default class BlocklyRunner extends AbstractRunner {
                 displayStr = varName + ' = ' + displayStr;
             }
 
-            // TODO Blockly: re-enable when FioiBlockly is migrated
-            // this.context.blocklyHelper.workspace.reportValue(id, displayStr);
+            reportValueOnBlock(this.context.blocklyHelper.workspace, id, displayStr);
             debounceHideBlocklyDropdown();
         }
         return value;

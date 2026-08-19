@@ -78,6 +78,7 @@ import {
 } from "./platform/platform_slice";
 import {selectAnswer} from "./selectors";
 import {loadBlocklyHelperSaga} from "../stepper/js";
+import {hideReportedValue} from "../stepper/js/blockly_value_report";
 import {isEmptyDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes} from "../common/actionTypes";
@@ -955,8 +956,7 @@ export default function (bundle: Bundle) {
             if (Codecast.runner) {
                 Codecast.runner.stop();
             }
-            // TODO Blockly: use when FioiBlockly will be migrated
-            //Blockly?.DropDownDiv?.hideWithoutAnimation();
+            hideReportedValue();
             yield* call(quickAlgoLibraryResetAndReloadStateSaga);
             log.getLogger('task').debug('put task reset done to true');
             yield* put(taskResetDone(true));
