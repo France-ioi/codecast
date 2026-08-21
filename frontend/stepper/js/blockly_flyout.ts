@@ -7,7 +7,7 @@ import * as Blockly from 'blockly/core';
 import {ContinuousFlyout} from '@blockly/continuous-toolbox';
 
 /** How wide the flyout may get, in screen pixels, scrollbar included. */
-const MAX_FLYOUT_WIDTH = 250;
+const MAX_FLYOUT_WIDTH = 400;
 
 /** Vertical space between two blocks of the flyout, in workspace units. */
 const BLOCK_GAP = 12;
