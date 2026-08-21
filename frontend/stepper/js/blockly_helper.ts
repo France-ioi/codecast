@@ -8,6 +8,7 @@ import {BlocklyOptions} from 'blockly/core';
 import {JavascriptGenerator, javascriptGenerator, Order as JavascriptOrder} from 'blockly/javascript';
 import {PythonGenerator, pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import {registerFieldAngle} from '@blockly/field-angle';
+import {registerFieldColour, installAllBlocks as installColourBlocks} from '@blockly/field-colour';
 import {
     ContinuousToolbox,
     ContinuousFlyout,
@@ -30,7 +31,13 @@ import {registerFieldNumberKeypad} from './fields/field_number';
 import {MaxWidthContinuousFlyout, MaxWidthVerticalFlyout} from './blockly_flyout';
 
 registerFieldAngle();
+registerFieldColour();
 registerFieldNumberKeypad();
+
+installColourBlocks({
+    javascript: javascriptGenerator,
+    python: pythonGenerator,
+});
 
 // Force thickness to always be 15
 const scrollbarThickness = 15;

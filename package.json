@@ -31,6 +31,7 @@
     "@babel/runtime": "^7.22.5",
     "@blockly/continuous-toolbox": "^7.0.9",
     "@blockly/field-angle": "^6.0.9",
+    "@blockly/field-colour": "^6.0.12",
     "@blueprintjs/core": "^6.7.0",
     "@blueprintjs/datetime": "^6.0.14",
     "@blueprintjs/select": "6.0.13",

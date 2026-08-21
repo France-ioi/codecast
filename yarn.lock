@@ -1564,6 +1564,18 @@
   resolved "https://registry.yarnpkg.com/@blockly/field-angle/-/field-angle-6.0.9.tgz#c29ac371a49e34b42bcb94d6fba63950a76c011f"
   integrity sha512-7cjOoOG7Ol8k2VIWuLkaDSnN5PGcG56PwzHbqrv0dWMWUVHZbyC4tPo8hWL+5I3X6ebvF5GU1VkX6pmwXyg9OQ==
 
+"@blockly/field-colour@^6.0.12":
+  version "6.0.12"
+  resolved "https://registry.yarnpkg.com/@blockly/field-colour/-/field-colour-6.0.12.tgz#c4148d662e8b46cd2130ecab493dd5cc4a1f4c57"
+  integrity sha512-sZUlMtn1Bnj3/inayhZAMJ1ZUxFfR8eISBWPgOvWMBlnUIeCWXJDc76a6JVEcZhnjHFjDI+ihOXYdrp5cedShA==
+  dependencies:
+    "@blockly/field-grid-dropdown" "^6.0.10"
+
+"@blockly/field-grid-dropdown@^6.0.10":
+  version "6.0.10"
+  resolved "https://registry.yarnpkg.com/@blockly/field-grid-dropdown/-/field-grid-dropdown-6.0.10.tgz#ea9af678096c46809bdf2f1dc2e49797fc3de094"
+  integrity sha512-b54xLznsFb5OyAfpFYCFX52M7vRc9dITbLzTBIsETuXfVX8R4TFj3z0+QbJ1znlqNhr5+dgrfDfkUEm8+8zbxg==
+
 "@blueprintjs/colors@^5.1.12", "@blueprintjs/colors@^5.1.13":
   version "5.1.13"
   resolved "https://registry.yarnpkg.com/@blueprintjs/colors/-/colors-5.1.13.tgz#556b5a96183c1a83ce0376b0733bbc1e062209dc"
