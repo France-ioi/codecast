@@ -93,6 +93,11 @@ export abstract class QuickAlgoLibrary {
     features: ModuleDefinition;
     getPythonCode: () => Promise<string>;
     showIfMutator: boolean;
+    programEnded: boolean[];
+    allowInfiniteLoop: boolean;
+    curSteps: {total: number, withoutAction: number, microSteps: number, lastNbMoves: number}[];
+    nbTestCases: number;
+    onExecutionEnd?: () => void;
 
     constructor(display: boolean, infos: any) {
         this.display = display;

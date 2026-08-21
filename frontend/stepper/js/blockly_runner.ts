@@ -12,13 +12,14 @@ import {getMessage} from '../../lang/messages';
 import {javascriptGenerator} from 'blockly/javascript';
 import * as Blockly from 'blockly/core';
 import {hideReportedValue, reportValueOnBlock} from './blockly_value_report';
+import {QuickAlgoLibrary} from '../../task/libs/quickalgo_library';
 
 const debounceHideBlocklyDropdown = debounce(() => {
     hideReportedValue();
 }, 750);
 
 export default class BlocklyRunner extends AbstractRunner {
-    private context;
+    private context: QuickAlgoLibrary
     private interpreters = [];
     private isRunningInterpreter = [];
     private toStopInterpreter = [];
@@ -109,7 +110,7 @@ export default class BlocklyRunner extends AbstractRunner {
         names.setVariableMap(workspace.getVariableMap());
         names.populateVariables(workspace);
 
-        for (const variable of workspace.getAllVariables()) {
+        for (const variable of workspace.getVariableMap().getAllVariables()) {
             if (names.getName(variable.getId(), Blockly.Names.NameType.VARIABLE) === generatedName) {
                 return variable.getName();
             }

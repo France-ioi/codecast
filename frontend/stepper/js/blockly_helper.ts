@@ -262,7 +262,7 @@ export class BlocklyHelper {
     private availableBlocks: Block[];
     private mainContext: QuickAlgoLibrary;
     private placeholderBlocks: boolean;
-    private strings: any;
+    public strings: any;
     public groupByCategory: boolean;
     private allBlocksAllowed: any;
     public limitedPointers: any;

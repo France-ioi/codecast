@@ -128,6 +128,8 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     allowClientExecution?: boolean,
     codeHelpAdditionalContext?: string,
     showIfMutator?: boolean,
+    maxIter?: number,
+    maxIterWithoutAction?: number,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
