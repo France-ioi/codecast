@@ -9,6 +9,8 @@ import {JavascriptGenerator, javascriptGenerator, Order as JavascriptOrder} from
 import {PythonGenerator, pythonGenerator, Order as PythonOrder} from 'blockly/python';
 import {registerFieldAngle} from '@blockly/field-angle';
 import {registerFieldColour, installAllBlocks as installColourBlocks} from '@blockly/field-colour';
+import 'blockly/blocks';
+// import '@blockly/block-plus-minus';
 import {
     ContinuousToolbox,
     ContinuousFlyout,
@@ -29,10 +31,12 @@ import {addProcedureBlocks} from './blocks/procedures';
 import {getToolboxXml as buildToolboxXml, registerProceduresFlyout, registerVariablesFlyout} from './blockly_toolbox';
 import {registerFieldNumberKeypad} from './fields/field_number';
 import {MaxWidthContinuousFlyout, MaxWidthVerticalFlyout} from './blockly_flyout';
+import {ALIGNED_ZELOS_RENDERER, registerAlignedZelosRenderer} from './blockly_renderer';
 
 registerFieldAngle();
 registerFieldColour();
 registerFieldNumberKeypad();
+registerAlignedZelosRenderer();
 
 installColourBlocks({
     javascript: javascriptGenerator,
@@ -340,7 +344,7 @@ export class BlocklyHelper {
         this.options = options;
 
         const defaultColors = this.getDefaultColours();
-        addExtraBlocks(this.strings, defaultColors, !this.mainContext.infos || !this.mainContext.infos.showIfMutator, this.scratchMode);
+        addExtraBlocks(this.strings, defaultColors, !!this.mainContext.infos?.showIfMutator, this.scratchMode);
         addInputBlocks(defaultColors);
         addTableBlocks(defaultColors);
         addMathBlocks(defaultColors);
@@ -400,7 +404,7 @@ export class BlocklyHelper {
                 media: this.mediaUrl,
                 scrollbars: true,
                 zoom: {startScale: 1},
-                renderer: this.scratchMode ? 'zelos' : 'thrasos',
+                renderer: this.scratchMode ? ALIGNED_ZELOS_RENDERER : 'thrasos',
                 theme: Blockly.Theme.defineTheme('custom_theme', {
                     name: 'custom_theme',
                     base: Blockly.Themes.Classic,
