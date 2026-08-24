@@ -2,6 +2,7 @@ const Blockly: any = {Msg: {}};
 
 Blockly.Msg.VARIABLES_DEFAULT_NAME = "element";
 Blockly.Msg.CONTROLS_REPEAT_INPUT_DO = "";
+Blockly.Msg.CONTROLS_IF_MSG_THEN = "alors";
 
 Blockly.Msg.DICTS_CREATE_EMPTY_TITLE = "dictionnaire vide";
 Blockly.Msg.DICTS_CREATE_WITH_CONTAINER_TITLE_ADD = "Créer un dictionnaire";
