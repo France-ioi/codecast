@@ -4,7 +4,7 @@ export default {
     gridInfos: {
         context: "quickpi",
         quickPiBoard: "galaxia",
-        importModules: ['connected-boards'],
+        importModules: ['connected-boards2'],
 
         defaultLevel: "easy",
         hideSaveOrLoad: false,
