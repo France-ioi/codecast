@@ -23,6 +23,31 @@ function setBlockGap(flyout: Blockly.Flyout) {
 }
 
 /**
+ * A pair of flyout scrollbars, each shown only when its axis actually overflows.
+ *
+ * Blockly hides a scrollbar it does not need, but only when that scrollbar stands alone:
+ * both halves of a `ScrollbarPair` stay up permanently, because hiding one would leave
+ * the corner square where the two meet unaccounted for. That square is invisible here —
+ * Blockly's own stylesheet gives `.blocklyScrollbarBackground` an opacity of 0 — so we
+ * can hide either half and let the other keep the few pixels it reserves for the corner.
+ */
+class FlyoutScrollbarPair extends Blockly.ScrollbarPair {
+    constructor(private readonly flyoutWorkspace: Blockly.WorkspaceSvg, margin: number) {
+        super(flyoutWorkspace, true, true, 'blocklyFlyoutScrollbar', margin);
+    }
+
+    override resize() {
+        super.resize();
+
+        // `setVisibleInternal` is `setVisible` without its "paired scrollbars cannot be
+        // toggled" guard; the metrics are the ones the scrollbars size themselves from.
+        const metrics = this.flyoutWorkspace.getMetrics();
+        this.hScroll?.setVisibleInternal(metrics.scrollWidth > metrics.viewWidth);
+        this.vScroll?.setVisibleInternal(metrics.scrollHeight > metrics.viewHeight);
+    }
+}
+
+/**
  * Gives the flyout's workspace a horizontal scrollbar on top of its vertical one.
  *
  * Blockly only ever builds the scrollbar of the axis a flyout scrolls along — a vertical
@@ -31,16 +56,32 @@ function setBlockGap(flyout: Blockly.Flyout) {
  * pair in place, and the flyout root is an `<svg>` element, so its own viewport clips
  * whatever scrolls out of view.
  */
-function addHorizontalScrollbar(flyout: Blockly.Flyout) {
+function addScrollbars(flyout: Blockly.Flyout) {
     const workspace = flyout.getWorkspace();
     workspace.scrollbar?.dispose();
-    workspace.scrollbar = new Blockly.ScrollbarPair(
-        workspace,
-        true,
-        true,
-        'blocklyFlyoutScrollbar',
-        flyout.SCROLLBAR_MARGIN,
-    );
+    workspace.scrollbar = new FlyoutScrollbarPair(workspace, flyout.SCROLLBAR_MARGIN);
+}
+
+/**
+ * Scrolls the flyout sideways, on a shift-wheel or a sideways trackpad swipe.
+ *
+ * `VerticalFlyout.wheel_` reads the vertical delta alone, a stock vertical flyout having
+ * nothing to scroll sideways; this is the horizontal half of `HorizontalFlyout`'s, to run
+ * before it. Swallowing the event is left to it — it does so whichever way the wheel went.
+ */
+function wheelFlyoutSideways(flyout: Blockly.Flyout, e: WheelEvent) {
+    const scrollDelta = Blockly.browserEvents.getScrollDeltaPixels(e);
+    if (!scrollDelta.x) {
+        return;
+    }
+
+    const workspace = flyout.getWorkspace();
+    const metricsManager = workspace.getMetricsManager();
+    const scrollMetrics = metricsManager.getScrollMetrics();
+    const viewMetrics = metricsManager.getViewMetrics();
+
+    workspace.scrollbar?.setX(viewMetrics.left - scrollMetrics.left + scrollDelta.x);
+    Blockly.WidgetDiv.hideIfOwnerIsInWorkspace(workspace);
 }
 
 /**
@@ -80,11 +121,16 @@ export class MaxWidthVerticalFlyout extends Blockly.VerticalFlyout {
 
     override init(targetWorkspace: Blockly.WorkspaceSvg) {
         super.init(targetWorkspace);
-        addHorizontalScrollbar(this);
+        addScrollbars(this);
     }
 
     protected override setMetrics_(xyRatio: {x?: number, y?: number}) {
         scrollFlyoutTo(this, xyRatio);
+    }
+
+    protected override wheel_(e: WheelEvent) {
+        wheelFlyoutSideways(this, e);
+        super.wheel_(e);
     }
 
     protected override reflowInternal_() {
@@ -108,11 +154,16 @@ export class MaxWidthContinuousFlyout extends ContinuousFlyout {
 
     override init(targetWorkspace: Blockly.WorkspaceSvg) {
         super.init(targetWorkspace);
-        addHorizontalScrollbar(this);
+        addScrollbars(this);
     }
 
     protected override setMetrics_(xyRatio: {x?: number, y?: number}) {
         scrollFlyoutTo(this, xyRatio);
+    }
+
+    protected override wheel_(e: WheelEvent) {
+        wheelFlyoutSideways(this, e);
+        super.wheel_(e);
     }
 
     protected override reflowInternal_() {
