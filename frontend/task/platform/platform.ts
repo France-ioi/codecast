@@ -611,7 +611,7 @@ export function getNextLevelIndex(levels: {[key: string]: TaskLevel}, currentLev
 }
 
 function* platformValidateEventSaga({payload: {mode}}: ReturnType<typeof platformValidateEvent>) {
-    if ('log' === mode) {
+    if (mode == 'nextImmediate' || mode == 'top' || mode == 'log') {
         return;
     }
     if ('cancel' === mode) {
