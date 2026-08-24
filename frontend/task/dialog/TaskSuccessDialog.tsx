@@ -23,7 +23,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const forceNextTaskAfter = currentTask?.gridInfos?.forceNextTaskAfter;
     const dispatch = useDispatch();
-    const hasSolution = !!useAppSelector(getTaskSolution);
+    const hasSolution = useAppSelector(state => !!getTaskSolution(state));
     const taskTokenPayload = useAppSelector(selectTaskTokenPayload);
 
     if (false === taskTokenPayload?.bSubmissionPossible) {
