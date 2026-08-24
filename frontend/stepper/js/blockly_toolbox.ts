@@ -66,6 +66,22 @@ function createVariableFieldDom(variableName: string) {
     return field;
 }
 
+function createNumberShadowDom(inputName: string, value: number) {
+    const input = Blockly.utils.xml.createElement('value');
+    input.setAttribute('name', inputName);
+
+    const shadowBlock = Blockly.utils.xml.createElement('shadow');
+    shadowBlock.setAttribute('type', 'math_number');
+    input.appendChild(shadowBlock);
+
+    const numberField = Blockly.utils.xml.createElement('field');
+    numberField.setAttribute('name', 'NUM');
+    numberField.appendChild(Blockly.utils.xml.createTextNode(String(value)));
+    shadowBlock.appendChild(numberField);
+
+    return input;
+}
+
 /**
  * Characters allowed in variable names by exception to Blockly's rules, so that
  * French names keep their accents instead of being mangled into underscores.
@@ -189,6 +205,11 @@ function variablesFlyoutCategory(workspace?: Blockly.Workspace): Element[] {
         for (let i = 0; i < variableList.length; i++) {
             // <block type="variables_set" gap="20">
             //   <field name="VAR">item</field>
+            //   <value name="VALUE">
+            //     <shadow type="math_number">
+            //       <field name="NUM">0</field>
+            //     </shadow>
+            //   </value>
             // </block>
             if (options.shortList && i > options.fixed.length) {
                 break;
@@ -196,6 +217,7 @@ function variablesFlyoutCategory(workspace?: Blockly.Workspace): Element[] {
 
             const block = makeBlock(VARIABLE_BLOCK_NAMES.set, i);
             block.appendChild(createVariableFieldDom(variableList[i]));
+            block.appendChild(createNumberShadowDom('VALUE', 0));
             xmlList.push(block);
         }
     }
@@ -214,20 +236,7 @@ function variablesFlyoutCategory(workspace?: Blockly.Workspace): Element[] {
             }
 
             const block = makeBlock(VARIABLE_BLOCK_NAMES.incr, i);
-
-            const value = Blockly.utils.xml.createElement('value');
-            value.setAttribute('name', 'DELTA');
-            block.appendChild(value);
-
-            const shadowBlock = Blockly.utils.xml.createElement('shadow');
-            shadowBlock.setAttribute('type', 'math_number');
-            value.appendChild(shadowBlock);
-
-            const numberField = Blockly.utils.xml.createElement('field');
-            numberField.setAttribute('name', 'NUM');
-            numberField.appendChild(Blockly.utils.xml.createTextNode('1'));
-            shadowBlock.appendChild(numberField);
-
+            block.appendChild(createNumberShadowDom('DELTA', 1));
             block.appendChild(createVariableFieldDom(variableList[i]));
             xmlList.push(block);
         }
