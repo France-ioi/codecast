@@ -130,6 +130,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     showIfMutator?: boolean,
     maxIter?: number,
     maxIterWithoutAction?: number,
+    variablesSetShadowType?: 'number'|null,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {

@@ -1300,7 +1300,7 @@ export class BlocklyHelper {
             scratchMode: this.scratchMode,
             groupByCategory: this.groupByCategory,
             placeholderBlocks: this.placeholderBlocks,
-            showIfMutator: !!this.mainContext?.showIfMutator,
+            contextInfos: this.mainContext?.infos,
             strings: this.strings,
             colours: this.getDefaultColours(),
             includeBlocks: this.includeBlocks,

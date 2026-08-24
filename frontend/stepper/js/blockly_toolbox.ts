@@ -3,6 +3,7 @@ import {Block, BlockType} from '../../task/blocks/block_types';
 import {BlocklyColours} from './blockly_types';
 import {getStandardBlocks} from './standard_blocks';
 import {setProceduresDisableArgs} from './blocks/procedures';
+import {QuickalgoLibraryInfos} from '../../task/task_types';
 
 const blocklySets = {
     allDefault: {
@@ -42,6 +43,7 @@ interface VariablesFlyoutOptions {
     includedBlocks: {get: boolean, set: boolean, incr: boolean};
     /** Generate set/incr blocks only for the first (non-fixed) variable */
     shortList: boolean;
+    setShadowType: 'number'|null;
 }
 
 let variablesFlyoutOptions: VariablesFlyoutOptions;
@@ -53,6 +55,7 @@ function resetVariablesFlyoutOptions() {
         fixed: [],
         includedBlocks: {get: true, set: true, incr: true},
         shortList: true,
+        setShadowType: null,
     };
 }
 
@@ -217,7 +220,9 @@ function variablesFlyoutCategory(workspace?: Blockly.Workspace): Element[] {
 
             const block = makeBlock(VARIABLE_BLOCK_NAMES.set, i);
             block.appendChild(createVariableFieldDom(variableList[i]));
-            block.appendChild(createNumberShadowDom('VALUE', 0));
+            if ('number' === options.setShadowType) {
+                block.appendChild(createNumberShadowDom('VALUE', 0));
+            }
             xmlList.push(block);
         }
     }
@@ -524,7 +529,7 @@ export interface ToolboxOptions {
     scratchMode: boolean;
     groupByCategory: boolean;
     placeholderBlocks: boolean;
-    showIfMutator: boolean;
+    contextInfos: QuickalgoLibraryInfos;
     strings: any;
     colours: BlocklyColours;
     includeBlocks: any;
@@ -659,7 +664,7 @@ export function getToolboxXml(options: ToolboxOptions) {
 
 
     // *** Standard blocks
-    let stdBlocks = getStandardBlocks(options.scratchMode, options.placeholderBlocks, options.showIfMutator);
+    let stdBlocks = getStandardBlocks(options.scratchMode, options.placeholderBlocks, options.contextInfos.showIfMutator);
 
     // It is normally executed during load, but for
     let taskStdInclude = (options.includeBlocks && options.includeBlocks.standardBlocks) || {};
@@ -841,6 +846,10 @@ export function getToolboxXml(options: ToolboxOptions) {
         if (variablesFlyoutOptions.includedBlocks['incr']) {
             options.addBlocksAllowed(['math_change']);
         }
+    }
+
+    if (options.contextInfos.variablesSetShadowType) {
+        variablesFlyoutOptions.setShadowType = 'number';
     }
 
     // Disable arguments in procedures if variables are not allowed
