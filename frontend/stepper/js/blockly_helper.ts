@@ -460,6 +460,11 @@ export class BlocklyHelper {
                 toolbox.getFlyout().show(getInitialFlyoutContents(toolbox));
             }
 
+            const flyout = toolbox?.getFlyout();
+            if (flyout) {
+                flyout.autoClose = options.autoClose;
+            }
+
             let toolboxNode = window.jQuery('#toolboxXml');
             if (toolboxNode.length != 0) {
                 toolboxNode.html(xmlString);

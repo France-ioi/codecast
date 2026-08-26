@@ -292,33 +292,20 @@ function promptVariableName(promptText: string, defaultText: string, callback: (
 
 function createVariable(workspace: Blockly.WorkspaceSvg) {
     // Our name prompt is a DOM modal, so opening it moves the focus out of the
-    // toolbox. Blockly answers that by auto-hiding the flyout
-    // (`Toolbox.onTreeBlur` -> `autoHide`), which would close the variables
-    // category while the user is still typing the name — and the new block
-    // would only show up after re-opening the category. Suspend the auto-hide
-    // until the prompt is done; Blockly then refreshes the open flyout by
-    // itself on VAR_CREATE.
-    const flyout = workspace.getToolbox()?.getFlyout();
-    const restoreAutoClose = flyout?.autoClose;
-    if (flyout) {
-        flyout.autoClose = false;
-    }
-
+    // toolbox — which Blockly answers by auto-hiding the flyout
+    // (`Toolbox.onTreeBlur` -> `autoHide`). Nothing to do about it here: the
+    // flyout is set never to auto-close (see blockly_helper.ts), so the
+    // variables category stays open while the name is being typed, and Blockly
+    // refreshes it by itself on VAR_CREATE.
     promptVariableName(Blockly.Msg['NEW_VARIABLE_TITLE'], '', function(text) {
-        try {
-            if (!text) {
-                return;
-            }
-            if (workspace.getVariableMap().getVariable(text)) {
-                window.displayHelper.showPopupMessage(
-                    Blockly.Msg['VARIABLE_ALREADY_EXISTS'].replace('%1', text.toLowerCase()), 'blanket');
-            } else {
-                workspace.getVariableMap().createVariable(text);
-            }
-        } finally {
-            if (flyout) {
-                flyout.autoClose = restoreAutoClose;
-            }
+        if (!text) {
+            return;
+        }
+        if (workspace.getVariableMap().getVariable(text)) {
+            window.displayHelper.showPopupMessage(
+                Blockly.Msg['VARIABLE_ALREADY_EXISTS'].replace('%1', text.toLowerCase()), 'blanket');
+        } else {
+            workspace.getVariableMap().createVariable(text);
         }
     });
 }

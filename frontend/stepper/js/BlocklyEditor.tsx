@@ -16,6 +16,7 @@ import * as Blockly from 'blockly/core';
 import {BlockSvg} from 'blockly/core';
 import {CodecastPlatform} from '../codecast_platform';
 import {BlocklyProgram} from './blockly_helper';
+import {LayoutType} from '../../task/layout/layout_types';
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -35,6 +36,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const contextIncludeBlocks = useAppSelector(state => state.task.contextIncludeBlocks);
     const groupByCategory = useAppSelector(selectGroupByCategory);
     const activeView = useAppSelector(selectActiveView);
+    const layoutType = useAppSelector(state => state.layout.type);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentValue = useRef(null);
@@ -194,6 +196,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             zoom: null,
             scrollbars: false,
             readOnly: props.readOnly,
+            autoClose: LayoutType.MobileVertical === layoutType,
         };
 
         // Handle zoom options
