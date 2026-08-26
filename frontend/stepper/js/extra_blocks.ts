@@ -167,7 +167,13 @@ export function addExtraBlocks(
         const old = Blockly.Blocks['controls_if'].init;
         Blockly.Blocks['controls_if'].init = function () {
             old.call(this);
-            this.setMutator(undefined)
+            // The "else if" and "else" parts are added from a mutator dialog on
+            // Blockly's own block, and from a "+" on the first row on the one of
+            // `@blockly/block-plus-minus`. Only one of the two is there, and
+            // taking away whichever it is leaves the block with the parts it is
+            // loaded with, and no way to add another.
+            this.setMutator(undefined);
+            this.getInput('IF0')?.removeField('PLUS', true);
         };
     }
 

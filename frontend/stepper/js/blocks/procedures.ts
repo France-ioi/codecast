@@ -7,73 +7,126 @@ let disableArgs = false;
 
 /**
  * Whether function definitions may declare parameters. When disabled, the
- * definition blocks lose their mutator. Set from the task options.
+ * definition blocks lose the "+" that adds one. Set from the task options.
  */
 export function setProceduresDisableArgs(newDisableArgs?: boolean) {
     disableArgs = !!newDisableArgs;
 }
 
-export function addProcedureBlocks(defaultColors: BlocklyColours) {
-    // Only `init` is overridden: the rest of the standard definition mixin
-    // (setStatements_, updateParams_, compose/decompose, getProcedureDef, …) is
-    // kept as-is.
-    if (Blockly.Blocks['procedures_defnoreturn']) {
-        Blockly.Blocks['procedures_defnoreturn'].init = function() {
-            const nameField = new Blockly.FieldTextInput('');
-            nameField.setValidator(Blockly.Procedures.rename);
-            nameField.setSpellcheck(false);
-            this.appendDummyInput()
-                .appendField(Blockly.Msg['PROCEDURES_DEFNORETURN_TITLE'])
-                .appendField(nameField, 'NAME')
-                .appendField('', 'PARAMS');
-            if (!disableArgs) {
-                this.setMutator(new Blockly.icons.MutatorIcon(['procedures_mutatorarg'], this));
-            }
-            if ((this.workspace.options.comments ||
-                    (this.workspace.options.parentWorkspace &&
-                        this.workspace.options.parentWorkspace.options.comments)) &&
-                Blockly.Msg['PROCEDURES_DEFNORETURN_COMMENT']) {
-                this.setCommentText(Blockly.Msg['PROCEDURES_DEFNORETURN_COMMENT']);
-            }
-            this.setColour(defaultColors.categories['functions']);
-            this.setTooltip(Blockly.Msg['PROCEDURES_DEFNORETURN_TOOLTIP']);
-            this.setHelpUrl(Blockly.Msg['PROCEDURES_DEFNORETURN_HELPURL']);
-            this.arguments_ = [];
-            this.argumentVarModels_ = [];
-            this.setStatements_(true);
-            this.statementConnection_ = null;
-        };
+/** One of the two blocks that define a function. */
+interface ProcedureDefBlock {
+    /** Type the block is registered under. */
+    type: string;
+    /** Prefix of the keys its messages have in `Blockly.Msg`. */
+    messagePrefix: string;
+    /** Whether the function returns a value, and so the block has a RETURN input. */
+    returnsValue: boolean;
+}
+
+const PROCEDURE_DEF_BLOCKS: ProcedureDefBlock[] = [
+    {type: 'procedures_defnoreturn', messagePrefix: 'PROCEDURES_DEFNORETURN', returnsValue: false},
+    {type: 'procedures_defreturn', messagePrefix: 'PROCEDURES_DEFRETURN', returnsValue: true},
+];
+
+/**
+ * Applies our customisations to one of the function definition blocks of
+ * `@blockly/block-plus-minus`, by extending its `init` instead of replacing it.
+ *
+ * The plugin builds its blocks from a JSON definition: everything that makes the
+ * +/- UI work — the parameter rows, `getProcedureDef`, the mutation
+ * serialization, the callers being kept in sync — is installed by the extensions
+ * and the mutator that its `init` applies through `jsonInit`. Overwriting `init`,
+ * the way {@link defineStockProcedureDefBlock} does on Blockly's own blocks,
+ * would drop all of it and leave a block that only looks like a function.
+ */
+function customizeProcedureDefBlock({type, messagePrefix}: ProcedureDefBlock, defaultColors: BlocklyColours) {
+    const blockDefinition = Blockly.Blocks[type];
+    if (!blockDefinition) {
+        return;
     }
 
-    if (Blockly.Blocks['procedures_defreturn']) {
-        Blockly.Blocks['procedures_defreturn'].init = function() {
-            const nameField = new Blockly.FieldTextInput('');
-            nameField.setValidator(Blockly.Procedures.rename);
-            nameField.setSpellcheck(false);
-            this.appendDummyInput()
-                .appendField(Blockly.Msg['PROCEDURES_DEFRETURN_TITLE'])
-                .appendField(nameField, 'NAME')
-                .appendField('', 'PARAMS');
+    const pluginInit = blockDefinition.init;
+    blockDefinition.init = function() {
+        pluginInit.call(this);
+
+        (this.getField('NAME') as Blockly.FieldTextInput).setSpellcheck(false);
+        this.setColour(defaultColors.categories['functions']);
+
+        // Parameters are added by the "+" field the plugin puts on the TOP
+        // input, and removed by the "-" of each parameter row. Taking the "+"
+        // away is what the mutator icon not being set used to be: a block that
+        // still displays the parameters it is loaded with, but to which the
+        // user cannot add any.
+        if (disableArgs) {
+            this.getInput('TOP').removeField('PLUS', true);
+        }
+
+        if ((this.workspace.options.comments ||
+                (this.workspace.options.parentWorkspace &&
+                    this.workspace.options.parentWorkspace.options.comments)) &&
+            Blockly.Msg[messagePrefix + '_COMMENT']) {
+            this.setCommentText(Blockly.Msg[messagePrefix + '_COMMENT']);
+        }
+    };
+}
+
+/**
+ * Replaces the `init` of one of Blockly's own function definition blocks, the
+ * ones with a mutator dialog, used when the task did not ask for the +/- UI.
+ *
+ * Only `init` is overridden: the rest of the standard definition mixin
+ * (setStatements_, updateParams_, compose/decompose, getProcedureDef, …) is
+ * kept as-is.
+ */
+function defineStockProcedureDefBlock({type, messagePrefix, returnsValue}: ProcedureDefBlock, defaultColors: BlocklyColours) {
+    const blockDefinition = Blockly.Blocks[type];
+    if (!blockDefinition) {
+        return;
+    }
+
+    blockDefinition.init = function() {
+        const nameField = new Blockly.FieldTextInput('');
+        nameField.setValidator(Blockly.Procedures.rename);
+        nameField.setSpellcheck(false);
+        this.appendDummyInput()
+            .appendField(Blockly.Msg[messagePrefix + '_TITLE'])
+            .appendField(nameField, 'NAME')
+            .appendField('', 'PARAMS');
+        if (returnsValue) {
             this.appendValueInput('RETURN')
                 .setAlign(Blockly.inputs.Align.RIGHT)
                 .appendField(Blockly.Msg['PROCEDURES_DEFRETURN_RETURN']);
-            if (!disableArgs) {
-                this.setMutator(new Blockly.icons.MutatorIcon(['procedures_mutatorarg'], this));
-            }
-            if ((this.workspace.options.comments ||
-                    (this.workspace.options.parentWorkspace &&
-                        this.workspace.options.parentWorkspace.options.comments)) &&
-                Blockly.Msg['PROCEDURES_DEFRETURN_COMMENT']) {
-                this.setCommentText(Blockly.Msg['PROCEDURES_DEFRETURN_COMMENT']);
-            }
-            this.setColour(defaultColors.categories['functions']);
-            this.setTooltip(Blockly.Msg['PROCEDURES_DEFRETURN_TOOLTIP']);
-            this.setHelpUrl(Blockly.Msg['PROCEDURES_DEFRETURN_HELPURL']);
-            this.arguments_ = [];
-            this.argumentVarModels_ = [];
-            this.setStatements_(true);
-            this.statementConnection_ = null;
-        };
+        }
+        if (!disableArgs) {
+            this.setMutator(new Blockly.icons.MutatorIcon(['procedures_mutatorarg'], this));
+        }
+        if ((this.workspace.options.comments ||
+                (this.workspace.options.parentWorkspace &&
+                    this.workspace.options.parentWorkspace.options.comments)) &&
+            Blockly.Msg[messagePrefix + '_COMMENT']) {
+            this.setCommentText(Blockly.Msg[messagePrefix + '_COMMENT']);
+        }
+        this.setColour(defaultColors.categories['functions']);
+        this.setTooltip(Blockly.Msg[messagePrefix + '_TOOLTIP']);
+        this.setHelpUrl(Blockly.Msg[messagePrefix + '_HELPURL']);
+        this.arguments_ = [];
+        this.argumentVarModels_ = [];
+        this.setStatements_(true);
+        this.statementConnection_ = null;
+    };
+}
+
+/**
+ * @param plusMinusEnabled Whether the definition blocks are the ones of
+ *     `@blockly/block-plus-minus`, the task having asked for the +/- UI.
+ */
+export function addProcedureBlocks(defaultColors: BlocklyColours, plusMinusEnabled: boolean) {
+    for (const procedureDefBlock of PROCEDURE_DEF_BLOCKS) {
+        if (plusMinusEnabled) {
+            customizeProcedureDefBlock(procedureDefBlock, defaultColors);
+        } else {
+            defineStockProcedureDefBlock(procedureDefBlock, defaultColors);
+        }
     }
 
     Blockly.Blocks['procedures_return'] = {

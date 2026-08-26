@@ -10,7 +10,7 @@ import {PythonGenerator, pythonGenerator, Order as PythonOrder} from 'blockly/py
 import {registerFieldAngle} from '@blockly/field-angle';
 import {registerFieldColour, installAllBlocks as installColourBlocks} from '@blockly/field-colour';
 import 'blockly/blocks';
-// import '@blockly/block-plus-minus';
+import {setPlusMinusBlocksEnabled} from './blockly_plus_minus';
 import {
     ContinuousToolbox,
     ContinuousFlyout,
@@ -344,6 +344,10 @@ export class BlocklyHelper {
         this.options = options;
 
         const defaultColors = this.getDefaultColours();
+        // Must come first: it puts back the definition of every block
+        // `@blockly/block-plus-minus` touches, which the calls below customize.
+        const plusMinusEnabled = !!this.mainContext.infos?.plusMinusEnabled;
+        setPlusMinusBlocksEnabled(plusMinusEnabled);
         addExtraBlocks(this.strings, defaultColors, !!this.mainContext.infos?.showIfMutator, this.scratchMode);
         addInputBlocks(defaultColors);
         addTableBlocks(defaultColors);
@@ -353,7 +357,7 @@ export class BlocklyHelper {
         addListBlocks(defaultColors);
         addLogicBlocks(defaultColors);
         addLoopBlocks();
-        addProcedureBlocks(defaultColors);
+        addProcedureBlocks(defaultColors, plusMinusEnabled);
         this.createSimpleGeneratorsAndBlocks();
 
         this.display = display;

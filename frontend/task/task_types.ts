@@ -84,6 +84,7 @@ export interface QuickalgoTaskIncludeBlocksAllLevels {
     },
     variables?: string[]|{[level: string]: string[]},
     pythonAdditionalFunctions?: string[],
+    procedures?: {disableArgs?: boolean},
 }
 
 export interface QuickalgoTaskGridInfosNotLevelDependent {
@@ -131,6 +132,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     maxIter?: number,
     maxIterWithoutAction?: number,
     variablesSetShadowType?: 'number'|null,
+    plusMinusEnabled?: boolean,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
