@@ -57,6 +57,7 @@ export class FieldNumberKeypad extends Blockly.FieldNumber {
                     // Closing the editor commits the value and fires a single
                     // change event for the whole edition.
                     Blockly.WidgetDiv.hide();
+                    this.focusAfterKeypad();
                 } else {
                     this.htmlInput_?.focus();
                     this.htmlInput_?.select();
@@ -64,6 +65,22 @@ export class FieldNumberKeypad extends Blockly.FieldNumber {
             },
             keypadOptions,
         );
+    }
+
+    /**
+     * Puts the keyboard focus back on the field, once the keypad is gone.
+     *
+     * Deferred because none of that has happened yet: the modal is only told to
+     * close once this returns, and lets the focus go once React has rendered it.
+     */
+    private focusAfterKeypad() {
+        setTimeout(() => {
+            if (this.getSourceBlock()?.isDeadOrDying()) {
+                return;
+            }
+
+            Blockly.getFocusManager().focusNode(this);
+        }, 0);
     }
 
     private setKeypadValue(value: number) {
