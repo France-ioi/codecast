@@ -78,7 +78,7 @@ import {
     bufferReload,
     bufferResetToDefaultSourceCode,
 } from './buffer_actions';
-import {selectSourceBuffers} from './buffer_selectors';
+import {selectActiveBufferPlatform, selectSourceBuffers} from './buffer_selectors';
 import {getDefaultSourceCode} from '../task/utils';
 import {submissionChangeCurrentSubmissionId} from '../submission/submission_slice';
 import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
@@ -91,6 +91,7 @@ import {bufferGitSyncSagas} from './buffer_git_sync';
 import {compressDocument, uncompressDocument} from './compression';
 import {isServerSubmission} from '../submission/submission_selectors';
 import {getMessage} from '../lang/messages';
+import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -319,7 +320,7 @@ function* buffersSaga() {
     });
 
     yield* takeEvery(bufferChangePlatform, function* ({payload: {bufferName, platform, document}}) {
-        const state = yield* appSelect();
+        let state = yield* appSelect();
         const bufferState = state.buffers.buffers[bufferName];
         const currentPlatform = bufferState.platform;
         yield* put(bufferInit({buffer: bufferName, platform}));
@@ -328,6 +329,12 @@ function* buffersSaga() {
             yield* call(createQuickalgoLibrary);
             document = document ?? (yield* call(getDefaultSourceCode, platform));
             yield* put(bufferResetDocument({buffer: bufferName, document}));
+        }
+
+        state = yield* appSelect();
+        const activeBufferPlatform = selectActiveBufferPlatform(state);
+        if (state.options.platform !== activeBufferPlatform) {
+            yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: activeBufferPlatform}});
         }
     });
 

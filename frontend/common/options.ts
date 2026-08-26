@@ -261,7 +261,7 @@ export default function(bundle: Bundle) {
                 yield* put({type: StepperActionTypes.StepperExit});
 
                 const activeBufferName = state.buffers.activeBufferName;
-                if (!state.options.tabsEnabled && null !== activeBufferName) {
+                if (!state.options.tabsEnabled && null !== activeBufferName && state.buffers.buffers[state.buffers.activeBufferName].platform !== newPlatform) {
                     yield* put(bufferChangePlatform(activeBufferName, newPlatform));
                 }
             }
