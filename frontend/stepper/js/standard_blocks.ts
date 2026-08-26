@@ -53,7 +53,12 @@ export function getStandardBlocks(scratchMode: boolean, placeholderBlocks: boole
                 },
                 {
                     name: "controls_repeat",
-                    blocklyXml: "<block type='controls_repeat'>" +
+                    blocklyXml: "<block type='controls_repeat_ext'>" +
+                        "  <value name='TIMES'>" +
+                        "    <shadow type='math_number'>" +
+                        "      <field name='NUM'>10</field>" +
+                        "    </shadow>" +
+                        "  </value>" +
                         getPlaceholderBlock(placeholderBlocks, 'DO') +
                         "</block>",
                     excludedByDefault: true
@@ -76,12 +81,12 @@ export function getStandardBlocks(scratchMode: boolean, placeholderBlocks: boole
                 },
                 {
                     name: "controls_whileUntil",
-                    blocklyXml: "<block type='controls_whileUntil'></block>"
+                    blocklyXml: "<block type='controls_whileUntil'><field name='MODE'>UNTIL</field></block>",
+                    excludedByDefault: true
                 },
                 {
                     name: "controls_untilWhile",
                     blocklyXml: "<block type='controls_whileUntil'><field name='MODE'>UNTIL</field></block>",
-                    excludedByDefault: true
                 },
                 {
                     name: "controls_for",
