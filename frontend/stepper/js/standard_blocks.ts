@@ -351,6 +351,70 @@ export function getStandardBlocks(scratchMode: boolean, placeholderBlocks: boole
                 excludedByDefault: true
             },
             {
+                name: "math_sum",
+                blocklyXml: "<block type='math_sum'>" +
+                    "  <value name='A'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='B'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>",
+                excludedByDefault: true
+            },
+            {
+                name: "math_difference",
+                blocklyXml: "<block type='math_difference'>" +
+                    "  <value name='A'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='B'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>",
+                excludedByDefault: true
+            },
+            {
+                name: "math_product",
+                blocklyXml: "<block type='math_product'>" +
+                    "  <value name='A'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='B'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>",
+                excludedByDefault: true
+            },
+            {
+                name: "math_division",
+                blocklyXml: "<block type='math_division'>" +
+                    "  <value name='A'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "  <value name='B'>" +
+                    "    <shadow type='math_number'>" +
+                    "      <field name='NUM'>1</field>" +
+                    "    </shadow>" +
+                    "  </value>" +
+                    "</block>",
+                excludedByDefault: true
+            },
+            {
                 name: "math_single",
                 blocklyXml: "<block type='math_single'>" +
                     "  <value name='NUM'>" +
