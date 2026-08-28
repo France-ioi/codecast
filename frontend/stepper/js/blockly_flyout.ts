@@ -112,6 +112,30 @@ function scrollFlyoutTo(flyout: Blockly.Flyout, xyRatio: {x?: number, y?: number
     workspace.translate(workspace.scrollX + absoluteMetrics.left, workspace.scrollY + absoluteMetrics.top);
 }
 
+/**
+ * The contents of a flyout, with each custom category — ours are the variables and the
+ * functions ones — replaced by the items its callback returns.
+ *
+ * `Flyout.show` expands them as well, but it then looks for an inflater of their own
+ * `category` kind all the same, which Blockly has none of: it warns about it, once per
+ * custom category and per refresh of the flyout. Only a continuous flyout ever holds
+ * one, a regular toolbox opening a custom category as a flyout of its own, by name.
+ */
+function expandCustomCategories(
+    flyout: Blockly.Flyout,
+    flyoutDef: Blockly.utils.toolbox.FlyoutDefinition,
+): Blockly.utils.toolbox.FlyoutItemInfoArray {
+    return Blockly.utils.toolbox.convertFlyoutDefToJsonArray(flyoutDef).flatMap(item => {
+        if (!('custom' in item)) {
+            return [item];
+        }
+
+        const getContents = flyout.targetWorkspace.getToolboxCategoryCallback(item.custom);
+
+        return getContents ? expandCustomCategories(flyout, getContents(flyout.targetWorkspace)) : [];
+    });
+}
+
 /** The flyout of a regular Blockly workspace, category-based toolbox or not. */
 export class MaxWidthVerticalFlyout extends Blockly.VerticalFlyout {
     constructor(workspaceOptions: Blockly.Options) {
@@ -155,6 +179,11 @@ export class MaxWidthContinuousFlyout extends ContinuousFlyout {
     override init(targetWorkspace: Blockly.WorkspaceSvg) {
         super.init(targetWorkspace);
         addScrollbars(this);
+    }
+
+    override show(flyoutDef: Blockly.utils.toolbox.FlyoutDefinition|string) {
+        // The continuous toolbox shows every category at once, custom ones included.
+        super.show('string' === typeof flyoutDef ? flyoutDef : expandCustomCategories(this, flyoutDef));
     }
 
     protected override setMetrics_(xyRatio: {x?: number, y?: number}) {
