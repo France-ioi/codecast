@@ -1570,6 +1570,11 @@
   resolved "https://registry.yarnpkg.com/@blockly/field-grid-dropdown/-/field-grid-dropdown-13.2.0.tgz#aa98036177733d7ed0d46553e9308f9960818c78"
   integrity sha512-TrtwonbP4uQt65BE850DYXFDuG0IP96/wgD6BNTCMBaMQFg4sEvdBHCnkxqaI72EWGtsl1FJ9OCXDGWbL34RPg==
 
+"@blockly/plugin-cross-tab-copy-paste@^13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@blockly/plugin-cross-tab-copy-paste/-/plugin-cross-tab-copy-paste-13.2.0.tgz#58826d4ba0531c4f23213927f81a5adc582d41b7"
+  integrity sha512-TZtiqR4fckM4tB9ZzKk3Jgh2kVn+34ovU+4VhFsC3GtbIzuuXOhDFXuenJnLZzqIwAm4GVnS8tm0EiRAfDGLTQ==
+
 "@blueprintjs/colors@^5.1.12", "@blueprintjs/colors@^5.1.13":
   version "5.1.13"
   resolved "https://registry.yarnpkg.com/@blueprintjs/colors/-/colors-5.1.13.tgz#556b5a96183c1a83ce0376b0733bbc1e062209dc"

@@ -201,6 +201,7 @@ export default {
     TASK_BLOCKS_REMAINING_BLOCKS: '{remaining} Blok|{remaining} Blokken',
     TASK_BLOCKS_LIMIT_REMAINING: 'blijft over:',
     TASK_BLOCKS_OVER_LIMIT: '{overLimit} overtollig blok gebruikt voor {limit} autorisés|{overLimit} overtollige blokken gebruikt voor {limit} toegestaan',
+    TASK_BLOCKS_PASTE_NOT_ALLOWED: 'Je kan deze blokken niet plakken: sommige zijn niet beschikbaar in deze oefening.',
     TASK_POST_COMPILATION_ERROR: 'Uw programma valideert de oefening echter niet:',
     TASK_BLOCK_CATEGORY_ACTIONS: 'Acties',
     TASK_BLOCK_CATEGORY_SENSORS: 'Sensoren',

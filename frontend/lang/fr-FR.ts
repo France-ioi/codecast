@@ -231,6 +231,8 @@ export default {
     TASK_BLOCKS_LIMIT_REMAINING: 'reste :',
     TASK_BLOCKS_LIMIT_EXECUTE_ONLY_WITH: 'Exécution seulement avec',
     TASK_BLOCKS_OVER_LIMIT: '{overLimit} bloc en trop utilisé pour {limit} autorisés|{overLimit} blocs en trop utilisés pour {limit} autorisés',
+    TASK_BLOCKS_PASTE_NOT_ALLOWED: "Vous ne pouvez pas coller ces blocs : certains ne sont pas disponibles dans cet exercice.",
+    TASK_BLOCKS_PASTE_NOT_ALLOWED_FAMILIAR: "Tu ne peux pas coller ces blocs : certains ne sont pas disponibles dans cet exercice.",
     TASK_POST_COMPILATION_ERROR: "Cependant, votre programme ne valide pas l'exercice : ",
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",
     TASK_BLOCK_CATEGORY_SENSORS: "Capteurs",

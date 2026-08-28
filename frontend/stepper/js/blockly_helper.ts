@@ -32,6 +32,10 @@ import {getToolboxXml as buildToolboxXml, registerProceduresFlyout, registerVari
 import {registerFieldNumberKeypad} from './fields/field_number';
 import {MaxWidthContinuousFlyout, MaxWidthVerticalFlyout} from './blockly_flyout';
 import {ALIGNED_ZELOS_RENDERER, registerAlignedZelosRenderer} from './blockly_renderer';
+import {CrossTabCopyPaste} from '@blockly/plugin-cross-tab-copy-paste';
+import {Codecast} from '../../app_types';
+import {stepperDisplayError} from '../actionTypes';
+import {getMessage} from '../../lang/messages';
 
 registerFieldAngle();
 registerFieldColour();
@@ -113,6 +117,47 @@ Blockly.BlockSvg.prototype.toCopyData = function() {
     return originalToCopyData.call(this, true);
 };
 
+class TaskCrossTabCopyPaste extends CrossTabCopyPaste {
+    // The helper of the workspace that is currently being edited, which knows
+    // which blocks the task allows.
+    blocklyHelper: BlocklyHelper|null = null;
+
+    // Whether the clipboard is being read to decide if pasting is possible at
+    // all, rather than to paste right now.
+    private isCheckingPrecondition = false;
+
+    pastePrecondition(workspace: Blockly.WorkspaceSvg) {
+        // Let the user paste blocks the task doesn't allow, so that the attempt
+        // can tell them why nothing was pasted, rather than leaving them with a
+        // disabled menu item and no explanation.
+        this.isCheckingPrecondition = true;
+        try {
+            return super.pastePrecondition(workspace);
+        } finally {
+            this.isCheckingPrecondition = false;
+        }
+    }
+
+    getCopyData() {
+        const copyData = super.getCopyData();
+        if (this.isCheckingPrecondition || !copyData || !this.blocklyHelper) {
+            return copyData;
+        }
+
+        if (!this.blocklyHelper.checkBlocksAreAllowed(copyData, false)) {
+            Codecast.environments['main'].store.dispatch(stepperDisplayError(getMessage('TASK_BLOCKS_PASTE_NOT_ALLOWED').s));
+
+            return undefined;
+        }
+
+        return copyData;
+    }
+}
+
+// The plugin registers itself into Blockly's global context menu and shortcut
+// registries, so a single instance serves every workspace.
+let crossTabCopyPaste: TaskCrossTabCopyPaste = null;
+
 const codeGenerators: Record<string, JavascriptGenerator | PythonGenerator> = {
     javascript: javascriptGenerator,
     python: pythonGenerator,
@@ -139,7 +184,6 @@ const blocklyAllowedSiblings = {
     'lists_create_with_empty': ['lists_create_with']
 };
 
-let blocklyClipboardSaved;
 let blocklyUserScale;
 
 const blocklyCategoriesColors: Record<string, number|HexColor> = {
@@ -391,6 +435,15 @@ export class BlocklyHelper {
                 disableContinuousToolbox();
             }
 
+            if (!crossTabCopyPaste) {
+                crossTabCopyPaste = new TaskCrossTabCopyPaste();
+                crossTabCopyPaste.init({
+                    contextMenu: true,
+                    shortcut: true,
+                });
+            }
+            crossTabCopyPaste.blocklyHelper = this;
+
             let wsConfig: BlocklyOptions = {
                 toolbox: "<xml>" + xmlString + "</xml>",
                 // Both flyouts are ours only to keep them within a maximum width and to
@@ -474,16 +527,6 @@ export class BlocklyHelper {
                 toolboxNode.html(xmlString);
             }
 
-            // Restore clipboard if allowed
-            if (blocklyClipboardSaved) {
-                if (this.checkBlocksAreAllowed(blocklyClipboardSaved, false)) {
-                    Blockly.clipboard.setLastCopiedData(blocklyClipboardSaved);
-                } else {
-                    Blockly.clipboard.setLastCopiedData(null);
-                }
-                Blockly.clipboard.setLastCopiedWorkspace(this.workspace);
-            }
-
             window.jQuery(".blocklyToolboxDiv").css("background-color", "rgba(168, 168, 168, 0.5)");
             this.workspace.addChangeListener(this.onChange.bind(this));
             this.onChange();
@@ -506,11 +549,6 @@ export class BlocklyHelper {
             // Need to hide the WidgetDiv before disposing of the workspace
             Blockly.WidgetDiv.hide();
         } catch (e) {
-        }
-
-        // Save clipboard
-        if (this.display && Blockly.clipboard.getLastCopiedData()) {
-            blocklyClipboardSaved = Blockly.clipboard.getLastCopiedData();
         }
 
         let ws = this.workspace;

@@ -226,6 +226,7 @@ export default {
     TASK_BLOCKS_LIMIT_REMAINING: 'remaining:',
     TASK_BLOCKS_LIMIT_EXECUTE_ONLY_WITH: 'Execution only with',
     TASK_BLOCKS_OVER_LIMIT: '{overLimit} extra block used out of {limit} authorized|{overLimit} extra blocks used out of {limit} authorized',
+    TASK_BLOCKS_PASTE_NOT_ALLOWED: "You cannot paste these blocks: some of them are not available in this exercise.",
     TASK_POST_COMPILATION_ERROR: "However, your program does not validate this task: ",
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",
     TASK_BLOCK_CATEGORY_SENSORS: "Sensors",
