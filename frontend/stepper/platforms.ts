@@ -136,6 +136,18 @@ export const platformsList: {[key: string]: PlatformData} = {
         aceSourceMode: null,
         extension: 'pseudo',
     },
+    [CodecastPlatform.Pascal]: {
+        name: 'Pascal',
+        needsCompilation: true,
+        aceSourceMode: 'pascal',
+        extension: 'pas',
+    },
+    [CodecastPlatform.OCaml]: {
+        name: 'OCaml',
+        needsCompilation: true,
+        aceSourceMode: 'ocaml',
+        extension: 'ml',
+    },
     ...smartContractPlatformsList,
 };
 
