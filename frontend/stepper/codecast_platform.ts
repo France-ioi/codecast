@@ -9,4 +9,6 @@ export enum CodecastPlatform {
     Scratch = 'scratch',
     Output = 'output',
     PseudoCode = 'pseudo',
+    Pascal = 'pascal',
+    OCaml = 'ocaml',
 }
