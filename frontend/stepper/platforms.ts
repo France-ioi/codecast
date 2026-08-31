@@ -93,10 +93,17 @@ export const platformsList: {[key: string]: PlatformData} = {
         checkCode: checkCCode,
     },
     [CodecastPlatform.Java]: {
-        name: 'Java (GCJ)',
+        name: 'Java',
         needsCompilation: true,
         hasMicroSteps: true,
         extension: 'java',
+        aceSourceMode: 'java',
+    },
+    [CodecastPlatform.JavaScool]: {
+        name: 'JavaScool',
+        needsCompilation: true,
+        hasMicroSteps: true,
+        extension: 'jvs',
         aceSourceMode: 'java',
     },
     [CodecastPlatform.Arduino]: {
