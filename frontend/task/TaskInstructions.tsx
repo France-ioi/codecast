@@ -10,6 +10,7 @@ import {documentationConceptSelected} from './documentation/documentation_slice'
 import {faMinus} from '@fortawesome/free-solid-svg-icons/faMinus';
 import {TaskInstructionsTabs} from './instructions/TaskInstructionsTabs';
 import {
+    applyInstructionsPostProcessing,
     convertHtmlInstructionsToReact, getFormattedInstructionsForLevelSelector,
 } from './instructions/instructions';
 import {getDomElementFromDomTree, useCursorPositionTracking} from './layout/cursor_tracking';
@@ -86,15 +87,15 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         if (props.changeDisplayShowMore) {
             props.changeDisplayShowMore(hasShortOrLongInstructions || hasTabs);
         }
-
-        setTimeout(() => {
-            if (window.instructionsPostProcessing?.length) {
-                for (let postProcessingCallback of window.instructionsPostProcessing) {
-                    postProcessingCallback();
-                }
-            }
-        });
     }, [contextId, platform]);
+
+    useEffect(() => {
+        if (null === instructionsHtml && null === instructionsTabs) {
+            return;
+        }
+
+        applyInstructionsPostProcessing();
+    }, [instructionsHtml, instructionsTabs]);
 
     useCursorPositionTracking('instructions', (absPoint: CursorPoint): Pick<CursorPosition, 'textOffset'|'element'> => {
         let range, offset, textNode: HTMLElement;
