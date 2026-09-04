@@ -224,6 +224,7 @@ export function getCurrentImmerState(object) {
 }
 
 export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName, taskVariant?: number) {
+    instructions = instructions ?? '';
     instructions = instructions.replace(/"java_jvs"/g, '"java"');
 
     const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
