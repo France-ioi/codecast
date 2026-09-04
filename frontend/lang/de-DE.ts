@@ -230,6 +230,7 @@ export default {
     TASK_BLOCKS_LIMIT_REMAINING: "übrig:",
     TASK_BLOCKS_LIMIT_EXECUTE_ONLY_WITH: "Ausführung nur mit",
     TASK_BLOCKS_OVER_LIMIT: "{overLimit} Baustein über dem Limit von {limit}|{overLimit} Bausteine über dem Limit von {limit}",
+    TASK_BLOCKS_PASTE_NOT_ALLOWED: "Du kannst diese Bausteine nicht einfügen: Einige davon sind in dieser Aufgabe nicht verfügbar.",
     TASK_POST_COMPILATION_ERROR: "Dein Programm löst die Aufgabe noch nicht: ",
     TASK_BLOCK_CATEGORY_ACTIONS: "Aktionen",
     TASK_BLOCK_CATEGORY_SENSORS: "Sensoren",

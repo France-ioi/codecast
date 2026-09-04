@@ -267,7 +267,7 @@ export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, p
     let language: string = platform;
     if (BufferType.Block === answer.document.type) {
         language = 'python';
-        const pythonCode = yield* call(getBlocklyCodeFromXml, answer.document as BlockDocument, 'python', state);
+        const pythonCode = yield* call(getBlocklyCodeFromXml, answer.document as BlockDocument, 'python' as const, state);
         answerContent = '# blocklyXml: ' + answerContent + '\n\n' + pythonCode;
     }
 

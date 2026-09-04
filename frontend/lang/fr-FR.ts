@@ -148,7 +148,6 @@ export default {
     CLOSED_CAPTIONS_SHOW_PANE: "Afficher tous les sous-titres",
     CLOSED_CAPTIONS_SHOW_BAND: "Afficher le bandeau de sous-titres",
     PLATFORM_SETTING: "Langage :",
-    PLATFORM_RELOAD: "Impossible d'afficher le langage {platform} dans le mode actuel, veuillez recharger la page pour mettre l'interface à jour.",
     PROGRAM_MISSING_LIB: "Vous devez mettre la ligne {line} dans votre programme.",
     PROGRAM_MISSING_LIB_FAMILIAR: "Tu dois mettre la ligne {line} dans ton programme.",
 
@@ -232,6 +231,8 @@ export default {
     TASK_BLOCKS_LIMIT_REMAINING: 'reste :',
     TASK_BLOCKS_LIMIT_EXECUTE_ONLY_WITH: 'Exécution seulement avec',
     TASK_BLOCKS_OVER_LIMIT: '{overLimit} bloc en trop utilisé pour {limit} autorisés|{overLimit} blocs en trop utilisés pour {limit} autorisés',
+    TASK_BLOCKS_PASTE_NOT_ALLOWED: "Vous ne pouvez pas coller ces blocs : certains ne sont pas disponibles dans cet exercice.",
+    TASK_BLOCKS_PASTE_NOT_ALLOWED_FAMILIAR: "Tu ne peux pas coller ces blocs : certains ne sont pas disponibles dans cet exercice.",
     TASK_POST_COMPILATION_ERROR: "Cependant, votre programme ne valide pas l'exercice : ",
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",
     TASK_BLOCK_CATEGORY_SENSORS: "Capteurs",

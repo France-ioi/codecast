@@ -1543,6 +1543,38 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.28.5"
 
+"@blockly/block-plus-minus@^13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@blockly/block-plus-minus/-/block-plus-minus-13.2.0.tgz#5d4a57f949b44c8f2176a9c2d05f77a11b97d8bc"
+  integrity sha512-xC16BqR+WSucNXUczSKqDLUJu1XY25kqqzbSqFZbxfRgdudRySMj/RS+SWHtX1TMdj7U9oit136PZKGNr/bh9A==
+
+"@blockly/continuous-toolbox@^13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@blockly/continuous-toolbox/-/continuous-toolbox-13.2.0.tgz#0b875b8883a2cb6ab74ca7166a015083cedfc160"
+  integrity sha512-6CemlhYskGVWnIn/aQhkJpX6U9DkB1cfzMDp9wrg6aX3+DBktLlrO0N/WzDQ3xZMWSI+kRhpv431Uw24oltcMQ==
+
+"@blockly/field-angle@^13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@blockly/field-angle/-/field-angle-13.2.0.tgz#e6d9519851b6d2293676a12ffcf9a07e165e4ab2"
+  integrity sha512-cb+8VRsWowt7cVDDpgA8PkiTk30OiMmtXrIG/mxz+AGDKxkKe1o75Z7bhClh8LlVtdO7Omag28qrvuPg6qZ0MA==
+
+"@blockly/field-colour@^13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@blockly/field-colour/-/field-colour-13.2.0.tgz#af8b2e748401550dfdf2a8373007e07faaed0ef9"
+  integrity sha512-QFPppQGuCEGjT71Vr4llD42pNOhprG98zUdIaHgJYhVLly/6ojPrNmI6yczLzlHJUJua3DNZmynjx1DAevW19A==
+  dependencies:
+    "@blockly/field-grid-dropdown" "^13.2.0"
+
+"@blockly/field-grid-dropdown@^13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@blockly/field-grid-dropdown/-/field-grid-dropdown-13.2.0.tgz#aa98036177733d7ed0d46553e9308f9960818c78"
+  integrity sha512-TrtwonbP4uQt65BE850DYXFDuG0IP96/wgD6BNTCMBaMQFg4sEvdBHCnkxqaI72EWGtsl1FJ9OCXDGWbL34RPg==
+
+"@blockly/plugin-cross-tab-copy-paste@^13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@blockly/plugin-cross-tab-copy-paste/-/plugin-cross-tab-copy-paste-13.2.0.tgz#58826d4ba0531c4f23213927f81a5adc582d41b7"
+  integrity sha512-TZtiqR4fckM4tB9ZzKk3Jgh2kVn+34ovU+4VhFsC3GtbIzuuXOhDFXuenJnLZzqIwAm4GVnS8tm0EiRAfDGLTQ==
+
 "@blueprintjs/colors@^5.1.12", "@blueprintjs/colors@^5.1.13":
   version "5.1.13"
   resolved "https://registry.yarnpkg.com/@blueprintjs/colors/-/colors-5.1.13.tgz#556b5a96183c1a83ce0376b0733bbc1e062209dc"
@@ -3532,6 +3564,13 @@ acorn-walk@^8.0.0:
   dependencies:
     acorn "^8.11.0"
 
+acorn-walk@^8.3.4:
+  version "8.3.5"
+  resolved "https://registry.yarnpkg.com/acorn-walk/-/acorn-walk-8.3.5.tgz#8a6b8ca8fc5b34685af15dabb44118663c296496"
+  integrity sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==
+  dependencies:
+    acorn "^8.11.0"
+
 acorn@^7.1.1:
   version "7.4.1"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
@@ -4027,6 +4066,11 @@ blacklist@^1.1.4:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/blacklist/-/blacklist-1.1.4.tgz#b2dd09d6177625b2caa69835a37b28995fa9a2f2"
   integrity sha512-DWdfwimA1WQxVC69Vs1Fy525NbYwisMSCdYQmW9zyzOByz9OB/tQwrKZ3T3pbTkuFjnkJFlJuyiDjPiXL5kzew==
+
+blockly@^13.2.1:
+  version "13.2.1"
+  resolved "https://registry.yarnpkg.com/blockly/-/blockly-13.2.1.tgz#340a0fef650f8989b1beec3aa8e0997a04609260"
+  integrity sha512-iOa37H0ks5Zup2G1zZyviLX9E5WzWh3h0Zs8Nta2cPKmnAGHjZ6wrp3VqLTaquTJReJKPwaJZ39K7AD24rT4lg==
 
 bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.11.9:
   version "4.12.2"
