@@ -384,3 +384,11 @@ export function convertHtmlInstructionsToReact(instructionsHtml: string, platfor
     // @ts-ignore
     return htmlToReact.default.default(instructionsHtml, {transform: (node, index) => transformNode(node, index, {platform})})
 }
+
+export function applyInstructionsPostProcessing() {
+    if (window.instructionsPostProcessing?.length) {
+        for (let postProcessingCallback of window.instructionsPostProcessing) {
+            postProcessingCallback();
+        }
+    }
+}
