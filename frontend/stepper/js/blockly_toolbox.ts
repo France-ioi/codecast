@@ -601,10 +601,7 @@ export function getToolboxXml(options: ToolboxOptions) {
     resetVariablesFlyoutOptions();
     resetProceduresFlyoutOptions();
 
-    options.addBlocksAllowed(['robot_start', 'placeholder_statement']);
-    if (options.scratchMode) {
-        options.addBlocksAllowed(['math_number', 'text']);
-    }
+    options.addBlocksAllowed(['robot_start', 'placeholder_statement', 'math_number', 'text']);
 
     // *** Blocks from the lib
     for (let block of options.availableBlocks) {
