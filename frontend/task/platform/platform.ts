@@ -48,7 +48,7 @@ import {Codecast} from '../../app_types';
 import {Document} from '../../buffers/buffer_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
-import {isServerTask, TaskAnswer, TaskTokenPayload} from '../task_types';
+import {isServerTask, TaskAnswer} from '../task_types';
 import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
@@ -58,10 +58,8 @@ import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
 import {isEditorStateReloaded, saveEditors} from '../../submission/task_platform';
-import {createSelector} from '@reduxjs/toolkit';
 import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
-import jwt from 'jsonwebtoken';
 import {getAvailablePlatforms} from '../libs/quickalgo_library_factory';
 import {getMessage} from '../../lang/messages';
 import {DeferredPromise} from '../../utils/app';
@@ -112,17 +110,6 @@ export function selectTaskMetadata() {
         minApiVersion: 1,
     };
 }
-
-export const selectTaskTokenPayload = createSelector(
-    [(state: AppStore) => state.platform.taskToken],
-    (token): TaskTokenPayload|null => {
-        if (!token) {
-            return null;
-        }
-
-        return jwt.decode(token) as TaskTokenPayload;
-    },
-);
 
 function sendErrorLog() {
     // Send errors to the platform

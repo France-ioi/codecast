@@ -22,7 +22,7 @@ import {BlockDocument, BufferType} from '../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../stepper/js';
 import merge from 'lodash/merge';
 import {AppStore} from '../store';
-import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
+import {selectSourceBuffers} from '../buffers/buffer_selectors';
 import {selectCurrentTest} from '../task/task_selectors';
 import {
     bufferChangeActiveBufferName,
@@ -39,10 +39,9 @@ import {
     updateTaskTests,
 } from '../task/task_slice';
 import {createSourceBufferFromBufferParameters} from '../buffers';
-import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {getRandomId} from '../utils/app';
 import {selectTaskTests} from './submission_selectors';
-import {selectTaskTokenPayload} from '../task/platform/platform';
+import {selectTaskTokenPayload} from '../task/platform/platform_selectors';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -518,12 +517,6 @@ function* reloadEditorStateSources(sources: EditorStateSource[]) {
     yield* put(bufferChangeActiveBufferName(activeBufferName));
     for (let bufferName of previousBufferNames) {
         yield* put(bufferRemove(bufferName));
-    }
-
-    const newState = yield* appSelect();
-    const activeBufferPlatform = selectActiveBufferPlatform(newState);
-    if (newState.options.platform !== activeBufferPlatform) {
-        yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: activeBufferPlatform}});
     }
 }
 

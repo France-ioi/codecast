@@ -45,10 +45,11 @@ import BlocksBundle from "./blocks/blocks";
 import HintsBundle from "./hints/hints_saga";
 import PlatformBundle, {
     getTaskAnswerAggregated,
-    platformApi, selectTaskTokenPayload,
+    platformApi,
     setPlatformBundleParameters, subscribePlatformHelper,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
+import {selectTaskTokenPayload} from "./platform/platform_selectors";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
 import {ActionTypes as LangActionTypes} from "../lang/actionTypes";
 import {ZOOM_LEVEL_HIGH} from "./layout/layout";

@@ -10,7 +10,7 @@ import {selectActiveBufferPlatform} from '../../buffers/buffer_selectors';
 import {getContextBlocksDataSelector} from '../blocks/blocks';
 import {Block, BlockType} from '../blocks/block_types';
 import {platformsList} from '../../stepper/platforms';
-import {selectTaskTokenPayload} from '../platform/platform';
+import {selectTaskTokenPayload} from '../platform/platform_selectors';
 import {getMessage} from '../../lang/messages';
 
 interface CodeHelpParameters {

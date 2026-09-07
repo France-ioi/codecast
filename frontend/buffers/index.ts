@@ -330,8 +330,8 @@ function* buffersSaga() {
         const currentPlatform = bufferState.platform;
         yield* put(bufferInit({buffer: bufferName, platform}));
 
-        if (currentPlatform !== platform) {
-            yield* call(createQuickalgoLibrary);
+        if (hasBlockPlatform(currentPlatform) !== hasBlockPlatform(platform)) {
+            // yield* call(createQuickalgoLibrary);
             document = document ?? (yield* call(getDefaultSourceCode, platform));
             yield* put(bufferResetDocument({buffer: bufferName, document}));
         }

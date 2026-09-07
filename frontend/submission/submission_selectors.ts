@@ -11,7 +11,7 @@ import {TaskLevelName} from '../task/platform/platform_slice';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {doesPlatformHaveClientRunner} from '../stepper';
 import {remoteDebugSupportedPlatforms} from '../stepper/remote/remote_debug_executer';
-import {selectTaskTokenPayload} from '../task/platform/platform';
+import {selectTaskTokenPayload} from '../task/platform/platform_selectors';
 import {SubmissionExecutionScope} from './submission_slice';
 import {Range} from '../buffers/buffer_types';
 import {selectCurrentTest} from '../task/task_selectors';
