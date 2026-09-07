@@ -274,6 +274,11 @@ function* buffersSaga() {
         if (currentSubmissionIndex !== submissionIndex) {
             yield* put(submissionChangeCurrentSubmissionId({submissionId: submissionIndex}));
         }
+
+        const activeBufferPlatform = selectActiveBufferPlatform(state);
+        if (state.options.platform !== activeBufferPlatform) {
+            yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: activeBufferPlatform}});
+        }
     });
 
     yield* takeEvery(bufferReload, function* () {
