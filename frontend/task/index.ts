@@ -85,7 +85,10 @@ import log from 'loglevel';
 import {
     convertServerTaskToCodecastFormat,
     getServerTaskFromTaskData,
-    getTaskFromId
+    getTaskFromId,
+    reloadEditorState,
+    reloadPendingEditorState,
+    saveEditorsSaga
 } from "../submission/task_platform";
 import {
     submissionChangePaneOpen,
@@ -187,6 +190,10 @@ function* taskRefresh(taskId?: string, deferredPromise?: DeferredPromise<void>) 
 
     if (convertedTask?.gridInfos?.hints?.length) {
         yield* put(hintsLoaded(convertedTask.gridInfos.hints));
+    }
+
+    if (task?.editorState) {
+        yield* call(reloadEditorState, taskId, task.editorState);
     }
 
     deferredPromise?.resolve();
@@ -437,6 +444,11 @@ function* taskLoadSaga(app: App, action) {
             }
         }
     });
+
+    // The code tabs and the tests of the task are in place, the work in progress that the task
+    // refresh may have brought back from the task platform is restored over them, before the task
+    // is announced as loaded and the platform starts reloading its own answer
+    yield* call(reloadPendingEditorState);
 
     state = yield* appSelect();
     const sourceBuffers = selectSourceBuffers(state);
@@ -822,6 +834,7 @@ export default function (bundle: Bundle) {
     });
 
     bundle.addSaga(watchRecordingProgressSaga);
+    bundle.addSaga(saveEditorsSaga);
 
     bundle.defineAction(TaskActionTypes.TaskRunExecution);
     bundle.addReducer(TaskActionTypes.TaskRunExecution, (state: AppStore) => {

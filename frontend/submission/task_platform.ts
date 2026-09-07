@@ -1,16 +1,48 @@
-import {call} from "typed-redux-saga";
+import {call, put, throttle} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
-import {Task, TaskAnswer, TaskServer, TaskTest} from '../task/task_types';
+import {
+    EditorState,
+    EditorStateSource,
+    EditorStateTest,
+    isServerTask,
+    Task,
+    TaskAnswer,
+    TaskServer,
+    TaskTest,
+    TaskTestGroupType,
+} from '../task/task_types';
 import {appSelect} from '../hooks';
 import {TaskSubmissionServerResult} from './submission_types';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
-import {getAvailablePlatformsFromSupportedLanguages} from '../stepper/platforms';
-import {documentToString} from '../buffers/document';
+import {getAvailablePlatformsFromSupportedLanguages, hasBlockPlatform} from '../stepper/platforms';
+import {BlockBufferHandler, documentToString, TextBufferHandler} from '../buffers/document';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {delay} from '../player/sagas';
 import {BlockDocument, BufferType} from '../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../stepper/js';
 import merge from 'lodash/merge';
+import {AppStore} from '../store';
+import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
+import {selectCurrentTest} from '../task/task_selectors';
+import {
+    bufferChangeActiveBufferName,
+    bufferEdit,
+    bufferEditPlain,
+    bufferInit,
+    bufferRemove,
+} from '../buffers/buffers_slice';
+import {
+    addNewTaskTest,
+    removeTaskTest,
+    updateCurrentTestId,
+    updateTaskTest,
+    updateTaskTests,
+} from '../task/task_slice';
+import {createSourceBufferFromBufferParameters} from '../buffers';
+import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
+import {getRandomId} from '../utils/app';
+import {selectTaskTests} from './submission_selectors';
+import {selectTaskTokenPayload} from '../task/platform/platform';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -299,4 +331,238 @@ export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, p
     };
 
     return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions', body, false)) as {success: boolean, submissionId?: string};
+}
+
+// Save the editor state at most once every 20 seconds
+const saveEditorsThrottleDelay = 20 * 1000;
+let lastSavedEditorState: {taskId: string, editorState: string}|null = null;
+let reloadedEditorStateTaskId: string|null = null;
+let pendingEditorState: EditorState|null = null;
+let reloadingEditorState = false;
+
+function getEditorStateSources(state: AppStore): EditorStateSource[] {
+    const sourceBuffers = selectSourceBuffers(state);
+
+    return Object.entries(sourceBuffers)
+        // A tab displaying the code of a past submission is read-only, it's not part of the editor state
+        .filter(([, buffer]) => null === buffer.submissionIndex || undefined === buffer.submissionIndex)
+        .map(([bufferName, buffer]) => ({
+            name: buffer.fileName ?? '',
+            source: documentToString(buffer.document),
+            language: buffer.platform ?? state.options.platform,
+            active: bufferName === state.buffers.activeBufferName,
+        }));
+}
+
+function getEditorStateTests(state: AppStore): EditorStateTest[]|null {
+    if (!state.task.currentTask?.userTests) {
+        // The task has no user tests, the ones saved for it must be left untouched
+        return null;
+    }
+
+    const currentTest = selectCurrentTest(state);
+
+    return state.task.taskTests
+        .filter(test => TaskTestGroupType.User === test.groupType)
+        .map(test => ({
+            name: test.name ?? '',
+            input: test.data?.input ?? '',
+            output: test.data?.output ?? '',
+            active: !!currentTest && currentTest.id === test.id,
+            clientId: test.id,
+        }));
+}
+
+export function* saveEditors() {
+    const state = yield* appSelect();
+    const currentTask = state.task.currentTask;
+    const taskPlatformUrl = state.options.taskPlatformUrl;
+    const tokenPayload = yield* appSelect(selectTaskTokenPayload);
+
+    // Only the state of a task loaded from the task platform can be saved there, and as in the
+    // previous platform, the state of a read-only task is never saved
+    if (reloadingEditorState || 'main' !== state.environment || !state.task.loaded || !taskPlatformUrl
+        || !isServerTask(currentTask) || !currentTask?.id || false === currentTask.isEvaluable
+        || false === tokenPayload?.bSubmissionPossible
+    ) {
+        return;
+    }
+
+    const taskId = String(currentTask.id);
+    const editorState: EditorState = {
+        sources: getEditorStateSources(state),
+        tests: getEditorStateTests(state),
+    };
+
+    const serializedEditorState = JSON.stringify(editorState);
+    if (taskId === lastSavedEditorState?.taskId && serializedEditorState === lastSavedEditorState?.editorState) {
+        return;
+    }
+
+    const body = {
+        ...editorState,
+        ...(state.platform.taskToken ? {token: state.platform.taskToken} : {}),
+        ...(state.platform.platformName ? {platform: state.platform.platformName} : {}),
+    };
+
+    try {
+        yield* call(asyncRequestJson, `${taskPlatformUrl}/tasks/${taskId}/editor-state`, body, false);
+    } catch (e) {
+        // The editor state will be saved again on the next change
+        console.error("Couldn't save the editor state", e);
+
+        return;
+    }
+
+    lastSavedEditorState = {taskId, editorState: serializedEditorState};
+}
+
+export function isEditorStateReloaded(): boolean {
+    return null !== reloadedEditorStateTaskId;
+}
+
+/**
+ * Takes the state of the editor that was saved on the task platform for the current user, to
+ * restore the content of their code tabs, with the one they were on selected again, and their
+ * tests. It is only taken once per task: the refreshes of the task that follow must not discard the
+ * work in progress.
+ *
+ * The state is restored right away when the task is already loaded, and kept for
+ * reloadPendingEditorState otherwise: loading the task creates a default code tab and extracts the
+ * tests of the task, both of which would overwrite it. This never waits for the task to be loaded,
+ * because the platform can be waiting for the token update that brought this state to be over
+ * before it asks for the task to be loaded.
+ */
+export function* reloadEditorState(taskId: string, editorState: EditorState) {
+    const state = yield* appSelect();
+    if ('main' !== state.environment || taskId === reloadedEditorStateTaskId) {
+        return;
+    }
+
+    // From now on the answer of the platform is ignored, even before the state is restored: the
+    // platform may send it in between, and it would overwrite the state we are about to restore
+    reloadedEditorStateTaskId = taskId;
+    pendingEditorState = editorState;
+
+    if (state.task.loaded) {
+        yield* call(reloadPendingEditorState);
+    }
+}
+
+/**
+ * Restores the editor state that reloadEditorState is holding, if there is one. It is called during
+ * the loading of the task, once the code tabs and the tests of the task are in place and before the
+ * task is announced as loaded, so that the platform can only reload its own answer, which we then
+ * ignore, after the state has been restored.
+ */
+export function* reloadPendingEditorState() {
+    const environment = yield* appSelect(state => state.environment);
+    if ('main' !== environment || null === pendingEditorState) {
+        return;
+    }
+
+    const editorState = pendingEditorState;
+    pendingEditorState = null;
+
+    reloadingEditorState = true;
+    try {
+        yield* call(reloadEditorStateSources, editorState.sources);
+        if (editorState.tests) {
+            yield* call(reloadEditorStateTests, editorState.tests);
+        }
+    } finally {
+        reloadingEditorState = false;
+    }
+}
+
+function* reloadEditorStateSources(sources: EditorStateSource[]) {
+    if (!sources.length) {
+        return;
+    }
+
+    const state = yield* appSelect();
+
+    // Only one code tab can be displayed when the tabs are disabled, keep the one the user was on
+    const restoredSources = state.options.tabsEnabled
+        ? sources
+        : [sources.find(source => source.active) ?? sources[0]];
+
+    // The tabs currently open were created by the loading of the task, they are replaced by the
+    // saved ones. The tabs displaying the code of a past submission are read-only, they are not
+    // part of the editor state and are left untouched
+    const previousBufferNames = Object.entries(selectSourceBuffers(state))
+        .filter(([, buffer]) => null === buffer.submissionIndex || undefined === buffer.submissionIndex)
+        .map(([bufferName]) => bufferName);
+
+    let activeBufferName: string|null = null;
+    for (let source of restoredSources) {
+        const platform = source.language as CodecastPlatform;
+        const document = hasBlockPlatform(platform)
+            ? BlockBufferHandler.documentFromObject({blockly: source.source})
+            : TextBufferHandler.documentFromString(source.source);
+
+        const bufferName = yield* call(createSourceBufferFromBufferParameters, {
+            type: document.type,
+            source: true,
+            document,
+            fileName: source.name,
+            platform,
+        }, {noSwitch: true});
+
+        if (source.active || null === activeBufferName) {
+            activeBufferName = bufferName;
+        }
+    }
+
+    // The new tabs are created before the old ones are removed so that the active tab always exists
+    yield* put(bufferChangeActiveBufferName(activeBufferName));
+    for (let bufferName of previousBufferNames) {
+        yield* put(bufferRemove(bufferName));
+    }
+
+    const newState = yield* appSelect();
+    const activeBufferPlatform = selectActiveBufferPlatform(newState);
+    if (newState.options.platform !== activeBufferPlatform) {
+        yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: activeBufferPlatform}});
+    }
+}
+
+function* reloadEditorStateTests(tests: EditorStateTest[]) {
+    const state = yield* appSelect();
+    const level = state.task.currentLevel;
+
+    // The tests of the task are kept as they are, only the tests of the user are restored
+    yield* put(updateTaskTests([
+        ...state.task.taskTests.filter(test => TaskTestGroupType.User !== test.groupType),
+        ...tests.map(test => ({
+            id: test.clientId ?? getRandomId(),
+            name: test.name,
+            data: {input: test.input, output: test.output},
+            contextState: null,
+            groupType: TaskTestGroupType.User,
+            level,
+        })),
+    ]));
+
+    // updateTaskTests clears the current test, select again the one the user was on
+    const newTests = yield* appSelect(selectTaskTests);
+    const activeTest = tests.find(test => test.active);
+    const activeTestIndex = activeTest ? newTests.findIndex(test => activeTest.clientId === test.id) : -1;
+    const testId = -1 !== activeTestIndex ? activeTestIndex : (newTests.length ? 0 : null);
+    yield* put(updateCurrentTestId({testId, record: false}));
+}
+
+export function* saveEditorsSaga() {
+    yield* throttle(saveEditorsThrottleDelay, [
+        // A code tab was edited, created, renamed, removed, or the user moved to another one
+        bufferEdit,
+        bufferEditPlain,
+        bufferInit,
+        bufferRemove,
+        bufferChangeActiveBufferName,
+        // A test was edited, created or removed
+        updateTaskTest,
+        addNewTaskTest,
+        removeTaskTest,
+    ], saveEditors);
 }

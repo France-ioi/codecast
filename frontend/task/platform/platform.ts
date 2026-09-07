@@ -57,6 +57,7 @@ import {AppStore} from '../../store';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
+import {isEditorStateReloaded, saveEditors} from '../../submission/task_platform';
 import {createSelector} from '@reduxjs/toolkit';
 import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
@@ -279,7 +280,9 @@ function* taskGetHeightEventSaga ({payload: {success}}: ReturnType<typeof taskGe
 }
 
 function* taskUnloadEventSaga ({payload: {success}}: ReturnType<typeof taskUnloadEvent>) {
-    /* XXX No action needed? */
+    // Save the last changes made to the editor, they may not have been saved yet because of the throttling
+    yield* call(saveEditors);
+
     yield* call(success);
 }
 
@@ -370,6 +373,17 @@ export function* canReloadAnswer(answer: TaskAnswer) {
 
 function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}}: ReturnType<typeof taskReloadAnswerEvent>) {
     try {
+        // The state of the editor saved on the task platform has already been restored, and it
+        // holds all the code tabs and all the tests, when the answer of the platform only holds the
+        // code of one tab: reloading it would overwrite the work that has just been restored. An
+        // answer that comes with an idUserAnswer is a specific submission that the platform asks to
+        // display, that one is always reloaded
+        if (isEditorStateReloaded() && !options.idUserAnswer) {
+            yield* call(success);
+
+            return;
+        }
+
         const taskLevels = yield* appSelect(state => state.platform.levels);
         if (taskLevels && Object.keys(taskLevels).length && answer) {
             const currentLevel = yield getTaskLevel();

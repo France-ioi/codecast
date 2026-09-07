@@ -221,12 +221,37 @@ export interface TaskAnswer {
     //submissionId: string ?
 }
 
+// The saved state of the editor of a user on a task: the content of their code tabs and their tests
+export interface EditorStateSource {
+    name: string,
+    source: string,
+    language: string,
+    active: boolean,
+}
+
+export interface EditorStateTest {
+    name: string,
+    input: string,
+    output: string,
+    active: boolean,
+    clientId: string,
+}
+
+export interface EditorState {
+    sources: EditorStateSource[],
+    // A null tests list means the task has no user tests
+    tests: EditorStateTest[]|null,
+}
+
 export interface TaskServer extends TaskNormalized {
     limits: TaskLimitNormalized[],
     strings: TaskStringNormalized[],
     subTasks: TaskSubtaskNormalized[],
     sourceCodes: SourceCodeNormalized[],
     tests: TaskTestServer[],
+    // Last state of the editor saved by the user of the token, null when there is no token or when
+    // this user has never saved anything on this task
+    editorState: EditorState|null,
 }
 
 export interface SourceCodeParams {
