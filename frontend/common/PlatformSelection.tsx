@@ -2,8 +2,7 @@ import React from "react";
 import {ActionTypes as CommonActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from '../hooks';
-import {getJsLibLoaded} from '../task/libs/import_modules';
-import {hasBlockPlatform, platformsList} from '../stepper/platforms';
+import {platformsList} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {getMessage} from '../lang/messages';
 
@@ -50,10 +49,6 @@ export function PlatformSelection(props: PlatformSelectionProps) {
                 {getMessage('PLATFORM_SETTING')}
                 {selector}
             </label>
-
-            {hasBlockPlatform(currentPlatform) && currentPlatform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
-                {getMessage('PLATFORM_RELOAD').format({platform: platformsList[currentPlatform].name})}
-            </div>}
         </div>
     );
 }

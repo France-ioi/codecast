@@ -65,7 +65,7 @@ export default {
     gridInfos: {
         context: "quickpi",
         quickPiBoard: "microbit",
-        importModules: ['connected-boards'],
+        importModules: ['connected-boards2'],
 
         defaultLevel: "easy",
         hideSaveOrLoad: false,
@@ -85,6 +85,7 @@ export default {
             groupByCategory: true,
             generatedBlocks: {
                 microbit: [
+                    // "onButtonPressed",
                     "readAcceleration",
                     "isButtonPressedWithName",
                     "readMagneticForce",

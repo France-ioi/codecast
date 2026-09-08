@@ -84,6 +84,7 @@ export interface QuickalgoTaskIncludeBlocksAllLevels {
     },
     variables?: string[]|{[level: string]: string[]},
     pythonAdditionalFunctions?: string[],
+    procedures?: {disableArgs?: boolean},
 }
 
 export interface QuickalgoTaskGridInfosNotLevelDependent {
@@ -128,6 +129,10 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     allowClientExecution?: boolean,
     codeHelpAdditionalContext?: string,
     showIfMutator?: boolean,
+    maxIter?: number,
+    maxIterWithoutAction?: number,
+    variablesSetShadowType?: 'number'|null,
+    plusMinusEnabled?: boolean,
 }
 
 export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
@@ -146,6 +151,8 @@ export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDep
     includeBlocks?: QuickalgoTaskIncludeBlocks,
     hiddenTests?: boolean,
     documentationOpenByDefault?: boolean,
+    definitions?: Record<'javascript'|'python', {label: string, code: string}[]>,
+    simpleGenerators?: {[generatorName: string]: {label: string, code: string, category: string, type: number, nbParams: number}[]},
 }
 
 export interface QuickalgoTask {

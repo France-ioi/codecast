@@ -27,7 +27,11 @@ export interface Block {
     className?: string,
     classInstance?: string,
     placeholderClassInstance?: boolean, // if this is a placeholder class instance that we generate for the sole purpose of creating blocks for this class
-    blocklyJson?: object,
+    blocklyJson?: any,
     blocklyXml?: string,
     blocklyInit?: Function,
+    fullBlock?: any,
+    countAs?: number,
+    handler?: Function,
+    noConnectors?: boolean,
 }

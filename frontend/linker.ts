@@ -272,7 +272,9 @@ export function link(rootBuilder, globalScope: App): Linker {
                 serializableCheck: false,
             }).concat(sagaMiddleware, userTimingMiddleware)
         },
-        devTools: true,
+        devTools: {
+            name: `Codecast-${globalScope.environment}`,
+        },
     });
 
     function finalize(...args) {

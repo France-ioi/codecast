@@ -3,7 +3,7 @@ import {QuickalgoTask} from '../../task_types';
 export default {
     gridInfos: {
         context: 'quickpi',
-        importModules: ['connected-boards', 'font-awesome'],
+        importModules: ['connected-boards2', 'font-awesome'],
         '3d_visualization': true,
         hideSaveOrLoad: false,
         actionDelay: 0,

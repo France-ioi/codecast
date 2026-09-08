@@ -35,6 +35,7 @@ import {getNextLevelIndex} from '../task/platform/platform';
 import { getTralalereImg } from './tralalere_assets';
 import {SmallTick} from '@blueprintjs/icons';
 import {getMessage} from '../lang/messages';
+import {setProceduresInlineArgs} from '../stepper/js/blockly_toolbox';
 
 const layoutEditorStyle = { backgroundImage: `url(${getTralalereImg('editor-cross.png')}` };
 
@@ -136,9 +137,8 @@ export function TralalereApp() {
     useEffect(() => {
         // Set timeout to give time to Blockly editor to load before
         setTimeout(() => {
-            if (window.Blockly) {
-                window.Blockly.Procedures.flyoutOptions.inlineArgs = true;
-            }
+            setProceduresInlineArgs(true);
+
             const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
             const flyout = document.getElementsByClassName('blocklyFlyout');
             if (flyoutToolbox.length && (flyoutToolbox[0] as HTMLElement).clientWidth) {

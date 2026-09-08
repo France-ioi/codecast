@@ -45,12 +45,13 @@ import {LayoutView} from '../layout/layout_types';
 import {taskLoad} from '../task_actions';
 import {levelScoringData} from '../../submission/scoring';
 import {Codecast} from '../../app_types';
-import {Document} from '../../buffers/buffer_types';
+import {BlockDocument, BufferType, Document} from '../../buffers/buffer_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
 import {isServerTask, TaskAnswer, TaskTokenPayload} from '../task_types';
 import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
+import {convertLegacyScratchXml} from '../../stepper/js/blockly_legacy_scratch';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 import {hasBlockPlatform} from '../../stepper/platforms';
 import {AppStore} from '../../store';
@@ -300,7 +301,7 @@ function* taskGetAnswerEventSaga (action: ReturnType<typeof taskGetAnswerEvent>)
     }
 }
 
-function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, any> {
+export function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, any> {
     if (!answer) {
         return null;
     }
@@ -316,7 +317,7 @@ function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, 
     }
 
     if ('object' === typeof answer && answer.version) {
-        return answer;
+        return {...answer, document: convertLegacyBlocks(answer.document)};
     }
 
     let platform = yield* appSelect(state => state.options.platform);
@@ -339,9 +340,29 @@ function* backwardCompatibilityConvert(answer: any): Generator<any, TaskAnswer, 
 
     return {
         version: RECORDING_FORMAT_VERSION,
-        document,
+        document: convertLegacyBlocks(document),
         platform,
     }
+}
+
+/**
+ * Answers of the previous Blockly version, in Scratch mode, are written in the
+ * scratch-blocks vocabulary, which no longer exists: rewrite their blocks into
+ * the ones the current Scratch mode uses. Any other document is left alone.
+ */
+function convertLegacyBlocks(document: Document): Document {
+    if (!document || BufferType.Block !== document.type) {
+        return document;
+    }
+
+    const content = (document as BlockDocument).content;
+    if (!content?.blockly) {
+        return document;
+    }
+
+    const blockly = convertLegacyScratchXml(content.blockly);
+
+    return blockly === content.blockly ? document : BlockBufferHandler.documentFromObject({...content, blockly});
 }
 
 export function* canReloadAnswer(answer: TaskAnswer) {

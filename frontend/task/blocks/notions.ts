@@ -94,10 +94,6 @@ export class NotionsBag {
     public hasNotion(notion: string) {
         return -1 !== this.getNotionsList().indexOf(notion);
     }
-
-    public getNotionsByCategory(category: string) {
-        return category in this.arborescence ? this.arborescence[category] : [];
-    }
 }
 
 export function getNotionsBagFromIncludeBlocks(includeBlocks: QuickalgoTaskIncludeBlocks = null, allNotions: NotionArborescence): NotionsBag {

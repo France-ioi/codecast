@@ -166,7 +166,6 @@ declare global {
         initBlocklySubTask?: () => void,
         instructionsPostProcessing?: (() => void)[],
         MathJax: any,
-        blocklyUserScale: number,
         TASK_NEEDS_ADDITIONAL_CHECKS?: boolean,
     }
 }

@@ -86,7 +86,7 @@ import {TaskAnswer} from '../task/task_types';
 import {selectAnswer} from '../task/selectors';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {StepperStatus} from '../stepper';
-import {canReloadAnswer} from '../task/platform/platform';
+import {backwardCompatibilityConvert, canReloadAnswer} from '../task/platform/platform';
 import {bufferGitSyncSagas} from './buffer_git_sync';
 import {compressDocument, uncompressDocument} from './compression';
 import {isServerSubmission} from '../submission/submission_selectors';
@@ -289,12 +289,13 @@ function* buffersSaga() {
                 throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
             }
 
-            const answer: TaskAnswer = {
+            let answer: TaskAnswer = {
                 version: RECORDING_FORMAT_VERSION,
                 document,
                 platform: state.options.platform,
             };
 
+            answer = yield* call(backwardCompatibilityConvert, answer);
             if (!(yield* call(canReloadAnswer, answer))) {
                 throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
             }
