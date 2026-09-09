@@ -12,6 +12,7 @@ import {
     platformValidateEvent,
     taskGetAnswerEvent,
     taskGetHeightEvent,
+    taskGetHistoryEvent,
     taskGetMetadataEvent,
     taskGetResourcesPost,
     taskGetStateEvent,
@@ -19,6 +20,7 @@ import {
     taskGradeAnswerEvent,
     taskLoadEvent,
     taskReloadAnswerEvent,
+    taskReloadFromHistoryEvent,
     taskReloadStateEvent,
     taskShowViewsEvent,
     taskUnloadEvent,
@@ -57,7 +59,12 @@ import {AppStore} from '../../store';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
-import {isEditorStateReloaded, saveEditors} from '../../submission/task_platform';
+import {
+    isEditorStateReloaded,
+    loadEditorStateHistory,
+    reloadEditorStateHistoryElement,
+    saveEditors,
+} from '../../submission/task_platform';
 import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
 import {getAvailablePlatforms} from '../libs/quickalgo_library_factory';
@@ -356,6 +363,27 @@ export function* canReloadAnswer(answer: TaskAnswer) {
     }
 
     return true;
+}
+
+function* taskGetHistoryEventSaga ({payload: {success, error}}: ReturnType<typeof taskGetHistoryEvent>) {
+    try {
+        const historyElements = yield* call(loadEditorStateHistory);
+        yield* call(success, historyElements);
+    } catch (ex: any) {
+        console.error(`The history of the editor could not be loaded: ${ex.message}`, ex);
+        yield* call(error, `The history of the editor could not be loaded: ${ex.message}`);
+    }
+}
+
+function* taskReloadFromHistoryEventSaga ({payload: {historyElementId, success, error}}: ReturnType<typeof taskReloadFromHistoryEvent>) {
+    try {
+        yield* call(reloadEditorStateHistoryElement, historyElementId);
+        yield* call(success);
+    } catch (ex: any) {
+        console.error(`This version of the editor could not be reloaded (${historyElementId}): ${ex.message}`, ex);
+        yield* put(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE').s));
+        yield* call(error, `This version of the editor could not be reloaded: ${ex.message}`);
+    }
 }
 
 function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}}: ReturnType<typeof taskReloadAnswerEvent>) {
@@ -675,6 +703,8 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskGetAnswerEvent, taskGetAnswerEventSaga);
         yield* takeEvery(taskGradeAnswerEvent, taskGradeAnswerEventSaga);
         yield* takeEvery(taskReloadAnswerEvent, taskReloadAnswerEventSaga);
+        yield* takeEvery(taskGetHistoryEvent, taskGetHistoryEventSaga);
+        yield* takeEvery(taskReloadFromHistoryEvent, taskReloadFromHistoryEventSaga);
         yield* takeEvery(taskGetResourcesPost, taskGetResourcesPostSaga);
         yield* takeEvery(platformTaskLink, linkTaskPlatformSaga);
         yield* takeEvery(platformValidateEvent, platformValidateEventSaga);

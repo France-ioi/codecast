@@ -71,6 +71,14 @@ export const taskReloadAnswerEvent = createAction('taskEventReloadAnswer', (answ
         options,
     },
 }));
+export const taskGetHistoryEvent = createAction('taskEventGetHistory', successErrorPayload);
+export const taskReloadFromHistoryEvent = createAction('taskEventReloadFromHistory', (historyElementId, success, error) => ({
+    payload: {
+        historyElementId,
+        success,
+        error,
+    },
+}));
 export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer, answerToken, success, error, updateScore?: boolean, showResult?: boolean, useCache?: boolean) => ({
     payload: {
         answer,

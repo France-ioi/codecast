@@ -243,6 +243,41 @@ export interface EditorState {
     tests: EditorStateTest[]|null,
 }
 
+export interface EditorStateHistoryPatch {
+    patchId: number,
+    date: string,
+    patch: string|null,
+}
+
+export interface EditorStateHistoryResponse {
+    state: string|null,
+    patches: EditorStateHistoryPatch[],
+}
+
+export enum EditorStateHistoryModificationType {
+    AddTab = 'add_tab',
+    ModifyTab = 'modify_tab',
+    DeleteTab = 'delete_tab',
+}
+
+export interface EditorStateHistoryElementTab {
+    language: string,
+    name: string,
+    size: number,
+    modificationType: EditorStateHistoryModificationType,
+}
+
+export interface EditorStateHistoryElement {
+    id: number,
+    date: string,
+    activeTab: EditorStateHistoryElementTab,
+}
+
+export interface EditorStateHistoryEntry {
+    element: EditorStateHistoryElement,
+    state: EditorState,
+}
+
 export interface TaskServer extends TaskNormalized {
     limits: TaskLimitNormalized[],
     strings: TaskStringNormalized[],

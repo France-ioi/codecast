@@ -2,6 +2,10 @@ import {call, put, throttle} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {
     EditorState,
+    EditorStateHistoryElement, EditorStateHistoryElementTab,
+    EditorStateHistoryEntry,
+    EditorStateHistoryModificationType,
+    EditorStateHistoryResponse,
     EditorStateSource,
     EditorStateTest,
     isServerTask,
@@ -14,7 +18,7 @@ import {
 import {appSelect} from '../hooks';
 import {TaskSubmissionServerResult} from './submission_types';
 import {smartContractPlatforms} from '../task/libs/smart_contract/smart_contract_blocks';
-import {getAvailablePlatformsFromSupportedLanguages, hasBlockPlatform} from '../stepper/platforms';
+import {getAvailablePlatformsFromSupportedLanguages, hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {BlockBufferHandler, documentToString, TextBufferHandler} from '../buffers/document';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {delay} from '../player/sagas';
@@ -42,6 +46,8 @@ import {createSourceBufferFromBufferParameters} from '../buffers';
 import {getRandomId} from '../utils/app';
 import {selectTaskTests} from './submission_selectors';
 import {selectTaskTokenPayload} from '../task/platform/platform_selectors';
+import {platformEditorStateHistoryLoaded} from '../task/platform/platform_slice';
+import {applyEditorStatePatch} from './editor_state_patch';
 
 export function* getTaskFromId(taskId: string, token: string, platform: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
@@ -448,12 +454,6 @@ export function* reloadEditorState(taskId: string, editorState: EditorState) {
     }
 }
 
-/**
- * Restores the editor state that reloadEditorState is holding, if there is one. It is called during
- * the loading of the task, once the code tabs and the tests of the task are in place and before the
- * task is announced as loaded, so that the platform can only reload its own answer, which we then
- * ignore, after the state has been restored.
- */
 export function* reloadPendingEditorState() {
     const environment = yield* appSelect(state => state.environment);
     if ('main' !== environment || null === pendingEditorState) {
@@ -463,6 +463,10 @@ export function* reloadPendingEditorState() {
     const editorState = pendingEditorState;
     pendingEditorState = null;
 
+    yield* call(restoreEditorState, editorState);
+}
+
+function* restoreEditorState(editorState: EditorState) {
     reloadingEditorState = true;
     try {
         yield* call(reloadEditorStateSources, editorState.sources);
@@ -472,6 +476,179 @@ export function* reloadPendingEditorState() {
     } finally {
         reloadingEditorState = false;
     }
+}
+
+interface EditorStateSerializedSource {
+    name: string,
+    language: string,
+    active: boolean,
+    source: string[],
+}
+
+interface EditorStateSerialized {
+    sources: EditorStateSerializedSource[],
+    tests: EditorStateTest[]|null,
+}
+
+export function* loadEditorStateHistory(): Generator<any, EditorStateHistoryElement[]> {
+    const state = yield* appSelect();
+    const currentTask = state.task.currentTask;
+    const taskPlatformUrl = state.options.taskPlatformUrl;
+    if ('main' !== state.environment || !taskPlatformUrl || !isServerTask(currentTask) || !currentTask?.id) {
+        return [];
+    }
+
+    const queryParameters = {
+        ...(state.platform.taskToken ? {token: state.platform.taskToken} : {}),
+        ...(state.platform.platformName ? {platform: state.platform.platformName} : {}),
+    };
+
+    const history = (yield* call(
+        asyncGetJson,
+        `${taskPlatformUrl}/tasks/${String(currentTask.id)}/editor-state/history`,
+        queryParameters,
+    )) as EditorStateHistoryResponse;
+
+    const entries = buildEditorStateHistory(history);
+    yield* put(platformEditorStateHistoryLoaded(entries));
+
+    return entries.map(entry => entry.element);
+}
+
+/**
+ * Puts back in the editor the version of the state that loadEditorStateHistory described with this
+ * id. The state comes from the store, the task platform is not asked again.
+ */
+export function* reloadEditorStateHistoryElement(historyElementId: number) {
+    const entry = yield* appSelect(state => state.platform.editorStateHistory
+        .find(entry => historyElementId === entry.element.id));
+    if (undefined === entry) {
+        throw new Error(`No version of the editor state with this id: ${String(historyElementId)}`);
+    }
+
+    yield* call(restoreEditorState, entry.state);
+}
+
+function buildEditorStateHistory(history: EditorStateHistoryResponse): EditorStateHistoryEntry[] {
+    const versions = rebuildEditorStateHistoryVersions(history);
+
+    // Each version is described by what changed between the version before it, which is the next
+    // one in the list since they go from the newest to the oldest, and itself
+    return versions.map((version, index) => ({
+        element: {
+            id: version.patchId,
+            date: new Date(version.date).toISOString(),
+            activeTab: describeEditorStateModification(version.state, versions[index + 1]?.state ?? null),
+        },
+        state: denormalizeSerializedEditorState(version.state),
+    }));
+}
+
+// Rebuilds the state of every version of the history, from the newest one, whose state is sent in
+// full, to the oldest one that can still be reached: the patch of a version rebuilds its own state
+// from the state of the version before it in the list
+function rebuildEditorStateHistoryVersions(history: EditorStateHistoryResponse): {patchId: number, date: string, state: EditorStateSerialized}[] {
+    const versions: {patchId: number, date: string, state: EditorStateSerialized}[] = [];
+
+    let serializedState = history.state;
+    for (let [index, patch] of history.patches.entries()) {
+        if (0 < index) {
+            if (null === serializedState || null === patch.patch) {
+                break;
+            }
+
+            const previousSerializedState = applyEditorStatePatch(serializedState, patch.patch);
+            if (null === previousSerializedState) {
+                // The chain cannot be walked any further back
+                break;
+            }
+
+            serializedState = previousSerializedState;
+        }
+
+        if (null === serializedState) {
+            break;
+        }
+
+        versions.push({
+            patchId: patch.patchId,
+            date: patch.date,
+            state: JSON.parse(serializedState) as EditorStateSerialized,
+        });
+    }
+
+    return versions;
+}
+
+// Compares a version of the editor state with the version before it to tell what the user did:
+// which tab they added, changed or removed, and how big that tab then was
+function describeEditorStateModification(state: EditorStateSerialized, previousState: EditorStateSerialized|null): EditorStateHistoryElementTab {
+    const sources = state.sources;
+    const previousSources = previousState?.sources ?? [];
+    const previousSourcesByTab = new Map(previousSources.map(source => [getSourceTabKey(source), source]));
+    const sourcesByTab = new Map(sources.map(source => [getSourceTabKey(source), source]));
+
+    const modifications: {type: EditorStateHistoryModificationType, source: EditorStateSerializedSource}[] = [
+        ...sources
+            .filter(source => !previousSourcesByTab.has(getSourceTabKey(source)))
+            .map(source => ({type: EditorStateHistoryModificationType.AddTab, source})),
+        ...sources
+            .filter(source => {
+                const previousSource = previousSourcesByTab.get(getSourceTabKey(source));
+
+                return undefined !== previousSource && getSourceCode(previousSource) !== getSourceCode(source);
+            })
+            .map(source => ({type: EditorStateHistoryModificationType.ModifyTab, source})),
+        ...previousSources
+            .filter(source => !sourcesByTab.has(getSourceTabKey(source)))
+            .map(source => ({type: EditorStateHistoryModificationType.DeleteTab, source})),
+    ];
+
+    // When several tabs changed at once, the tab the user was on is the one they were working in.
+    // When no tab changed, the user only changed their tests, and the version is described by the
+    // tab they were on
+    const activeSource = sources.find(source => source.active) ?? sources[0];
+    const modification = modifications.find(({source}) => source === activeSource)
+        ?? modifications[0]
+        ?? (undefined !== activeSource ? {type: EditorStateHistoryModificationType.ModifyTab, source: activeSource} : null);
+
+    if (null === modification) {
+        return {
+            language: '',
+            name: '',
+            size: 0,
+            modificationType: EditorStateHistoryModificationType.ModifyTab,
+        };
+    }
+
+    return {
+        language: platformsList[modification.source.language]?.name ?? modification.source.language,
+        name: modification.source.name,
+        size: getSourceCode(modification.source).length,
+        modificationType: modification.type,
+    };
+}
+
+// The versions hold no tab identifier, a tab is followed from a version to the next one by its name
+// and its language: renaming a tab, or changing its language, reads as another tab
+function getSourceTabKey(source: EditorStateSerializedSource): string {
+    return `${source.language}\n${source.name}`;
+}
+
+function getSourceCode(source: EditorStateSerializedSource): string {
+    return source.source.join('\n');
+}
+
+function denormalizeSerializedEditorState(state: EditorStateSerialized): EditorState {
+    return {
+        sources: state.sources.map(source => ({
+            name: source.name,
+            source: getSourceCode(source),
+            language: source.language,
+            active: source.active,
+        })),
+        tests: state.tests ?? null,
+    };
 }
 
 function keepOneSourcePerLanguage(sources: EditorStateSource[]): EditorStateSource[] {
