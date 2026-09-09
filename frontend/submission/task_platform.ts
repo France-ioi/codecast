@@ -474,6 +474,17 @@ export function* reloadPendingEditorState() {
     }
 }
 
+function keepOneSourcePerLanguage(sources: EditorStateSource[]): EditorStateSource[] {
+    const sourcesByLanguage = new Map<string, EditorStateSource>();
+    for (let source of sources) {
+        if (!sourcesByLanguage.has(source.language) || source.active) {
+            sourcesByLanguage.set(source.language, source);
+        }
+    }
+
+    return [...sourcesByLanguage.values()];
+}
+
 function* reloadEditorStateSources(sources: EditorStateSource[]) {
     if (!sources.length) {
         return;
@@ -481,10 +492,9 @@ function* reloadEditorStateSources(sources: EditorStateSource[]) {
 
     const state = yield* appSelect();
 
-    // Only one code tab can be displayed when the tabs are disabled, keep the one the user was on
     const restoredSources = state.options.tabsEnabled
         ? sources
-        : [sources.find(source => source.active) ?? sources[0]];
+        : keepOneSourcePerLanguage(sources);
 
     // The tabs currently open were created by the loading of the task, they are replaced by the
     // saved ones. The tabs displaying the code of a past submission are read-only, they are not

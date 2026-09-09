@@ -32,6 +32,7 @@ import {
     createEmptyBufferState,
     documentToString,
     expandRange,
+    isEmptyDocument,
     TextBufferHandler,
     uncompressIntoDocument
 } from "./document";
@@ -44,7 +45,7 @@ import log from 'loglevel';
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from '../stepper/actionTypes';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {appSelect} from '../hooks';
-import {hasBlockPlatform} from '../stepper/platforms';
+import {hasBlockPlatform, platformsList} from '../stepper/platforms';
 import {CodecastPlatform} from '../stepper/codecast_platform';
 import {App} from '../app_types';
 import './ace_loader';
@@ -92,6 +93,8 @@ import {compressDocument, uncompressDocument} from './compression';
 import {isServerSubmission} from '../submission/submission_selectors';
 import {getMessage} from '../lang/messages';
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
+import {showPopupMessageSaga} from '../common/prompt_modal';
+import {ModalType} from '../common/modal_slice';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -119,6 +122,116 @@ function getNewFileName(state: AppStore, platform: CodecastPlatform) {
     }
 
     return getMessage('BUFFER_TAB_FILENAME').format({i: j});
+}
+
+export function isSubmissionBuffer(buffer: BufferState) {
+    return null !== buffer.submissionIndex && undefined !== buffer.submissionIndex;
+}
+
+// A buffer is considered empty as long as the user has not written anything into it: it either has
+// no content at all, or it still contains the default source code it was created with
+function* isBufferEmpty(buffer: BufferState) {
+    if (isEmptyDocument(buffer.document)) {
+        return true;
+    }
+
+    const defaultSourceCode = yield* call(getDefaultSourceCode, buffer.platform);
+
+    return documentToString(defaultSourceCode) === documentToString(buffer.document);
+}
+
+export interface BufferChangePlatformParameters {
+    bufferName: string,
+    platform: CodecastPlatform,
+    document?: Document,
+    // Ask the user to confirm the change when it makes the code of the buffer be erased
+    askConfirmation?: boolean,
+}
+
+export function* changeBufferPlatform({bufferName, platform, document, askConfirmation}: BufferChangePlatformParameters) {
+    let state = yield* appSelect();
+    const bufferState = state.buffers.buffers[bufferName];
+    const currentPlatform = bufferState.platform;
+    // The code of a text platform cannot be converted into blocks, and the other way around,
+    // so it has to be erased when the buffer changes from one kind of platform to the other
+    const codeErased = hasBlockPlatform(currentPlatform) !== hasBlockPlatform(platform);
+
+    if (askConfirmation && codeErased && !isEmptyDocument(bufferState.document)) {
+        const confirmed = yield* call(showPopupMessageSaga, {
+            message: getMessage('BUFFER_TAB_CHANGE_PLATFORM_ERASE_CODE').format({platform: platformsList[platform].name}),
+            mode: ModalType.message,
+            noButtonText: getMessage('CANCEL').s,
+        });
+
+        if (!confirmed) {
+            return;
+        }
+    }
+
+    yield* put(bufferInit({buffer: bufferName, platform}));
+
+    const activeBufferName = yield* appSelect(state => state.buffers.activeBufferName);
+    if (codeErased && bufferName === activeBufferName) {
+        // Recreate the library for the new platform, it loads the Blockly helper that a block
+        // platform needs and it gives the context on which the default source code depends
+        yield* call(createQuickalgoLibrary);
+    }
+
+    if (document || codeErased) {
+        document = document ?? (yield* call(getDefaultSourceCode, platform));
+        yield* put(bufferResetDocument({buffer: bufferName, document}));
+    }
+
+    state = yield* appSelect();
+    const activeBufferPlatform = selectActiveBufferPlatform(state);
+    if (state.options.platform !== activeBufferPlatform) {
+        yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: activeBufferPlatform}});
+    }
+}
+
+// The user works with one tab per language (or several when tabs are enabled), so when the language
+// of the platform changes we display the tab of this language: an existing one if there is already
+// one, otherwise the current tab if it is still empty, otherwise a new tab
+function* changePlatformSaga(platform: CodecastPlatform) {
+    const state: AppStore = yield* appSelect();
+    const activeBufferName = state.buffers.activeBufferName;
+    if (null === activeBufferName) {
+        return;
+    }
+
+    const activeBuffer = state.buffers.buffers[activeBufferName];
+    // The buffer whose content has to be replaced by the default source code of the new platform
+    let bufferToFill: string = null;
+
+    if (platform !== activeBuffer.platform || isSubmissionBuffer(activeBuffer)) {
+        const sourceBuffers = selectSourceBuffers(state);
+        const existingBufferName = Object.keys(sourceBuffers)
+            .find(bufferName => platform === sourceBuffers[bufferName].platform && !isSubmissionBuffer(sourceBuffers[bufferName]));
+
+        if (undefined !== existingBufferName) {
+            yield* put(bufferChangeActiveBufferName(existingBufferName));
+        } else if (!isSubmissionBuffer(activeBuffer) && (yield* call(isBufferEmpty, activeBuffer))) {
+            yield* put(bufferInit({buffer: activeBufferName, platform}));
+            bufferToFill = activeBufferName;
+        } else {
+            // The new tab is created empty, its content is only put in it once the library has been
+            // recreated for its platform
+            bufferToFill = yield* call(createSourceBufferFromDocument, TextBufferHandler.getEmptyDocument(), platform);
+        }
+    }
+
+    // The library must be recreated for the new platform, in particular to load the Blockly helper
+    // that a block platform needs
+    if (hasBlockPlatform(window.currentPlatform) !== hasBlockPlatform(platform)) {
+        yield* call(createQuickalgoLibrary);
+    }
+
+    if (null !== bufferToFill) {
+        // The default source code is computed after the library creation because it depends on the
+        // context of the new platform
+        const document = yield* call(getDefaultSourceCode, platform);
+        yield* put(bufferResetDocument({buffer: bufferToFill, document, goToEnd: true}));
+    }
 }
 
 export function normalizeBufferToTaskAnswer(buffer: BufferState): TaskAnswer {
@@ -231,11 +344,12 @@ function* buffersSaga() {
         anchor.click();
     });
 
-    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document, parameters}}) {
+    yield* takeEvery(bufferCreateSourceBuffer, function* ({payload: {document, platform, parameters}}) {
         const state: AppStore = yield* appSelect();
-        let newDocument: Document = document ?? (yield* call(getDefaultSourceCode, state.options.platform));
+        const newPlatform = platform ?? state.options.platform;
+        let newDocument: Document = document ?? (yield* call(getDefaultSourceCode, newPlatform));
         log.getLogger('editor').debug('Load new source code', newDocument);
-        yield* call(createSourceBufferFromDocument, newDocument, state.options.platform, parameters ?? {});
+        yield* call(createSourceBufferFromDocument, newDocument, newPlatform, parameters ?? {});
     });
 
     yield* takeEvery(bufferResetToDefaultSourceCode, function* ({payload: {bufferName}}) {
@@ -324,23 +438,18 @@ function* buffersSaga() {
         yield* put(bufferInit({buffer, fileName: newFileName}));
     });
 
-    yield* takeEvery(bufferChangePlatform, function* ({payload: {bufferName, platform, document}}) {
-        let state = yield* appSelect();
-        const bufferState = state.buffers.buffers[bufferName];
-        const currentPlatform = bufferState.platform;
-        yield* put(bufferInit({buffer: bufferName, platform}));
+    yield* takeEvery(bufferChangePlatform, function* ({payload}) {
+        yield* call(changeBufferPlatform, payload);
+    });
 
-        if (hasBlockPlatform(currentPlatform) !== hasBlockPlatform(platform)) {
-            // yield* call(createQuickalgoLibrary);
-            document = document ?? (yield* call(getDefaultSourceCode, platform));
-            yield* put(bufferResetDocument({buffer: bufferName, document}));
+    // @ts-ignore
+    yield* takeEvery(CommonActionTypes.PlatformChanged, function* ({payload: {reloadTask}}) {
+        if (false === reloadTask) {
+            return;
         }
 
-        state = yield* appSelect();
-        const activeBufferPlatform = selectActiveBufferPlatform(state);
-        if (state.options.platform !== activeBufferPlatform) {
-            yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: activeBufferPlatform}});
-        }
+        const platform = yield* appSelect(state => state.options.platform);
+        yield* call(changePlatformSaga, platform);
     });
 
     yield* takeEvery(submissionChangeCurrentSubmissionId, function* () {

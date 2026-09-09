@@ -25,7 +25,7 @@ import {App} from '../../app_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {bufferResetDocument} from '../../buffers/buffers_slice';
 import {AppStore} from '../../store';
-import {bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
+import {bufferChangePlatform, bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
 import {getMessage} from '../../lang/messages';
 
 let openerChannel;
@@ -327,17 +327,13 @@ export default function (bundle: Bundle) {
             if (state.options.tabsEnabled) {
                 yield* put(bufferCreateSourceBuffer(document, newPlatform));
             } else {
+                // The example replaces the code of the current tab, which takes the language of the
+                // example if it has another one
                 const activeBuffer = state.buffers.activeBufferName;
-                yield* put(bufferResetDocument({buffer: activeBuffer, document}));
-
-                const currentPlatform = yield* appSelect(state => state.options.platform);
-                if (newPlatform !== currentPlatform) {
-                    yield* put({
-                        type: CommonActionTypes.PlatformChanged,
-                        payload: {
-                            platform: newPlatform,
-                        },
-                    });
+                if (newPlatform !== state.buffers.buffers[activeBuffer].platform) {
+                    yield* put(bufferChangePlatform(activeBuffer, newPlatform, document));
+                } else {
+                    yield* put(bufferResetDocument({buffer: activeBuffer, document}));
                 }
             }
 

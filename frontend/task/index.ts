@@ -101,7 +101,7 @@ import {selectTaskTests} from '../submission/submission_selectors';
 import {hasBlockPlatform} from '../stepper/platforms';
 import {LibraryTestResult} from './libs/library_test_result';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
-import {isServerTask, TaskServer, TaskTest} from './task_types';
+import {isServerTask, TaskAnswer, TaskServer, TaskTest} from './task_types';
 import {extractTestsFromTask} from '../submission/tests';
 import {taskChangeLevel, taskLoad} from './task_actions';
 import {App, Codecast} from '../app_types';
@@ -115,19 +115,21 @@ import {
     bufferDissociateFromSubmission,
     bufferEdit,
     bufferEditPlain, bufferInit,
+    bufferRemove,
     bufferResetDocument, buffersInitialState
 } from '../buffers/buffers_slice';
 import {getTaskHintsSelector} from './instructions/instructions';
 import {selectActiveBufferPlatform, selectSourceBuffers} from '../buffers/buffer_selectors';
 import {callPlatformLog, callPlatformValidate, submissionCancel} from '../submission/submission_actions';
 import {
+    changeBufferPlatform,
     createSourceBufferFromBufferParameters,
     createSourceBufferFromDocument,
-    denormalizeBufferFromAnswer
+    denormalizeBufferFromAnswer,
+    isSubmissionBuffer
 } from '../buffers';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {DeferredPromise} from '../utils/app';
-import {bufferChangePlatform} from '../buffers/buffer_actions';
 import {getAudioTimeStep} from './task_selectors';
 import {getMessage, Languages} from '../lang/messages';
 
@@ -560,10 +562,33 @@ function* taskRunExecution({type, payload}) {
     yield* put({type: StepperActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run}});
 }
 
+function* loadPlatformAnswer(answer: TaskAnswer) {
+    log.getLogger('task').debug('Platform answer loaded', answer);
+    if (!answer) {
+        return;
+    }
+    const state = yield* appSelect();
+    const currentBuffer = state.buffers.activeBufferName;
+    const bufferParameters = yield* call(denormalizeBufferFromAnswer, answer);
+    const document = bufferParameters.document;
+    if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
+        yield* call(createSourceBufferFromBufferParameters, bufferParameters);
+    } else if (null !== currentBuffer) {
+        if (state.buffers.buffers[currentBuffer].platform !== answer.platform) {
+            yield* call(changeBufferPlatform, {bufferName: currentBuffer, platform: answer.platform, document});
+        } else {
+            yield* put(bufferInit({buffer: currentBuffer, ...bufferParameters}));
+            yield* put(bufferResetDocument({buffer: currentBuffer, document}));
+        }
+    }
+}
+
 function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     const state = yield* appSelect();
     const currentLevel = state.task.currentLevel;
     const newLevel = payload.level;
+    // The language the user is working in, which must not change with the version
+    const currentPlatform = state.options.platform;
     log.getLogger('task').debug('level change', currentLevel, newLevel);
 
     yield* put({type: StepperActionTypes.StepperExit});
@@ -604,11 +629,35 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     if (!newLevelAnswer || isEmptyDocument(newLevelAnswer.document)) {
         newLevelAnswer = {
             version: RECORDING_FORMAT_VERSION,
-            document: yield* call(getDefaultSourceCode, state.options.platform),
-            platform: state.options.platform,
+            document: yield* call(getDefaultSourceCode, currentPlatform),
+            platform: currentPlatform,
         }
     }
-    yield* put(platformAnswerLoaded(newLevelAnswer));
+
+    if (!state.options.tabsEnabled) {
+        // A version has a single answer, in a single language, so the tabs of the other languages
+        // still hold the code of the previous version: they are removed to avoid displaying the
+        // code of another version when the user changes language
+        const activeBufferName = yield* appSelect(state => state.buffers.activeBufferName);
+        const otherBufferNames = Object.entries(yield* appSelect(selectSourceBuffers))
+            .filter(([bufferName, buffer]) => bufferName !== activeBufferName && !isSubmissionBuffer(buffer))
+            .map(([bufferName]) => bufferName);
+
+        for (let bufferName of otherBufferNames) {
+            yield* put(bufferRemove(bufferName));
+        }
+    }
+
+    // The answer is loaded with a call and not with an action so that it is fully restored before
+    // the language of the user is restored below
+    yield* call(loadPlatformAnswer, newLevelAnswer);
+
+    if (currentPlatform !== newLevelAnswer.platform) {
+        // Changing the version must not change the language the user works in: the answer of the
+        // new version has just been restored in a tab of its own language, we come back to a tab of
+        // the language of the user, which this version has no answer in yet
+        yield* put({type: ActionTypes.PlatformChanged, payload: {platform: currentPlatform}});
+    }
 
     yield* call(openDocumentationIfNecessary);
 
@@ -1026,24 +1075,7 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(platformAnswerLoaded, function*({payload: {answer}}) {
-            log.getLogger('task').debug('Platform answer loaded', answer);
-            if (!answer) {
-                return;
-            }
-            const state = yield* appSelect();
-            const currentBuffer = state.buffers.activeBufferName;
-            const bufferParameters = yield* call(denormalizeBufferFromAnswer, answer);
-            const document = bufferParameters.document;
-            if (state.options.tabsEnabled || !state.buffers.activeBufferName) {
-                yield* call(createSourceBufferFromBufferParameters, bufferParameters);
-            } else if (null !== currentBuffer) {
-                if (state.buffers.buffers[currentBuffer].platform !== answer.platform) {
-                    yield* put(bufferChangePlatform(currentBuffer, answer.platform, document));
-                } else {
-                    yield* put(bufferInit({buffer: currentBuffer, ...bufferParameters}));
-                    yield* put(bufferResetDocument({buffer: currentBuffer, document}));
-                }
-            }
+            yield* call(loadPlatformAnswer, answer);
         });
 
         yield* takeEvery(platformTokenUpdated, function* ({payload: {deferredPromise}}) {

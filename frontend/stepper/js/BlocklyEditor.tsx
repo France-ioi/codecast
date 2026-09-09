@@ -43,7 +43,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlights: props.highlights});
 
     const reset = (document: BlockDocument) => {
-        if (!context?.blocklyHelper) {
+        if (!context?.blocklyHelper || context.blocklyHelper.fake) {
             return;
         }
 
@@ -138,7 +138,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const resize = () => {
         log.getLogger('editor').debug('[blockly.editor] resize');
-        if (context && context.blocklyHelper) {
+        if (context && context.blocklyHelper && !context.blocklyHelper.fake) {
             context.blocklyHelper.unloadLevel();
         }
         onLoad();
@@ -194,7 +194,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     };
 
     const onLoad = () => {
-        if (!currentTask || !context || !context.blocklyHelper) {
+        if (!currentTask || !context || !context.blocklyHelper || context.blocklyHelper.fake) {
             log.getLogger('editor').debug('[blockly.editor] load no data');
             return;
         }
@@ -262,7 +262,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         return () => {
             log.getLogger('editor').debug('[blockly.editor] unload');
 
-            if (context && context.blocklyHelper) {
+            if (context && context.blocklyHelper && !context.blocklyHelper.fake) {
                 context.blocklyHelper.unloadLevel();
             }
         };
@@ -312,7 +312,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     useEffect(() => {
         const selection = props.state?.selection;
         log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, selectedBlockId.current);
-        if (selection === selectedBlockId.current || context.blocklyHelper?.scratchMode) {
+        if (!context?.blocklyHelper || context.blocklyHelper.fake || selection === selectedBlockId.current || context.blocklyHelper.scratchMode) {
             return;
         }
 

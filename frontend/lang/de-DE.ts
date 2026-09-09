@@ -330,6 +330,7 @@ export default {
     BUFFER_TAB_NO_PAST_SUBMISSION: "Keine vorherige Abgabe",
     BUFFER_TAB_FILE_NAME: "Dateiname",
     BUFFER_TAB_LANGUAGE: "Programmiersprache der Datei",
+    BUFFER_TAB_CHANGE_PLATFORM_ERASE_CODE: "Wenn Sie zu {platform} wechseln, geht der Code dieses Tabs verloren. Möchten Sie fortfahren?",
     BUFFER_TAB_SAVE: "Speichern",
 
     SUBMISSION_RESULTS_TESTS_TITLE: "Liste der Tests",

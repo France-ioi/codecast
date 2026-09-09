@@ -321,6 +321,7 @@ export default {
     BUFFER_TAB_NO_PAST_SUBMISSION: "No recent submission",
     BUFFER_TAB_FILE_NAME: "File name",
     BUFFER_TAB_LANGUAGE: "File language",
+    BUFFER_TAB_CHANGE_PLATFORM_ERASE_CODE: "If you switch to {platform}, the code of this tab will be lost. Do you want to continue?",
     BUFFER_TAB_SAVE: "Save",
 
     SUBMISSION_RESULTS_TESTS_TITLE: 'Tests list',
