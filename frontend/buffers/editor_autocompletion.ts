@@ -1,5 +1,6 @@
 import {Block, BlockType} from '../task/blocks/block_types';
 import {getMessage} from '../lang/messages';
+import {getLocalIdentifiers} from './editor_local_identifiers';
 
 export const addAutocompletion = function (blocks: Block[], strings: any) {
     let langTools = window.ace.acequire("ace/ext/language_tools");
@@ -61,8 +62,58 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
         }
     };
 
+    // Names already provided by the blocks above, so that we never propose them twice.
+    // Captions of functions look like "avancer()", we only keep the identifier part.
+    const blockNames = new Set<string>();
+    for (let block of blocks) {
+        for (let candidate of [block.name, block.methodName, block.caption, block.code]) {
+            const name = (candidate || '').trim().split('(')[0].trim();
+            if ('' !== name) {
+                blockNames.add(name);
+            }
+        }
+    }
+    for (let completion of completions) {
+        const name = (completion.name || completion.caption || '').trim().split('(')[0].trim();
+        if ('' !== name) {
+            blockNames.add(name);
+        }
+    }
+
+    // Complete with the variables and functions the user has defined in the document itself
+    let localIdentifiersCompleter = {
+        getCompletions: function (editor, session, pos, prefix, callback) {
+            const aceMode = (session.getMode()?.$id || '').replace('ace/mode/', '');
+            const identifiers = getLocalIdentifiers(session.getValue(), aceMode, pos.row);
+
+            callback(null, identifiers
+                .filter(identifier => !blockNames.has(identifier.name))
+                .map(identifier => {
+                    if (!identifier.isFunction) {
+                        return {
+                            name: identifier.name,
+                            value: identifier.name,
+                            meta: getMessage('MY_VARIABLE').s,
+                        };
+                    }
+
+                    // Same shape as the function blocks: the parameters become tab stops
+                    const params = identifier.params ?? [];
+                    const snippetParams = params.map((param, index) => '${' + (index + 1) + ':' + param + '}');
+
+                    return {
+                        caption: `${identifier.name}(${params.join(', ')})`,
+                        snippet: `${identifier.name}(${snippetParams.join(', ')})`,
+                        type: 'snippet',
+                        meta: getMessage('MY_FUNCTION').s,
+                    };
+                })
+            );
+        },
+    };
+
     // we set the completer to only what we want instead of all the noisy default stuff
     if (langTools) {
-        langTools.setCompleters([completer]);
+        langTools.setCompleters([completer, localIdentifiersCompleter]);
     }
 };

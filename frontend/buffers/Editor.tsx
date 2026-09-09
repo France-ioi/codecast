@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
-import {addAutocompletion} from "./editorAutocompletion";
+import {addAutocompletion} from "./editor_autocompletion";
 import {Range, TextBufferState} from './buffer_types';
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";

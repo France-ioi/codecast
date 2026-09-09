@@ -180,6 +180,8 @@ export default {
 
     KEYWORD: 'keyword',
     CONSTANT: "constant",
+    MY_VARIABLE: "variable",
+    MY_FUNCTION: "function",
     VARIABLE: "variable",
     OK: "Ok",
 
