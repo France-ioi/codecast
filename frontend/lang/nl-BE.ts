@@ -299,6 +299,17 @@ export default {
     SUBMISSION_RESULT_OUTPUT_PROGRAM: 'Uw programma heeft weergegeven:',
     SUBMISSION_RESULT_OUTPUT_EXPECTED: 'Terwijl het verwachte antwoord was:',
     SUBMISSION_RESULT_OUTPUT_HELP: 'Om u te helpen is het eerste afwijkende karakter rood gemarkeerd.<br><br> Controleer dat u precies weergeeft wat gevraagd wordt en niets meer. Controleer ook de regeleinden.',
+    SUBMISSION_EXECUTE_ON_REMOTE_DEBUG_SERVER: 'debugserver',
+    SUBMISSION_READ_ONLY: 'Alleen-lezenmodus – indiening niet beschikbaar',
+    // Required by getNewFileName(); without {i} a second buffer creation loops forever.
+    BUFFER_TAB_FILENAME: 'Code {i}',
+    BUFFER_TAB_PENDING_SUBMISSION: 'Indiening wordt geëvalueerd',
+    BUFFER_TAB_FINISHED_SUBMISSION: 'Beschikbare resultaten',
+    BUFFER_TAB_NOT_EDITABLE: 'Deze code kan niet meer worden bewerkt omdat hij wordt ingediend.',
+    BUFFER_TAB_NO_PAST_SUBMISSION: 'Geen recente indiening',
+    BUFFER_TAB_FILE_NAME: 'Bestandsnaam',
+    BUFFER_TAB_LANGUAGE: 'Bestandstaal',
+    BUFFER_TAB_SAVE: 'Opslaan',
 }
 
 
