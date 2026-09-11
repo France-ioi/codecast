@@ -10,7 +10,7 @@ export interface LocalIdentifier {
 // user definitions.
 const reservedWords = new Set([
     // Python
-    'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else',
+    'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def', 'del', 'elif  ', 'else',
     'except', 'False', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'None',
     'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'True', 'try', 'while', 'with', 'yield', 'self',
     // C / C++ / Java / Arduino
@@ -260,13 +260,19 @@ function extractCLikeIdentifiers(code: string): LocalIdentifier[] {
         }
     };
 
-    // A return type, a name, a parameter list without any ; and an opening brace:
-    // this excludes if/while/switch headers, which have no type before them.
+    // A return type, a name, a parameter list without any ; and an opening brace, which
+    // may be on the next line: this excludes if/while/switch headers, which have no type
+    // before them.
     const functionRegexp = new RegExp(
-        `^[ \\t]*(?:[A-Za-z_][\\w:<>]*[ \\t*&]+)+([A-Za-z_]\\w*)[ \\t]*\\(([^;{)]*)\\)[ \\t]*(?:const[ \\t]*)?\\{`,
+        `^[ \\t]*(?:[A-Za-z_][\\w:<>]*[ \\t*&]+)+([A-Za-z_]\\w*)[ \\t]*\\(([^;{)]*)\\)[ \\t]*(?:const[ \\t]*)?(?:\\r?\\n[ \\t]*)?\\{`,
         'gm'
     );
     for (let match of sanitized.matchAll(functionRegexp)) {
+        // "else if (...)" and the like look like a definition, their parameters are not ones
+        if (reservedWords.has(match[1])) {
+            continue;
+        }
+
         const bodyBlock = blocks.find(block => block.startOffset === match.index + match[0].length - 1);
         const bodyScope = scopeOfBlock(bodyBlock);
         const params = [];
