@@ -164,6 +164,8 @@ export default {
     EDITOR_RELOAD_IMPOSSIBLE: 'Het bewaarde antwoord kon niet opnieuw worden herladen.',
     KEYWORD: 'Trefwoord',
     CONSTANT: 'constante',
+    MY_VARIABLE: 'variabele',
+    MY_FUNCTION: 'functie',
     VARIABLE: 'variabele ',
     OK: 'Ok',
     TASK_DESCRIPTION: 'Opgave',

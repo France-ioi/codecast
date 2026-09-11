@@ -182,6 +182,8 @@ export default {
 
     KEYWORD: "Schlüsselwort",
     CONSTANT: "Konstante",
+    MY_VARIABLE: "Variable",
+    MY_FUNCTION: "Funktion",
     VARIABLE: "Variable",
     OK: "OK",
 
