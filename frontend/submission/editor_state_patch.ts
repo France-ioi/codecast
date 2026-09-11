@@ -1,5 +1,3 @@
-import {applyPatch as applyUnifiedDiff} from 'diff';
-
 // A patch is a JSON array of operations that rebuilds a target string from a source string. It is
 // read from left to right with a cursor placed at the beginning of the source:
 //   a positive number   copies that many characters of the source and advances the cursor
@@ -13,20 +11,12 @@ import {applyPatch as applyUnifiedDiff} from 'diff';
 // Lengths count UTF-16 code units, the unit of String.prototype.length, so the strings here are
 // walked with the same semantics the backend used to measure them.
 
-const legacyUnifiedDiffPrefix = 'Index:';
-
 /**
  * Rebuilds a state from the one the patch was created from. Returns null when the patch is
  * malformed or does not fit the source, rather than a state rebuilt only in part: the caller then
  * stops walking the history back instead of showing the user a broken version.
  */
 export function applyEditorStatePatch(source: string, patch: string): string|null {
-    if (patch.startsWith(legacyUnifiedDiffPrefix)) {
-        const target = applyUnifiedDiff(source, patch);
-
-        return false === target ? null : target;
-    }
-
     let operations: unknown;
     try {
         operations = JSON.parse(patch);
