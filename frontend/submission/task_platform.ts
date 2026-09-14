@@ -338,8 +338,8 @@ export function* makeServerSubmission(answer: TaskAnswer, answerToken: string, p
     return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions', body, false)) as {success: boolean, submissionId?: string};
 }
 
-// Save the editor state at most once every 20 seconds
-const saveEditorsThrottleDelay = 20 * 1000;
+// Save the editor state at most once every 60 seconds
+const saveEditorsThrottleDelay = 60 * 1000;
 let lastSavedEditorState: {taskId: string, editorState: string}|null = null;
 let reloadedEditorStateTaskId: string|null = null;
 let pendingEditorState: EditorState|null = null;
