@@ -360,11 +360,6 @@ function getEditorStateSources(state: AppStore): EditorStateSource[] {
 }
 
 function getEditorStateTests(state: AppStore): EditorStateTest[]|null {
-    if (!state.task.currentTask?.userTests) {
-        // The task has no user tests, the ones saved for it must be left untouched
-        return null;
-    }
-
     const currentTest = selectCurrentTest(state);
 
     return state.task.taskTests
