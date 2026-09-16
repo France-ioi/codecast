@@ -216,6 +216,8 @@ export default {
     TASK_LEVEL_SUCCESS_FINISHED: "Du hast diese Aufgabe vollständig gelöst.",
     TASK_LEVEL_SUCCESS_FINISHED_FAMILIAR: "Du hast diese Aufgabe vollständig gelöst.",
     TASK_LEVEL_SUCCESS_TRY_NEXT_TASK: "Probiere als Nächstes eine andere Aufgabe aus. Falls du danach noch Zeit hast, kannst du zurückkommen und die nächste Version dieser Aufgabe versuchen.",
+    TASK_LEVEL_SUCCESS_SHOW_SOLUTION_INCITATIVE: "Wir empfehlen dir, die Korrektur aufmerksam zu lesen, auch wenn die Aufgabe dir keine Schwierigkeiten bereitet hat. Du findest dort oft Tipps, die dir später sehr nützlich sein können.",
+    TASK_LEVEL_SUCCESS_SHOW_SOLUTION: "Die Korrektur lesen",
     TASK_LEVEL_LOCKED_TITLE: "Version gesperrt",
     TASK_LEVEL_LOCKED_MESSAGE: "Diese Version ist gesperrt. Du musst zuerst die vorherige Version lösen, bevor du diese Version öffnen kannst.",
     TASK_LEVEL_LOCKED_MESSAGE_DEV: "Diese Version ist normalerweise gesperrt. Du musst zuerst die vorherige Version lösen, bevor du diese Version öffnen kannst. Da du die Aufgabe lokal geöffnet hast, kannst du die Version dennoch zu Testzwecken anzeigen.",
