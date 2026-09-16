@@ -19,6 +19,23 @@ import {Document, TextDocument} from '../buffers/buffer_types';
 import {documentToString} from '../buffers/document';
 import {getMessage, getMessageChoices} from '../lang/messages';
 
+const pythonSpecialKeywordMessageKeys: Record<string, string> = {
+    list_brackets: 'PYTHON_SPECIAL_LIST_BRACKETS',
+    dict_brackets: 'PYTHON_SPECIAL_DICT_BRACKETS',
+    math_number: 'PYTHON_SPECIAL_MATH_NUMBER',
+    var_assign: 'PYTHON_SPECIAL_VAR_ASSIGN',
+    def_args: 'PYTHON_SPECIAL_DEF_ARGS',
+    strings: 'PYTHON_SPECIAL_STRINGS',
+};
+
+export function pythonSpecialKeywordName(key: string): string {
+    const messageKey = pythonSpecialKeywordMessageKeys[key];
+    if (messageKey) {
+        return getMessage(messageKey).toString();
+    }
+    return key;
+}
+
 const pythonCountPatterns = [
     // Comments
     {pattern: /^#[^\n\r]+/, block: false},
@@ -159,7 +176,7 @@ export const pythonForbidden = function (code, includeBlocks: QuickalgoTaskInclu
 
     let code2 = removeFromPatterns(code, stringPatterns);
     if (-1 !== forbidden.indexOf('strings') && code != code2) {
-        return 'chaînes de caractères';
+        return pythonSpecialKeywordName('strings');
     }
 
     code = code2;
@@ -183,27 +200,27 @@ export const pythonForbidden = function (code, includeBlocks: QuickalgoTaskInclu
             const re = /[\[\]]/;
             if (re.exec(code)) {
                 // Forbidden keyword found
-                return 'crochets [ ]'; // TODO :: i18n ?
+                return pythonSpecialKeywordName('list_brackets');
             }
         } else if (forbidden[i] == 'dict_brackets') {
             // Special pattern for lists
             const re = /[\{\}]/;
             if (re.exec(code)) {
                 // Forbidden keyword found
-                return 'accolades { }'; // TODO :: i18n ?
+                return pythonSpecialKeywordName('dict_brackets');
             }
         } else if (forbidden[i] == 'var_assign') {
             // Special pattern for lists
             const re = /[^=!<>]=[^=!<>]/;
             if (re.exec(code)) {
                 // Forbidden keyword found
-                return '= (assignation de variable)'; // TODO :: i18n ?
+                return pythonSpecialKeywordName('var_assign');
             }
         } else if (forbidden[i] == 'def_args') {
             const re = /def\s*\w+\([^\s]+\)/;
             if (re.exec(code)) {
                 // Forbidden keyword found
-                return 'fonction avec arguments'; // TODO :: i18n ?
+                return pythonSpecialKeywordName('def_args');
             }
         } else if (forbidden[i] != 'strings') {
             const re = new RegExp('(^|\\W)' + forbidden[i] + '(\\W|$)');
@@ -290,17 +307,9 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
                 usesCount[pointer] = 0;
             }
             usesCount[pointer] += count;
-            // TODO :: i18n ?
-            let name;
-            if (pyKey == 'list_brackets') {
-                name = 'crochets [ ]';
-            } else if (pyKey == 'dict_brackets') {
-                name = 'accolades { }';
-            } else if (pyKey == 'math_number') {
-                name = 'nombres';
-            } else {
-                name = pyKey;
-            }
+            const name = (pyKey == 'list_brackets' || pyKey == 'dict_brackets' || pyKey == 'math_number')
+                ? pythonSpecialKeywordName(pyKey)
+                : pyKey;
 
             limitations.push({type: 'uses', name, current: usesCount[pointer], limit: limitedUses[pointer].nbUses});
         }
