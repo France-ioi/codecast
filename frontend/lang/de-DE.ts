@@ -191,6 +191,7 @@ export default {
     TASK_VARIABLES: "Variablen",
     TASK_EDITOR: "Editor",
     TASK_RESTART: "Neustarten",
+    TASK_RESTART_CONFIRM: "Wenn Sie von vorne anfangen, verlieren Sie Ihren aktuellen Code. Möchten Sie fortfahren?",
     TASK_DOCUMENTATION: "Informationen",
     TASK_INSTRUCTIONS_MORE: "Weitere Hinweise",
     TASK_INSTRUCTIONS_LESS: "Hinweise ausblenden",
