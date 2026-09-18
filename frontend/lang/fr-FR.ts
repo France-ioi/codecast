@@ -296,6 +296,14 @@ export default {
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "Vous utilisez la fonction \"{funcName}\" sans les parenthèses. Ajoutez les parenthèses pour appeler la fonction.",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS_FAMILIAR: "Tu utilises la fonction \"{funcName}\" sans les parenthèses. Ajoute les parenthèses pour appeler la fonction.",
 
+    PYTHON_SPECIAL_LIST_BRACKETS: "crochets [ ]",
+    PYTHON_SPECIAL_DICT_BRACKETS: "accolades { }",
+    PYTHON_SPECIAL_MATH_NUMBER: "nombres",
+    PYTHON_SPECIAL_VAR_ASSIGN: "= (assignation de variable)",
+    PYTHON_SPECIAL_DEF_ARGS: "fonction avec arguments",
+    PYTHON_SPECIAL_STRINGS: "chaînes de caractères",
+    PYTHON_SPECIAL_VARIABLES: "variables",
+
     ABOUT_AUTHORS: "Ce sujet a été créé par :",
     ABOUT_TRANSLATORS: "et a été traduit par :",
     ABOUT_LICENSE: "License :",

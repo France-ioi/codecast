@@ -285,6 +285,14 @@ export default {
     CODE_CONSTRAINTS_EMPTY_PROGRAM_BLOCKS: "The program is empty. Connect blocks!",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "You use the function \"{funcName}\" without the parentheses. Add the parentheses to call the function.",
 
+    PYTHON_SPECIAL_LIST_BRACKETS: "brackets [ ]",
+    PYTHON_SPECIAL_DICT_BRACKETS: "braces { }",
+    PYTHON_SPECIAL_MATH_NUMBER: "numbers",
+    PYTHON_SPECIAL_VAR_ASSIGN: "= (variable assignment)",
+    PYTHON_SPECIAL_DEF_ARGS: "function with arguments",
+    PYTHON_SPECIAL_STRINGS: "strings",
+    PYTHON_SPECIAL_VARIABLES: "variables",
+
     ABOUT_AUTHORS: "This task was created by:",
     ABOUT_TRANSLATORS: "and translated by:",
     ABOUT_LICENSE: "Licence:",

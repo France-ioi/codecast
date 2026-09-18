@@ -296,6 +296,14 @@ export default {
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "Du verwendest die Funktion „{funcName}“ ohne Klammern. Ergänze die Klammern, um die Funktion aufzurufen.",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS_FAMILIAR: "Du verwendest die Funktion „{funcName}“ ohne Klammern. Ergänze die Klammern, um die Funktion aufzurufen.",
 
+    PYTHON_SPECIAL_LIST_BRACKETS: "eckige Klammern [ ]",
+    PYTHON_SPECIAL_DICT_BRACKETS: "geschweifte Klammern { }",
+    PYTHON_SPECIAL_MATH_NUMBER: "Zahlen",
+    PYTHON_SPECIAL_VAR_ASSIGN: "= (Variablenzuweisung)",
+    PYTHON_SPECIAL_DEF_ARGS: "Funktion mit Argumenten",
+    PYTHON_SPECIAL_STRINGS: "Zeichenketten",
+    PYTHON_SPECIAL_VARIABLES: "Variablen",
+
     ABOUT_AUTHORS: "Diese Aufgabe wurde erstellt von:",
     ABOUT_TRANSLATORS: "und übersetzt von:",
     ABOUT_LICENSE: "Lizenz:",

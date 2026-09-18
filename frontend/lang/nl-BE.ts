@@ -288,6 +288,14 @@ export default {
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: 'U gebruikt de functie "{funcName}" zonder de haakjes. Voeg de haakjes toe om de functie op te roepen.',
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS_FAMILIAR: 'Je gebruikt de functie "{funcName}" zonder de haakjes. Voeg de haakjes toe om de functie op te roepen.',
 
+    PYTHON_SPECIAL_LIST_BRACKETS: 'vierkante haken [ ]',
+    PYTHON_SPECIAL_DICT_BRACKETS: 'accolades { }',
+    PYTHON_SPECIAL_MATH_NUMBER: 'getallen',
+    PYTHON_SPECIAL_VAR_ASSIGN: '= (toekenning van een variabele)',
+    PYTHON_SPECIAL_DEF_ARGS: 'functie met argumenten',
+    PYTHON_SPECIAL_STRINGS: 'tekenreeksen',
+    PYTHON_SPECIAL_VARIABLES: 'variabelen',
+
     ABOUT_AUTHORS: 'Dit onderwerp is gemaakt door:',
     ABOUT_TRANSLATORS: 'en is vertaald door:',
     ABOUT_LICENSE: 'Licentie:',
