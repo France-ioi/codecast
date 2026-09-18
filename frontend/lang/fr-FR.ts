@@ -191,6 +191,7 @@ export default {
     TASK_VARIABLES: 'Variables',
     TASK_EDITOR: 'Éditeur',
     TASK_RESTART : 'Recommencer',
+    TASK_RESTART_CONFIRM: 'Si vous recommencez à zéro, vous perdrez votre code actuel. Voulez-vous continuer ?',
     TASK_DOCUMENTATION: 'Informations',
     TASK_INSTRUCTIONS_MORE: 'Plus de détails',
     TASK_INSTRUCTIONS_LESS: 'Masquer les détails',

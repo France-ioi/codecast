@@ -188,6 +188,7 @@ export default {
     TASK_DESCRIPTION: 'Instructions',
     TASK_VARIABLES: 'Variables',
     TASK_RESTART : 'Restart',
+    TASK_RESTART_CONFIRM: 'If you start over, you will lose your current code. Do you want to continue?',
     TASK_DOCUMENTATION: 'Informations',
     TASK_INSTRUCTIONS_MORE: 'More details',
     TASK_INSTRUCTIONS_LESS: 'Hide details',

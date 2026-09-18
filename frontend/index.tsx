@@ -39,6 +39,7 @@ import {library} from '@fortawesome/fontawesome-svg-core';
 import {faBook} from '@fortawesome/free-solid-svg-icons/faBook';
 import {faCog} from '@fortawesome/free-solid-svg-icons/faCog';
 import {faComment} from '@fortawesome/free-solid-svg-icons/faComment';
+import {DisplayHelper} from './task/libs/display_helper';
 library.add(
     faBook,
     faCog,
@@ -137,7 +138,7 @@ declare global {
         goog: any,
         FioiBlockly: any,
         quickAlgoInterface: any,
-        displayHelper: any,
+        displayHelper: DisplayHelper,
         arrayContains: any,
         mergeIntoArray: any,
         mergeIntoObject: any,

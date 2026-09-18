@@ -184,6 +184,7 @@ export default {
     TASK_DESCRIPTION: 'Opgave',
     TASK_VARIABLES: 'Variabelen',
     TASK_RESTART: 'Opnieuw beginnen',
+    TASK_RESTART_CONFIRM: 'Als u opnieuw begint, verliest u uw huidige code. Wilt u doorgaan?',
     TASK_DOCUMENTATION: 'Informatie',
     TASK_INSTRUCTIONS_MORE: 'Meer details',
     TASK_INSTRUCTIONS_LESS: 'De details verbergen',
