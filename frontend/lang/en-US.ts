@@ -93,7 +93,7 @@ export default {
     CONTROL_SPEED: "execution speed",
     CONTROL_UNDO: "undo",
     CONTROL_REDO: "redo",
-    PROGRAM_STOPPED: "Program stopped.",
+    PROGRAM_STOPPED: "Run your program to see the content of the variables.",
     SETTINGS_MENU_TITLE: "Settings",
     DOWNLOAD_OFFLINE: "Download to use the app without connection : Extract the zip and open index.html in your browser.",
     'LANGUAGE:': "Language: ",

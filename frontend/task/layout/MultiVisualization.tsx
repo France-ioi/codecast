@@ -1,69 +1,47 @@
-import React, {ReactElement, ReactNode} from 'react';
-import {connect} from "react-redux";
-import {Dropdown} from 'react-bootstrap';
+import React, {ReactElement} from 'react';
+import {useDispatch} from "react-redux";
 import {Icon} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
 
-function mapStateToProps() {
-    return {};
-}
-
-interface MultiVisualizationDispatchToProps {
-    dispatch: Function
-}
-
-interface MultiVisualizationProps extends MultiVisualizationDispatchToProps {
+interface MultiVisualizationProps {
     className?: string,
     currentVisualizationGroup: number,
     children: React.ReactNode,
 }
 
-const _CustomToggle = ({children, onClick}, ref) => (
-    <a
-        href=""
-        ref={ref}
-        onClick={(e) => {
-            e.preventDefault();
-            onClick(e);
-        }}
-        className="multi-visualization-toggle"
-    >
-        {children}
-        <span className="multi-visualization-toggle-caret">&#x25bc;</span>
-    </a>
-);
+export function MultiVisualization(props: MultiVisualizationProps) {
+    const dispatch = useDispatch();
+    const elements = React.Children.toArray(props.children) as ReactElement<{metadata: any}>[];
+    const currentElement = elements[props.currentVisualizationGroup];
 
-const CustomToggle = React.forwardRef<HTMLAnchorElement, {children: ReactNode, onClick: Function}>(_CustomToggle);
-
-class _MultiVisualization extends React.PureComponent<MultiVisualizationProps> {
-    render() {
-        const elements = React.Children.toArray(this.props.children) as ReactElement<{metadata: any}>[];
-
-        return (
-            <div className={`multi-visualization ${this.props.className ? this.props.className : ''}`}>
-                <Dropdown>
-                    <Dropdown.Toggle as={CustomToggle}>{this.props.children[this.props.currentVisualizationGroup].props.metadata.title}</Dropdown.Toggle>
-
-                    <Dropdown.Menu>
-                        {elements.map(({props: {metadata}}) =>
-                            <Dropdown.Item key={metadata.id} onClick={() => this.selectVisualization(metadata.id)}>
-                                {metadata.icon && <Icon icon={metadata.icon as React.JSX.Element}/>}
-                                <span>{metadata.title}</span>
-                            </Dropdown.Item>
-                        )}
-                    </Dropdown.Menu>
-                </Dropdown>
-
-                <div className="multi-visualization-content">
-                    {this.props.children[this.props.currentVisualizationGroup]}
-                </div>
-            </div>
-        );
-    }
-
-    selectVisualization = (id: string) => {
-        this.props.dispatch({type: ActionTypes.LayoutVisualizationSelected, payload: {visualization: id}})
+    const selectVisualization = (id: string) => {
+        dispatch({type: ActionTypes.LayoutVisualizationSelected, payload: {visualization: id}});
     };
-}
 
-export const MultiVisualization = connect(mapStateToProps)(_MultiVisualization);
+    return (
+        <div className={`multi-visualization ${props.className ? props.className : ''}`}>
+            <div className="multi-visualization-pills">
+                {elements.map((element) => {
+                    const {metadata} = element.props;
+                    const isActive = element === currentElement;
+
+                    return (
+                        <button
+                            key={metadata.id}
+                            type="button"
+                            className={`multi-visualization-pill ${isActive ? 'is-active' : ''}`}
+                            onClick={() => selectVisualization(metadata.id)}
+                        >
+                            {metadata.icon && <Icon icon={metadata.icon as React.JSX.Element}/>}
+                            <span>{metadata.title}</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            <div className="multi-visualization-content">
+                {currentElement}
+            </div>
+        </div>
+    );
+}
