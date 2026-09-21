@@ -94,7 +94,7 @@ export default {
     CONTROL_SPEED: "vitesse d'exécution",
     CONTROL_UNDO: "annuler",
     CONTROL_REDO: "refaire",
-    PROGRAM_STOPPED: "Programme arrêté.",
+    PROGRAM_STOPPED: "Lancez votre programme pour voir le contenu des variables.",
     SETTINGS_MENU_TITLE: "Réglages",
     DOWNLOAD_OFFLINE: "Télécharger pour utiliser l'application sans connexion : Extraire le zip et ouvrir index.html dans votre navigateur.",
     'LANGUAGE:': "Langue : ",

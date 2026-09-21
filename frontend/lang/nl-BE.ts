@@ -94,7 +94,7 @@ export default {
     CONTROL_SPEED: 'uitvoeringssnelheid',
     CONTROL_UNDO: 'annuleren',
     CONTROL_REDO: 'herdoen',
-    PROGRAM_STOPPED: 'Programma gestopt.',
+    PROGRAM_STOPPED: 'Voer je programma uit om de inhoud van de variabelen te zien.',
     SETTINGS_MENU_TITLE: 'Instellingen',
     DOWNLOAD_OFFLINE: 'Downloaden om de applicatie zonder verbinding te gebruiken: Haal de zip eruit en open index.html in uw browser.',
     'LANGUAGE:': 'Taal:',
