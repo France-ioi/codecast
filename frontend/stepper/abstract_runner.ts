@@ -145,6 +145,10 @@ export default abstract class AbstractRunner {
         callback(value);
     }
 
+    public setStepperApi(stepperApi: StepperApi): void {
+
+    }
+
     createValuePrimitive(value: any): any {
         return value;
     }

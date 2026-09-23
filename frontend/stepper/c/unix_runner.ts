@@ -187,13 +187,17 @@ export default class UnixRunner extends AbstractRunner {
         }
     }
 
+    public setStepperApi(stepperApi: StepperApi): void {
+        this.builtinHandlers = stepperApi.builtinHandlers;
+        this.effectHandlers = stepperApi.effectHandlers;
+    }
+
     public *compileAnswer(answer: TaskAnswer, stepperApi: StepperApi) {
         const state = yield* appSelect();
         const context = quickAlgoLibraries.getContext(null, state.environment);
         const blocksData = getContextBlocksDataSelector({state, context});
 
-        this.builtinHandlers = stepperApi.builtinHandlers;
-        this.effectHandlers = stepperApi.effectHandlers;
+        this.setStepperApi(stepperApi);
         this.availableBlocks = blocksData;
         this.injectFunctions();
 
