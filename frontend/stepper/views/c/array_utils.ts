@@ -71,7 +71,7 @@ interface HeapNode {
  */
 export const extractView = function(context, stackFrame, refExpr, options) {
     const {programState} = context;
-    const localMap = stackFrame.get('localMap');
+    const localMap = stackFrame.localMap;
     // Normalize options.
     const {fullView, dimExpr} = options;
     let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind} = options;

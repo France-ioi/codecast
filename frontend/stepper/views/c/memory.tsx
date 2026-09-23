@@ -693,7 +693,7 @@ interface Layout {
 }
 
 function MemoryViewSelector({scale, directive, context, controls, functionCallStack, allocatedWidth}) {
-    const localMap = functionCallStack[0].get('localMap');
+    const localMap = functionCallStack[0].localMap;
     const {byName, byPos} = directive;
     const extraExprs = getList(byName.extras, []);
     const cursorExprs = getList(byName.cursors, []);

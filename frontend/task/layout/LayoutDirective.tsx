@@ -9,6 +9,7 @@ import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
 import {CodecastAnalysisSnapshot} from "../../stepper/analysis/analysis";
 import log from 'loglevel';
+import {getDirectiveFunctionCallStack} from '../../stepper/c/analysis';
 
 import {CodecastPlatform} from '../../stepper/codecast_platform';
 
@@ -40,15 +41,14 @@ export function LayoutDirective(props: LayoutDirectiveProps) {
         return false;
     }
 
-    const {codecastAnalysis, programState, lastProgramState, controls, directives, platform} = stepperState;
-    const {functionCallStackMap} = directives;
+    const {codecastAnalysis, programState, lastProgramState, controls, platform} = stepperState;
     const context: LayoutDirectiveContext = {analysis: codecastAnalysis, programState, lastProgramState};
     const {key} = props.directive;
     const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : initialStepperStateControls;
     let functionCallStack = null;
-    // if (platform === CodecastPlatform.C || platform === CodecastPlatform.Cpp || platform === CodecastPlatform.Arduino) {
-    //     functionCallStack = functionCallStackMap[key];
-    // }
+    if (platform !== CodecastPlatform.Python && programState?.scope) {
+        functionCallStack = getDirectiveFunctionCallStack(programState, key, controls.stack?.focusDepth);
+    }
 
     log.getLogger('layout').debug('layout directive context', context, props.directive, functionCallStack);
 

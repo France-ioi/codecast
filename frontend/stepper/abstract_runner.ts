@@ -146,7 +146,7 @@ export default abstract class AbstractRunner {
     }
 
     createValuePrimitive(value: any): any {
-
+        return value;
     }
 
     public signalAction() {

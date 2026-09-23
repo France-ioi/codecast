@@ -60,6 +60,7 @@ export function PureTerminal(props: PureTerminalProps) {
         <div
             ref={refTerminal}
             className="terminal"
+            tabIndex={0}
             onKeyDown={onKeyDown}
             onKeyUp={onKeyUp}
             onKeyPress={onKeyPress}
