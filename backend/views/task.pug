@@ -9,6 +9,9 @@ head(lang='fr')
     else
       link(rel='stylesheet', href='build/index.css')
   title Codecast
+  if bebrasModulesUrl
+    script(type='text/javascript').
+      window.modulesPath = !{JSON.stringify(bebrasModulesUrl + '/')};
   style.
     @keyframes pt-spinner-animation{
         from{
