@@ -112,6 +112,7 @@ function addBackendRoutes(app, config, store) {
             res.render('task', {
                 development: config.isDevelopment,
                 rebaseUrl: config.rebaseUrl,
+                bebrasModulesUrl: config.bebrasModulesUrl ? config.bebrasModulesUrl.replace(/\/+$/, '') : null,
                 files: filePaths,
                 options
             });

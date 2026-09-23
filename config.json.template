@@ -47,6 +47,7 @@
   },
   "builderUrl": "https://archive-builder.test",
   "examplesUrl": "https://codecast.test/examples/",
+  "bebrasModulesUrl": "",
   "audioWorkerUrl": "build/index.worker.worker.js",
   "ownSecret": "The own secret",
   "builderSecret": "The builder secret",

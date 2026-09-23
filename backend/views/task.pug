@@ -4,7 +4,10 @@ head(lang='fr')
   meta(name='viewport', content='width=device-width, initial-scale=1')
   link(rel='icon', href='assets/favicon.ico')
   unless development
-    link(rel='stylesheet', href='build/index.css')
+    if bebrasModulesUrl
+      link(rel='stylesheet', href=bebrasModulesUrl + '/ext/codecast/7.7/index.css')
+    else
+      link(rel='stylesheet', href='build/index.css')
   title Codecast
   style.
     @keyframes pt-spinner-animation{
@@ -29,6 +32,7 @@ body(id='app')
             style="stroke: rgba(95, 107, 124, 0.8); fill-opacity: 0; stroke-linecap: round; transform-origin: center; transition: stroke-dashoffset 200ms cubic-bezier(0.4, 1, 0.75, 0.9)"
           )
 
+  - const fileUrl = (file) => bebrasModulesUrl && file.startsWith('bebras-modules/') ? bebrasModulesUrl + '/' + file.substring('bebras-modules/'.length) : rebaseUrl('build/' + file)
   if development
     script(type='module', src=rebaseUrl('@vite/client'))
     script(type='module').
@@ -39,11 +43,14 @@ body(id='app')
       window.__vite_plugin_react_preamble_installed__ = true
     script(type='module', src=rebaseUrl('frontend/index.tsx'))
     each file in files
-      script(type='text/javascript', src=rebaseUrl('build/' + file))
+      script(type='text/javascript', src=fileUrl(file))
   else
-    script(type='module', src=rebaseUrl('build/index.modern.js'))
+    if bebrasModulesUrl
+      script(type='module', src=bebrasModulesUrl + '/ext/codecast/7.7/index.modern.js')
+    else
+      script(type='module', src=rebaseUrl('build/index.modern.js'))
     each file in files
-      script(type='text/javascript', src=rebaseUrl('build/' + file))
+      script(type='text/javascript', src=fileUrl(file))
   script(type='text/javascript').
     window.addEventListener('load', () => {
       Codecast.start(!{JSON.stringify(options)})
