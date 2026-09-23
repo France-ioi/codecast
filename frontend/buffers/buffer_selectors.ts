@@ -21,11 +21,12 @@ export function selectSourceBuffersFromBufferState (buffers: BuffersState): {[bu
 }
 
 export function selectActiveBufferPlatform(state: AppStore): CodecastPlatform {
-    if (null === state.buffers.activeBufferName) {
+    const activeBufferName = state.buffers.activeBufferName;
+    if (null === activeBufferName || !(activeBufferName in state.buffers.buffers)) {
         return state.options.platform;
     }
 
-    return state.buffers.buffers[state.buffers.activeBufferName].platform;
+    return state.buffers.buffers[activeBufferName].platform;
 }
 
 export function selectActiveBuffer(state: AppStore): BufferState|null {

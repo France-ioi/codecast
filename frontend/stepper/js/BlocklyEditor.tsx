@@ -12,6 +12,11 @@ import {callPlatformLog} from '../../submission/submission_actions';
 import {selectGroupByCategory} from './index';
 import {selectActiveView} from '../../task/layout/layout';
 import {getMessage} from '../../lang/messages';
+import {BlocklyHelper} from './blockly_helper';
+
+function isBlocklyHelperReady(blocklyHelper: BlocklyHelper | null | undefined): boolean {
+    return !!blocklyHelper && !blocklyHelper.fake && typeof blocklyHelper.load === 'function';
+}
 
 export interface BlocklyEditorProps {
     name?: string,
@@ -43,7 +48,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     log.getLogger('editor').debug('[buffer] re-render editor', {name: props.name, state: props.state, highlights: props.highlights});
 
     const reset = (document: BlockDocument) => {
-        if (!context?.blocklyHelper) {
+        if (!isBlocklyHelperReady(context?.blocklyHelper)) {
             return;
         }
 
@@ -138,7 +143,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const resize = () => {
         log.getLogger('editor').debug('[blockly.editor] resize');
-        if (context && context.blocklyHelper) {
+        if (typeof context?.blocklyHelper?.unloadLevel === 'function') {
             context.blocklyHelper.unloadLevel();
         }
         onLoad();
@@ -194,13 +199,14 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     };
 
     const onLoad = () => {
-        if (!currentTask || !context || !context.blocklyHelper) {
+        if (!currentTask || !context || !isBlocklyHelperReady(context.blocklyHelper)) {
             log.getLogger('editor').debug('[blockly.editor] load no data');
             return;
         }
 
-        log.getLogger('editor').debug('[blockly.editor] load with data', contextIncludeBlocks);
         const blocklyHelper = context.blocklyHelper;
+
+        log.getLogger('editor').debug('[blockly.editor] load with data', contextIncludeBlocks);
 
         const blocklyOptions = {
             // readOnly: !!subTask.taskParams.readOnly,
@@ -262,7 +268,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         return () => {
             log.getLogger('editor').debug('[blockly.editor] unload');
 
-            if (context && context.blocklyHelper) {
+            if (typeof context?.blocklyHelper?.unloadLevel === 'function') {
                 context.blocklyHelper.unloadLevel();
             }
         };
