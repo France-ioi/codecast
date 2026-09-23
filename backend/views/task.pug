@@ -12,6 +12,7 @@ head(lang='fr')
   if bebrasModulesUrl
     script(type='text/javascript').
       window.modulesPath = !{JSON.stringify(bebrasModulesUrl + '/')};
+      window.codecastAssetsUrl = !{JSON.stringify(rebaseUrl('build/'))};
   style.
     @keyframes pt-spinner-animation{
         from{
