@@ -145,8 +145,12 @@ export default abstract class AbstractRunner {
         callback(value);
     }
 
-    createValuePrimitive(value: any): any {
+    public setStepperApi(stepperApi: StepperApi): void {
 
+    }
+
+    createValuePrimitive(value: any): any {
+        return value;
     }
 
     public signalAction() {

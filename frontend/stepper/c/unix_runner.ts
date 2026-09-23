@@ -4,7 +4,7 @@ import * as C from '@france-ioi/persistent-c';
 import {StepperState} from "../index";
 import log from 'loglevel';
 import {ActionTypes, ContextEnrichingTypes} from '../actionTypes';
-import {analyseState, collectDirectives, convertUnixStateToAnalysisSnapshot} from './analysis';
+import {convertUnixStateToAnalysisSnapshot} from './analysis';
 import {TaskAnswer} from '../../task/task_types';
 import {appSelect} from '../../hooks';
 import {documentToString} from '../../buffers/document';
@@ -125,17 +125,13 @@ export default class UnixRunner extends AbstractRunner {
     }
 
     public enrichStepperState(stepperState: StepperState, context: ContextEnrichingTypes, stepperContext?: StepperContext) {
-        const {programState, controls} = stepperState;
+        const {programState} = stepperState;
         if (!programState) {
             return;
         }
 
         stepperState.isFinished = !stepperState.programState.control;
         stepperState.analysis = convertUnixStateToAnalysisSnapshot(stepperState.programState, stepperState.lastProgramState);
-        const focusDepth = controls.stack.focusDepth;
-        const analysisBack = analyseState(programState);
-        stepperState.directives = collectDirectives(analysisBack.functionCallStack, focusDepth);
-
         stepperState.directives = {
             ordered: parseDirectives(stepperState.analysis),
             functionCallStackMap: null,
@@ -191,13 +187,17 @@ export default class UnixRunner extends AbstractRunner {
         }
     }
 
+    public setStepperApi(stepperApi: StepperApi): void {
+        this.builtinHandlers = stepperApi.builtinHandlers;
+        this.effectHandlers = stepperApi.effectHandlers;
+    }
+
     public *compileAnswer(answer: TaskAnswer, stepperApi: StepperApi) {
         const state = yield* appSelect();
         const context = quickAlgoLibraries.getContext(null, state.environment);
         const blocksData = getContextBlocksDataSelector({state, context});
 
-        this.builtinHandlers = stepperApi.builtinHandlers;
-        this.effectHandlers = stepperApi.effectHandlers;
+        this.setStepperApi(stepperApi);
         this.availableBlocks = blocksData;
         this.injectFunctions();
 

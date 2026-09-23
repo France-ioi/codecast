@@ -1,5 +1,6 @@
 import {AnalysisSnapshot, AnalysisStackFrame} from "../analysis/analysis";
 import PR from 'packrattle';
+import {current, isDraft} from 'immer';
 
 export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
 
@@ -113,9 +114,13 @@ export const parseDirectives = function(analysis: AnalysisSnapshot) {
     let directiveKeyExists = {};
     for (let activeStackFrame of activeStackFrames) {
         for (let directiveContent of activeStackFrame.directives) {
-            let directive = directiveContent;
+            let directive;
             if ('string' === typeof directiveContent) {
                 directive = parseDirective(directiveContent);
+            } else {
+                // This can be called inside an immer producer: detach the directive from the draft,
+                // otherwise the returned frozen array would keep proxies that get revoked afterwards.
+                directive = {...(isDraft(directiveContent) ? current(directiveContent) : directiveContent)};
             }
 
             if (directive.key) {
