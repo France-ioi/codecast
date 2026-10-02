@@ -201,3 +201,15 @@
     }
   }
 }
+
+// Looks like the context menu of the blocks in Blockly
+.bp6-popover.task-available-block-context-menu {
+  box-shadow: 0 0 3px 1px rgba(0, 0, 0, .3);
+  font-size: .9em;
+  .bp6-menu {
+    padding: 6px 0;
+  }
+  .bp6-menu-item {
+    padding: 6px 16px;
+  }
+}

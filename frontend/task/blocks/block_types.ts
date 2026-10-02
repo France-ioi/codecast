@@ -34,4 +34,5 @@ export interface Block {
     countAs?: number,
     handler?: Function,
     noConnectors?: boolean,
+    documentationConcept?: string, // concept of the Codecast documentation explaining this block
 }

@@ -1,4 +1,4 @@
-import {NotionsBag} from './notions';
+import {getNotionDocumentationConcept, NotionsBag} from './notions';
 import {QuickalgoTaskIncludeBlocks} from '../task_types';
 import {Block, BlockType} from './block_types';
 import {analysisDirectiveViewDict} from '../../stepper/views';
@@ -95,12 +95,15 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
     if (contextIncludeBlocks) {
         let allowedTokens = [];
         const tokenCategories = {};
+        // A token several notions bring is documented by the concept of the first one
+        const tokenDocumentationConcepts = {};
         for (let [category, notions] of Object.entries(notionsBag.getArborescence())) {
             for (let notion of notions) {
                 const tokens = pythonNotionsToBlocks[notion];
                 for (let token of tokens) {
                     if (-1 !== pythonBlocksList.indexOf(token)) {
                         tokenCategories[token] = category;
+                        tokenDocumentationConcepts[token] ??= getNotionDocumentationConcept(notion);
                         allowedTokens.push(token);
                     } else if (-1 !== pythonBlocksFunctionsList.indexOf(token)) {
                         availableBlocks.push({
@@ -109,6 +112,7 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
                             type: BlockType.Function,
                             category,
                             code: token + '()',
+                            documentationConcept: getNotionDocumentationConcept(notion),
                         });
                     }
                 }
@@ -122,6 +126,7 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
             const bracketsIdx = allowedTokens.indexOf(bracketsCode);
             if (bracketsIdx !== -1) {
                 allowedTokens[bracketsIdx] = bracketsWords[bracketsCode];
+                tokenDocumentationConcepts[bracketsWords[bracketsCode]] = tokenDocumentationConcepts[bracketsCode];
             }
         }
 
@@ -138,6 +143,7 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
                 snippet: name in specialSnippets ? specialSnippets[name].snippet : code,
                 code,
                 category: tokenCategories[token],
+                documentationConcept: tokenDocumentationConcepts[token],
                 showInBlocks: (name in specialSnippets && false === specialSnippets[name].showInBlocks) || -1 !== Object.values(bracketsWords).indexOf(token) || -1 !== hiddenWords.indexOf(name) ? false : undefined,
             });
         }

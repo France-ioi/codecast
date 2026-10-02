@@ -6,6 +6,9 @@ import {toHtml} from "../../utils/sanitize";
 import {Block} from './block_types';
 import {bufferInsertBlock} from '../../buffers/buffers_slice';
 import {useAppSelector} from '../../hooks';
+import {ContextMenu, ContextMenuContentProps, Menu, MenuItem, mergeRefs} from '@blueprintjs/core';
+import {findDocumentationConcept} from '../documentation/doc';
+import {getMessage} from '../../lang/messages';
 
 export interface AvailableBlockProps {
     block: Block,
@@ -51,13 +54,43 @@ export function AvailableBlock(props: AvailableBlockProps) {
         }
     }, [activeBufferName, block]);
 
-    return (
-        <button className="task-available-block" ref={dragRef} onClick={insertBlock}>
-            <div className="task-available-block-name">
-                {block.caption}
-            </div>
+    const renderContextMenu = useCallback(({isOpen}: ContextMenuContentProps) => {
+        if (!isOpen) {
+            return undefined;
+        }
 
-            {block.description && <div className="task-available-block-description" dangerouslySetInnerHTML={toHtml(block.description)}/>}
-        </button>
+        // Looked up when the menu opens, as the documentation can change in the meantime
+        const concept = findDocumentationConcept(block.documentationConcept);
+
+        return (
+            <Menu>
+                <MenuItem
+                    text={getMessage('TASK_DOCUMENTATION_BLOCK_HELP')}
+                    disabled={!concept}
+                    onClick={() => window.conceptViewer.showConcept(concept.id)}
+                />
+            </Menu>
+        );
+    }, [block]);
+
+    return (
+        <ContextMenu content={renderContextMenu} popoverProps={{popoverClassName: 'task-available-block-context-menu'}}>
+            {(contextMenuProps) => <>
+                <button
+                    className={`task-available-block ${contextMenuProps.className}`}
+                    ref={mergeRefs(dragRef, contextMenuProps.ref)}
+                    onClick={insertBlock}
+                    onContextMenu={contextMenuProps.onContextMenu}
+                >
+                    <div className="task-available-block-name">
+                        {block.caption}
+                    </div>
+
+                    {block.description && <div className="task-available-block-description" dangerouslySetInnerHTML={toHtml(block.description)}/>}
+                </button>
+
+                {contextMenuProps.popover}
+            </>}
+        </ContextMenu>
     );
 }

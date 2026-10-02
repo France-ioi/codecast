@@ -15,7 +15,7 @@ import {
     TaskActionTypes,
     taskSetAvailablePlatforms
 } from '../task_slice';
-import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
+import {getNotionDocumentationConcept, getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
 import {createAction} from '@reduxjs/toolkit';
 import {addAutoRecordingBehaviour} from '../../recorder/record';
 import {TextBufferHandler} from '../../buffers/document';
@@ -28,6 +28,7 @@ import {bufferResetDocument} from '../../buffers/buffers_slice';
 import {AppStore} from '../../store';
 import {bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
 import {getMessage} from '../../lang/messages';
+import {getContextBlocksDataSelector} from '../blocks/blocks';
 
 let openerChannel;
 
@@ -119,16 +120,9 @@ export function convertPlatformToDocumentationLanguage(platform: CodecastPlatfor
     }
 }
 
-const blockNamesToDocumentationConcepts = {
-    'controls_repeat_ext': 'controls_repeat',
-    'variables_get': 'extra_variable',
-    'variables_set': 'extra_variable',
-};
-
-function getBlockConceptIds(blockName: string): string[] {
-    const notion = blockName in blockNamesToDocumentationConcepts ? blockNamesToDocumentationConcepts[blockName] : blockName;
-
-    return ['blockly_' + notion, notion];
+/** Ids a documentation concept can have in the concepts list, by order of preference. */
+function getDocumentationConceptIds(documentationConcept: string): string[] {
+    return ['blockly_' + documentationConcept, documentationConcept];
 }
 
 // Extracted from _common/modules/pemFioi/conceptViewer-1.0-mobileFirst.js
@@ -146,7 +140,7 @@ function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allCon
 
     const notionsBag = getNotionsBagFromIncludeBlocks(includeBlocks, notionsList);
     for (let notion of notionsBag.getNotionsList()) {
-        const conceptId = getBlockConceptIds(notion).find(id => allConceptsById[id]);
+        const conceptId = getDocumentationConceptIds(getNotionDocumentationConcept(notion)).find(id => allConceptsById[id]);
         if (conceptId) {
             concepts.push(allConceptsById[conceptId]);
         }
@@ -279,16 +273,17 @@ const BLOCK_HELP_CONTEXT_MENU_ITEM_ID = 'blockHelp';
 type ContextMenuActionItem = Exclude<Blockly.ContextMenuRegistry.RegistryItem, {separator: true}>;
 
 /**
- * The concept documenting a block, or null when there is none — the
+ * The concept of the documentation matching the `documentationConcept` of a
+ * block, or null when the documentation of the task has none — the
  * documentation being turned off for the task counting as none.
  *
  * The concepts only reach the store once the documentation has been displayed
  * at least once, so the list is built here, the way the documentation builds it
  * when it opens.
  */
-function findBlockDocumentationConcept(blockName?: string): DocumentationConcept|null {
+export function findDocumentationConcept(documentationConcept?: string): DocumentationConcept|null {
     const store = Codecast.environments['main']?.store;
-    if (!blockName || !store || !window.conceptViewer) {
+    if (!documentationConcept || !store || !window.conceptViewer) {
         return null;
     }
 
@@ -299,7 +294,7 @@ function findBlockDocumentationConcept(blockName?: string): DocumentationConcept
 
     // Building the list reads the concepts of the library and of the
     // conceptViewer module. A throw here would take down the whole context
-    // menu, so a task whose documentation cannot be built keeps Blockly's own
+    // menu, so a task whose documentation cannot be built gets a disabled
     // "Help" rather than losing the menu.
     let concepts: DocumentationConcept[];
     try {
@@ -310,7 +305,7 @@ function findBlockDocumentationConcept(blockName?: string): DocumentationConcept
         return null;
     }
 
-    for (const conceptId of getBlockConceptIds(blockName)) {
+    for (const conceptId of getDocumentationConceptIds(documentationConcept)) {
         const concept = concepts.find(concept => conceptId === concept.id);
         if (concept) {
             return concept;
@@ -318,6 +313,29 @@ function findBlockDocumentationConcept(blockName?: string): DocumentationConcept
     }
 
     return null;
+}
+
+/**
+ * The `documentationConcept` of the block of the task having this Blockly type,
+ * and for Blockly standard blocks, which are not blocks of the task, the
+ * concept of the notion they are.
+ */
+function getBlocklyBlockDocumentationConcept(blockType: string): string {
+    const store = Codecast.environments['main']?.store;
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    if (store && context) {
+        const availableBlocks = getContextBlocksDataSelector({state: store.getState(), context});
+        const availableBlock = availableBlocks.find(block => blockType === block.name && block.documentationConcept);
+        if (availableBlock) {
+            return availableBlock.documentationConcept;
+        }
+    }
+
+    return getNotionDocumentationConcept(blockType);
+}
+
+function findBlocklyBlockDocumentationConcept(block?: Blockly.BlockSvg): DocumentationConcept|null {
+    return block ? findDocumentationConcept(getBlocklyBlockDocumentationConcept(block.type)) : null;
 }
 
 /**
@@ -341,7 +359,7 @@ function registerBlockHelpConceptViewer() {
     registry.register({
         ...helpItem,
         preconditionFn(scope, menuOpenEvent) {
-            if (findBlockDocumentationConcept(scope.block?.type)) {
+            if (findBlocklyBlockDocumentationConcept(scope.block)) {
                 return 'enabled';
             }
 
@@ -349,7 +367,7 @@ function registerBlockHelpConceptViewer() {
             // return preconditionFn(scope, menuOpenEvent);
         },
         callback(scope, menuOpenEvent, menuSelectEvent, location) {
-            const concept = findBlockDocumentationConcept(scope.block?.type);
+            const concept = findBlocklyBlockDocumentationConcept(scope.block);
             if (concept) {
                 window.conceptViewer.showConcept(concept.id);
 

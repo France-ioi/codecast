@@ -196,6 +196,7 @@ export default {
     TASK_INSTRUCTIONS_FAMILIAR: "Deine Aufgabe",
     TASK_DOCUMENTATION_INSTRUCTIONS: "Aufgabenhinweise",
     TASK_DOCUMENTATION_CODE_EXAMPLES: "Codebeispiele",
+    TASK_DOCUMENTATION_BLOCK_HELP: "Hilfe",
     TASK_DOCUMENTATION_LOAD_ERROR: "Dieser Inhalt kann nicht angezeigt werden, weil die Verbindung zur Aufgabe beendet wurde. Schließe diesen Tab und öffne die Dokumentation erneut über die Aufgabe.",
     TASK_IO: "Terminal",
     TASK_VISUALIZATION: "Visualisierung {number}",

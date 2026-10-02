@@ -174,6 +174,7 @@ export default {
     TASK_INSTRUCTIONS_FAMILIAR: 'Je missie',
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Details van de missie',
     TASK_DOCUMENTATION_CODE_EXAMPLES: 'Voorbeelden van code',
+    TASK_DOCUMENTATION_BLOCK_HELP: 'Hulp',
     TASK_DOCUMENTATION_LOAD_ERROR: 'De inhoud kan niet worden weergegeven omdat de verbinding met het onderwerp is verbroken. Sluit dit tabblad en open opnieuw de documentatie van het onderwerp.',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: 'Weergave {number}',

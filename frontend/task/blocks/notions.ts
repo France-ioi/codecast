@@ -96,6 +96,20 @@ export class NotionsBag {
     }
 }
 
+const notionsToDocumentationConcepts = {
+    'controls_repeat_ext': 'controls_repeat',
+    'variables_get': 'extra_variable',
+    'variables_set': 'extra_variable',
+};
+
+/**
+ * The documentation concept explaining a notion. A Blockly block type being
+ * the notion it belongs to, this is also the concept of a Blockly block.
+ */
+export function getNotionDocumentationConcept(notion: string): string {
+    return notion in notionsToDocumentationConcepts ? notionsToDocumentationConcepts[notion] : notion;
+}
+
 export function getNotionsBagFromIncludeBlocks(includeBlocks: QuickalgoTaskIncludeBlocks = null, allNotions: NotionArborescence): NotionsBag {
     if (!includeBlocks) {
         return new NotionsBag();

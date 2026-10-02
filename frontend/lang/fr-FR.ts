@@ -195,6 +195,7 @@ export default {
     TASK_INSTRUCTIONS_FAMILIAR: 'Ta mission',
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Détails de la mission',
     TASK_DOCUMENTATION_CODE_EXAMPLES: 'Exemples de code',
+    TASK_DOCUMENTATION_BLOCK_HELP: 'Aide',
     TASK_DOCUMENTATION_LOAD_ERROR: "Le contenu ne peut pas être affiché car la connexion au sujet a été coupée. Fermez cet onglet et réouvrez la documentation depuis le sujet.",
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
