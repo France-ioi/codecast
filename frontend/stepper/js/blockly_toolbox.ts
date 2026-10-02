@@ -1,6 +1,7 @@
 import * as Blockly from 'blockly/core';
 import {Block, BlockType} from '../../task/blocks/block_types';
 import {BlocklyColours} from './blockly_types';
+import {ModalType} from '../../common/modal_slice';
 import {getStandardBlocks} from './standard_blocks';
 import {setProceduresDisableArgs} from './blocks/procedures';
 import {QuickalgoLibraryInfos} from '../../task/task_types';
@@ -284,9 +285,9 @@ function promptVariableName(promptText: string, defaultText: string, callback: (
     const onCancel = () => callback(null);
 
     if (defaultText) {
-        window.displayHelper.showPopupMessage(fullPromptText, 'input', null, cb, Blockly.Msg['UNDO'], null, defaultText, onCancel);
+        window.displayHelper.showPopupMessage(fullPromptText, ModalType.input, null, cb, Blockly.Msg['UNDO'], null, defaultText, onCancel);
     } else {
-        window.displayHelper.showPopupMessage(fullPromptText, 'input', null, cb, undefined, undefined, undefined, onCancel);
+        window.displayHelper.showPopupMessage(fullPromptText, ModalType.input, null, cb, undefined, undefined, undefined, onCancel);
     }
 }
 
@@ -303,7 +304,7 @@ function createVariable(workspace: Blockly.WorkspaceSvg) {
         }
         if (workspace.getVariableMap().getVariable(text)) {
             window.displayHelper.showPopupMessage(
-                Blockly.Msg['VARIABLE_ALREADY_EXISTS'].replace('%1', text.toLowerCase()), 'blanket');
+                Blockly.Msg['VARIABLE_ALREADY_EXISTS'].replace('%1', text.toLowerCase()), ModalType.message);
         } else {
             workspace.getVariableMap().createVariable(text);
         }
@@ -334,7 +335,7 @@ function renameVariable(workspace: Blockly.Workspace, variable: Blockly.IVariabl
                 Blockly.Msg['VARIABLE_ALREADY_EXISTS_FOR_ANOTHER_TYPE']
                     .replace('%1', otherVariable.getName())
                     .replace('%2', otherVariable.getType()),
-                'blanket', null, retry);
+                ModalType.message, null, retry);
 
             return;
         }
@@ -345,7 +346,7 @@ function renameVariable(workspace: Blockly.Workspace, variable: Blockly.IVariabl
                 Blockly.Msg['VARIABLE_ALREADY_EXISTS_FOR_A_PARAMETER']
                     .replace('%1', newName)
                     .replace('%2', conflictingParameter),
-                'blanket', null, retry);
+                ModalType.message, null, retry);
 
             return;
         }
