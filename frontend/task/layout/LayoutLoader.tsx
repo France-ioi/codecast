@@ -1,5 +1,5 @@
-import React, {useCallback, useRef} from "react";
-import {useSelector} from "react-redux";
+import React, {useCallback, useEffect, useRef} from "react";
+import {useDispatch, useSelector} from "react-redux";
 import {createSelector} from "@reduxjs/toolkit";
 import {AppStore} from "../../store";
 import {createLayout, LayoutProps, selectActiveView, selectLayoutMobileMode} from "./layout";
@@ -9,6 +9,7 @@ import {getNotionsBagFromIncludeBlocks} from '../blocks/notions';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 
 import {selectCurrentTest} from '../task_selectors';
+import {ActionTypes} from './actionTypes';
 
 const selectLayoutLoaderProps = createSelector(
     [
@@ -87,6 +88,7 @@ const LayoutLoaderContent = React.memo(function LayoutLoaderContent(props: Layou
 
 export function LayoutLoader() {
     const stateProps = useSelector(selectLayoutLoaderProps);
+    const dispatch = useDispatch();
     const parentRef = useRef<HTMLElement>(null);
     const {width, height} = useResizeDetector({targetRef: parentRef});
 
@@ -95,6 +97,10 @@ export function LayoutLoader() {
             parentRef.current = node.parentElement;
         }
     }, []);
+
+    useEffect(() => {
+        dispatch({type: ActionTypes.LayoutVisualizationSelected, payload: {visualization: stateProps.advisedVisualization}});
+    }, [stateProps.advisedVisualization]);
 
     if (undefined !== width && undefined !== height) {
         return <LayoutLoaderContent {...stateProps} width={width} height={height}/>;

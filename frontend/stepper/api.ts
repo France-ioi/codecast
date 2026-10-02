@@ -189,6 +189,8 @@ export default function(bundle: Bundle) {
             environment,
         });
 
+        // The runner may not have been given the stepper API yet, e.g. when replaying a recording without compiling
+        Codecast.runner.setStepperApi(stepperApi);
         yield Codecast.runner.programInitialization(stepperContext);
 
         return stepperContext.state;

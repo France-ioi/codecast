@@ -4,9 +4,12 @@ export enum CodecastPlatform {
     Cpp = 'cpp',
     Cpp11 = 'cpp11',
     Java = 'java',
+    JavaScool = 'jvs',
     Arduino = 'arduino',
     Blockly = 'blockly',
     Scratch = 'scratch',
     Output = 'output',
     PseudoCode = 'pseudo',
+    Pascal = 'pascal',
+    OCaml = 'ocaml',
 }

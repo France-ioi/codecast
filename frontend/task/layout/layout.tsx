@@ -616,7 +616,7 @@ function getAppropriateXmlLayout(layoutType: LayoutType, layoutMobileMode: Layou
 }
 
 export function createLayout(layoutProps: LayoutProps): ReactElement {
-    const instructionsAvailable = layoutProps.currentTask && LayoutView.Editor !== layoutProps.activeView && !(layoutProps.showVariables && 'variables' === layoutProps.advisedVisualization);
+    const instructionsAvailable = layoutProps.currentTask && LayoutView.Editor !== layoutProps.activeView;
 
     const xmlToReact = new XMLToReact({
         HorizontalLayout: (attrs) => ({
@@ -676,7 +676,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 },
             })
         } : {}),
-        ...(!instructionsAvailable && layoutProps.showVariables ? {
+        ...(layoutProps.showVariables ? {
             Variables: (attrs) => ({
                 type: LayoutStackView,
                 metadata: {

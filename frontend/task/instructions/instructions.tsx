@@ -296,6 +296,10 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
             lang = node.attribs['class'].substring(node.attribs['class'].indexOf('language-') + 'language-'.length).split(' ')[0];
         }
 
+        if (!(lang in platformsList)) {
+            throw new Error(`Unknown language "${lang}" to display source code`);
+        }
+
         const sourceMode = platformsList[lang ?? context.platform].aceSourceMode;
 
         let children = null;
@@ -379,4 +383,12 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
 export function convertHtmlInstructionsToReact(instructionsHtml: string, platform: CodecastPlatform) {
     // @ts-ignore
     return htmlToReact.default.default(instructionsHtml, {transform: (node, index) => transformNode(node, index, {platform})})
+}
+
+export function applyInstructionsPostProcessing() {
+    if (window.instructionsPostProcessing?.length) {
+        for (let postProcessingCallback of window.instructionsPostProcessing) {
+            postProcessingCallback();
+        }
+    }
 }

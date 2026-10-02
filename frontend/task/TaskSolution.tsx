@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {formatTaskInstructions} from './utils';
 import {
+    applyInstructionsPostProcessing,
     convertHtmlInstructionsToReact,
     getTaskSolution,
 } from './instructions/instructions';
@@ -18,15 +19,15 @@ export function TaskSolution() {
     useEffect(() => {
         let instructionsJQuery = formatTaskInstructions(solutionHtml, platform, taskLevel, taskVariant);
         setSolutionsHtml(instructionsJQuery.html());
-
-        setTimeout(() => {
-            if (window.instructionsPostProcessing?.length) {
-                for (let postProcessingCallback of window.instructionsPostProcessing) {
-                    postProcessingCallback();
-                }
-            }
-        });
     }, [contextId]);
+
+    useEffect(() => {
+        if (null === solutionsHtml) {
+            return;
+        }
+
+        applyInstructionsPostProcessing();
+    }, [solutionsHtml]);
 
     if (!solutionsHtml) {
         return null;

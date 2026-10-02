@@ -2,13 +2,15 @@ import log from 'loglevel';
 import {Codecast} from '../../app_types';
 import {cancelModal, displayModal} from '../../common/prompt_modal';
 import {ModalType} from '../../common/modal_slice';
+import {getMessage} from '../../lang/messages';
 
 export class DisplayHelper {
     public avatarType = 'none';
+    public timeoutMinutes = null;
 
-    async showPopupMessage(message, mode, yesButtonText, agreeFunc, noButtonText, avatarMood, defaultText, disagreeFunc) {
+    async showPopupMessage(message, mode = ModalType.message, yesButtonText = getMessage('CONFIRM'), agreeFunc = null, noButtonText = getMessage('CANCEL'), avatarMood = null, defaultText = null, disagreeFunc = null) {
         log.getLogger('libraries').debug('popup message', defaultText, noButtonText);
-        const result = await new Promise(resolve => {
+        const result = await new Promise<boolean>(resolve => {
             const mainStore = Codecast.environments['main'].store;
             mainStore.dispatch(displayModal({
                 message,
@@ -31,6 +33,8 @@ export class DisplayHelper {
         if (false === result && disagreeFunc) {
             disagreeFunc();
         }
+
+        return result;
     }
 
     async showPopupDialog(message, callback) {

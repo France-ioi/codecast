@@ -14,7 +14,7 @@ export function LayoutStackView() {
     if (currentStepperState) {
         stackView = <AnalysisStackView analysis={analysis}/>
     } else {
-        stackView = <div className="stack-view">
+        stackView = <div className="stack-view-empty">
             <p>{getMessage('PROGRAM_STOPPED')}</p>
         </div>;
     }

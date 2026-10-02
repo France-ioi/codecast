@@ -94,7 +94,7 @@ export default {
     CONTROL_SPEED: "vitesse d'exécution",
     CONTROL_UNDO: "annuler",
     CONTROL_REDO: "refaire",
-    PROGRAM_STOPPED: "Programme arrêté.",
+    PROGRAM_STOPPED: "Lancez votre programme pour voir le contenu des variables.",
     SETTINGS_MENU_TITLE: "Réglages",
     DOWNLOAD_OFFLINE: "Télécharger pour utiliser l'application sans connexion : Extraire le zip et ouvrir index.html dans votre navigateur.",
     'LANGUAGE:': "Langue : ",
@@ -181,6 +181,8 @@ export default {
 
     KEYWORD: 'mot-clé',
     CONSTANT: "constante",
+    MY_VARIABLE: "variable",
+    MY_FUNCTION: "fonction",
     VARIABLE: "variable",
     OK: "Ok",
 
@@ -188,6 +190,7 @@ export default {
     TASK_VARIABLES: 'Variables',
     TASK_EDITOR: 'Éditeur',
     TASK_RESTART : 'Recommencer',
+    TASK_RESTART_CONFIRM: 'Si vous recommencez à zéro, vous perdrez votre code actuel. Voulez-vous continuer ?',
     TASK_DOCUMENTATION: 'Informations',
     TASK_INSTRUCTIONS_MORE: 'Plus de détails',
     TASK_INSTRUCTIONS_LESS: 'Masquer les détails',
@@ -294,6 +297,14 @@ export default {
     CODE_CONSTRAINTS_EMPTY_PROGRAM_BLOCKS_FAMILIAR: "Le programme est vide ! Connecte des blocs.",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "Vous utilisez la fonction \"{funcName}\" sans les parenthèses. Ajoutez les parenthèses pour appeler la fonction.",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS_FAMILIAR: "Tu utilises la fonction \"{funcName}\" sans les parenthèses. Ajoute les parenthèses pour appeler la fonction.",
+
+    PYTHON_SPECIAL_LIST_BRACKETS: "crochets [ ]",
+    PYTHON_SPECIAL_DICT_BRACKETS: "accolades { }",
+    PYTHON_SPECIAL_MATH_NUMBER: "nombres",
+    PYTHON_SPECIAL_VAR_ASSIGN: "= (assignation de variable)",
+    PYTHON_SPECIAL_DEF_ARGS: "fonction avec arguments",
+    PYTHON_SPECIAL_STRINGS: "chaînes de caractères",
+    PYTHON_SPECIAL_VARIABLES: "variables",
 
     ABOUT_AUTHORS: "Ce sujet a été créé par :",
     ABOUT_TRANSLATORS: "et a été traduit par :",
