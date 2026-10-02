@@ -48,9 +48,13 @@ export function PlayerControls() {
             }
         }
 
-        document.addEventListener("mousedown", handleClickOutside, true);
+        // `pointerdown` and not `mousedown`: Blockly calls `preventDefault()` on
+        // the pointer events it handles, which suppresses the compatibility
+        // mouse events, so clicks on the workspace never reach a mousedown
+        // listener.
+        document.addEventListener("pointerdown", handleClickOutside, true);
         return () => {
-            document.removeEventListener("mousedown", handleClickOutside, true);
+            document.removeEventListener("pointerdown", handleClickOutside, true);
         };
     }, [wrapperRef, layoutPlayerMode, player.isPlaying]);
 

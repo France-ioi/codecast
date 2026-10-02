@@ -64,7 +64,7 @@ var og = new OutputGenerator();
 export default {
     gridInfos: {
         context: 'quickpi',
-        importModules: ['connected-boards'],
+        importModules: ['connected-boards2'],
         // importModules: ['quickpi-board', 'quickpi-connection', 'quickpi-screen', 'blockly-quickpi'],
         quickPiDisableConnection: true,
         hideSaveOrLoad: false,

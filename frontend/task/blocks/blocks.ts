@@ -74,6 +74,28 @@ function convertQuickalgoLibraryToCodecastBlock(block: QuickalgoLibraryBlock, ca
     };
 }
 
+/**
+ * The documentation concept of each block of the library, by block name. A
+ * concept of the library lists the blocks it documents in its `python` array.
+ */
+function getBlockNamesToDocumentationConcepts(context: QuickAlgoLibrary): {[blockName: string]: string} {
+    let conceptList = [];
+    try {
+        conceptList = context.getConceptList() ?? [];
+    } catch (e) {
+        console.error(e);
+    }
+
+    const blockNamesToConcepts = {};
+    for (let concept of conceptList) {
+        for (let blockName of (Array.isArray(concept?.python) ? concept.python : [])) {
+            blockNamesToConcepts[blockName] ??= concept.id;
+        }
+    }
+
+    return blockNamesToConcepts;
+}
+
 // For a specific context and a platform
 export const getContextBlocksDataSelector = createSelector(
     ({state}: { state: AppStore, context: QuickAlgoLibrary }) => state.task.contextIncludeBlocks,
@@ -224,7 +246,13 @@ export const getContextBlocksDataSelector = createSelector(
             availableBlocks = [...availableBlocks, ...specificBlocks];
         }
 
+        const blockNamesToDocumentationConcepts = getBlockNamesToDocumentationConcepts(context);
+
         availableBlocks.forEach((block => {
+            if (!block.documentationConcept && block.name in blockNamesToDocumentationConcepts) {
+                block.documentationConcept = blockNamesToDocumentationConcepts[block.name];
+            }
+
             if (contextStrings.description && `${block.generatorName}.${block.name}` in contextStrings.description) {
                 block.description = contextStrings.description[`${block.generatorName}.${block.name}`];
             } else if (contextStrings.description && block.name in contextStrings.description) {

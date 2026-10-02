@@ -22,6 +22,16 @@ export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
     return state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
 }
 
+/**
+ * Whether the item only holds versions of a value for levels, as in
+ * {easy: X, medium: Y}, as opposed to an object with properties of its own.
+ */
+function isLevelSpecific(item: object) {
+    const props = Object.keys(item);
+
+    return 0 < props.length && props.every(prop => -1 !== taskLevelsList.indexOf(prop as TaskLevelName));
+}
+
 export function extractLevelSpecific(item: any, level: TaskLevelName) {
     if (typeof item !== "object" || null === item) {
         return item;
@@ -33,6 +43,13 @@ export function extractLevelSpecific(item: any, level: TaskLevelName) {
     }
     if (item.shared === undefined) {
         if (item[level] === undefined) {
+            if (isLevelSpecific(item)) {
+                // The item only has versions for other levels, so it has no
+                // value at all for this one. Keeping its content would leave
+                // the levels of the other versions in the extracted result.
+                return undefined;
+            }
+
             let newItem = {};
             for (let prop in item) {
                 newItem[prop] = extractLevelSpecific(item[prop], level);

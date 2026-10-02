@@ -10,7 +10,6 @@ import {Screen} from "../common/screens";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
-import {getJsLibLoaded} from "./libs/import_modules";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faDownload} from '@fortawesome/free-solid-svg-icons/faDownload';
 import {faUpload} from '@fortawesome/free-solid-svg-icons/faUpload';
@@ -65,11 +64,15 @@ export function MenuTask() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        document.addEventListener('mousedown', handleClickOutside, true);
+        // `pointerdown` and not `mousedown`: Blockly calls `preventDefault()` on
+        // the pointer events it handles, which suppresses the compatibility
+        // mouse events, so clicks on the workspace never reach a mousedown
+        // listener.
+        document.addEventListener('pointerdown', handleClickOutside, true);
         document.addEventListener('keydown', handleKeyDown, true);
 
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside, true);
+            document.removeEventListener('pointerdown', handleClickOutside, true);
             document.removeEventListener('keydown', handleKeyDown, true);
         }
     })
@@ -125,8 +128,6 @@ export function MenuTask() {
         dispatch(bufferReload());
     };
 
-    const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();
-
     return (
         <div ref={wrapperRef} className={`menu-container ${menuOpen ? 'is-open' : ''} position-${menuPosition ?? 'right'}`}>
             {screen !== Screen.DocumentationSmall
@@ -178,8 +179,8 @@ export function MenuTask() {
                 </button>}
             </div>
             <SettingsDialog
-                open={settingsOpen || forceSettingsOpen}
-                closable={!forceSettingsOpen}
+                open={settingsOpen}
+                closable
                 onClose={() => setSettingsOpen(false)}
             />
             <EditRecordingDialog

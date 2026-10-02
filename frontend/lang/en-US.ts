@@ -147,7 +147,6 @@ export default {
     CLOSED_CAPTIONS_SHOW_PANE: "Show pane",
     CLOSED_CAPTIONS_SHOW_BAND: "Show strip",
     PLATFORM_SETTING: "Language: ",
-    PLATFORM_RELOAD: "We can't display the language {platform} in the current mode, please reload the page to update the display.",
     PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 
     EDITOR_SPLIT: 'Split',
@@ -195,6 +194,7 @@ export default {
     TASK_INSTRUCTIONS_OK: "Understood, let's get started!",
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Mission details',
     TASK_DOCUMENTATION_CODE_EXAMPLES: 'Code examples',
+    TASK_DOCUMENTATION_BLOCK_HELP: 'Help',
     TASK_DOCUMENTATION_LOAD_ERROR: "This content cannot be displayed because the connection to the task has been terminated. Close this tab and reopen the documentation from the task.",
     TASK_EDITOR: 'Editor',
     TASK_IO: 'Terminal',
@@ -230,6 +230,7 @@ export default {
     TASK_BLOCKS_LIMIT_REMAINING: 'remaining:',
     TASK_BLOCKS_LIMIT_EXECUTE_ONLY_WITH: 'Execution only with',
     TASK_BLOCKS_OVER_LIMIT: '{overLimit} extra block used out of {limit} authorized|{overLimit} extra blocks used out of {limit} authorized',
+    TASK_BLOCKS_PASTE_NOT_ALLOWED: "You cannot paste these blocks: some of them are not available in this exercise.",
     TASK_POST_COMPILATION_ERROR: "However, your program does not validate this task: ",
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",
     TASK_BLOCK_CATEGORY_SENSORS: "Sensors",

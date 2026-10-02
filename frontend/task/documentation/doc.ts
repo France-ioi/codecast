@@ -15,18 +15,21 @@ import {
     TaskActionTypes,
     taskSetAvailablePlatforms
 } from '../task_slice';
-import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
+import {getNotionDocumentationConcept, getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
 import {createAction} from '@reduxjs/toolkit';
 import {addAutoRecordingBehaviour} from '../../recorder/record';
 import {TextBufferHandler} from '../../buffers/document';
-import {QuickalgoTaskIncludeBlocks, Task} from '../task_types';
+import {QuickalgoTaskIncludeBlocks} from '../task_types';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
-import {App} from '../../app_types';
+import {App, Codecast} from '../../app_types';
+import * as Blockly from 'blockly/core';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {bufferResetDocument} from '../../buffers/buffers_slice';
 import {AppStore} from '../../store';
 import {bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
 import {getMessage} from '../../lang/messages';
+import {getContextBlocksDataSelector} from '../blocks/blocks';
+import {Block} from '../blocks/block_types';
 
 let openerChannel;
 
@@ -118,16 +121,18 @@ export function convertPlatformToDocumentationLanguage(platform: CodecastPlatfor
     }
 }
 
+/** Ids a documentation concept can have in the concepts list, by order of preference. */
+function getDocumentationConceptIds(documentationConcept: string): string[] {
+    return ['blockly_' + documentationConcept, documentationConcept];
+}
+
 // Extracted from _common/modules/pemFioi/conceptViewer-1.0-mobileFirst.js
-function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allConcepts, notionsList: NotionArborescence) {
+function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allConcepts, notionsList: NotionArborescence, availableBlocks: Block[]) {
     if (!includeBlocks) {
         return [];
     }
 
     let concepts = [{id: 'language'}];
-    let blocklyAliases = {
-        'controls_repeat_ext': 'controls_repeat'
-    };
 
     const allConceptsById = {};
     for (let c = 0; c < allConcepts.length; c++) {
@@ -136,11 +141,21 @@ function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allCon
 
     const notionsBag = getNotionsBagFromIncludeBlocks(includeBlocks, notionsList);
     for (let notion of notionsBag.getNotionsList()) {
-        let notionRealName = notion in blocklyAliases ? blocklyAliases[notion] : notion;
-        if (allConceptsById['blockly_' + notionRealName]) {
-            concepts.push(allConceptsById['blockly_' + notionRealName]);
-        } else if (allConceptsById[notionRealName]) {
-            concepts.push(allConceptsById[notionRealName]);
+        const conceptId = getDocumentationConceptIds(getNotionDocumentationConcept(notion)).find(id => allConceptsById[id]);
+        if (conceptId) {
+            concepts.push(allConceptsById[conceptId]);
+        }
+    }
+
+    // Concepts of the blocks of the task, whatever the language, so that the
+    // help of each of these blocks can be displayed
+    for (let block of availableBlocks) {
+        if (!block.documentationConcept) {
+            continue;
+        }
+        const conceptId = getDocumentationConceptIds(block.documentationConcept).find(id => allConceptsById[id]);
+        if (conceptId && !concepts.find(concept => conceptId === concept.id)) {
+            concepts.push(allConceptsById[conceptId]);
         }
     }
 
@@ -228,7 +243,8 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
             // Fill library concepts with information from base concepts if needed
             allConcepts = window.conceptsFill(allConcepts, baseConcepts);
 
-            concepts = getConceptsFromBlocks(contextIncludeBlocks, allConcepts, context.getNotionsList());
+            const availableBlocks = getContextBlocksDataSelector({state, context});
+            concepts = getConceptsFromBlocks(contextIncludeBlocks, allConcepts, context.getNotionsList(), availableBlocks);
             const disabledConcepts = context.conceptDisabledList ? context.conceptDisabledList : [];
             concepts = concepts.filter(concept => -1 === disabledConcepts.indexOf(concept.id));
         }
@@ -262,6 +278,119 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
     }
 
     return documentationConcepts.length ? documentationConcepts : null;
+}
+
+/** Id Blockly gives the "Help" item of the context menu of a block. */
+const BLOCK_HELP_CONTEXT_MENU_ITEM_ID = 'blockHelp';
+
+/** A context menu item that does something, as opposed to a separator. */
+type ContextMenuActionItem = Exclude<Blockly.ContextMenuRegistry.RegistryItem, {separator: true}>;
+
+/**
+ * The concept of the documentation matching the `documentationConcept` of a
+ * block, or null when the documentation of the task has none — the
+ * documentation being turned off for the task counting as none.
+ *
+ * The concepts only reach the store once the documentation has been displayed
+ * at least once, so the list is built here, the way the documentation builds it
+ * when it opens.
+ */
+export function findDocumentationConcept(documentationConcept?: string): DocumentationConcept|null {
+    const store = Codecast.environments['main']?.store;
+    if (!documentationConcept || !store || !window.conceptViewer) {
+        return null;
+    }
+
+    const state: AppStore = store.getState();
+    if (!selectShowDocumentation(state)) {
+        return null;
+    }
+
+    // Building the list reads the concepts of the library and of the
+    // conceptViewer module. A throw here would take down the whole context
+    // menu, so a task whose documentation cannot be built gets a disabled
+    // "Help" rather than losing the menu.
+    let concepts: DocumentationConcept[];
+    try {
+        concepts = getConceptsFromLanguage(false, state) ?? [];
+    } catch (e: any) {
+        console.error(e);
+
+        return null;
+    }
+
+    for (const conceptId of getDocumentationConceptIds(documentationConcept)) {
+        const concept = concepts.find(concept => conceptId === concept.id);
+        if (concept) {
+            return concept;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * The `documentationConcept` of the block of the task having this Blockly type,
+ * and for Blockly standard blocks, which are not blocks of the task, the
+ * concept of the notion they are.
+ */
+function getBlocklyBlockDocumentationConcept(blockType: string): string {
+    const store = Codecast.environments['main']?.store;
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    if (store && context) {
+        const availableBlocks = getContextBlocksDataSelector({state: store.getState(), context});
+        const availableBlock = availableBlocks.find(block => blockType === block.name && block.documentationConcept);
+        if (availableBlock) {
+            return availableBlock.documentationConcept;
+        }
+    }
+
+    return getNotionDocumentationConcept(blockType);
+}
+
+function findBlocklyBlockDocumentationConcept(block?: Blockly.BlockSvg): DocumentationConcept|null {
+    return block ? findDocumentationConcept(getBlocklyBlockDocumentationConcept(block.type)) : null;
+}
+
+/**
+ * Points "Help", in the context menu of a block, at the documentation of the
+ * concept the block belongs to, instead of opening the `helpUrl` of the block in
+ * a page of its own. A block no concept documents keeps Blockly's behaviour,
+ * and so does the whole menu when the documentation is turned off.
+ */
+function registerBlockHelpConceptViewer() {
+    const registry = Blockly.ContextMenuRegistry.registry;
+    // Blockly registers it as an item that opens the help of the block, never
+    // as a separator.
+    const helpItem = registry.getItem(BLOCK_HELP_CONTEXT_MENU_ITEM_ID) as ContextMenuActionItem;
+    if (!helpItem) {
+        return;
+    }
+
+    const {preconditionFn, callback} = helpItem;
+
+    registry.unregister(BLOCK_HELP_CONTEXT_MENU_ITEM_ID);
+    registry.register({
+        ...helpItem,
+        preconditionFn(scope, menuOpenEvent) {
+            if (findBlocklyBlockDocumentationConcept(scope.block)) {
+                return 'enabled';
+            }
+
+            return 'disabled';
+            // return preconditionFn(scope, menuOpenEvent);
+        },
+        callback(scope, menuOpenEvent, menuSelectEvent, location) {
+            const concept = findBlocklyBlockDocumentationConcept(scope.block);
+            if (concept) {
+                window.conceptViewer.showConcept(concept.id);
+
+                return;
+            }
+
+            callback(scope, menuOpenEvent, menuSelectEvent, location);
+        },
+    });
 }
 
 function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolean) {
@@ -361,6 +490,8 @@ export default function (bundle: Bundle) {
                 app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: tralalere ? Screen.DocumentationBig : Screen.DocumentationSmall}});
             },
         };
+
+        registerBlockHelpConceptViewer();
 
         yield* takeEvery(documentationLoad, function* (action) {
             yield* call(documentationLoadSaga, action.payload.standalone, action.payload.hasTaskInstructions);

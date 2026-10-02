@@ -4,7 +4,7 @@ export default {
     gridInfos: {
         context: 'quickpi',
         // quickPiBoard: "galaxia",
-        importModules: ['connected-boards', 'font-awesome'],
+        importModules: ['connected-boards2', 'font-awesome'],
         hideSaveOrLoad: false,
         actionDelay: 0,
         conceptViewer: [
