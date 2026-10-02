@@ -29,6 +29,7 @@ import {AppStore} from '../../store';
 import {bufferCreateSourceBuffer} from '../../buffers/buffer_actions';
 import {getMessage} from '../../lang/messages';
 import {getContextBlocksDataSelector} from '../blocks/blocks';
+import {Block} from '../blocks/block_types';
 
 let openerChannel;
 
@@ -126,7 +127,7 @@ function getDocumentationConceptIds(documentationConcept: string): string[] {
 }
 
 // Extracted from _common/modules/pemFioi/conceptViewer-1.0-mobileFirst.js
-function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allConcepts, notionsList: NotionArborescence) {
+function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allConcepts, notionsList: NotionArborescence, availableBlocks: Block[]) {
     if (!includeBlocks) {
         return [];
     }
@@ -142,6 +143,18 @@ function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allCon
     for (let notion of notionsBag.getNotionsList()) {
         const conceptId = getDocumentationConceptIds(getNotionDocumentationConcept(notion)).find(id => allConceptsById[id]);
         if (conceptId) {
+            concepts.push(allConceptsById[conceptId]);
+        }
+    }
+
+    // Concepts of the blocks of the task, whatever the language, so that the
+    // help of each of these blocks can be displayed
+    for (let block of availableBlocks) {
+        if (!block.documentationConcept) {
+            continue;
+        }
+        const conceptId = getDocumentationConceptIds(block.documentationConcept).find(id => allConceptsById[id]);
+        if (conceptId && !concepts.find(concept => conceptId === concept.id)) {
             concepts.push(allConceptsById[conceptId]);
         }
     }
@@ -230,7 +243,8 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, state: AppStore) 
             // Fill library concepts with information from base concepts if needed
             allConcepts = window.conceptsFill(allConcepts, baseConcepts);
 
-            concepts = getConceptsFromBlocks(contextIncludeBlocks, allConcepts, context.getNotionsList());
+            const availableBlocks = getContextBlocksDataSelector({state, context});
+            concepts = getConceptsFromBlocks(contextIncludeBlocks, allConcepts, context.getNotionsList(), availableBlocks);
             const disabledConcepts = context.conceptDisabledList ? context.conceptDisabledList : [];
             concepts = concepts.filter(concept => -1 === disabledConcepts.indexOf(concept.id));
         }
