@@ -513,7 +513,9 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, answerToken, succe
                 // For server tasks with JS "data: {easy: {}}" when we want to evaluate correct solutions,
                 // we pass the solution without the version, it should work like this too
                 if (!answerObject[level] && 1 === Object.keys(taskLevels).length && answerObject.document) {
-                    answerObject[level] = answerObject;
+                    // Copy to avoid a circular reference (answerObject[level] === answerObject)
+                    // which breaks the JSON serialization of the answer
+                    answerObject[level] = {...answerObject};
                 }
                 if (!answerObject[level]) {
                     versionsScore[level] = 0;
