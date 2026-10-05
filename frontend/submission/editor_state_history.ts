@@ -252,30 +252,83 @@ export function selectEditorStateHistoryElements(history: EditorStateHistoryCach
         return null;
     }
 
-    return selected.map(({index, tags}) => describeEditorStateHistoryElement(history, index, tags, checkpoints));
+    const checkpointsDeltas = computeEditorStateHistoryCheckpointsDeltas(history, selected
+        .filter(({tags}) => 0 < tags.length)
+        .map(({patch}) => ({
+            id: patch.id,
+            previousId: checkpoints.find(({patch: checkpoint}) => checkpoint.id < patch.id)?.patch.id ?? null,
+        })));
+
+    return selected.map(({index, tags}) => describeEditorStateHistoryElement(history, index, tags, checkpointsDeltas));
 }
 
 function getPatchDeltas(history: EditorStateHistoryCache, patch: EditorStateHistoryPatch): {added: number, removed: number} {
     return history.descriptions[patch.id]?.modificationDeltas ?? {added: 0, removed: 0};
 }
 
-// The deltas of a checkpoint add up those of the saves since the previous checkpoint, the states are
-// not compared
-function describeEditorStateHistoryCheckpointDeltas(history: EditorStateHistoryCache, checkpointId: number, checkpoints: {patch: EditorStateHistoryPatch}[]): EditorStateHistoryElement['checkpointsDeltas'] {
-    const previousCheckpointId = checkpoints.find(({patch}) => patch.id < checkpointId)?.patch.id ?? 0;
-    const patches = history.patches.filter(patch => patch.id > previousCheckpointId && patch.id <= checkpointId);
+// The deltas between two saves, by "<chain key>\n<older save id>\n<newer save id>": the state of a
+// save never changes, so neither do the deltas between two of them
+const checkpointsDeltasCache = new Map<string, {added: number, removed: number}>();
 
-    return {
-        added: patches.reduce((sum, patch) => sum + getPatchDeltas(history, patch).added, 0),
-        removed: patches.reduce((sum, patch) => sum + getPatchDeltas(history, patch).removed, 0),
-        elementsCount: patches.length - 1,
-    };
+/**
+ * Computes the deltas of checkpoints by comparing the state of each checkpoint with the state of the
+ * previous checkpoint, or with the empty answer for the first checkpoint, and counts the saves
+ * between them. The states are rebuilt in a single walk down the chain from the newest state.
+ */
+function computeEditorStateHistoryCheckpointsDeltas(history: EditorStateHistoryCache, checkpoints: {id: number, previousId: number|null}[]): Map<number, EditorStateHistoryElement['sinceEarlierCheckpoint']> {
+    const getCacheKey = ({id, previousId}: {id: number, previousId: number|null}) => `${history.key}\n${String(previousId)}\n${String(id)}`;
+
+    const neededIds = new Set<number>();
+    for (let checkpoint of checkpoints) {
+        if (!checkpointsDeltasCache.has(getCacheKey(checkpoint))) {
+            neededIds.add(checkpoint.id);
+            if (null !== checkpoint.previousId) {
+                neededIds.add(checkpoint.previousId);
+            }
+        }
+    }
+
+    const states = new Map<number, EditorStateSerialized>();
+    let serializedState = history.headState;
+    for (let index = 0; index < history.patches.length && states.size < neededIds.size && null !== serializedState; index++) {
+        const patch = history.patches[index];
+        if (0 < index) {
+            serializedState = null !== patch.patch ? applyEditorStatePatch(serializedState, patch.patch) : null;
+        }
+        if (null !== serializedState && neededIds.has(patch.id)) {
+            states.set(patch.id, JSON.parse(serializedState) as EditorStateSerialized);
+        }
+    }
+
+    const deltas = new Map<number, EditorStateHistoryElement['sinceEarlierCheckpoint']>();
+    for (let checkpoint of checkpoints) {
+        const cacheKey = getCacheKey(checkpoint);
+        if (!checkpointsDeltasCache.has(cacheKey)) {
+            const state = states.get(checkpoint.id);
+            const previousState = null !== checkpoint.previousId ? states.get(checkpoint.previousId) : null;
+            if (undefined === state || undefined === previousState) {
+                // Can't happen: the saves listed have all been rebuilt to be described
+                continue;
+            }
+            checkpointsDeltasCache.set(cacheKey, computeEditorStateModificationDeltas(previousState, state));
+        }
+
+        const {added, removed} = checkpointsDeltasCache.get(cacheKey);
+        deltas.set(checkpoint.id, {
+            charsAdded: added,
+            charsRemoved: removed,
+            elementsCount: history.patches.filter(patch => patch.id > (checkpoint.previousId ?? 0) && patch.id < checkpoint.id).length,
+        });
+    }
+
+    return deltas;
 }
 
-function describeEditorStateHistoryElement(history: EditorStateHistoryCache, index: number, tags: EditorStateHistoryTag[], checkpoints: {patch: EditorStateHistoryPatch}[]): EditorStateHistoryElement {
+function describeEditorStateHistoryElement(history: EditorStateHistoryCache, index: number, tags: EditorStateHistoryTag[], checkpointsDeltas: Map<number, EditorStateHistoryElement['sinceEarlierCheckpoint']>): EditorStateHistoryElement {
     const patch = history.patches[index];
     const activeTab = history.descriptions[patch.id]?.activeTab ?? null;
     const isCheckpoint = 0 < tags.length;
+    const deltas = getPatchDeltas(history, patch);
 
     return {
         id: patch.id,
@@ -283,8 +336,11 @@ function describeEditorStateHistoryElement(history: EditorStateHistoryCache, ind
         tags,
         idUser: patch.idUser,
         isCheckpoint,
-        deltas: getPatchDeltas(history, patch),
-        ...(isCheckpoint ? {checkpointsDeltas: describeEditorStateHistoryCheckpointDeltas(history, patch.id, checkpoints)} : {}),
+        sinceEarlier: {
+            charsAdded: deltas.added,
+            charsRemoved: deltas.removed,
+        },
+        ...(isCheckpoint && checkpointsDeltas.has(patch.id) ? {sinceEarlierCheckpoint: checkpointsDeltas.get(patch.id)} : {}),
         activeTab: null !== activeTab ? {
             name: activeTab.name,
             length: activeTab.length,

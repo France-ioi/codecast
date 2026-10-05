@@ -261,15 +261,15 @@ export interface EditorStateHistoryElement {
     isCheckpoint: boolean,
     // The characters added and removed since the previous save, or since the empty answer for the
     // first save
-    deltas: {
-        added: number,
-        removed: number,
+    sinceEarlier: {
+        charsAdded: number,
+        charsRemoved: number,
     },
-    // Only for a checkpoint: the characters added and removed since the previous checkpoint, and the
-    // number of saves between them
-    checkpointsDeltas?: {
-        added: number,
-        removed: number,
+    // Only for a checkpoint: the characters added and removed since the previous checkpoint (or since
+    // the empty answer for the first checkpoint), and the number of saves between them
+    sinceEarlierCheckpoint?: {
+        charsAdded: number,
+        charsRemoved: number,
         elementsCount: number,
     },
     // The code tab the user was on, null when there was none

@@ -486,8 +486,8 @@ function* restoreEditorState(editorState: EditorState) {
 
 // The number of saves fetched at once from the task platform
 const editorStateHistoryPageSize = 200;
-// Tells the chains of saves apart: the task platform keeps one per attempt, which the task token
-// gives. The chain of an attempt is the one of its participant, which is a team in team solving: it
+// Tells the chains of saves apart: the task platform keeps one per platform, task and attempt, which
+// the task token gives. The chain of an attempt is the one of its participant, which is a team in team solving: it
 // holds the saves of all the users of the team, so the user of the token is not part of the key.
 // idAttempt is only compared, never parsed. Like the task platform, a token without idAttempt falls
 // back to a single attempt per user
@@ -496,7 +496,7 @@ function* getEditorStateHistoryKey(): Generator<any, string> {
     const tokenPayload = yield* appSelect(selectTaskTokenPayload);
     const attempt = tokenPayload?.idAttempt ? {idAttempt: tokenPayload.idAttempt} : {idUser: tokenPayload?.idUser ?? null};
 
-    return JSON.stringify([String(state.task.currentTask?.id), attempt]);
+    return JSON.stringify([state.platform.platformName ?? null, String(state.task.currentTask?.id), attempt]);
 }
 
 function* fetchEditorStateHistoryPage(earlierThanId: number|null): Generator<any, EditorStateHistoryResponse> {
@@ -600,7 +600,7 @@ export function* loadEditorStateHistory(options: EditorStateHistoryOptions): Gen
     if (!canUseEditorStateHistory(state)) {
         return [];
     }
-    if (options.limit > 1000) {
+    if (options?.limit > 1000) {
         throw new Error('The limit must be less than or equal to 1000');
     }
 

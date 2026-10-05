@@ -113,8 +113,8 @@ export function selectTaskMetadata() {
         autoHeight: true,
         ...(!serverTask ? {disablePlatformProgress: true} : {}),
         usesTokens: true, // To receive task token
-        usesHistory: true, // To declare that the task supports task.getHistory and task.reloadHistory
-        apiVersion: 2,
+        usesHistory: true,
+        apiVersion: 3,
         minApiVersion: 1,
     };
 }
