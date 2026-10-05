@@ -1,5 +1,5 @@
 import {createAction} from "@reduxjs/toolkit";
-import {TaskAnswer} from '../task_types';
+import {EditorStateHistoryOptions, EditorStateReloadHistoryOptions, TaskAnswer} from '../task_types';
 
 export interface TaskReloadAnswerOptions {
     idUserAnswer?: string,
@@ -71,10 +71,16 @@ export const taskReloadAnswerEvent = createAction('taskEventReloadAnswer', (answ
         options,
     },
 }));
-export const taskGetHistoryEvent = createAction('taskEventGetHistory', successErrorPayload);
-export const taskReloadFromHistoryEvent = createAction('taskEventReloadFromHistory', (historyElementId, success, error) => ({
+export const taskGetHistoryEvent = createAction('taskEventGetHistory', (options: EditorStateHistoryOptions, success, error) => ({
     payload: {
-        historyElementId,
+        options,
+        success,
+        error,
+    },
+}));
+export const taskReloadHistoryEvent = createAction('taskEventReloadHistory', (options: EditorStateReloadHistoryOptions, success, error) => ({
+    payload: {
+        options,
         success,
         error,
     },

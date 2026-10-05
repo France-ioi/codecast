@@ -20,7 +20,7 @@ import {
     taskGradeAnswerEvent,
     taskLoadEvent,
     taskReloadAnswerEvent,
-    taskReloadFromHistoryEvent,
+    taskReloadHistoryEvent,
     taskReloadStateEvent,
     taskShowViewsEvent,
     taskUnloadEvent,
@@ -365,9 +365,9 @@ export function* canReloadAnswer(answer: TaskAnswer) {
     return true;
 }
 
-function* taskGetHistoryEventSaga ({payload: {success, error}}: ReturnType<typeof taskGetHistoryEvent>) {
+function* taskGetHistoryEventSaga ({payload: {options, success, error}}: ReturnType<typeof taskGetHistoryEvent>) {
     try {
-        const historyElements = yield* call(loadEditorStateHistory);
+        const historyElements = yield* call(loadEditorStateHistory, options);
         yield* call(success, historyElements);
     } catch (ex: any) {
         console.error(`The history of the editor could not be loaded: ${ex.message}`, ex);
@@ -375,12 +375,12 @@ function* taskGetHistoryEventSaga ({payload: {success, error}}: ReturnType<typeo
     }
 }
 
-function* taskReloadFromHistoryEventSaga ({payload: {historyElementId, success, error}}: ReturnType<typeof taskReloadFromHistoryEvent>) {
+function* taskReloadHistoryEventSaga ({payload: {options, success, error}}: ReturnType<typeof taskReloadHistoryEvent>) {
     try {
-        yield* call(reloadEditorStateHistoryElement, historyElementId);
+        yield* call(reloadEditorStateHistoryElement, options.elementId);
         yield* call(success);
     } catch (ex: any) {
-        console.error(`This version of the editor could not be reloaded (${historyElementId}): ${ex.message}`, ex);
+        console.error(`This version of the editor could not be reloaded (${options.elementId}): ${ex.message}`, ex);
         yield* put(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE').s));
         yield* call(error, `This version of the editor could not be reloaded: ${ex.message}`);
     }
@@ -704,7 +704,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskGradeAnswerEvent, taskGradeAnswerEventSaga);
         yield* takeEvery(taskReloadAnswerEvent, taskReloadAnswerEventSaga);
         yield* takeEvery(taskGetHistoryEvent, taskGetHistoryEventSaga);
-        yield* takeEvery(taskReloadFromHistoryEvent, taskReloadFromHistoryEventSaga);
+        yield* takeEvery(taskReloadHistoryEvent, taskReloadHistoryEventSaga);
         yield* takeEvery(taskGetResourcesPost, taskGetResourcesPostSaga);
         yield* takeEvery(platformTaskLink, linkTaskPlatformSaga);
         yield* takeEvery(platformValidateEvent, platformValidateEventSaga);

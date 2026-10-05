@@ -1,5 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {EditorStateHistoryEntry, TaskAnswer} from '../task_types';
+import {EditorStateHistoryCache, TaskAnswer} from '../task_types';
 import {DeferredPromise} from '../../utils/app';
 
 export enum TaskLevelName {
@@ -25,7 +25,7 @@ export interface PlatformState {
     levels: {[key: string]: TaskLevel},
     taskParams: PlatformTaskParams,
     platformName: string,
-    editorStateHistory: EditorStateHistoryEntry[],
+    editorStateHistory: EditorStateHistoryCache|null,
 }
 
 export interface PlatformTaskParams {
@@ -49,7 +49,7 @@ export const platformInitialState = {
     levels: {},
     taskParams: {},
     platformName: null,
-    editorStateHistory: [],
+    editorStateHistory: null,
 } as PlatformState;
 
 export const getDefaultTaskLevel = (level: TaskLevelName) => {
@@ -120,7 +120,7 @@ export const platformSlice = createSlice({
         platformChangeName(state, action: PayloadAction<string>) {
             state.platformName = action.payload;
         },
-        platformEditorStateHistoryLoaded(state: PlatformState, action: PayloadAction<EditorStateHistoryEntry[]>) {
+        platformEditorStateHistoryLoaded(state: PlatformState, action: PayloadAction<EditorStateHistoryCache>) {
             state.editorStateHistory = action.payload;
         },
     },

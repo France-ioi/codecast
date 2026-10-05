@@ -174,6 +174,9 @@ export default {
     EDITOR_SUBTITLES_SAVE: 'Save',
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Do you confirm the removal of language {language}?',
     EDITOR_RELOAD_IMPOSSIBLE: "The saved answer couldn't be reloaded.",
+    EDITOR_HISTORY_TAG_LAST_SAVE: "Last save",
+    EDITOR_HISTORY_TAG_ACTIVE_TAB_CHANGE: "Tab change",
+    EDITOR_HISTORY_TAG_BEFORE_INACTIVITY: "Before a break",
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
     USER_CHANGE_USER: "Logout",

@@ -176,6 +176,9 @@ export default {
     EDITOR_SUBTITLES_SAVE: "Speichern",
     EDITOR_SUBTITLES_REMOVE_CONFIRM: "Möchtest du die Untertitel für {language} wirklich entfernen?",
     EDITOR_RELOAD_IMPOSSIBLE: "Die gespeicherte Lösung konnte nicht erneut geladen werden.",
+    EDITOR_HISTORY_TAG_LAST_SAVE: "Letzte Speicherung",
+    EDITOR_HISTORY_TAG_ACTIVE_TAB_CHANGE: "Tab-Wechsel",
+    EDITOR_HISTORY_TAG_BEFORE_INACTIVITY: "Vor einer Pause",
 
     USER_SELECT_LOGIN_METHOD: "Wähle eine Anmeldeoption:",
     USER_CHANGE_USER: "Abmelden",
