@@ -113,7 +113,7 @@ export function selectTaskMetadata() {
         autoHeight: true,
         ...(!serverTask ? {disablePlatformProgress: true} : {}),
         usesTokens: true, // To receive task token
-        usesHistory: true,
+        ...(serverTask ? {savesHistory: true} : {}),
         apiVersion: 3,
         minApiVersion: 1,
     };
@@ -399,6 +399,10 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}
 
             return;
         }
+
+        // With savesHistory, the platform no longer backs up the work in progress before reloading
+        // another answer: save it now, it may not have been saved yet because of the throttling
+        yield* call(saveEditors);
 
         const taskLevels = yield* appSelect(state => state.platform.levels);
         if (taskLevels && Object.keys(taskLevels).length && answer) {
