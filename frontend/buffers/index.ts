@@ -26,7 +26,7 @@ user interaction change the view.
 
 */
 
-import {call, put, takeEvery} from 'typed-redux-saga';
+import {call, put, takeEvery, takeLatest} from 'typed-redux-saga';
 import {
     compressRange,
     createEmptyBufferState,
@@ -66,6 +66,7 @@ import {
     bufferEditPlain,
     bufferInit,
     bufferModelEdit,
+    bufferRemove,
     bufferReset,
     bufferResetDocument,
     bufferScrollToLine,
@@ -83,6 +84,7 @@ import {selectActiveBufferPlatform, selectSourceBuffers} from './buffer_selector
 import {getDefaultSourceCode} from '../task/utils';
 import {submissionChangeCurrentSubmissionId} from '../submission/submission_slice';
 import {createQuickalgoLibrary} from '../task/libs/quickalgo_library_factory';
+import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {TaskAnswer} from '../task/task_types';
 import {selectAnswer} from '../task/selectors';
 import {RECORDING_FORMAT_VERSION} from '../version';
@@ -95,6 +97,7 @@ import {getMessage} from '../lang/messages';
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {showPopupMessageSaga} from '../common/prompt_modal';
 import {ModalType} from '../common/modal_slice';
+import {loadBlocklyHelperSaga} from '../stepper/js';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(buffersSaga);
@@ -328,6 +331,18 @@ function* createBufferFromSubmission(submissionId: number) {
     yield* put(bufferChangeActiveBufferName(newBufferName));
 }
 
+function* syncBlocklyHelperForActiveBuffer() {
+    const state: AppStore = yield* appSelect();
+    if (!hasBlockPlatform(selectActiveBufferPlatform(state))) {
+        return;
+    }
+
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    if (!context?.blocklyHelper || context.blocklyHelper.fake || typeof context.blocklyHelper.load !== 'function') {
+        yield* call(loadBlocklyHelperSaga, context);
+    }
+}
+
 function* buffersSaga() {
     yield* takeEvery(bufferDownload, function* () {
         const state: AppStore = yield* appSelect();
@@ -394,6 +409,9 @@ function* buffersSaga() {
             yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: activeBufferPlatform}});
         }
     });
+
+    // takeLatest avoids overlapping loadBlocklyHelperSaga on rapid tab switch/close
+    yield* takeLatest([bufferChangeActiveBufferName, bufferRemove], syncBlocklyHelperForActiveBuffer);
 
     yield* takeEvery(bufferReload, function* () {
         const state: AppStore = yield* appSelect();

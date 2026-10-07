@@ -468,8 +468,8 @@ function stepperRestartReducer(state: AppStore, {payload: {stepperState}}): void
     }
 
     state.stepper.status = StepperStatus.Idle;
-    state.stepper.initialStepperState = JSON.parse(JSON.stringify(stepperState));
-    state.stepper.currentStepperState = JSON.parse(JSON.stringify(stepperState));
+    state.stepper.initialStepperState = stepperState;
+    state.stepper.currentStepperState = stepperState;
     state.stepper.redo = [];
     state.task.resetDone = false;
     state.task.inputs = [];

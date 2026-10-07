@@ -117,7 +117,11 @@ export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBl
 
         allowedTokens = [...new Set(allowedTokens)];
 
-        const bracketsWords = { list_brackets: 'crochets [ ]+[]', dict_brackets: 'accolades { }+{}', var_assign: 'variables+x =' };
+        const bracketsWords = {
+            list_brackets: `${getMessage('PYTHON_SPECIAL_LIST_BRACKETS').toString()}+[]`,
+            dict_brackets: `${getMessage('PYTHON_SPECIAL_DICT_BRACKETS').toString()}+{}`,
+            var_assign: `${getMessage('PYTHON_SPECIAL_VARIABLES').toString()}+x =`,
+        };
         for (let bracketsCode in bracketsWords) {
             const bracketsIdx = allowedTokens.indexOf(bracketsCode);
             if (bracketsIdx !== -1) {

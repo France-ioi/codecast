@@ -100,6 +100,18 @@ const analyseScope = function(scope): StackFrameUnixAnalysis[] {
     return functionCallStack;
 };
 
+/*
+  Returns the stack frames in which the directive with the given key is declared,
+  innermost first, as expected by the C directive views (they use functionCallStack[0]).
+*/
+export const getDirectiveFunctionCallStack = function(programState, directiveKey: string, focusDepth: number = 0): StackFrameUnixAnalysis[] {
+    const {functionCallStack} = analyseState(programState);
+    const visibleFrames: StackFrameUnixAnalysis[] = functionCallStack.slice(0, functionCallStack.length - focusDepth).reverse();
+    const directiveFrames = visibleFrames.filter(frame => frame.directives.some(directive => directive?.key === directiveKey));
+
+    return directiveFrames.length ? directiveFrames : visibleFrames;
+};
+
 export const collectDirectives = function(functionCallStack, focusDepth): StepperDirectives {
     const ordered = [];
     const functionCallStackMap = {};

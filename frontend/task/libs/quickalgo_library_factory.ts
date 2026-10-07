@@ -177,7 +177,6 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
     if (context instanceof PrinterLib && currentTask) {
         yield* put({type: IOActionTypes.IoPaneModeChanged, payload: {mode: IoMode.Split}});
     }
-    yield* put(taskIncreaseContextId());
     yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
         // Don't freeze any objet inside context.infos.includeBlocks because
@@ -190,8 +189,10 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
         yield* put(taskSetBlocksPanelCollapsed({collapsed: true, manual: true}));
     }
 
+    // Re-select after yields above: platform / task may have changed during module/font loads
+    state = yield* appSelect();
     yield* call(createDisplayHelper);
-    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && currentTask) {
+    if (hasBlockPlatform(selectActiveBufferPlatform(state)) && state.task.currentTask) {
         yield* call(loadBlocklyHelperSaga, context);
     } else {
         // Create a fake blockly helper to make other libs like Turtle work
@@ -202,6 +203,8 @@ export function* createQuickalgoLibrary(platformAlreadyChanged: boolean = false)
             },
         } as any as BlocklyHelper;
     }
+
+    yield* put(taskIncreaseContextId());
 
     yield* call(quickAlgoLibraryResetAndReloadStateSaga);
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});

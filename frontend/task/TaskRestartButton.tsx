@@ -18,8 +18,11 @@ export function TaskRestartButton() {
         return null;
     }
 
-    const restartTask = () => {
-        dispatch(bufferResetToDefaultSourceCode(activeBufferName))
+    const restartTask = async () => {
+        const confirmed = await window.displayHelper.showPopupMessage(getMessage('TASK_RESTART_CONFIRM'));
+        if (confirmed) {
+            dispatch(bufferResetToDefaultSourceCode(activeBufferName));
+        }
     };
 
     return (

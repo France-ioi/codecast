@@ -102,6 +102,18 @@ export class Icons {
                 }
             },
         },
+        experimental: {
+            // In the lib build, let the host page choose where images are loaded from
+            // (e.g. Codecast's own build/ folder) instead of next to the bundle in bebras-modules
+            renderBuiltUrl(filename, {hostType}) {
+                if (isLib && modernBuild && 'js' === hostType && filename.startsWith('images/')) {
+                    const file = JSON.stringify(filename);
+                    return {runtime: `(window.codecastAssetsUrl ? window.codecastAssetsUrl + ${file} : new URL(${file}, import.meta.url).href)`};
+                }
+
+                return undefined;
+            },
+        },
         worker: {
             rollupOptions: {
                 output: {entryFileNames: '[name].worker.js'},
