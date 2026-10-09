@@ -428,6 +428,27 @@ export function* saveEditors() {
     lastSavedEditorState = {taskId, editorState: serializedEditorState};
 }
 
+/**
+ * Takes the editor state of the task that has just been loaded as the saved one: it is either the
+ * default one, or the one restored from the task platform, none of which needs to be saved. Without
+ * that, the save done before reloading an answer would send the empty default code tab to the task
+ * platform. The refreshes of the task that follow keep the last state actually saved.
+ */
+export function* initSavedEditorState() {
+    const state = yield* appSelect();
+    const currentTask = state.task.currentTask;
+    if ('main' !== state.environment || !isServerTask(currentTask) || !currentTask?.id) {
+        return;
+    }
+
+    const taskId = String(currentTask.id);
+    if (taskId === lastSavedEditorState?.taskId) {
+        return;
+    }
+
+    lastSavedEditorState = {taskId, editorState: JSON.stringify(getEditorState(state))};
+}
+
 export function isEditorStateReloaded(): boolean {
     return null !== reloadedEditorStateTaskId;
 }
@@ -457,6 +478,8 @@ export function* reloadEditorState(taskId: string, editorState: EditorState) {
 
     if (state.task.loaded) {
         yield* call(reloadPendingEditorState);
+        // The state that has just been restored is the one of the task platform, no need to save it again
+        lastSavedEditorState = {taskId, editorState: JSON.stringify(getEditorState(yield* appSelect()))};
     }
 }
 
