@@ -27,7 +27,7 @@ export function BufferEditorTabEdit(props: BufferEditorTabEditProps) {
         e.preventDefault();
         dispatch(bufferInit({buffer: bufferName, fileName}));
         if (canChangePlatform) {
-            dispatch(bufferChangePlatform(bufferName, platform));
+            dispatch(bufferChangePlatform(bufferName, platform, undefined, true));
         }
         props.onClose();
     };

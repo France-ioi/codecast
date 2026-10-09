@@ -12,6 +12,7 @@ import {
     platformValidateEvent,
     taskGetAnswerEvent,
     taskGetHeightEvent,
+    taskGetHistoryEvent,
     taskGetMetadataEvent,
     taskGetResourcesPost,
     taskGetStateEvent,
@@ -19,6 +20,7 @@ import {
     taskGradeAnswerEvent,
     taskLoadEvent,
     taskReloadAnswerEvent,
+    taskReloadHistoryEvent,
     taskReloadStateEvent,
     taskShowViewsEvent,
     taskUnloadEvent,
@@ -48,7 +50,7 @@ import {Codecast} from '../../app_types';
 import {Document} from '../../buffers/buffer_types';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
-import {isServerTask, TaskAnswer, TaskTokenPayload} from '../task_types';
+import {isServerTask, TaskAnswer} from '../task_types';
 import {RECORDING_FORMAT_VERSION} from '../../version';
 import {BlockBufferHandler, uncompressIntoDocument} from '../../buffers/document';
 import {CodecastPlatform} from '../../stepper/codecast_platform';
@@ -57,10 +59,14 @@ import {AppStore} from '../../store';
 import {stepperDisplayError} from '../../stepper/actionTypes';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../utils';
 import {getAudioTimeStep} from '../task_selectors';
-import {createSelector} from '@reduxjs/toolkit';
+import {
+    isEditorStateReloaded,
+    loadEditorStateHistory,
+    reloadEditorStateHistoryElement,
+    saveEditors,
+} from '../../submission/task_platform';
 import {getTaskSolution} from '../instructions/instructions';
 import {taskFillResources} from './resources';
-import jwt from 'jsonwebtoken';
 import {getAvailablePlatforms} from '../libs/quickalgo_library_factory';
 import {getMessage} from '../../lang/messages';
 import {DeferredPromise} from '../../utils/app';
@@ -107,21 +113,11 @@ export function selectTaskMetadata() {
         autoHeight: true,
         ...(!serverTask ? {disablePlatformProgress: true} : {}),
         usesTokens: true, // To receive task token
-        apiVersion: 2,
+        ...(serverTask ? {savesHistory: true} : {}),
+        apiVersion: 3,
         minApiVersion: 1,
     };
 }
-
-export const selectTaskTokenPayload = createSelector(
-    [(state: AppStore) => state.platform.taskToken],
-    (token): TaskTokenPayload|null => {
-        if (!token) {
-            return null;
-        }
-
-        return jwt.decode(token) as TaskTokenPayload;
-    },
-);
 
 function sendErrorLog() {
     // Send errors to the platform
@@ -279,7 +275,9 @@ function* taskGetHeightEventSaga ({payload: {success}}: ReturnType<typeof taskGe
 }
 
 function* taskUnloadEventSaga ({payload: {success}}: ReturnType<typeof taskUnloadEvent>) {
-    /* XXX No action needed? */
+    // Save the last changes made to the editor, they may not have been saved yet because of the throttling
+    yield* call(saveEditors);
+
     yield* call(success);
 }
 
@@ -368,8 +366,44 @@ export function* canReloadAnswer(answer: TaskAnswer) {
     return true;
 }
 
+function* taskGetHistoryEventSaga ({payload: {options, success, error}}: ReturnType<typeof taskGetHistoryEvent>) {
+    try {
+        const historyElements = yield* call(loadEditorStateHistory, options);
+        yield* call(success, historyElements);
+    } catch (ex: any) {
+        console.error(`The history of the editor could not be loaded: ${ex.message}`, ex);
+        yield* call(error, `The history of the editor could not be loaded: ${ex.message}`);
+    }
+}
+
+function* taskReloadHistoryEventSaga ({payload: {options, success, error}}: ReturnType<typeof taskReloadHistoryEvent>) {
+    try {
+        yield* call(reloadEditorStateHistoryElement, options.elementId);
+        yield* call(success);
+    } catch (ex: any) {
+        console.error(`This version of the editor could not be reloaded (${options.elementId}): ${ex.message}`, ex);
+        yield* put(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE').s));
+        yield* call(error, `This version of the editor could not be reloaded: ${ex.message}`);
+    }
+}
+
 function* taskReloadAnswerEventSaga ({payload: {answer, success, error, options}}: ReturnType<typeof taskReloadAnswerEvent>) {
     try {
+        // The state of the editor saved on the task platform has already been restored, and it
+        // holds all the code tabs and all the tests, when the answer of the platform only holds the
+        // code of one tab: reloading it would overwrite the work that has just been restored. An
+        // answer that comes with an idUserAnswer is a specific submission that the platform asks to
+        // display, that one is always reloaded
+        if (isEditorStateReloaded() && !options.idUserAnswer) {
+            yield* call(success);
+
+            return;
+        }
+
+        // With savesHistory, the platform no longer backs up the work in progress before reloading
+        // another answer: save it now, it may not have been saved yet because of the throttling
+        yield* call(saveEditors);
+
         const taskLevels = yield* appSelect(state => state.platform.levels);
         if (taskLevels && Object.keys(taskLevels).length && answer) {
             const currentLevel = yield getTaskLevel();
@@ -676,6 +710,8 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskGetAnswerEvent, taskGetAnswerEventSaga);
         yield* takeEvery(taskGradeAnswerEvent, taskGradeAnswerEventSaga);
         yield* takeEvery(taskReloadAnswerEvent, taskReloadAnswerEventSaga);
+        yield* takeEvery(taskGetHistoryEvent, taskGetHistoryEventSaga);
+        yield* takeEvery(taskReloadHistoryEvent, taskReloadHistoryEventSaga);
         yield* takeEvery(taskGetResourcesPost, taskGetResourcesPostSaga);
         yield* takeEvery(platformTaskLink, linkTaskPlatformSaga);
         yield* takeEvery(platformValidateEvent, platformValidateEventSaga);

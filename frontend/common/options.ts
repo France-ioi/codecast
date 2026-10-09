@@ -10,7 +10,6 @@ import {appSelect} from '../hooks';
 import {platformsList} from '../stepper/platforms';
 import {IoMode} from '../stepper/io';
 import {CodecastPlatform} from '../stepper/codecast_platform';
-import {bufferChangePlatform} from '../buffers/buffer_actions';
 import url from 'url';
 import {Languages} from '../lang/messages';
 
@@ -259,11 +258,6 @@ export default function(bundle: Bundle) {
             }
             if (false !== reloadTask) {
                 yield* put({type: StepperActionTypes.StepperExit});
-
-                const activeBufferName = state.buffers.activeBufferName;
-                if (!state.options.tabsEnabled && null !== activeBufferName && state.buffers.buffers[state.buffers.activeBufferName].platform !== newPlatform) {
-                    yield* put(bufferChangePlatform(activeBufferName, newPlatform));
-                }
             }
         });
     });

@@ -221,12 +221,143 @@ export interface TaskAnswer {
     //submissionId: string ?
 }
 
+// The saved state of the editor of a user on a task: the content of their code tabs and their tests
+export interface EditorStateSource {
+    name: string,
+    source: string,
+    language: string,
+    active: boolean,
+}
+
+export interface EditorStateTest {
+    name: string,
+    input: string,
+    output: string,
+    active: boolean,
+    clientId: string,
+}
+
+export interface EditorState {
+    sources: EditorStateSource[],
+    // A null tests list means the task has no user tests
+    tests: EditorStateTest[]|null,
+}
+
+export interface EditorStateHistoryTag {
+    identifier: string,
+    i18nText?: string,
+}
+
+// A save of the editor state, as described to the platform by task.getHistory
+export interface EditorStateHistoryElement {
+    // Goes up by one at each save of the attempt
+    id: number,
+    // RFC 3339, precise to the second
+    datetime: string,
+    // When it is a checkpoint, some of them tell why
+    tags: EditorStateHistoryTag[],
+    // The user who made this save, several users share a history in team solving
+    idUser: string,
+    isCheckpoint: boolean,
+    // The characters added and removed since the previous save, or since the empty answer for the
+    // first save
+    sinceEarlier: {
+        charsAdded: number,
+        charsRemoved: number,
+    },
+    // Only for a checkpoint: the characters added and removed since the previous checkpoint (or since
+    // the empty answer for the first checkpoint), and the number of saves between them
+    sinceEarlierCheckpoint?: {
+        charsAdded: number,
+        charsRemoved: number,
+        elementsCount: number,
+    },
+    // The code tab the user was on, null when there was none
+    activeTab: {
+        // Null when the task has no tabs
+        name: string|null,
+        // Characters for a text language, blocks for a block language
+        length: number,
+        // The display name of the language: Python, Java...
+        progLang: string,
+    }|null,
+}
+
+// The options of task.getHistory
+export interface EditorStateHistoryOptions {
+    // 100 by default, 1000 at most
+    limit?: number,
+    // The maximum id, included
+    maxId?: number,
+    // The minimum id, excluded
+    minId?: number,
+    onlyCheckpoints?: boolean,
+}
+
+// The options of task.reloadHistory
+export interface EditorStateReloadHistoryOptions {
+    elementId: number,
+}
+
+// What a save changed, derived from its state and the state of the save before it
+export interface EditorStateHistoryDescription {
+    // The code tab the user was on, null when there was none
+    activeTab: {
+        name: string,
+        // As Codecast names it: python, blockly...
+        language: string,
+        // Characters for a text language, blocks for a block language
+        length: number,
+    }|null,
+    // Whether the user was on another tab at the save before
+    activeTabChanged: boolean,
+    // The characters of the code tabs added and removed since the save before
+    modificationDeltas: {
+        added: number,
+        removed: number,
+    },
+}
+
+export interface EditorStateHistoryPatch {
+    id: number,
+    date: string,
+    idUser: string,
+    // The reverse patch that rebuilds the state of this save from the state of the save after it
+    patch: string|null,
+}
+
+// A page of the chain of saves, newest first
+export interface EditorStateHistoryResponse {
+    // The serialized state of the newest save of the chain, when the page starts with it
+    state: string|null,
+    patches: EditorStateHistoryPatch[],
+}
+
+// The part of the chain of saves fetched so far: it goes from the newest save down, without gap,
+// since the state of a save is rebuilt from the state of the save after it
+export interface EditorStateHistoryCache {
+    // The task and the attempt this chain belongs to
+    key: string,
+    headState: string|null,
+    // The descriptions of the saves, by id. A save is described once the state of the save before
+    // it has been rebuilt, so the oldest fetched save is only described when it is the first one
+    descriptions: {[id: number]: EditorStateHistoryDescription},
+    // The oldest state rebuilt so far, from which the older saves are described as they are fetched
+    oldestRebuiltState: {id: number, state: string}|null,
+    patches: EditorStateHistoryPatch[],
+    // Whether the chain has been fetched down to its first save
+    complete: boolean,
+}
+
 export interface TaskServer extends TaskNormalized {
     limits: TaskLimitNormalized[],
     strings: TaskStringNormalized[],
     subTasks: TaskSubtaskNormalized[],
     sourceCodes: SourceCodeNormalized[],
     tests: TaskTestServer[],
+    // Last state of the editor saved by the user of the token, null when there is no token or when
+    // this user has never saved anything on this task
+    editorState: EditorState|null,
 }
 
 export interface SourceCodeParams {
@@ -247,6 +378,7 @@ export interface SourceCodeNormalized {
 
 export interface TaskTokenPayload {
     idUser: string,
+    idAttempt?: string,
     itemUrl: string,
     platformName: string,
     randomSeed: string,

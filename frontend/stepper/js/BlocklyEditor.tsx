@@ -143,7 +143,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const resize = () => {
         log.getLogger('editor').debug('[blockly.editor] resize');
-        if (typeof context?.blocklyHelper?.unloadLevel === 'function') {
+        if (context?.blocklyHelper && !context.blocklyHelper.fake && typeof context.blocklyHelper.unloadLevel === 'function') {
             context.blocklyHelper.unloadLevel();
         }
         onLoad();
@@ -268,7 +268,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         return () => {
             log.getLogger('editor').debug('[blockly.editor] unload');
 
-            if (typeof context?.blocklyHelper?.unloadLevel === 'function') {
+            if (context?.blocklyHelper && !context.blocklyHelper.fake && typeof context.blocklyHelper.unloadLevel === 'function') {
                 context.blocklyHelper.unloadLevel();
             }
         };
@@ -318,7 +318,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     useEffect(() => {
         const selection = props.state?.selection;
         log.getLogger('editor').debug('[blockly.editor] selection changed', selection, props, selectedBlockId.current);
-        if (selection === selectedBlockId.current || context.blocklyHelper?.scratchMode) {
+        if (!context?.blocklyHelper || context.blocklyHelper.fake || selection === selectedBlockId.current || context.blocklyHelper.scratchMode) {
             return;
         }
 

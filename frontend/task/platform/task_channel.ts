@@ -5,6 +5,8 @@ import {
     taskGetStateEvent,
     taskGetViewsEvent, taskGradeAnswerEvent, taskLoadEvent, taskReloadAnswerEvent,
     TaskReloadAnswerOptions, taskReloadStateEvent,
+    taskGetHistoryEvent,
+    taskReloadHistoryEvent,
     taskShowViewsEvent,
     taskUnloadEvent, taskUpdateTokenEvent
 } from "./actionTypes";
@@ -62,6 +64,12 @@ function makeTask(emit, state: AppStore) {
         },
         getAnswer: function (success, error) {
             emit(taskGetAnswerEvent(success ?? (() => {}), error ?? (() => {})));
+        },
+        getHistory: function (options, callback, error) {
+            emit(taskGetHistoryEvent(options ?? {}, callback ?? (() => {}), error ?? (() => {})));
+        },
+        reloadHistory: function (options, success, error) {
+            emit(taskReloadHistoryEvent(options ?? {}, success ?? (() => {}), error ?? (() => {})));
         },
         load: function (views, success, error) {
             emit(taskLoadEvent(views, success ?? (() => {}), error ?? (() => {})));

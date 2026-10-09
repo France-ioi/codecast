@@ -176,6 +176,9 @@ export default {
     EDITOR_SUBTITLES_SAVE: 'Enregistrer',
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Confirmez-vous la suppression des sous-titres {language} ?',
     EDITOR_RELOAD_IMPOSSIBLE: "La réponse sauvegardée n'a pas pu être rechargée.",
+    EDITOR_HISTORY_TAG_LAST_SAVE: "Dernière sauvegarde",
+    EDITOR_HISTORY_TAG_ACTIVE_TAB_CHANGE: "Changement d'onglet",
+    EDITOR_HISTORY_TAG_BEFORE_INACTIVITY: "Avant une pause",
 
     USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",
     USER_CHANGE_USER: "Déconnexion",
@@ -343,6 +346,7 @@ export default {
     BUFFER_TAB_NO_PAST_SUBMISSION: "Aucune soumission récente",
     BUFFER_TAB_FILE_NAME: "Titre du fichier",
     BUFFER_TAB_LANGUAGE: "Langage du fichier",
+    BUFFER_TAB_CHANGE_PLATFORM_ERASE_CODE: "Si vous passez en {platform}, le code de cet onglet sera perdu. Voulez-vous continuer ?",
     BUFFER_TAB_SAVE: "Enregistrer",
 
     SUBMISSION_RESULTS_TESTS_TITLE: 'Liste des tests',

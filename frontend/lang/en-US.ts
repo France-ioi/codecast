@@ -174,6 +174,9 @@ export default {
     EDITOR_SUBTITLES_SAVE: 'Save',
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Do you confirm the removal of language {language}?',
     EDITOR_RELOAD_IMPOSSIBLE: "The saved answer couldn't be reloaded.",
+    EDITOR_HISTORY_TAG_LAST_SAVE: "Last save",
+    EDITOR_HISTORY_TAG_ACTIVE_TAB_CHANGE: "Tab change",
+    EDITOR_HISTORY_TAG_BEFORE_INACTIVITY: "Before a break",
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
     USER_CHANGE_USER: "Logout",
@@ -332,6 +335,7 @@ export default {
     BUFFER_TAB_NO_PAST_SUBMISSION: "No recent submission",
     BUFFER_TAB_FILE_NAME: "File name",
     BUFFER_TAB_LANGUAGE: "File language",
+    BUFFER_TAB_CHANGE_PLATFORM_ERASE_CODE: "If you switch to {platform}, the code of this tab will be lost. Do you want to continue?",
     BUFFER_TAB_SAVE: "Save",
 
     SUBMISSION_RESULTS_TESTS_TITLE: 'Tests list',

@@ -30,6 +30,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
     const ioModeSelect = CodecastPlatform.Arduino !== platform && (!stepper || stepper.status === StepperStatus.Clear) && !currentTask;
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const layoutRequiredType = useAppSelector(state => state.layout.requiredType);
+    const editorTabsEnabled = useAppSelector(state => state.options.tabsEnabled);
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl && canDownload) {
@@ -74,7 +75,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 {canChangeLanguage && <div style={{marginBottom: '10px'}}>
                     <LanguageSelection closeMenu={props.onClose}/>
                 </div>}
-                {(canChangePlatform || forceSettingsOpen) &&
+                {((canChangePlatform && !editorTabsEnabled) || forceSettingsOpen) &&
                     <PlatformSelection/>
                 }
                 {ioModeSelect &&
