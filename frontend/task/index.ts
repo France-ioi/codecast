@@ -87,6 +87,7 @@ import {
     convertServerTaskToCodecastFormat,
     getServerTaskFromTaskData,
     getTaskFromId,
+    initSavedEditorState,
     reloadEditorState,
     reloadPendingEditorState,
     saveEditorsSaga
@@ -461,6 +462,8 @@ function* taskLoadSaga(app: App, action) {
     }
 
     yield* call(taskLevelLoadedSaga);
+
+    yield* call(initSavedEditorState);
 
     yield* delay(0);
     log.getLogger('task').debug('task loaded', app.environment);
