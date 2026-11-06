@@ -114,7 +114,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
     };
 
     getComponent() {
-        return this.display ? SmartContractView : null;
+        return SmartContractView;
     };
 
     usesStack() {
