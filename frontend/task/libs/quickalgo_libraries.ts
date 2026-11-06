@@ -17,7 +17,7 @@ import {BlockDocument, BufferType} from '../../buffers/buffer_types';
 import {getBlocklyCodeFromXml} from '../../stepper/js';
 import {selectAnswer} from '../selectors';
 import {getAvailableModules} from '../utils';
-import {selectCurrentTestData} from '../task_selectors';
+import {selectCurrentTest} from '../task_selectors';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -29,12 +29,13 @@ window.quickAlgoContext = function (display: boolean, infos: any) {
 
 export function* quickAlgoLibraryResetAndReloadStateSaga(innerState = null) {
     const state = yield* appSelect();
-    const currentTest = selectCurrentTestData(state);
+    const currentTest = selectCurrentTest(state);
+    const currentTestData = null !== currentTest ? currentTest.data : null;
 
     for (let [name, library] of Object.entries(quickAlgoLibraries.getAllLibrariesByName(state.environment))) {
-        log.getLogger('libraries').debug('quickalgo reset and reload state', state.environment, library, innerState, currentTest);
+        log.getLogger('libraries').debug('quickalgo reset and reload state', state.environment, library, innerState, currentTestData);
         const libraryInnerState = 'object' === typeof innerState && innerState && name in innerState ? innerState[name] : null;
-        library.resetAndReloadState(currentTest, state, libraryInnerState);
+        library.resetAndReloadState(currentTestData, state, libraryInnerState);
     }
 
     const contextState = quickAlgoLibraries.getLibrariesInnerState(state.environment);
