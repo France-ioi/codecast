@@ -1,10 +1,8 @@
-import * as htmlToReact from '@hedgedoc/html-to-react';
+import parseHtml, {attributesToProps, domToReact, DOMNode, HTMLReactParserOptions} from 'html-react-parser';
 import {platformsList} from '../../stepper/platforms';
 import {PlatformSelection} from '../../common/PlatformSelection';
 import {SmartContractStorage} from '../libs/smart_contract/SmartContractStorage';
 import {Editor} from '../../buffers/Editor';
-import {generatePropsFromAttributes} from '@hedgedoc/html-to-react/dist/utils/generatePropsFromAttributes';
-import {VOID_ELEMENTS} from '@hedgedoc/html-to-react/dist/dom/elements/VoidElements';
 import React from 'react';
 import {AppStore} from '../../store';
 import {formatTaskInstructions} from '../utils';
@@ -277,6 +275,31 @@ function getNodeText(node) {
     return nodeTexts.join(' ');
 }
 
+const VOID_ELEMENTS = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+
+function getParserOptions(context: {platform: CodecastPlatform}): HTMLReactParserOptions {
+    return {
+        replace: (node, index) => transformNode(node, index, context),
+    };
+}
+
+function processNodes(nodes: DOMNode[], context: {platform: CodecastPlatform}): (React.ReactElement|string)[] {
+    const result = domToReact(nodes, getParserOptions(context));
+
+    return Array.isArray(result) ? result : [result];
+}
+
+function generatePropsFromAttributes(attributes: Record<string, string>, key: string|number): Record<string, unknown> {
+    const filteredAttributes = Object.fromEntries(
+        Object.entries(attributes).filter(([name, value]) => null !== value && undefined !== value && !/^on/i.test(name))
+    );
+
+    return {
+        ...attributesToProps(filteredAttributes),
+        key,
+    };
+}
+
 function transformNode(node, index: string|number, context: {platform: CodecastPlatform}) {
     if (node.attribs && 'current-lang' in node.attribs) {
         return <span>{platformsList[context.platform].name}</span>
@@ -304,7 +327,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
 
         let children = null;
         if (VOID_ELEMENTS.indexOf(node.tagName) === -1) {
-            children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context));
+            children = processNodes(node.children, context);
         }
 
         return <div style={{marginBottom: 20}} data-lang={lang} className="code-block code">
@@ -331,7 +354,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
     } else if (node.attribs && 'data-task-examples' in node.attribs) {
         return <TaskExamples/>;
     } else if (node.attribs && 'data-slideshow' in node.attribs) {
-        let children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context))
+        let children = processNodes(node.children, context)
             .filter(a => 'string' !== typeof a);
 
         return <TaskInstructionsSlideshow
@@ -359,12 +382,12 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
         // If the node is not a void element and has children then process them
         let children = null;
         if (VOID_ELEMENTS.indexOf(tagName) === -1) {
-            children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context));
+            children = processNodes(node.children, context);
         }
 
         return React.createElement(tagName, props, children);
     } else if (node.attribs && 'class' in node.attribs && -1 !== node.attribs['class'].split(' ').indexOf('videoBtn')) {
-        let children = htmlToReact.processNodes(node.children, (node, index) => transformNode(node, index, context));
+        let children = processNodes(node.children, context);
         const props = generatePropsFromAttributes({
             style: 'data-style' in node.attribs ? node.attribs['data-style'] : null,
         }, index);
@@ -381,8 +404,7 @@ function transformNode(node, index: string|number, context: {platform: CodecastP
 }
 
 export function convertHtmlInstructionsToReact(instructionsHtml: string, platform: CodecastPlatform) {
-    // @ts-ignore
-    return htmlToReact.default.default(instructionsHtml, {transform: (node, index) => transformNode(node, index, {platform})})
+    return parseHtml(instructionsHtml ?? '', getParserOptions({platform}));
 }
 
 export function applyInstructionsPostProcessing() {
