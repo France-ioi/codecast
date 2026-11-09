@@ -14,7 +14,7 @@ export function getAudioTimeStep(state: AppStore) {
 export const selectCurrentTestData = (state: AppStore) => {
     const currentTest = selectCurrentTest(state);
 
-    return null !== currentTest ? currentTest.data : {};
+    return null !== currentTest ? currentTest.data : null;
 }
 
 export const selectCurrentTest = (state: AppStore): TaskTest | null => {
