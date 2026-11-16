@@ -90,6 +90,7 @@ import {selectAnswer} from '../task/selectors';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {StepperStatus} from '../stepper';
 import {canReloadAnswer} from '../task/platform/platform';
+import {saveEditors} from '../submission/task_platform';
 import {bufferGitSyncSagas} from './buffer_git_sync';
 import {compressDocument, uncompressDocument} from './compression';
 import {isServerSubmission} from '../submission/submission_selectors';
@@ -435,6 +436,10 @@ function* buffersSaga() {
             if (!(yield* call(canReloadAnswer, answer))) {
                 throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
             }
+
+            // Save the work in progress before it gets replaced by the file content: it may not
+            // have been saved yet because of the throttling
+            yield* call(saveEditors);
 
             yield* put(platformAnswerLoaded(answer));
             yield* put(platformTaskRefresh());
