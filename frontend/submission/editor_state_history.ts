@@ -59,7 +59,10 @@ export function describeEditorStateHistory(history: EditorStateHistoryCache): Ed
     let oldestRebuiltState = history.oldestRebuiltState;
 
     // Describes the saves from the one at this index, whose state is given, down to the oldest one
-    // fetched, or up to the first save already described. Returns where it stopped
+    // fetched, or up to the first save already described. A save whose state has no code tab is
+    // skipped (old saves were made without the tab locked by a submission): the save above it is
+    // described with the state of the first save below it that has one. Returns the save it stopped
+    // at, the oldest one fetched waiting for the next page to be described
     const describeDown = (startIndex: number, startState: string, untilDescribed: boolean): {index: number, state: string}|null => {
         let index = startIndex;
         let serializedState = startState;
@@ -70,31 +73,56 @@ export function describeEditorStateHistory(history: EditorStateHistoryCache): Ed
                 return null;
             }
 
-            const olderPatch = patches[index + 1];
-            if (undefined === olderPatch) {
-                // The first save has no save before it. The oldest save fetched otherwise waits for the
-                // next page
+            // Finds the first save below that has a code tab, the saves skipped on the way have none
+            let olderIndex = index + 1;
+            let olderSerializedState = serializedState;
+            let olderState: EditorStateSerialized|null = null;
+            while (undefined !== patches[olderIndex]) {
+                const olderPatch = patches[olderIndex];
+                olderSerializedState = null !== olderPatch.patch ? applyEditorStatePatch(olderSerializedState, olderPatch.patch) : null;
+                if (null === olderSerializedState) {
+                    break;
+                }
+                olderState = JSON.parse(olderSerializedState) as EditorStateSerialized;
+                if (olderState.sources.length) {
+                    break;
+                }
+                olderIndex++;
+            }
+            const skipBetween = () => {
+                for (let skippedPatch of patches.slice(index + 1, olderIndex)) {
+                    descriptions[skippedPatch.id] = null;
+                }
+            };
+            const describe = (previousState: EditorStateSerialized|null) => {
+                descriptions[patch.id] = state.sources.length ? describeEditorStateChange(state, previousState) : null;
+            };
+
+            if (undefined === patches[olderIndex]) {
+                // The first save has no save with a code tab before it. The oldest saves fetched
+                // otherwise wait for the next page
                 if (complete) {
-                    descriptions[patch.id] = describeEditorStateChange(state, null);
+                    describe(null);
+                    skipBetween();
                 }
 
                 return {index, state: serializedState};
             }
 
-            const olderSerializedState = null !== olderPatch.patch ? applyEditorStatePatch(serializedState, olderPatch.patch) : null;
             if (null === olderSerializedState) {
-                // The chain is broken: this save is the oldest one that can be rebuilt
-                console.error(`The state of the save ${String(olderPatch.id)} of the editor cannot be rebuilt`);
-                patches = patches.slice(0, index + 1);
+                // The chain is broken: the saves above are the oldest ones that can be rebuilt
+                console.error(`The state of the save ${String(patches[olderIndex].id)} of the editor cannot be rebuilt`);
+                patches = patches.slice(0, olderIndex);
                 complete = true;
-                descriptions[patch.id] = describeEditorStateChange(state, null);
+                describe(null);
+                skipBetween();
 
                 return {index, state: serializedState};
             }
 
-            const olderState = JSON.parse(olderSerializedState) as EditorStateSerialized;
-            descriptions[patch.id] = describeEditorStateChange(state, olderState);
-            index++;
+            describe(olderState);
+            skipBetween();
+            index = olderIndex;
             serializedState = olderSerializedState;
             state = olderState;
         }
@@ -124,19 +152,20 @@ function describeEditorStateChange(state: EditorStateSerialized, previousState: 
     const previousActiveSource = null !== previousState ? getActiveSerializedSource(previousState) : null;
 
     return {
-        activeTab: null !== activeSource ? {
+        activeTab: {
             name: activeSource.name,
             language: activeSource.language,
             length: getSerializedSourceLength(activeSource),
-        } : null,
-        activeTabChanged: null !== previousState
-            && (null !== activeSource ? getSerializedSourceTabKey(activeSource) : null) !== (null !== previousActiveSource ? getSerializedSourceTabKey(previousActiveSource) : null),
+        },
+        activeTabChanged: null !== previousActiveSource
+            && getSerializedSourceTabKey(activeSource) !== getSerializedSourceTabKey(previousActiveSource),
         modificationDeltas: computeEditorStateModificationDeltas(previousState, state),
     };
 }
 
-function getActiveSerializedSource(state: EditorStateSerialized): EditorStateSerializedSource|null {
-    return state.sources.find(source => source.active) ?? state.sources[0] ?? null;
+// There is always a code tab, even when the task has no tabs, the saves without one are skipped
+function getActiveSerializedSource(state: EditorStateSerialized): EditorStateSerializedSource {
+    return state.sources.find(source => source.active) ?? state.sources[0];
 }
 
 // Characters for a text language, blocks for a block language, whose source is the Blockly XML
@@ -200,12 +229,10 @@ function computeEditorStateModificationDeltas(previousState: EditorStateSerializ
  * before (switching tabs alone doesn't save, the switch is seen at the next save), or it is the last
  * one before a long inactivity.
  */
-function getEditorStateHistoryTags(history: EditorStateHistoryCache, index: number): EditorStateHistoryTag[] {
-    const patch = history.patches[index];
-    const newerPatch = history.patches[index - 1];
+function getEditorStateHistoryTags(history: EditorStateHistoryCache, patch: EditorStateHistoryPatch, newerPatch: EditorStateHistoryPatch|undefined): EditorStateHistoryTag[] {
     const tags: EditorStateHistoryTag[] = [];
 
-    if (0 === index) {
+    if (undefined === newerPatch) {
         tags.push({identifier: EditorStateHistoryTagIdentifier.LastSave});
     }
     if (history.descriptions[patch.id]?.activeTabChanged) {
@@ -234,10 +261,12 @@ export function selectEditorStateHistoryElements(history: EditorStateHistoryCach
     const isInRange = (patch: EditorStateHistoryPatch) => (null === maxId || patch.id <= maxId)
         && (null === minId || patch.id > minId);
 
-    // Only the saves described so far can be listed, they go from the newest one down without gap
+    // Only the saves described so far can be listed, they go from the newest one down without gap.
+    // The skipped ones are left out
     const describedCount = history.patches.findIndex(patch => undefined === history.descriptions[patch.id]);
     const described = (-1 === describedCount ? history.patches : history.patches.slice(0, describedCount))
-        .map((patch, index) => ({patch, index, tags: getEditorStateHistoryTags(history, index)}));
+        .filter(patch => null !== history.descriptions[patch.id])
+        .map((patch, index, kept) => ({patch, tags: getEditorStateHistoryTags(history, patch, kept[index - 1])}));
     const checkpoints = described.filter(({tags}) => 0 < tags.length);
     // Everything was fetched: the saves left, if any, can't be described (the chain has no state)
     const exhausted = history.complete;
@@ -259,7 +288,7 @@ export function selectEditorStateHistoryElements(history: EditorStateHistoryCach
             previousId: checkpoints.find(({patch: checkpoint}) => checkpoint.id < patch.id)?.patch.id ?? null,
         })));
 
-    return selected.map(({index, tags}) => describeEditorStateHistoryElement(history, index, tags, checkpointsDeltas));
+    return selected.map(({patch, tags}) => describeEditorStateHistoryElement(history, patch, tags, checkpointsDeltas));
 }
 
 function getPatchDeltas(history: EditorStateHistoryCache, patch: EditorStateHistoryPatch): {added: number, removed: number} {
@@ -317,16 +346,17 @@ function computeEditorStateHistoryCheckpointsDeltas(history: EditorStateHistoryC
         deltas.set(checkpoint.id, {
             charsAdded: added,
             charsRemoved: removed,
-            elementsCount: history.patches.filter(patch => patch.id > (checkpoint.previousId ?? 0) && patch.id < checkpoint.id).length,
+            elementsCount: history.patches.filter(patch => patch.id > (checkpoint.previousId ?? 0) && patch.id < checkpoint.id
+                && null !== history.descriptions[patch.id]).length,
         });
     }
 
     return deltas;
 }
 
-function describeEditorStateHistoryElement(history: EditorStateHistoryCache, index: number, tags: EditorStateHistoryTag[], checkpointsDeltas: Map<number, EditorStateHistoryElement['sinceEarlierCheckpoint']>): EditorStateHistoryElement {
-    const patch = history.patches[index];
-    const activeTab = history.descriptions[patch.id]?.activeTab ?? null;
+function describeEditorStateHistoryElement(history: EditorStateHistoryCache, patch: EditorStateHistoryPatch, tags: EditorStateHistoryTag[], checkpointsDeltas: Map<number, EditorStateHistoryElement['sinceEarlierCheckpoint']>): EditorStateHistoryElement {
+    // The saves listed have all been described, none of them is skipped
+    const {activeTab} = history.descriptions[patch.id];
     const isCheckpoint = 0 < tags.length;
     const deltas = getPatchDeltas(history, patch);
 
@@ -341,11 +371,11 @@ function describeEditorStateHistoryElement(history: EditorStateHistoryCache, ind
             charsRemoved: deltas.removed,
         },
         ...(isCheckpoint && checkpointsDeltas.has(patch.id) ? {sinceEarlierCheckpoint: checkpointsDeltas.get(patch.id)} : {}),
-        activeTab: null !== activeTab ? {
+        activeTab: {
             name: activeTab.name,
             length: activeTab.length,
             progLang: activeTab.language,
-        } : null,
+        },
     };
 }
 
@@ -357,7 +387,8 @@ function describeEditorStateHistoryElement(history: EditorStateHistoryCache, ind
  */
 export function rebuildEditorStateHistoryState(history: EditorStateHistoryCache, elementId: number): string {
     const elementIndex = history.patches.findIndex(patch => elementId === patch.id);
-    if (-1 === elementIndex || null === history.headState) {
+    // A skipped save has no code tab, it's not listed
+    if (-1 === elementIndex || null === history.headState || null === history.descriptions[elementId]) {
         throw new Error(`No save of the editor state with this id: ${String(elementId)}`);
     }
 
