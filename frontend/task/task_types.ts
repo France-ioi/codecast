@@ -272,7 +272,7 @@ export interface EditorStateHistoryElement {
         charsRemoved: number,
         elementsCount: number,
     },
-    // The code tab the user was on, null when there was none
+    // The code tab the user was on, there is always one even when the task has no tabs
     activeTab: {
         // Null when the task has no tabs
         name: string|null,
@@ -280,7 +280,7 @@ export interface EditorStateHistoryElement {
         length: number,
         // The display name of the language: Python, Java...
         progLang: string,
-    }|null,
+    },
 }
 
 // The options of task.getHistory
@@ -301,14 +301,14 @@ export interface EditorStateReloadHistoryOptions {
 
 // What a save changed, derived from its state and the state of the save before it
 export interface EditorStateHistoryDescription {
-    // The code tab the user was on, null when there was none
+    // The code tab the user was on, there is always one even when the task has no tabs
     activeTab: {
         name: string,
         // As Codecast names it: python, blockly...
         language: string,
         // Characters for a text language, blocks for a block language
         length: number,
-    }|null,
+    },
     // Whether the user was on another tab at the save before
     activeTabChanged: boolean,
     // The characters of the code tabs added and removed since the save before
@@ -340,8 +340,9 @@ export interface EditorStateHistoryCache {
     key: string,
     headState: string|null,
     // The descriptions of the saves, by id. A save is described once the state of the save before
-    // it has been rebuilt, so the oldest fetched save is only described when it is the first one
-    descriptions: {[id: number]: EditorStateHistoryDescription},
+    // it has been rebuilt, so the oldest fetched save is only described when it is the first one.
+    // Null for a skipped save, whose state has no code tab
+    descriptions: {[id: number]: EditorStateHistoryDescription|null},
     // The oldest state rebuilt so far, from which the older saves are described as they are fetched
     oldestRebuiltState: {id: number, state: string}|null,
     patches: EditorStateHistoryPatch[],

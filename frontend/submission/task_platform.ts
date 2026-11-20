@@ -355,9 +355,9 @@ let reloadingEditorState = false;
 function getEditorStateSources(state: AppStore): EditorStateSource[] {
     const sourceBuffers = selectSourceBuffers(state);
 
+    // A tab associated with a submission is still the user's tab, locked while the code it holds is
+    // submitted: it's part of the editor state
     return Object.entries(sourceBuffers)
-        // A tab displaying the code of a past submission is read-only, it's not part of the editor state
-        .filter(([, buffer]) => null === buffer.submissionIndex || undefined === buffer.submissionIndex)
         .map(([bufferName, buffer]) => ({
             name: buffer.fileName ?? '',
             source: documentToString(buffer.document),
@@ -404,6 +404,10 @@ export function* saveEditors() {
 
     const taskId = String(currentTask.id);
     const editorState = getEditorState(state);
+    // There is always a code tab: without one, the buffers are not set up yet
+    if (!editorState.sources.length) {
+        return;
+    }
 
     const serializedEditorState = JSON.stringify(editorState);
     if (taskId === lastSavedEditorState?.taskId && serializedEditorState === lastSavedEditorState?.editorState) {
@@ -639,11 +643,11 @@ export function* loadEditorStateHistory(options: EditorStateHistoryOptions): Gen
                     ...tag,
                     i18nText: getMessage(`EDITOR_HISTORY_TAG_${tag.identifier.toUpperCase()}`).s,
                 })),
-                activeTab: null !== element.activeTab ? {
+                activeTab: {
                     ...element.activeTab,
                     name: state.options.tabsEnabled ? element.activeTab.name : null,
                     progLang: platformsList[element.activeTab.progLang]?.name ?? element.activeTab.progLang,
-                } : null,
+                },
             }));
         }
 
@@ -717,12 +721,10 @@ function* reloadEditorStateSources(sources: EditorStateSource[]) {
         ? sources
         : keepOneSourcePerLanguage(sources);
 
-    // The tabs currently open were created by the loading of the task, they are replaced by the
-    // saved ones. The tabs displaying the code of a past submission are read-only, they are not
-    // part of the editor state and are left untouched
-    const previousBufferNames = Object.entries(selectSourceBuffers(state))
-        .filter(([, buffer]) => null === buffer.submissionIndex || undefined === buffer.submissionIndex)
-        .map(([bufferName]) => bufferName);
+    // The tabs currently open are replaced by the saved ones. A tab associated with a submission is
+    // still the user's tab, locked while the code it holds is submitted: it's part of the editor
+    // state, so it's replaced too
+    const previousBufferNames = Object.keys(selectSourceBuffers(state));
 
     let activeBufferName: string|null = null;
     for (let source of restoredSources) {
