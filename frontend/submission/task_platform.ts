@@ -387,11 +387,21 @@ function getEditorState(state: AppStore): EditorState {
     };
 }
 
-export function* saveEditors() {
-    const state = yield* appSelect();
+interface EditorStateSaveRequest {
+    taskId: string,
+    url: string,
+    body: object,
+    serializedEditorState: string,
+}
+
+/**
+ * Builds the request saving the editor state on the task platform, or null when there is nothing to
+ * save. It is synchronous so that it can also be used while the page is being closed.
+ */
+function getEditorStateSaveRequest(state: AppStore): EditorStateSaveRequest|null {
     const currentTask = state.task.currentTask;
     const taskPlatformUrl = state.options.taskPlatformUrl;
-    const tokenPayload = yield* appSelect(selectTaskTokenPayload);
+    const tokenPayload = selectTaskTokenPayload(state);
 
     // Only the state of a task loaded from the task platform can be saved there, and as in the
     // previous platform, the state of a read-only task is never saved
@@ -399,29 +409,42 @@ export function* saveEditors() {
         || !isServerTask(currentTask) || !currentTask?.id || false === currentTask.isEvaluable
         || false === tokenPayload?.bSubmissionPossible
     ) {
-        return;
+        return null;
     }
 
     const taskId = String(currentTask.id);
     const editorState = getEditorState(state);
     // There is always a code tab: without one, the buffers are not set up yet
     if (!editorState.sources.length) {
-        return;
+        return null;
     }
 
     const serializedEditorState = JSON.stringify(editorState);
     if (taskId === lastSavedEditorState?.taskId && serializedEditorState === lastSavedEditorState?.editorState) {
+        return null;
+    }
+
+    return {
+        taskId,
+        url: `${taskPlatformUrl}/tasks/${taskId}/editor-state`,
+        body: {
+            ...editorState,
+            ...(state.platform.taskToken ? {token: state.platform.taskToken} : {}),
+            ...(state.platform.platformName ? {platform: state.platform.platformName} : {}),
+        },
+        serializedEditorState,
+    };
+}
+
+export function* saveEditors() {
+    const state = yield* appSelect();
+    const saveRequest = getEditorStateSaveRequest(state);
+    if (!saveRequest) {
         return;
     }
 
-    const body = {
-        ...editorState,
-        ...(state.platform.taskToken ? {token: state.platform.taskToken} : {}),
-        ...(state.platform.platformName ? {platform: state.platform.platformName} : {}),
-    };
-
     try {
-        yield* call(asyncRequestJson, `${taskPlatformUrl}/tasks/${taskId}/editor-state`, body, false);
+        yield* call(asyncRequestJson, saveRequest.url, saveRequest.body, false);
     } catch (e) {
         // The editor state will be saved again on the next change
         console.error("Couldn't save the editor state", e);
@@ -429,7 +452,47 @@ export function* saveEditors() {
         return;
     }
 
-    lastSavedEditorState = {taskId, editorState: serializedEditorState};
+    lastSavedEditorState = {taskId: saveRequest.taskId, editorState: saveRequest.serializedEditorState};
+}
+
+/**
+ * Saves the editor state with a beacon when the page is closed, reloaded or left: the changes made
+ * since the last throttled save would be lost otherwise.
+ * The body is sent as text/plain, so that the browser sends it as a simple CORS request, without a
+ * preflight; the task platform parses it as JSON.
+ */
+function saveEditorsWithBeacon(state: AppStore) {
+    const saveRequest = getEditorStateSaveRequest(state);
+    if (!saveRequest || !navigator.sendBeacon) {
+        return;
+    }
+
+    // The browser refuses a payload too large for a beacon (about 64 KB), the editor state then
+    // stays as it was saved last
+    if (navigator.sendBeacon(saveRequest.url, JSON.stringify(saveRequest.body))) {
+        lastSavedEditorState = {taskId: saveRequest.taskId, editorState: saveRequest.serializedEditorState};
+    }
+}
+
+let pageHideListenersRegistered = false;
+
+function registerSaveEditorsOnPageHide(getState: () => AppStore) {
+    if (pageHideListenersRegistered || 'undefined' === typeof window) {
+        return;
+    }
+    pageHideListenersRegistered = true;
+
+    const onPageHide = () => {
+        try {
+            saveEditorsWithBeacon(getState());
+        } catch (e) {
+            console.error("Couldn't save the editor state", e);
+        }
+    };
+
+    // Only when the page is closed or left, not when the user switches tabs, which would save the
+    // editor state more often than the throttled saves do
+    window.addEventListener('pagehide', onPageHide);
 }
 
 /**
@@ -779,6 +842,12 @@ function* reloadEditorStateTests(tests: EditorStateTest[]) {
 }
 
 export function* saveEditorsSaga() {
+    // Only the editor state of the main environment is saved
+    const environment = yield* appSelect(state => state.environment);
+    if ('main' === environment) {
+        registerSaveEditorsOnPageHide(() => window.Codecast.environments['main'].store.getState());
+    }
+
     yield* throttle(saveEditorsThrottleDelay, [
         // A code tab was edited, created, renamed or removed. Switching tabs alone is not saved: the
         // active tab is saved with the next change, which the task platform then makes a checkpoint

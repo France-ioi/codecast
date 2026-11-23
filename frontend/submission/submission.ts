@@ -1,5 +1,5 @@
 import {Bundle} from "../linker";
-import {call, put, race, take, takeEvery} from "typed-redux-saga";
+import {call, fork, put, race, take, takeEvery} from "typed-redux-saga";
 import {platformApi} from "../task/platform/platform";
 import {appSelect} from '../hooks';
 import {addNewTaskTest, removeTaskTest, updateCurrentTestId, updateTaskTest} from '../task/task_slice';
@@ -43,6 +43,7 @@ import {testErrorCodeData} from './TestsPaneListTest';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 import {onEditSource} from '../task';
 import {bufferDissociateFromSubmission} from '../buffers/buffers_slice';
+import {saveEditors} from './task_platform';
 import {getMessage} from '../lang/messages';
 
 export interface TestResultDiffLog {
@@ -68,8 +69,13 @@ export default function (bundle: Bundle) {
                 return;
             }
 
+            const platformAction = action.payload.action ?? 'done';
+
+            if ('log' !== platformAction) {
+                yield* fork(saveEditors);
+            }
+
             try {
-                const platformAction = action.payload.action ?? 'done';
                 yield* call([platformApi, platformApi.validate], platformAction);
             } catch (e) {
                 console.error('An error occurred during platform validation', e);
