@@ -383,7 +383,8 @@ export const checkPythonCode = function (document: Document, context: QuickAlgoL
     if (!context.infos.multithread) {
         let codeWithoutTextsBetweenQuotes = code.replace(/"[^"]+"/g, '').replace(/'[^']+'/g, '');
         for (let j = 0; j < definedFunctions.length; j++) {
-            re = new RegExp('\\W' + definedFunctions[j] + '([^A-Za-z0-9_( ]| +[^ (]|$)');
+            // Assigning a function to the name (e.g. "input = stdin.readline") is not a use without parentheses
+            re = new RegExp('\\W' + definedFunctions[j] + '(?!\\s*=[^=])([^A-Za-z0-9_( ]| +[^ (]|$)');
             if (re.exec(codeWithoutTextsBetweenQuotes)) {
                 throw getMessage('CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS').format({funcName: definedFunctions[j]});
             }

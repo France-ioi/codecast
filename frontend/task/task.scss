@@ -598,18 +598,18 @@ html:not([active-view="task"]):not([active-view="solution"]) {
   }
   h2 {
     font-size: 1.35em !important;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
   }
   h3 {
     font-size: 1.25em !important;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
   }
   h4 {
     font-size: 1.15em !important;
-    margin-top: 1.25rem;
+    margin-top: 1rem;
   }
   h3:first-of-type {
-    margin-top: 0 !important;
+    //margin-top: 0 !important;
   }
   h1, h2, h3, h4, h5, h6 {
     color: #30242B;
