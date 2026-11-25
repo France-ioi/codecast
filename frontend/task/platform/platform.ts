@@ -47,7 +47,9 @@ import {LayoutView} from '../layout/layout_types';
 import {taskLoad} from '../task_actions';
 import {levelScoringData} from '../../submission/scoring';
 import {Codecast} from '../../app_types';
-import {Document} from '../../buffers/buffer_types';
+import {BufferType, Document} from '../../buffers/buffer_types';
+import {bufferFocus} from '../../buffers/buffers_slice';
+import {selectActiveView} from '../layout/layout';
 import {quickAlgoLibraries} from '../libs/quick_algo_libraries_model';
 import {ActionTypes} from '../../common/actionTypes';
 import {isServerTask, TaskAnswer} from '../task_types';
@@ -254,7 +256,18 @@ function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof
     const supportedViews = yield* call(getSupportedViews);
     // Use views system only if we support at least 2 views, otherwise we display everything
     let selectedViews = Object.keys(supportedViews).length >= 2 ? views : {};
+    const previousView = yield* appSelect(selectActiveView);
     yield* put({type: LayoutActionTypes.LayoutViewsChanged, payload: {views: selectedViews}});
+    const newView = yield* appSelect(selectActiveView);
+
+    // When the user switches from another view (e.g. instructions) to the solving view, focus the code editor
+    if (null !== previousView && LayoutView.Editor !== previousView && LayoutView.Editor === newView) {
+        const activeBufferName = yield* appSelect(state => state.buffers.activeBufferName);
+        const activeBuffer = yield* appSelect(state => activeBufferName ? state.buffers.buffers[activeBufferName] : null);
+        if (activeBuffer && BufferType.Text === activeBuffer.type) {
+            yield* put(bufferFocus({buffer: activeBufferName}));
+        }
+    }
     yield* call(success);
 }
 

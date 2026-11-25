@@ -118,6 +118,19 @@ export const buffersSlice = createSlice({
                 delete state.buffers[action.payload.buffer].actions.blocksToInsert.elements[id];
             }
         },
+        bufferFocus(state, action: PayloadAction<{buffer: string}>) {
+            if (!(action.payload.buffer in state.buffers)) {
+                return;
+            }
+            const actions = state.buffers[action.payload.buffer].actions;
+            actions.focus = (actions.focus ?? 0) + 1;
+        },
+        bufferClearFocus(state, action: PayloadAction<{buffer: string}>) {
+            if (!(action.payload.buffer in state.buffers)) {
+                return;
+            }
+            delete state.buffers[action.payload.buffer].actions.focus;
+        },
         bufferClearGoToEnd(state, action: PayloadAction<{buffer: string}>) {
             delete state.buffers[action.payload.buffer].actions.goToEnd;
         },
@@ -165,6 +178,8 @@ export const {
     bufferAssociateToSubmission,
     bufferDissociateFromSubmission,
     bufferClearGoToEnd,
+    bufferFocus,
+    bufferClearFocus,
 } = buffersSlice.actions;
 
 export default buffersSlice;
