@@ -67,6 +67,7 @@ export interface BufferState extends BufferStateParameters {
     actions: {
         goToEnd?: number,
         resize?: number,
+        focus?: number,
         blocksToInsert?: {nextId: number, elements: {[id: number]: {block: Block, pos: TextPosition}}},
         deltasToApply?: {nextId: number, elements: {[id: number]: TextDocumentDelta}},
     },

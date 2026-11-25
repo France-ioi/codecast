@@ -8,7 +8,7 @@ import {useDrop} from "react-dnd";
 import log from 'loglevel';
 import {quickAlgoLibraries} from '../task/libs/quick_algo_libraries_model';
 import {BlockType} from '../task/blocks/block_types';
-import {bufferClearBlocksToInsert, bufferClearDeltasToApply, bufferClearGoToEnd} from './buffers_slice';
+import {bufferClearBlocksToInsert, bufferClearDeltasToApply, bufferClearFocus, bufferClearGoToEnd} from './buffers_slice';
 import {batch, useDispatch} from 'react-redux';
 import {documentToString} from './document';
 import debounce from 'lodash/debounce';
@@ -561,6 +561,30 @@ export function Editor(props: EditorProps) {
             dispatch(bufferClearGoToEnd({buffer: props.name}));
         }
     }, [props.state?.actions?.goToEnd]);
+
+    useEffect(() => {
+        if (!(0 < props.state?.actions?.focus)) {
+            return;
+        }
+        dispatch(bufferClearFocus({buffer: props.name}));
+
+        // Wait for the editor to be laid out (it may have just been mounted, e.g. after a view change)
+        window.requestAnimationFrame(() => {
+            if (!editor.current || props.readOnly) {
+                return;
+            }
+
+            // When the task is inside an iframe, the iframe window must get the focus first,
+            // otherwise focusing the Ace textarea has no effect
+            try {
+                window.focus();
+            } catch (e) {
+            }
+
+            editor.current.resize(true);
+            editor.current.focus();
+        });
+    }, [props.state?.actions?.focus]);
 
     useEffect(() => {
         if (0 < props.state?.actions?.resize) {
